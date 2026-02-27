@@ -22,8 +22,10 @@ import {
   AlertTriangle,
   X,
   Sparkles,
+  Camera,
 } from "lucide-react";
 import { getTSBsForVehicle } from "../data/tsbData";
+import DVIScreen from "./DVIScreen";
 
 // ── Column definitions ──────────────────────────────────────
 const COLUMNS = [
@@ -92,7 +94,7 @@ function getOemBadgeLabel(ro) {
 }
 
 // ── RO Card ─────────────────────────────────────────────────
-function ROCard({ ro, column, selected, onSelect }) {
+function ROCard({ ro, column, selected, onSelect, onOpenDVI }) {
   const customer = getCustomer(ro.customerId);
   const vehicle = getVehicle(ro.vehicleId);
   const tech = getTech(ro.techId);
@@ -381,12 +383,31 @@ function ROCard({ ro, column, selected, onSelect }) {
           ${ro.totalEstimate != null ? ro.totalEstimate.toLocaleString() : "—"}
         </span>
       </div>
+
+      {/* DVI Button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onOpenDVI(ro.id); }}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+          marginTop: 8, width: "100%",
+          padding: "5px 8px",
+          border: "1px solid #BAE6FD",
+          borderRadius: 5,
+          background: "#F0F9FF",
+          color: "#0369A1",
+          fontSize: 11, fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        <Camera size={11} />
+        Inspection Report
+      </button>
     </div>
   );
 }
 
 // ── Kanban Column ────────────────────────────────────────────
-function KanbanColumn({ column, ros, selectedRoId, onSelectRo }) {
+function KanbanColumn({ column, ros, selectedRoId, onSelectRo, onOpenDVI }) {
   const columnTotal = ros.reduce((sum, ro) => sum + (ro.totalEstimate || 0), 0);
 
   return (
@@ -484,6 +505,7 @@ function KanbanColumn({ column, ros, selectedRoId, onSelectRo }) {
               column={column}
               selected={selectedRoId === ro.id}
               onSelect={onSelectRo}
+              onOpenDVI={onOpenDVI}
             />
           ))
         )}
@@ -760,6 +782,7 @@ export default function RepairOrderScreen() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoId, setSelectedRoId] = useState(null);
+  const [dviRoId, setDviRoId] = useState(null);
 
   const kanbanStatuses = [
     "checked_in",
@@ -1037,6 +1060,7 @@ export default function RepairOrderScreen() {
                 ros={columnROs}
                 selectedRoId={selectedRoId}
                 onSelectRo={(id) => setSelectedRoId(prev => prev === id ? null : id)}
+                onOpenDVI={(id) => setDviRoId(id)}
               />
             );
           })}
@@ -1140,6 +1164,60 @@ export default function RepairOrderScreen() {
           <ScheduledSection scheduledROs={filteredScheduled} />
         )}
       </div>
+
+      {/* ── DVI Modal Overlay ─────────────────────────────── */}
+      {dviRoId && (() => {
+        const ro = repairOrders.find(r => r.id === dviRoId);
+        const vehicle = ro ? getVehicle(ro.vehicleId) : null;
+        const customer = ro ? getCustomer(ro.customerId) : null;
+        return (
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.55)",
+            display: "flex", flexDirection: "column",
+          }}>
+            <div style={{ background: COLORS.bg, flex: 1, overflow: "auto", position: "relative" }}>
+              {/* Close bar */}
+              <div style={{
+                position: "sticky", top: 0, zIndex: 10,
+                background: "#fff",
+                borderBottom: "1px solid #E5E7EB",
+                padding: "12px 24px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Camera size={16} color={COLORS.primary} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary }}>
+                    Digital Vehicle Inspection
+                  </span>
+                  {vehicle && (
+                    <span style={{ fontSize: 12, color: COLORS.textMuted }}>
+                      — {vehicle.year} {vehicle.make} {vehicle.model}
+                      {customer ? ` · ${customer.firstName} ${customer.lastName}` : ""}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setDviRoId(null)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "7px 14px",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 7,
+                    background: "#fff",
+                    cursor: "pointer",
+                    fontSize: 13, fontWeight: 600,
+                    color: COLORS.textSecondary,
+                  }}
+                >
+                  <X size={15} /> Close
+                </button>
+              </div>
+              <DVIScreen />
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

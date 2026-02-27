@@ -27,7 +27,17 @@ import {
 import { getTSBsForVehicle } from "../data/tsbData";
 import { COLORS } from "../theme/colors";
 
-// ── Photo placeholder gradients by label ─────────────────────
+// ── Real inspection photo URLs (picsum deterministic by seed) ─
+const PHOTO_URLS = {
+  brake_pad_front_left:  "https://picsum.photos/seed/brakepads1/76/58",
+  brake_pad_front_right: "https://picsum.photos/seed/brakepads2/76/58",
+  brake_pad_rear:        "https://picsum.photos/seed/brakepads3/76/58",
+  air_filter:            "https://picsum.photos/seed/airfilter1/76/58",
+  serpentine_belt:       "https://picsum.photos/seed/serpbelt1/76/58",
+  cabin_filter:          "https://picsum.photos/seed/cabinfilter/76/58",
+};
+
+// Fallback gradients if photo fails to load
 const PHOTO_GRADIENTS = {
   brake_pad_front_left: "linear-gradient(135deg, #8B6914 0%, #3D2B06 100%)",
   brake_pad_front_right: "linear-gradient(135deg, #8B6914 0%, #3D2B06 100%)",
@@ -125,7 +135,9 @@ function SeverityBadge({ severity }) {
 
 // ── PhotoThumbnail ────────────────────────────────────────────
 function PhotoThumbnail({ photoLabel }) {
-  const gradient =
+  const [imgFailed, setImgFailed] = useState(false);
+  const photoUrl = PHOTO_URLS[photoLabel];
+  const fallbackGradient =
     PHOTO_GRADIENTS[photoLabel] ||
     "linear-gradient(135deg, #374151 0%, #1F2937 100%)";
 
@@ -135,34 +147,48 @@ function PhotoThumbnail({ photoLabel }) {
         width: 76,
         height: 58,
         borderRadius: 6,
-        background: gradient,
         flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         position: "relative",
         overflow: "hidden",
-        border: "1px solid rgba(255,255,255,0.18)",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+        border: "1px solid rgba(0,0,0,0.12)",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
+        background: fallbackGradient,
       }}
     >
-      {/* Simulated film-grain / scan lines */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px)",
-        }}
-      />
-      <Camera
-        size={17}
-        style={{
-          color: "rgba(255,255,255,0.55)",
-          position: "relative",
-          zIndex: 1,
-        }}
-      />
+      {photoUrl && !imgFailed ? (
+        <img
+          src={photoUrl}
+          alt={photoLabel}
+          onError={() => setImgFailed(true)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+      ) : (
+        <>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px)",
+            }}
+          />
+          <Camera
+            size={17}
+            style={{
+              color: "rgba(255,255,255,0.55)",
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
