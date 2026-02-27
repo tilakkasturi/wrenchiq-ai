@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import {
-  Sparkles, Send, Zap,
+  Sparkles, Send, Zap, ChevronUp, ChevronDown, X,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { repairOrders, customers, vehicles, getCustomer, getVehicle } from "../data/demoData";
@@ -196,23 +196,32 @@ function OppRow({ opp }) {
 
 // ── Main agent component ───────────────────────────────────
 
-export default function WrenchIQAgent({ activeScreen }) {
+export default function WrenchIQAgent({ activeScreen, onHide }) {
   const [typedInput, setTypedInput] = useState("");
+  const [expanded, setExpanded] = useState(false);
 
   const ctx = SCREEN_CONTEXT[activeScreen] || SCREEN_CONTEXT.dashboard;
 
   const totalOppValue = REVENUE_OPPS.reduce((sum, o) => sum + o.value, 0);
 
+  const panelHeight = expanded ? "calc(100vh - 72px)" : 390;
+
   return (
     <div style={{
-      width: 296,
-      flexShrink: 0,
-      borderLeft: "1px solid #E5E7EB",
+      position: "fixed",
+      right: 16,
+      bottom: 16,
+      width: 300,
+      height: panelHeight,
       background: "#fff",
+      borderRadius: 14,
+      boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)",
       display: "flex",
       flexDirection: "column",
-      height: "100%",
       overflow: "hidden",
+      zIndex: 1000,
+      transition: "height 0.25s ease",
+      border: "1px solid #E5E7EB",
     }}>
       {/* ── Header ── */}
       <div style={{
@@ -222,15 +231,31 @@ export default function WrenchIQAgent({ activeScreen }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,107,53,0.2)", border: "1px solid rgba(255,107,53,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Sparkles size={15} color={COLORS.accent} />
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,107,53,0.2)", border: "1px solid rgba(255,107,53,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={14} color={COLORS.accent} />
             </div>
             <div>
               <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: 0.2 }}>WrenchIQ Agent</div>
               <div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", marginTop: 0.5 }}>Revenue Intelligence</div>
             </div>
           </div>
-          <div style={{ width: 7, height: 7, borderRadius: 4, background: "#22C55E", boxShadow: "0 0 0 2px rgba(34,197,94,0.3)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 7, height: 7, borderRadius: 4, background: "#22C55E", boxShadow: "0 0 0 2px rgba(34,197,94,0.3)" }} />
+            <button
+              onClick={() => setExpanded(e => !e)}
+              title={expanded ? "Collapse" : "Expand"}
+              style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 5, width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              {expanded ? <ChevronDown size={13} color="rgba(255,255,255,0.7)" /> : <ChevronUp size={13} color="rgba(255,255,255,0.7)" />}
+            </button>
+            <button
+              onClick={onHide}
+              title="Hide agent"
+              style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 5, width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              <X size={12} color="rgba(255,255,255,0.7)" />
+            </button>
+          </div>
         </div>
 
         {/* Context chip */}
