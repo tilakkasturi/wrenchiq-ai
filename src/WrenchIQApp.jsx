@@ -1,28 +1,23 @@
 import { useState } from "react";
 import {
-  Wrench, Brain, ClipboardList, Eye, Smartphone, Package,
-  Calendar, BarChart3, Home, Search, Bell, ChevronLeft, ChevronRight,
+  Wrench, Home, ClipboardList, Smartphone, BarChart3, Settings,
+  Search, Bell, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { COLORS } from "./theme/colors";
 import { SHOP } from "./data/demoData";
 import DashboardScreen from "./screens/DashboardScreen";
-import AICopilotScreen from "./screens/AICopilotScreen";
 import RepairOrderScreen from "./screens/RepairOrderScreen";
-import DVIScreen from "./screens/DVIScreen";
 import CustomerPortalScreen from "./screens/CustomerPortalScreen";
-import PartsScreen from "./screens/PartsScreen";
-import SchedulingScreen from "./screens/SchedulingScreen";
 import AnalyticsScreen from "./screens/AnalyticsScreen";
+import SettingsScreen from "./screens/SettingsScreen";
+import WrenchIQAgent from "./components/WrenchIQAgent";
 
 const screens = [
   { id: "dashboard", label: "Command Center", icon: Home, component: DashboardScreen },
-  { id: "copilot", label: "AI Copilot", icon: Brain, component: AICopilotScreen },
   { id: "orders", label: "Repair Orders", icon: ClipboardList, component: RepairOrderScreen },
-  { id: "dvi", label: "Vehicle Inspection", icon: Eye, component: DVIScreen },
   { id: "customer", label: "Customer Portal", icon: Smartphone, component: CustomerPortalScreen },
-  { id: "parts", label: "Parts Intelligence", icon: Package, component: PartsScreen },
-  { id: "schedule", label: "Bay Scheduler", icon: Calendar, component: SchedulingScreen },
   { id: "analytics", label: "Analytics", icon: BarChart3, component: AnalyticsScreen },
+  { id: "settings", label: "Settings", icon: Settings, component: SettingsScreen },
 ];
 
 export default function WrenchIQApp() {
@@ -33,7 +28,8 @@ export default function WrenchIQApp() {
 
   return (
     <div style={{ display: "flex", height: "100vh", background: COLORS.bg, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
-      {/* Sidebar */}
+
+      {/* ── Left Nav ── */}
       <div style={{
         width: sidebarCollapsed ? 64 : 220,
         background: COLORS.bgDark,
@@ -79,9 +75,6 @@ export default function WrenchIQApp() {
               >
                 <s.icon size={18} style={{ flexShrink: 0 }} />
                 {!sidebarCollapsed && s.label}
-                {!sidebarCollapsed && s.id === "copilot" && (
-                  <span style={{ marginLeft: "auto", fontSize: 9, background: COLORS.accent, color: "#fff", borderRadius: 4, padding: "2px 6px", fontWeight: 700 }}>AI</span>
-                )}
               </button>
             );
           })}
@@ -103,14 +96,14 @@ export default function WrenchIQApp() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* ── Main Area: top bar + content ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
         {/* Top Bar */}
         <div style={{ height: 64, background: "#fff", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#F9FAFB", borderRadius: 10, padding: "8px 14px", width: 360, border: "1px solid #E5E7EB" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#F9FAFB", borderRadius: 10, padding: "8px 14px", width: 340, border: "1px solid #E5E7EB" }}>
             <Search size={16} color={COLORS.textMuted} />
             <input
-              placeholder="Search customers, vehicles, ROs..."
+              placeholder="Search customers, vehicles, ROs…"
               style={{ border: "none", outline: "none", background: "transparent", fontSize: 13, flex: 1, color: COLORS.textPrimary }}
             />
             <div style={{ fontSize: 10, color: COLORS.textMuted, background: "#E5E7EB", borderRadius: 4, padding: "2px 6px" }}>⌘K</div>
@@ -130,9 +123,15 @@ export default function WrenchIQApp() {
           </div>
         </div>
 
-        {/* Screen Content */}
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          <ActiveComponent />
+        {/* Content + Agent Row */}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {/* Screen Content */}
+          <div style={{ flex: 1, overflowY: "auto", minWidth: 0 }}>
+            <ActiveComponent />
+          </div>
+
+          {/* WrenchIQ Agent Panel */}
+          <WrenchIQAgent activeScreen={activeScreen} />
         </div>
 
         {/* Footer */}
@@ -148,13 +147,10 @@ export default function WrenchIQApp() {
           {/* Predii Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <svg width="44" height="22" viewBox="0 0 44 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Gray curve */}
               <path d="M2 18 C6 18, 10 15, 14 12 C18 9, 22 5, 28 3 C32 1.5, 36 1, 42 1"
                 stroke="#B8BEC8" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
-              {/* Navy curve */}
               <path d="M2 20 C6 20, 10 17, 14 14 C18 11, 22 7, 28 5 C32 3.5, 36 3, 42 3"
                 stroke="#1B3461" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
-              {/* Gold curve */}
               <path d="M2 22 C6 22, 10 19, 14 16 C18 13, 22 9, 28 7 C32 5.5, 36 5, 42 5"
                 stroke="#F5B800" strokeWidth="2.2" strokeLinecap="round" fill="none"/>
             </svg>

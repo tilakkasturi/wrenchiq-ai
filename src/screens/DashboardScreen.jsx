@@ -6,14 +6,13 @@ import {
 import {
   DollarSign, Car, Target, Timer, UserCheck, Brain, AlertTriangle,
   Zap, Package, MessageSquare, Phone, ClipboardList, ChevronRight,
-  ChevronUp, ChevronDown, Shield, Sparkles,
+  ChevronUp, ChevronDown, Sparkles,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import {
   SHOP, repairOrders, customers, vehicles, technicians,
   bayStatus, revenueData, todayMetrics, getCustomer, getVehicle, getTech,
 } from "../data/demoData";
-import { getRecallsForVehicle } from "../data/tsbData";
 import MetricCard from "../components/shared/MetricCard";
 import StatusBadge from "../components/shared/StatusBadge";
 
@@ -24,45 +23,10 @@ export default function DashboardScreen() {
   // Build today's appointments from active repair orders
   const todayROs = repairOrders.filter(ro => ro.status !== "scheduled");
 
-  // Check for vehicle recalls
-  const recallAlerts = [];
-  repairOrders.forEach(ro => {
-    const veh = getVehicle(ro.vehicleId);
-    if (veh) {
-      const recalls = getRecallsForVehicle(veh.make, veh.model, veh.year);
-      recalls.forEach(r => recallAlerts.push({ ...r, vehicle: veh, customer: getCustomer(ro.customerId) }));
-    }
-  });
 
   return (
     <div style={{ padding: "24px 28px" }}>
 
-      {/* Recall Alert Banner */}
-      {recallAlerts.length > 0 && (
-        <div style={{
-          background: "linear-gradient(90deg, #DC2626 0%, #B91C1C 100%)",
-          borderRadius: 12,
-          padding: "12px 18px",
-          marginBottom: 20,
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          color: "#fff",
-        }}>
-          <Shield size={20} />
-          <div style={{ flex: 1 }}>
-            <span style={{ fontWeight: 700, fontSize: 13 }}>NHTSA RECALL ALERT</span>
-            {recallAlerts.slice(0, 2).map((r, i) => (
-              <div key={i} style={{ fontSize: 12, opacity: 0.95, marginTop: 2 }}>
-                {r.customer?.firstName} {r.customer?.lastName}'s {r.vehicle.year} {r.vehicle.make} {r.vehicle.model} — {r.component} (#{r.nhtsaCampaignNumber}). {r.remedy?.split(".")[0]}.
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: 10, background: "rgba(255,255,255,0.2)", borderRadius: 6, padding: "4px 10px", fontWeight: 600, whiteSpace: "nowrap" }}>
-            via NHTSA API
-          </div>
-        </div>
-      )}
 
       {/* Top Metrics */}
       <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
