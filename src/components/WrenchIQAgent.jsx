@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  Sparkles, Send, TrendingUp, AlertTriangle, CheckCircle,
-  Clock, DollarSign, MessageCircle, ChevronDown, ChevronUp,
-  Zap, Target, BarChart2, User, Car,
+  Sparkles, Send, Zap,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { repairOrders, customers, vehicles, getCustomer, getVehicle } from "../data/demoData";
@@ -50,9 +48,9 @@ const SCREEN_CONTEXT = {
     customerFocus: null,
     suggestions: [
       { type: "alert", icon: "📉", text: "Parts margin at 48.2% — below your 53% target. BMW X3 brake job used OEM at low markup.", action: "Review parts", value: "-$420 margin", color: COLORS.danger },
-      { type: "revenue", icon: "💳", text: "Sarah Chen's $1,890 invoice is 14 days overdue — Xero shows no payment activity", action: "Send reminder", value: "$1,890 AR", color: COLORS.warning },
+      { type: "alert", icon: "🏦", text: "Worldpac Net-30 bill ($743) due Thursday — 2 days. O'Reilly ($1,104) due Friday. Both in Xero AP aging.", action: "Pay now", value: "$1,847 due", color: COLORS.warning },
+      { type: "alert", icon: "📦", text: "3 parts ordered but not yet delivered: Walker 16468 (CR-V), BMW brake rotors (x2), Subaru head gasket set. Jobber ETA overdue on rotors.", action: "Track orders", value: "3 pending", color: COLORS.danger },
       { type: "upsell", icon: "🎯", text: "Mike Reeves efficiency dropped to 85% — assign him lighter jobs this PM", action: "Reassign", value: "Recover 1.2 hrs", color: "#7C3AED" },
-      { type: "revenue", icon: "📊", text: "November on track for $178K but December has 3 fewer shop days — book ahead now", action: "View schedule", value: "Dec forecast", color: "#2563EB" },
     ],
   },
   settings: {
@@ -69,14 +67,16 @@ const SCREEN_CONTEXT = {
 
 // ── Live activity feed items ───────────────────────────────
 
+// priority: "red" = urgent/problem, "yellow" = needs attention, "green" = positive/done
 const FEED_ITEMS = [
-  { id: 1, icon: "✅", text: "Monica approved Air Filter + Serpentine Belt", meta: "2 min ago", value: "+$213", valueColor: COLORS.success },
-  { id: 2, icon: "🔍", text: "NHTSA decoded David Kim's CR-V VIN — 2 recalls found", meta: "8 min ago", value: "2 recalls", valueColor: COLORS.danger },
-  { id: 3, icon: "📦", text: "eBay Motors: Walker 16468 catalytic converter ordered", meta: "22 min ago", value: "Saved $44", valueColor: COLORS.success },
-  { id: 4, icon: "🔴", text: "Bay 3 idle since 11:00 AM — James K. available", meta: "40 min ago", value: "Bay idle", valueColor: COLORS.warning },
-  { id: 5, icon: "💰", text: "James Park approved brake service estimate", meta: "1 hr ago", value: "+$1,892", valueColor: COLORS.success },
-  { id: 6, icon: "📱", text: "Tom Wallace opened portal 3× — viewed wiper blades item", meta: "1.5 hrs ago", value: "Engaged", valueColor: "#7C3AED" },
-  { id: 7, icon: "🔄", text: "Xero synced — 2 new invoices posted for today's completions", meta: "2 hrs ago", value: "Synced", valueColor: COLORS.success },
+  { id: 1, icon: "✅", text: "Monica approved Air Filter + Serpentine Belt", meta: "2 min ago", value: "+$213", priority: "green" },
+  { id: 2, icon: "⚠️", text: "NHTSA decoded David Kim's CR-V VIN — 2 recalls found", meta: "8 min ago", value: "2 recalls", priority: "red" },
+  { id: 3, icon: "📦", text: "eBay Motors: Walker 16468 catalytic converter ordered", meta: "22 min ago", value: "Saved $44", priority: "green" },
+  { id: 4, icon: "🔴", text: "Bay 3 idle since 11:00 AM — James K. available", meta: "40 min ago", value: "Bay idle", priority: "red" },
+  { id: 5, icon: "💰", text: "James Park approved brake service estimate", meta: "1 hr ago", value: "+$1,892", priority: "green" },
+  { id: 6, icon: "⏳", text: "Tom Wallace opened portal 3× — hasn't approved yet", meta: "1.5 hrs ago", value: "Pending", priority: "yellow" },
+  { id: 7, icon: "⏰", text: "Worldpac bill $743 due in 2 days — Xero AP aging alert", meta: "2 hrs ago", value: "AP due", priority: "yellow" },
+  { id: 8, icon: "🚚", text: "BMW X3 brake rotors — delivery overdue 1 day. Jobber: Worldpac #W-88421.", meta: "3 hrs ago", value: "Parts late", priority: "red" },
 ];
 
 // ── Revenue opportunities (always visible) ─────────────────
@@ -142,15 +142,29 @@ function SuggestionCard({ item }) {
   );
 }
 
+const FEED_PRIORITY_STYLES = {
+  red:    { border: "#EF4444", bg: "#FEF2F2", valueColor: "#DC2626" },
+  yellow: { border: "#F59E0B", bg: "#FFFBEB", valueColor: "#D97706" },
+  green:  { border: "#22C55E", bg: "#F0FDF4", valueColor: "#16A34A" },
+};
+
 function FeedItem({ item }) {
+  const pStyle = FEED_PRIORITY_STYLES[item.priority] || FEED_PRIORITY_STYLES.green;
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 8, paddingBottom: 8, borderBottom: "1px solid #F3F4F6" }}>
-      <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
+    <div style={{
+      display: "flex", alignItems: "flex-start", gap: 8,
+      marginBottom: 6,
+      background: pStyle.bg,
+      borderRadius: 8,
+      borderLeft: `3px solid ${pStyle.border}`,
+      padding: "8px 9px",
+    }}>
+      <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 11, color: COLORS.textPrimary, lineHeight: 1.4 }}>{item.text}</div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 3 }}>
           <span style={{ fontSize: 9.5, color: COLORS.textMuted }}>{item.meta}</span>
-          <span style={{ fontSize: 10, fontWeight: 700, color: item.valueColor || COLORS.textMuted }}>{item.value}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: pStyle.valueColor }}>{item.value}</span>
         </div>
       </div>
     </div>
@@ -183,10 +197,6 @@ function OppRow({ opp }) {
 // ── Main agent component ───────────────────────────────────
 
 export default function WrenchIQAgent({ activeScreen }) {
-  const [feedExpanded, setFeedExpanded] = useState(true);
-  const [oppsExpanded, setOppsExpanded] = useState(true);
-  const [suggestionsExpanded, setSuggestionsExpanded] = useState(true);
-  const [input, setInput] = useState("");
   const [typedInput, setTypedInput] = useState("");
 
   const ctx = SCREEN_CONTEXT[activeScreen] || SCREEN_CONTEXT.dashboard;
@@ -220,10 +230,7 @@ export default function WrenchIQAgent({ activeScreen }) {
               <div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", marginTop: 0.5 }}>Revenue Intelligence</div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <div style={{ width: 7, height: 7, borderRadius: 4, background: "#22C55E", boxShadow: "0 0 0 2px rgba(34,197,94,0.3)" }} />
-            <span style={{ fontSize: 9, fontWeight: 700, background: "rgba(255,107,53,0.2)", color: COLORS.accent, borderRadius: 4, padding: "2px 6px", border: "1px solid rgba(255,107,53,0.3)" }}>Sonnet 4.6</span>
-          </div>
+          <div style={{ width: 7, height: 7, borderRadius: 4, background: "#22C55E", boxShadow: "0 0 0 2px rgba(34,197,94,0.3)" }} />
         </div>
 
         {/* Context chip */}
@@ -258,58 +265,34 @@ export default function WrenchIQAgent({ activeScreen }) {
 
         {/* Suggestions for this screen */}
         <div style={{ marginBottom: 10 }}>
-          <button
-            onClick={() => setSuggestionsExpanded(!suggestionsExpanded)}
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: "0 0 6px", cursor: "pointer" }}
-          >
-            <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>
-              AI Suggestions
-            </span>
-            {suggestionsExpanded ? <ChevronUp size={12} color={COLORS.textMuted} /> : <ChevronDown size={12} color={COLORS.textMuted} />}
-          </button>
-          {suggestionsExpanded && ctx.suggestions.map((item, i) => (
+          <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase", paddingBottom: 6 }}>
+            AI Suggestions
+          </div>
+          {ctx.suggestions.map((item, i) => (
             <SuggestionCard key={i} item={item} />
           ))}
         </div>
 
         {/* Revenue opportunities */}
         <div style={{ marginBottom: 10 }}>
-          <button
-            onClick={() => setOppsExpanded(!oppsExpanded)}
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: "0 0 6px", cursor: "pointer" }}
-          >
-            <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>
-              Revenue Pipeline
-            </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: COLORS.accent }}>${totalOppValue.toLocaleString()}</span>
-              {oppsExpanded ? <ChevronUp size={12} color={COLORS.textMuted} /> : <ChevronDown size={12} color={COLORS.textMuted} />}
-            </div>
-          </button>
-          {oppsExpanded && (
-            <div style={{ background: "#FAFAFA", borderRadius: 10, padding: "4px 10px 2px", border: "1px solid #F3F4F6" }}>
-              {REVENUE_OPPS.map((opp) => <OppRow key={opp.id} opp={opp} />)}
-            </div>
-          )}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Revenue Pipeline</span>
+            <span style={{ fontSize: 10, fontWeight: 800, color: COLORS.accent }}>${totalOppValue.toLocaleString()}</span>
+          </div>
+          <div style={{ background: "#FAFAFA", borderRadius: 10, padding: "4px 10px 2px", border: "1px solid #F3F4F6" }}>
+            {REVENUE_OPPS.map((opp) => <OppRow key={opp.id} opp={opp} />)}
+          </div>
         </div>
 
         {/* Live activity feed */}
         <div style={{ marginBottom: 4 }}>
-          <button
-            onClick={() => setFeedExpanded(!feedExpanded)}
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: "0 0 6px", cursor: "pointer" }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <div style={{ width: 6, height: 6, borderRadius: 3, background: "#22C55E" }} />
-              <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Live Feed</span>
-            </div>
-            {feedExpanded ? <ChevronUp size={12} color={COLORS.textMuted} /> : <ChevronDown size={12} color={COLORS.textMuted} />}
-          </button>
-          {feedExpanded && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {FEED_ITEMS.map((item) => <FeedItem key={item.id} item={item} />)}
-            </div>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 5, paddingBottom: 6 }}>
+            <div style={{ width: 6, height: 6, borderRadius: 3, background: "#22C55E" }} />
+            <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Live Feed</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {FEED_ITEMS.map((item) => <FeedItem key={item.id} item={item} />)}
+          </div>
         </div>
       </div>
 
@@ -329,10 +312,6 @@ export default function WrenchIQAgent({ activeScreen }) {
           >
             <Send size={11} color="#fff" />
           </button>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 5 }}>
-          <Sparkles size={8} color={COLORS.textMuted} />
-          <span style={{ fontSize: 9, color: COLORS.textMuted }}>Powered by Claude Sonnet 4.6</span>
         </div>
       </div>
     </div>
