@@ -1,11 +1,12 @@
 import { useState } from "react";
 import {
   Wrench, Home, ClipboardList, Smartphone, BarChart3, Settings,
-  Search, Bell, ChevronLeft, ChevronRight,
+  Search, Bell, ChevronLeft, ChevronRight, Camera,
 } from "lucide-react";
 import { COLORS } from "./theme/colors";
 import { SHOP } from "./data/demoData";
 import DashboardScreen from "./screens/DashboardScreen";
+import DVIScreen from "./screens/DVIScreen";
 import RepairOrderScreen from "./screens/RepairOrderScreen";
 import CustomerPortalScreen from "./screens/CustomerPortalScreen";
 import AnalyticsScreen from "./screens/AnalyticsScreen";
@@ -14,6 +15,7 @@ import WrenchIQAgent from "./components/WrenchIQAgent";
 
 const screens = [
   { id: "dashboard", label: "Command Center", icon: Home, component: DashboardScreen },
+  { id: "dvi", label: "Inspection", icon: Camera, component: DVIScreen },
   { id: "orders", label: "Repair Orders", icon: ClipboardList, component: RepairOrderScreen },
   { id: "customer", label: "Customer Portal", icon: Smartphone, component: CustomerPortalScreen },
   { id: "analytics", label: "Analytics", icon: BarChart3, component: AnalyticsScreen },
@@ -127,7 +129,7 @@ export default function WrenchIQApp() {
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
           {/* Screen Content */}
           <div style={{ flex: 1, overflowY: "auto", minWidth: 0 }}>
-            <ActiveComponent />
+            <ActiveComponent onNavigate={setActiveScreen} />
           </div>
 
           {/* WrenchIQ Agent Panel */}

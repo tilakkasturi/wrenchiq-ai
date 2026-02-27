@@ -219,7 +219,7 @@ function AIAnalysisPanel({ aiAnalysis }) {
         }}
       >
         <Sparkles size={13} />
-        AI Analysis by Sonnet 4.6
+        AI Analysis by Predii
         {expanded ? (
           <ChevronDown size={12} />
         ) : (
@@ -261,7 +261,7 @@ function AIAnalysisPanel({ aiAnalysis }) {
               <span
                 style={{ color: "#FFFFFF", fontSize: 11, fontWeight: 700 }}
               >
-                Claude Sonnet 4.6
+                Predii AI
               </span>
             </div>
             <div
@@ -374,7 +374,7 @@ function AIAnalysisPanel({ aiAnalysis }) {
                   }}
                 >
                   <span style={{ color: "#64748B", fontWeight: 700 }}>
-                    {"// Claude Sonnet 4.6 — Chain-of-Thought\n"}
+                    {"// Predii AI — Chain-of-Thought\n"}
                   </span>
                   {aiAnalysis.reasoning}
                 </div>
@@ -942,7 +942,7 @@ function AutoEstimateBanner() {
                 textTransform: "uppercase",
               }}
             >
-              AI Auto-Estimate — Claude Sonnet 4.6
+              AI Auto-Estimate — Predii AI
             </span>
           </div>
           <div
@@ -1431,7 +1431,7 @@ export default function DVIScreen() {
                   letterSpacing: "0.01em",
                 }}
               >
-                Analyzed by Claude Sonnet 4.6
+                Analyzed by Predii AI
               </span>
             </div>
           </div>
@@ -1769,7 +1769,7 @@ export default function DVIScreen() {
           <span style={{ fontSize: 12, color: COLORS.textMuted }}>
             AI inspection analysis powered by{" "}
             <strong style={{ color: COLORS.primary }}>
-              Claude Sonnet 4.6
+              Predii AI
             </strong>{" "}
             — {SHOP.name} · WrenchIQ DVI v2.0
           </span>
