@@ -19,7 +19,11 @@ import {
   Car,
   User,
   Calendar,
+  AlertTriangle,
+  X,
+  Sparkles,
 } from "lucide-react";
+import { getTSBsForVehicle } from "../data/tsbData";
 
 // ── Column definitions ──────────────────────────────────────
 const COLUMNS = [
@@ -88,7 +92,7 @@ function getOemBadgeLabel(ro) {
 }
 
 // ── RO Card ─────────────────────────────────────────────────
-function ROCard({ ro, column }) {
+function ROCard({ ro, column, selected, onSelect }) {
   const customer = getCustomer(ro.customerId);
   const vehicle = getVehicle(ro.vehicleId);
   const tech = getTech(ro.techId);
@@ -106,16 +110,19 @@ function ROCard({ ro, column }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => onSelect(ro.id)}
       style={{
-        background: COLORS.bgCard,
-        border: `1px solid ${hovered ? column.color : COLORS.border}`,
+        background: selected ? `${column.bgColor}` : COLORS.bgCard,
+        border: `1.5px solid ${selected ? column.color : hovered ? column.color + "80" : COLORS.border}`,
         borderLeft: `3px solid ${column.color}`,
         borderRadius: 8,
         padding: "12px 12px 10px",
         marginBottom: 10,
         cursor: "pointer",
         transition: "border-color 0.15s, box-shadow 0.15s",
-        boxShadow: hovered
+        boxShadow: selected
+          ? `0 0 0 2px ${column.color}30, 0 4px 12px rgba(0,0,0,0.08)`
+          : hovered
           ? "0 4px 12px rgba(0,0,0,0.10)"
           : "0 1px 3px rgba(0,0,0,0.06)",
       }}
@@ -379,7 +386,7 @@ function ROCard({ ro, column }) {
 }
 
 // ── Kanban Column ────────────────────────────────────────────
-function KanbanColumn({ column, ros }) {
+function KanbanColumn({ column, ros, selectedRoId, onSelectRo }) {
   const columnTotal = ros.reduce((sum, ro) => sum + (ro.totalEstimate || 0), 0);
 
   return (
@@ -470,7 +477,15 @@ function KanbanColumn({ column, ros }) {
             <div style={{ fontSize: 11, fontStyle: "italic" }}>No ROs</div>
           </div>
         ) : (
-          ros.map((ro) => <ROCard key={ro.id} ro={ro} column={column} />)
+          ros.map((ro) => (
+            <ROCard
+              key={ro.id}
+              ro={ro}
+              column={column}
+              selected={selectedRoId === ro.id}
+              onSelect={onSelectRo}
+            />
+          ))
         )}
       </div>
     </div>
@@ -744,6 +759,7 @@ function FilterPill({ label, active, onClick }) {
 export default function RepairOrderScreen() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRoId, setSelectedRoId] = useState(null);
 
   const kanbanStatuses = [
     "checked_in",
@@ -1019,10 +1035,105 @@ export default function RepairOrderScreen() {
                 key={column.id}
                 column={column}
                 ros={columnROs}
+                selectedRoId={selectedRoId}
+                onSelectRo={(id) => setSelectedRoId(prev => prev === id ? null : id)}
               />
             );
           })}
         </div>
+
+        {/* TSB Panel — shown when an RO is selected */}
+        {selectedRoId && (() => {
+          const ro = repairOrders.find(r => r.id === selectedRoId);
+          const vehicle = ro ? getVehicle(ro.vehicleId) : null;
+          const customer = ro ? getCustomer(ro.customerId) : null;
+          const tsbs = vehicle ? getTSBsForVehicle(vehicle.make, vehicle.model, vehicle.year) : [];
+          const severityConfig = {
+            high:     { bg: "#FEF2F2", border: "#FECACA", text: "#DC2626", label: "HIGH" },
+            moderate: { bg: "#FFFBEB", border: "#FDE68A", text: "#D97706", label: "MOD" },
+            low:      { bg: "#F0FDF4", border: "#BBF7D0", text: "#16A34A", label: "LOW" },
+          };
+          return (
+            <div style={{ padding: "20px 24px 0" }}>
+              <div style={{ background: "#fff", borderRadius: 12, border: "1.5px solid #E5E7EB", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
+                {/* Panel header */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid #F3F4F6" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 7, background: "#F0F9FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <AlertTriangle size={14} color="#2563EB" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: COLORS.textPrimary }}>
+                      Technical Service Bulletins
+                    </span>
+                    {vehicle && (
+                      <span style={{ fontSize: 12, color: COLORS.textSecondary, marginLeft: 8 }}>
+                        {vehicle.year} {vehicle.make} {vehicle.model} · {customer?.firstName} {customer?.lastName}
+                      </span>
+                    )}
+                  </div>
+                  {tsbs.length > 0 && (
+                    <span style={{ fontSize: 11, fontWeight: 700, background: "#EFF6FF", color: "#2563EB", borderRadius: 6, padding: "3px 9px" }}>
+                      {tsbs.length} bulletin{tsbs.length > 1 ? "s" : ""} found
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setSelectedRoId(null)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, padding: 4, borderRadius: 5, display: "flex" }}
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+
+                {/* TSB rows or empty state */}
+                <div style={{ padding: "10px 16px 14px" }}>
+                  {tsbs.length === 0 ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 0", color: COLORS.textMuted }}>
+                      <CheckCircle size={16} color={COLORS.success} />
+                      <span style={{ fontSize: 13 }}>No known TSBs for this vehicle.</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {tsbs.map((t, i) => {
+                        const sc = severityConfig[t.severity] || severityConfig.low;
+                        return (
+                          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, background: sc.bg, borderRadius: 9, border: `1px solid ${sc.border}`, padding: "10px 12px" }}>
+                            <span style={{ fontSize: 9, fontWeight: 800, color: sc.text, background: "#fff", border: `1px solid ${sc.border}`, borderRadius: 4, padding: "2px 6px", whiteSpace: "nowrap", marginTop: 2, flexShrink: 0 }}>
+                              {sc.label}
+                            </span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary }}>{t.title}</span>
+                                <span style={{ fontSize: 10, color: COLORS.textMuted, fontFamily: "monospace", background: "#fff", borderRadius: 3, padding: "1px 5px", border: "1px solid #E5E7EB" }}>#{t.bulletinNumber}</span>
+                              </div>
+                              <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5, marginBottom: 6 }}>{t.description.slice(0, 140)}…</div>
+                              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                                <span style={{ fontSize: 10, color: COLORS.textMuted }}><strong>Component:</strong> {t.component} — {t.system}</span>
+                                <span style={{ fontSize: 10, color: COLORS.textMuted }}><strong>Labor:</strong> {t.laborHours}h</span>
+                                {t.partsEstimate > 0 && (
+                                  <span style={{ fontSize: 10, color: COLORS.textMuted }}><strong>Parts est.:</strong> ${t.partsEstimate}</span>
+                                )}
+                                {t.extendedWarranty && (
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.success, background: "#F0FDF4", borderRadius: 4, padding: "1px 6px" }}>
+                                    Extended Warranty: {t.extendedWarranty.years}yr/{t.extendedWarranty.miles.toLocaleString()}mi
+                                  </span>
+                                )}
+                              </div>
+                              {t.note && (
+                                <div style={{ marginTop: 5, fontSize: 10, color: "#92400E", background: "#FFFBEB", borderRadius: 5, padding: "4px 8px", border: "1px solid #FDE68A" }}>
+                                  <Sparkles size={9} style={{ marginRight: 4 }} /> {t.note}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Scheduled section */}
         {filteredScheduled.length > 0 && (
