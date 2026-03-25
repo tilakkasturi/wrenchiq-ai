@@ -63,6 +63,97 @@ const SCREEN_CONTEXT = {
       { type: "ok", icon: "✅", text: "eBay Motors connected — 3 parts orders this week. Saved $147 vs O'Reilly.", action: "View orders", value: "Saved $147", color: COLORS.success },
     ],
   },
+  social: {
+    label: "Watching: Social Inbox",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert", icon: "⚠️", text: "Diana Moss (Facebook) — angry post, 3 hrs ago. No response yet. Google review risk HIGH.", action: "Respond Now", value: "Urgent", color: COLORS.danger },
+      { type: "revenue", icon: "🔥", text: "Jasmine Torres (Instagram) — brake grinding, HOT lead. AI draft ready in 1 click.", action: "Send Draft", value: "+$280–620", color: COLORS.accent },
+      { type: "upsell", icon: "📱", text: "Marcus Webb (TikTok) — discovered via your oil change video. First-time customer opportunity.", action: "Convert", value: "New cust.", color: "#7C3AED" },
+      { type: "revenue", icon: "📅", text: "Robert Chen (Google) — booked AC service for Tuesday. Prep: RAV4 R-134a refrigerant, no open TSBs.", action: "Prep Job", value: "$129 booked", color: COLORS.success },
+    ],
+  },
+  network: {
+    label: "Watching: 100 Locations",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert", icon: "🔴", text: "2 locations in alert status — Phoenix 7 and Dallas 4. Combined Google drop: 3.6★ avg.", action: "Review Locations", value: "Action needed", color: COLORS.danger },
+      { type: "revenue", icon: "💰", text: "Network hit $2.1M this week — top 10 locations drove 34% of revenue. Houston 3 is #1.", action: "See Top 10", value: "$2.1M", color: COLORS.success },
+      { type: "upsell", icon: "📦", text: "Cross-location parts transfer approved — $12,400 in excess inventory redistributed.", action: "Track Transfer", value: "$12,400 saved", color: "#3B82F6" },
+      { type: "alert", icon: "🎯", text: "59 locations haven't enabled pre-arrival AI message. Enable all to increase approval rate by 23%.", action: "Enable All", value: "+23% ARO", color: COLORS.warning },
+    ],
+  },
+  trust: {
+    label: "Watching: Trust Engine",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert", icon: "⚡", text: "James Park estimate pending 2 hrs — HIGH LTV ($12,450). Send TSB reference text NOW.", action: "Text James", value: "$1,847 at risk", color: COLORS.danger },
+      { type: "upsell", icon: "⭐", text: "David Kim hasn't left a review in 9 visits. Post-job approval rate 4★ — ideal time to ask.", action: "Send Review Request", value: "5★ potential", color: "#F59E0B" },
+      { type: "alert", icon: "📉", text: "Maria Santos trust score dropped 12 pts — 2 declined items. Call her personally before she goes to a dealer.", action: "Call Maria", value: "At-Risk", color: COLORS.warning },
+      { type: "revenue", icon: "❤️", text: "Sarah Chen referred 3 customers = $6,840 in additional revenue. Send thank-you gift card.", action: "Send Gift", value: "Champion", color: COLORS.success },
+    ],
+  },
+  health: {
+    label: "Watching: Health Report",
+    customerFocus: {
+      name: "Sarah Chen",
+      vehicle: "2022 Tesla Model 3",
+      roId: "RO-2024-1192",
+      status: "Report sent · awaiting approval",
+      statusColor: COLORS.warning,
+    },
+    suggestions: [
+      { type: "alert", icon: "⏳", text: "Sarah opened the health report 2× but hasn't approved. She uses text — send 1-tap approve link.", action: "Send Approve Link", value: "+$287–420", color: COLORS.warning },
+      { type: "upsell", icon: "🎥", text: "DeShawn's inspection video for front brakes is 47s. Customers who watch approve 31% more often.", action: "Resend with Video", value: "+31% approval", color: "#3B82F6" },
+      { type: "revenue", icon: "💡", text: "Dealer comparison showing $333 savings is visible on her report. This is your strongest close.", action: "View Report", value: "Save $333", color: COLORS.success },
+    ],
+  },
+  scheduling: {
+    label: "Watching: Schedule",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert", icon: "🕐", text: "Bay 5 & 6 empty after 1 PM — $890 in AI-suggested revenue ready to book in 2 taps.", action: "Book AI Slots", value: "+$890", color: COLORS.accent },
+      { type: "revenue", icon: "📊", text: "Today's schedule 71% utilization. Top days are 88%+. 3 AI suggestions can close the gap.", action: "Fill Schedule", value: "+17% util", color: COLORS.success },
+      { type: "alert", icon: "⚠️", text: "James Park's BMW rotors delayed 1 day (Worldpac Oakland). His 2 PM slot may need reshuffling.", action: "Reschedule", value: "Parts delayed", color: COLORS.warning },
+      { type: "upsell", icon: "🔄", text: "Angela Martinez hasn't been in 8 months — send recall/service reminder for pre-failure Outback check.", action: "Send Reminder", value: "+$165", color: "#7C3AED" },
+    ],
+  },
+  parts: {
+    label: "Watching: Parts",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert", icon: "🚚", text: "BMW X3 brake rotors — 1 day late from Worldpac. James Park's job blocked. Call Worldpac rep.", action: "Track Order", value: "Parts late", color: COLORS.danger },
+      { type: "revenue", icon: "💰", text: "WrenchIQ pick for David's CR-V cat converter: Akebono via Worldpac — saves $44 vs O'Reilly and ships same day.", action: "Order Now", value: "Save $44", color: COLORS.success },
+      { type: "alert", icon: "📦", text: "3 inventory items below minimum — cabin filter, brake pads, wiper blades (0 in stock).", action: "Auto-Reorder", value: "3 items low", color: COLORS.warning },
+      { type: "upsell", icon: "📈", text: "Parts margin this month: 48.2% — below your 53% target. Switch 2 jobs to Worldpac to recover $420.", action: "Optimize Margin", value: "-$420 margin", color: "#7C3AED" },
+    ],
+  },
+  techview: {
+    label: "Watching: Tech Mobile",
+    customerFocus: {
+      name: "DeShawn Williams",
+      vehicle: "Bay 1 — Tesla Model 3",
+      roId: "RO-2024-1192",
+      status: "Inspection in progress",
+      statusColor: "#3B82F6",
+    },
+    suggestions: [
+      { type: "ok", icon: "✅", text: "DeShawn completed tire rotation + brake inspection on Sarah's Tesla. 2/6 checklist items done.", action: "View Progress", value: "On track", color: COLORS.success },
+      { type: "alert", icon: "⚡", text: "TSB-2024-22-004 (ADAS phantom braking) not yet checked for Sarah's Tesla. Remind DeShawn.", action: "Send Reminder", value: "TSB pending", color: COLORS.warning },
+      { type: "revenue", icon: "💡", text: "David Kim's CR-V waiting on part (ETA 4 PM). DeShawn available — move Kevin Liu's PPI forward.", action: "Reassign", value: "Fill bay", color: "#3B82F6" },
+      { type: "ok", icon: "📊", text: "DeShawn efficiency today: 91% — 3.5 billed hrs vs 3.8 available. Trending to finish strong.", action: null, value: "91% eff.", color: COLORS.success },
+    ],
+  },
+  integrations: {
+    label: "Watching: Integrations Hub",
+    customerFocus: null,
+    suggestions: [
+      { type: "ok", icon: "✅", text: "18 of 18 configured integrations healthy. Last sync 4 min ago.", action: null, value: "All green", color: COLORS.success },
+      { type: "revenue", icon: "💰", text: "Social integrations (Instagram + TikTok) attributed $8,240 in revenue this month. 47 leads.", action: "View Attribution", value: "$8,240", color: COLORS.accent },
+      { type: "upsell", icon: "🚗", text: "Sunbit BNPL not yet connected — 90% approval rate could increase avg ticket on large jobs by 28%.", action: "Connect Sunbit", value: "+28% ticket", color: "#F59E0B" },
+      { type: "ok", icon: "📦", text: "PartsTech saved $847 this month searching 31 vendors vs single-source ordering.", action: "View Savings", value: "$847 saved", color: COLORS.success },
+    ],
+  },
 };
 
 // ── Live activity feed items ───────────────────────────────
@@ -194,17 +285,79 @@ function OppRow({ opp }) {
   );
 }
 
+// ── Owner persona: proactive alert context (AE-783) ────────
+
+const OWNER_CONTEXT = {
+  label: "Shop Owner · Proactive Intelligence",
+  customerFocus: null,
+  suggestions: [
+    { type: "alert",   icon: "⏳", text: "RO-1041 (Tom Wallace, $1,340) waiting 48 min for approval. High LTV customer.", action: "Nudge via SMS", value: "+$1,340 risk", color: COLORS.danger },
+    { type: "alert",   icon: "📊", text: "Tech Marcus averaging 2.1 hrs on 1.5-hr jobs — 3 consecutive pattern.", action: "View Performance", value: "Pattern forming", color: COLORS.warning },
+    { type: "revenue", icon: "💰", text: "You're $1,660 short of today's target. 3 customers in queue — Quick Lane special?", action: "Create Quick Lane", value: "$1,660 gap", color: COLORS.accent },
+    { type: "alert",   icon: "📦", text: "O'Reilly rebate cycle ends Sunday. $1,240 eligible — need $260 more for $187 rebate.", action: "Order $260 more", value: "$187 rebate risk", color: COLORS.warning },
+  ],
+};
+
+// ── Owner persona: NL command responses (AE-788) ───────────
+
+const NL_RESPONSES = [
+  { match: ["best tech", "top tech", "who is best"], response: "Best tech today: DeShawn Jackson — 94% efficiency, 72% upsell conversion on 2 jobs. Marcus at 89%. Kevin at 71% (below threshold)." },
+  { match: ["volvo", "bay 2", "move"], response: "Bay assignment updated — Volvo moved to Bay 2. Tech Kevin Liu notified." },
+  { match: ["open approval", "approvals", "pending approval"], response: "3 open approvals: Tom Wallace ($1,340) · 48 min, Angela Martinez ($287) · 22 min, Robert Taylor ($45) · 5 min." },
+  { match: ["worldpac", "spend", "parts spend"], response: "Worldpac spend: $3,240 this month vs $2,890 last month (+12%). You're 81% to the $4,000 rebate threshold." },
+  { match: ["revenue", "today", "target"], response: "Today: $5,840 / $7,500 target (78%). Need $1,660 more. 3 vehicles still in shop. On pace for $7,100 by close." },
+  { match: ["bay", "utilization", "bays"], response: "Bay utilization: 67%. Bays 1, 2, 4, 5 occupied. Bays 3 and 6 idle. Bay 3 idle 45+ min — reassignment recommended." },
+];
+
+function getNLResponse(query) {
+  const q = query.toLowerCase();
+  for (const r of NL_RESPONSES) {
+    if (r.match.some(m => q.includes(m))) return r.response;
+  }
+  return "I can answer questions about revenue, tech performance, bays, parts spend, and approvals. Try: 'What's my best tech?' or 'Show open approvals'.";
+}
+
+// ── Advisor persona context ─────────────────────────────────
+
+const ADVISOR_CONTEXT = {
+  label: "Advisor · Front Desk Intelligence",
+  customerFocus: null,
+  suggestions: [
+    { type: "alert",   icon: "⏳", text: "Monica Rodriguez estimate pending 35 min — 100% approval history. Send 1-tap approve link.", action: "Send SMS", value: "+$265", color: COLORS.warning },
+    { type: "upsell",  icon: "🔧", text: "David Kim's CR-V: AI detected TSB-19-052 applies. Mention Honda goodwill claim opportunity.", action: "Add TSB note", value: "Save $450", color: COLORS.accent },
+    { type: "revenue", icon: "💡", text: "3 customers in queue — average wait 12 min. Sarah Chen next. Estimated RO: $420.", action: "Start Intake", value: "+$420", color: "#2563EB" },
+    { type: "upsell",  icon: "📋", text: "Robert Taylor (22 visits, $15.8K LTV) — brake fluid due at 64K. Add to estimate.", action: "Add to RO", value: "+$185", color: COLORS.accent },
+  ],
+};
+
 // ── Main agent component ───────────────────────────────────
 
-export default function WrenchIQAgent({ activeScreen, onHide }) {
+export default function WrenchIQAgent({ activeScreen, persona = "admin", onHide }) {
   const [typedInput, setTypedInput] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [nlResponse, setNlResponse] = useState(null);
 
-  const ctx = SCREEN_CONTEXT[activeScreen] || SCREEN_CONTEXT.dashboard;
+  // Persona-specific context override
+  let ctx;
+  if (persona === "owner") {
+    ctx = OWNER_CONTEXT;
+  } else if (persona === "advisor") {
+    ctx = ADVISOR_CONTEXT;
+  } else {
+    ctx = SCREEN_CONTEXT[activeScreen] || SCREEN_CONTEXT.dashboard;
+  }
+
+  const handleSend = () => {
+    if (!typedInput.trim()) return;
+    if (persona === "owner") {
+      setNlResponse(getNLResponse(typedInput));
+    }
+    setTypedInput("");
+  };
 
   const totalOppValue = REVENUE_OPPS.reduce((sum, o) => sum + o.value, 0);
 
-  const panelHeight = expanded ? "calc(100vh - 72px)" : 390;
+  const panelHeight = expanded ? "calc(100vh - 72px)" : (persona === "owner" ? 420 : 390);
 
   return (
     <div style={{
@@ -235,7 +388,7 @@ export default function WrenchIQAgent({ activeScreen, onHide }) {
               <Sparkles size={14} color={COLORS.accent} />
             </div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: 0.2 }}>WrenchIQ Agent</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: 0.2 }}>WrenchIQ <span style={{ color: "#FF6B35" }}>AI</span></div>
               <div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", marginTop: 0.5 }}>Revenue Intelligence</div>
             </div>
           </div>
@@ -321,18 +474,33 @@ export default function WrenchIQAgent({ activeScreen, onHide }) {
         </div>
       </div>
 
+      {/* ── NL response (AE-788 owner natural language commands) ── */}
+      {nlResponse && (
+        <div style={{ margin: "0 12px 0", padding: "8px 10px", background: "#F0FDF4", borderRadius: 8, border: "1px solid #BBF7D0", borderLeft: `3px solid ${COLORS.success}` }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: COLORS.success, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4 }}>AI Response</div>
+          <div style={{ fontSize: 11, color: COLORS.textPrimary, lineHeight: 1.5 }}>{nlResponse}</div>
+          <button onClick={() => setNlResponse(null)} style={{ fontSize: 9, color: COLORS.textMuted, background: "none", border: "none", cursor: "pointer", marginTop: 4, padding: 0 }}>Dismiss</button>
+        </div>
+      )}
+
       {/* ── Ask Agent input ── */}
       <div style={{ borderTop: "1px solid #E5E7EB", padding: "10px 12px", flexShrink: 0, background: "#FAFAFA" }}>
+        {persona === "owner" && (
+          <div style={{ fontSize: 9, color: COLORS.textMuted, marginBottom: 5 }}>
+            Try: "What's my best tech?" · "Show open approvals" · "Worldpac spend"
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", borderRadius: 10, border: "1px solid #E5E7EB", padding: "7px 10px" }}>
           <Sparkles size={12} color={COLORS.accent} style={{ flexShrink: 0 }} />
           <input
             value={typedInput}
             onChange={(e) => setTypedInput(e.target.value)}
-            placeholder="Ask WrenchIQ anything…"
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            placeholder={persona === "owner" ? "Ask anything about your shop…" : "Ask WrenchIQ AI anything…"}
             style={{ flex: 1, border: "none", outline: "none", fontSize: 11, background: "transparent", color: COLORS.textPrimary }}
           />
           <button
-            onClick={() => setTypedInput("")}
+            onClick={handleSend}
             style={{ background: typedInput ? COLORS.accent : "#E5E7EB", border: "none", borderRadius: 6, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "background 0.15s" }}
           >
             <Send size={11} color="#fff" />

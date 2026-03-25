@@ -775,6 +775,7 @@ function WhatsGoingOn() {
 // ── Do These Today ────────────────────────────────────────
 
 function DoTheseToday() {
+  const [done, setDone] = useState({});
   const actions = [
     {
       icon: "📞",
@@ -816,31 +817,34 @@ function DoTheseToday() {
         {actions.map((a, i) => (
           <div
             key={i}
+            onClick={() => setDone(prev => ({ ...prev, [i]: !prev[i] }))}
             style={{
-              background: a.bg,
-              border: `1px solid ${a.border}`,
+              background: done[i] ? "#F0FDF4" : a.bg,
+              border: `1px solid ${done[i] ? "#BBF7D0" : a.border}`,
               borderRadius: 10,
               padding: "12px 14px",
               display: "flex",
               alignItems: "center",
               gap: 12,
-              cursor: "default",
+              cursor: "pointer",
+              opacity: done[i] ? 0.7 : 1,
             }}
           >
-            <div style={{ fontSize: 22, flexShrink: 0 }}>{a.icon}</div>
+            <div style={{ fontSize: 22, flexShrink: 0 }}>{done[i] ? "✓" : a.icon}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
                   fontSize: 13,
                   fontWeight: 700,
-                  color: a.color,
+                  color: done[i] ? COLORS.success : a.color,
                   marginBottom: 2,
+                  textDecoration: done[i] ? "line-through" : "none",
                 }}
               >
                 {a.title}
               </div>
               <div style={{ fontSize: 12, color: COLORS.textSecondary }}>
-                {a.detail}
+                {done[i] ? "Marked complete" : a.detail}
               </div>
               <div
                 style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 3 }}
@@ -850,7 +854,7 @@ function DoTheseToday() {
             </div>
             <ChevronRight
               size={14}
-              color={a.color}
+              color={done[i] ? COLORS.success : a.color}
               style={{ flexShrink: 0 }}
             />
           </div>
@@ -1319,6 +1323,7 @@ function ViewToggle({ view, onViewChange }) {
 
 export default function AnalyticsScreen() {
   const [view, setView] = useState("summary");
+  const [period, setPeriod] = useState("mtd");
   const ownerFirstName = SHOP.owner.split(" ")[0];
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -1391,9 +1396,25 @@ export default function AnalyticsScreen() {
             </div>
           </div>
 
-          {/* ── VIEW TOGGLE ── */}
-          <div style={{ marginTop: 20 }}>
+          {/* ── VIEW TOGGLE + PERIOD ── */}
+          <div style={{ marginTop: 20, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             <ViewToggle view={view} onViewChange={setView} />
+            <div style={{ display: "inline-flex", background: COLORS.borderLight, borderRadius: 10, padding: 3, gap: 2 }}>
+              {[{ key: "mtd", label: "MTD" }, { key: "3m", label: "3 Months" }, { key: "ytd", label: "YTD" }].map(p => (
+                <button
+                  key={p.key}
+                  onClick={() => setPeriod(p.key)}
+                  style={{
+                    padding: "7px 14px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
+                    background: period === p.key ? "#fff" : "transparent",
+                    color: period === p.key ? COLORS.textPrimary : COLORS.textMuted,
+                    boxShadow: period === p.key ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

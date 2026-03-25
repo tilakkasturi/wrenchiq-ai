@@ -27,14 +27,15 @@ import {
 import { getTSBsForVehicle } from "../data/tsbData";
 import { COLORS } from "../theme/colors";
 
-// ── Real inspection photo URLs (picsum deterministic by seed) ─
+// ── Real inspection photo URLs ─────────────────────────────
+const BASE = import.meta.env.BASE_URL;
 const PHOTO_URLS = {
-  brake_pad_front_left:  "https://picsum.photos/seed/brakepads1/76/58",
-  brake_pad_front_right: "https://picsum.photos/seed/brakepads2/76/58",
-  brake_pad_rear:        "https://picsum.photos/seed/brakepads3/76/58",
-  air_filter:            "https://picsum.photos/seed/airfilter1/76/58",
-  serpentine_belt:       "https://picsum.photos/seed/serpbelt1/76/58",
-  cabin_filter:          "https://picsum.photos/seed/cabinfilter/76/58",
+  brake_pad_front_left:  `${BASE}images/brake_pad_front_left.jpg`,
+  brake_pad_front_right: `${BASE}images/brake_pad_front_right.jpg`,
+  brake_pad_rear:        `${BASE}images/brake_pad_rear.jpg`,
+  air_filter:            `${BASE}images/air_filter.jpg`,
+  serpentine_belt:       null,
+  cabin_filter:          null,
 };
 
 // Fallback gradients if photo fails to load
@@ -1431,7 +1432,7 @@ export default function DVIScreen() {
                   letterSpacing: "0.01em",
                 }}
               >
-                Analyzed by Predii AI
+                Analyzed by PrediiAgent
               </span>
             </div>
           </div>

@@ -20,6 +20,10 @@ import {
   Star,
   AlertTriangle,
   PlusCircle,
+  Play,
+  Video,
+  Share2,
+  Bell,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import {
@@ -397,7 +401,7 @@ function MonicaPhoneContent({ approvedItems, setApprovedItems, expandedWhyItem, 
           <button onClick={() => setChatExpanded(true)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 7, padding: "10px 12px", borderRadius: 11, background: COLORS.primary, border: "none", color: "#fff", cursor: "pointer", marginBottom: 10 }}>
             <div style={{ width: 26, height: 26, borderRadius: 13, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}><Sparkles size={12} color="#fff" /></div>
             <div style={{ flex: 1, textAlign: "left" }}>
-              <div style={{ fontSize: 11, fontWeight: 700 }}>Chat with WrenchIQ AI</div>
+              <div style={{ fontSize: 11, fontWeight: 700 }}>Chat with PrediiAgent</div>
               <div style={{ fontSize: 9.5, opacity: 0.75, marginTop: 1 }}>Ask anything about your service</div>
             </div>
             <MessageCircle size={14} color="rgba(255,255,255,0.7)" />
@@ -408,7 +412,7 @@ function MonicaPhoneContent({ approvedItems, setApprovedItems, expandedWhyItem, 
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div style={{ width: 24, height: 24, borderRadius: 12, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}><Sparkles size={11} color="#fff" /></div>
                 <div>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "#fff" }}>WrenchIQ Assistant</div>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "#fff" }}>PrediiAgent Assistant</div>
                   <div style={{ fontSize: 8.5, color: "rgba(255,255,255,0.65)" }}>Online now</div>
                 </div>
               </div>
@@ -635,9 +639,437 @@ function PhoneContent({ row, approvedItems, setApprovedItems, expandedWhyItem, s
   );
 }
 
+// ── Standalone Mode: Monica's full mobile portal ────────────
+
+const STANDALONE_STEPS = [
+  { label: "Checked In", state: "done" },
+  { label: "Diagnosed", state: "done" },
+  { label: "Awaiting Approval", state: "current" },
+  { label: "Ready", state: "pending" },
+];
+
+const STANDALONE_ITEMS = [
+  {
+    id: "sa-air",
+    name: "Engine Air Filter",
+    urgency: "URGENT",
+    urgencyColor: "#EF4444",
+    urgencyBg: "#FEF2F2",
+    price: 87,
+    detail: "Your engine air filter is 40% clogged — like breathing through a dirty sock. Replacing now improves fuel economy and protects the engine.",
+    photoLink: true,
+  },
+  {
+    id: "sa-belt",
+    name: "Serpentine Belt",
+    urgency: "URGENT",
+    urgencyColor: "#EF4444",
+    urgencyBg: "#FEF2F2",
+    price: 126,
+    detail: "Visible cracks on 3 of 6 ribs. If it breaks while driving, you'll lose power steering and the car will stall. $126 now vs $400+ tow.",
+    photoLink: false,
+  },
+  {
+    id: "sa-cabin",
+    name: "Cabin Air Filter",
+    urgency: "SUGGESTED",
+    urgencyColor: "#2563EB",
+    urgencyBg: "#EFF6FF",
+    price: 52,
+    detail: "Last replaced 38K miles ago. Affects your A/C quality and air you breathe inside the car.",
+    photoLink: false,
+  },
+];
+
+const ALL_GOOD_ITEMS = [
+  "Engine Oil", "Tire Pressure", "Brake Fluid", "Coolant Level",
+  "Battery Health", "Wiper Blades", "Headlights", "Tail Lights",
+  "Power Steering", "Transmission Fluid", "Exhaust System", "Suspension",
+  "Fuel System", "A/C Refrigerant",
+];
+
+function StandaloneStepBar({ steps, approved }) {
+  const displaySteps = approved
+    ? steps.map((s) => s.label === "Awaiting Approval" ? { ...s, state: "done" } : s.label === "Ready" ? { ...s, state: "current" } : s)
+    : steps;
+
+  return (
+    <div style={{ padding: "14px 16px 10px" }}>
+      <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
+        {displaySteps.map((step, idx) => {
+          const isDone = step.state === "done";
+          const isCurrent = step.state === "current";
+          return (
+            <div key={idx} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1 }}>
+              {idx < displaySteps.length - 1 && (
+                <div style={{ position: "absolute", top: 9, left: "50%", width: "100%", height: 2, background: isDone ? "#22C55E" : "#E5E7EB", zIndex: 0 }} />
+              )}
+              <div style={{
+                width: 20, height: 20, borderRadius: 10,
+                background: isDone ? "#22C55E" : isCurrent ? "#FF6B35" : "#E5E7EB",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: isCurrent ? "0 0 0 4px rgba(255,107,53,0.2)" : "none",
+                marginBottom: 4, position: "relative", zIndex: 1, flexShrink: 0,
+              }}>
+                {isDone && <CheckCircle size={11} color="#fff" />}
+                {isCurrent && <div style={{ width: 7, height: 7, borderRadius: 4, background: "#fff" }} />}
+              </div>
+              <div style={{ fontSize: 9, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? "#FF6B35" : isDone ? "#22C55E" : "#9CA3AF", textAlign: "center", lineHeight: 1.2 }}>
+                {step.label}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 8, fontSize: 10, color: "#6B7280", textAlign: "center" }}>
+        Tech: Marcus Williams · Est. ready: 2:30 PM
+      </div>
+    </div>
+  );
+}
+
+function SignatureModal({ onConfirm, onClose }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 1000, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+      <div style={{ background: "#fff", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 420, padding: "24px 20px 32px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#0D3B45" }}>Your digital signature</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}><X size={18} color="#6B7280" /></button>
+        </div>
+        <div style={{ background: "#F9FAFB", borderRadius: 12, height: 200, border: "1.5px dashed #D1D5DB", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12, position: "relative", overflow: "hidden" }}>
+          <svg width="280" height="120" viewBox="0 0 280 120" style={{ position: "absolute" }}>
+            <path d="M20,80 C40,60 60,95 80,75 C100,55 115,90 135,70 C155,50 170,85 195,65 C215,48 230,72 255,58" stroke="#0D3B45" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+            <path d="M30,95 C50,88 70,98 90,92" stroke="#0D3B45" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.5" />
+          </svg>
+          <div style={{ position: "absolute", bottom: 10, right: 12, fontSize: 9, color: "#9CA3AF" }}>Monica Rodriguez</div>
+        </div>
+        <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 16, textAlign: "center" }}>
+          I authorize the above repairs and agree to the estimated total.
+        </div>
+        <button onClick={onConfirm} style={{ width: "100%", padding: "14px 0", borderRadius: 12, background: "#FF6B35", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+          Confirm &amp; Authorize
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function VideoModal({ onClose }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 1000, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <button onClick={onClose} style={{ position: "absolute", top: 20, right: 20, background: "none", border: "none", cursor: "pointer" }}><X size={24} color="#fff" /></button>
+      <div style={{ width: "100%", maxWidth: 380 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 16, textAlign: "center" }}>Video walkaround — recorded during inspection</div>
+        <div style={{ background: "#1A1A2E", borderRadius: 16, height: 220, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: 16, position: "relative" }}>
+          <div style={{ width: 64, height: 64, borderRadius: 32, background: "rgba(255,107,53,0.9)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <Play size={28} color="#fff" fill="#fff" />
+          </div>
+          <div style={{ position: "absolute", bottom: 14, left: 16, right: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>0:00</span>
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>0:47</span>
+            </div>
+            <div style={{ height: 3, background: "rgba(255,255,255,0.2)", borderRadius: 2, overflow: "hidden" }}>
+              <div style={{ width: "0%", height: "100%", background: "#FF6B35", borderRadius: 2 }} />
+            </div>
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", textAlign: "center", marginBottom: 20 }}>Tech: Marcus Williams · Today 9:12 AM</div>
+        <button style={{ width: "100%", padding: "13px 0", borderRadius: 12, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <Share2 size={15} /> Share with family
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StandaloneCustomerPortal() {
+  const [expandedItem, setExpandedItem] = useState(null);
+  const [allGoodExpanded, setAllGoodExpanded] = useState(false);
+  const [approvalMode, setApprovalMode] = useState("none"); // "none" | "select"
+  const [selectedApprovals, setSelectedApprovals] = useState(new Set(["sa-air", "sa-belt", "sa-cabin"]));
+  const [showSignature, setShowSignature] = useState(false);
+  const [approved, setApproved] = useState(false);
+  const [lyftToggle, setLyftToggle] = useState(false);
+  const [smsToggle, setSmsToggle] = useState(true);
+  const [showVideo, setShowVideo] = useState(false);
+
+  const totalAll = STANDALONE_ITEMS.reduce((s, i) => s + i.price, 0);
+  const selectedTotal = STANDALONE_ITEMS.filter((i) => selectedApprovals.has(i.id)).reduce((s, i) => s + i.price, 0);
+
+  const toggleItemApproval = (id) => {
+    setSelectedApprovals((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleApproveAll = () => {
+    setSelectedApprovals(new Set(STANDALONE_ITEMS.map((i) => i.id)));
+    setShowSignature(true);
+  };
+
+  const handleApproveSelected = () => {
+    setShowSignature(true);
+  };
+
+  const handleConfirmSignature = () => {
+    setShowSignature(false);
+    setApproved(true);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#F3F4F6", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "0 0 40px" }}>
+      <div style={{ width: "100%", maxWidth: 420, background: "#fff", minHeight: "100vh", boxShadow: "0 0 40px rgba(0,0,0,0.10)", position: "relative" }}>
+
+        {/* Header */}
+        <div style={{ background: "#0D3B45", padding: "20px 20px 16px", color: "#fff" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "#FF6B35", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Wrench size={14} color="#fff" style={{ transform: "rotate(-45deg)" }} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: -0.3 }}>WrenchIQ<span style={{ color: "#FF6B35" }}>.ai</span></span>
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 3 }}>2021 Toyota Camry SE</div>
+          <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 10 }}>Monica R. · Peninsula Precision Auto, Palo Alto</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: "#22C55E", boxShadow: "0 0 0 3px rgba(34,197,94,0.25)" }} />
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>Live · updating in real time</span>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ background: "#fff", borderBottom: "1px solid #F3F4F6" }}>
+          <StandaloneStepBar steps={STANDALONE_STEPS} approved={approved} />
+        </div>
+
+        {/* Success banner */}
+        {approved && (
+          <div style={{ background: "#F0FDF4", borderBottom: "1px solid #BBF7D0", padding: "14px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <CheckCircle size={18} color="#22C55E" />
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#15803D" }}>Approved! Shop has been notified.</span>
+            </div>
+            <div style={{ fontSize: 12, color: "#16A34A", marginBottom: 10 }}>You'll receive an SMS when your car is ready.</div>
+            <button style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "11px 14px", borderRadius: 10, background: "#FF6000", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", justifyContent: "center" }}>
+              <Car size={14} /> Need a ride? Request Lyft
+            </button>
+          </div>
+        )}
+
+        {/* What We Found */}
+        <div style={{ padding: "16px 16px 0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>What We Found</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ background: "#FF6B35", color: "#fff", fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "2px 8px" }}>3</span>
+              <div style={{ width: 7, height: 7, borderRadius: 4, background: "#EF4444" }} />
+            </div>
+          </div>
+
+          {STANDALONE_ITEMS.map((item) => {
+            const isExpanded = expandedItem === item.id;
+            return (
+              <div key={item.id} style={{ background: "#fff", border: "1.5px solid #E5E7EB", borderRadius: 12, marginBottom: 8, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+                <button
+                  onClick={() => setExpandedItem(isExpanded ? null : item.id)}
+                  style={{ width: "100%", padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: item.urgencyColor, background: item.urgencyBg, padding: "2px 6px", borderRadius: 20, letterSpacing: 0.5, textTransform: "uppercase" }}>{item.urgency}</span>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{item.name}</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>${item.price}</span>
+                    {isExpanded ? <ChevronUp size={16} color="#6B7280" /> : <ChevronDown size={16} color="#6B7280" />}
+                  </div>
+                </button>
+                {isExpanded && (
+                  <div style={{ padding: "0 14px 14px" }}>
+                    <div style={{ fontSize: 12, color: "#4B5563", lineHeight: 1.6, marginBottom: item.photoLink ? 10 : 0 }}>
+                      {item.detail}
+                    </div>
+                    {item.photoLink && (
+                      <button style={{ background: "none", border: "1px solid #E5E7EB", borderRadius: 8, padding: "6px 12px", fontSize: 11, color: "#0D3B45", fontWeight: 600, cursor: "pointer" }}>
+                        View photo
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* All Good section */}
+        <div style={{ padding: "4px 16px 12px" }}>
+          <button
+            onClick={() => setAllGoodExpanded(!allGoodExpanded)}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#F0FDF4", border: "1.5px solid #BBF7D0", borderRadius: 12, padding: "11px 14px", cursor: "pointer" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <CheckCircle size={16} color="#22C55E" />
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#15803D" }}>All Good (14)</span>
+              <span style={{ fontSize: 11, color: "#16A34A" }}>14 items checked — all good</span>
+            </div>
+            {allGoodExpanded ? <ChevronUp size={15} color="#22C55E" /> : <ChevronDown size={15} color="#22C55E" />}
+          </button>
+          {allGoodExpanded && (
+            <div style={{ background: "#F0FDF4", border: "1.5px solid #BBF7D0", borderTop: "none", borderRadius: "0 0 12px 12px", padding: "12px 14px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {ALL_GOOD_ITEMS.map((item) => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#15803D" }}>
+                    <CheckCircle size={11} color="#22C55E" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Estimate + Approval */}
+        {!approved && (
+          <div style={{ padding: "0 16px 16px" }}>
+            <div style={{ background: "#0D3B45", borderRadius: 14, padding: "14px 16px", marginBottom: 10 }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", marginBottom: 2 }}>Total estimate</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 12 }}>${approvalMode === "select" ? selectedTotal : totalAll} total · {approvalMode === "select" ? selectedApprovals.size : 3} items</div>
+              <button onClick={handleApproveAll} style={{ width: "100%", padding: "14px 0", borderRadius: 11, background: "#FF6B35", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 8 }}>
+                Approve All — ${totalAll}
+              </button>
+              <button onClick={() => setApprovalMode(approvalMode === "select" ? "none" : "select")} style={{ width: "100%", padding: "11px 0", borderRadius: 11, background: "transparent", border: "1.5px solid rgba(255,255,255,0.3)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Select individually
+              </button>
+            </div>
+
+            {approvalMode === "select" && (
+              <div style={{ background: "#fff", border: "1.5px solid #E5E7EB", borderRadius: 12, padding: "12px 14px", marginBottom: 10 }}>
+                {STANDALONE_ITEMS.map((item) => (
+                  <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 10, marginBottom: 10, borderBottom: item.id !== "sa-cabin" ? "1px solid #F3F4F6" : "none" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedApprovals.has(item.id)}
+                      onChange={() => toggleItemApproval(item.id)}
+                      style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#FF6B35" }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{item.name}</div>
+                      <div style={{ fontSize: 10, color: "#6B7280" }}>{item.urgency}</div>
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>${item.price}</span>
+                  </div>
+                ))}
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  <button onClick={handleApproveSelected} style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "#FF6B35", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                    Approve Selected
+                  </button>
+                  <button style={{ flex: 1, padding: "11px 0", borderRadius: 10, background: "#fff", border: "1.5px solid #E5E7EB", color: "#6B7280", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    Decline Rest
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Pickup options */}
+        <div style={{ padding: "0 16px 16px" }}>
+          <div style={{ background: "#fff", border: "1.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ padding: "12px 14px", borderBottom: "1px solid #F3F4F6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Request Lyft when ready</div>
+                <div style={{ fontSize: 11, color: "#6B7280" }}>Auto-schedule a ride at pickup</div>
+              </div>
+              <button onClick={() => setLyftToggle(!lyftToggle)} style={{ width: 44, height: 24, borderRadius: 12, background: lyftToggle ? "#FF6B35" : "#D1D5DB", border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                <div style={{ position: "absolute", top: 3, left: lyftToggle ? 23 : 3, width: 18, height: 18, borderRadius: 9, background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
+              </button>
+            </div>
+            <div style={{ padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Bell size={14} color="#0D3B45" />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Notify me when ready</div>
+                  <div style={{ fontSize: 11, color: "#6B7280" }}>SMS to (650) 555-0193</div>
+                </div>
+              </div>
+              <button onClick={() => setSmsToggle(!smsToggle)} style={{ width: 44, height: 24, borderRadius: 12, background: smsToggle ? "#22C55E" : "#D1D5DB", border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                <div style={{ position: "absolute", top: 3, left: smsToggle ? 23 : 3, width: 18, height: 18, borderRadius: 9, background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Health Report */}
+        <div style={{ padding: "0 16px 32px" }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#111827", marginBottom: 10 }}>Full Inspection Report</div>
+
+          {/* Traffic light summary */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <div style={{ flex: 1, background: "#FEF2F2", border: "1.5px solid #FECACA", borderRadius: 10, padding: "10px 0", textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#EF4444" }}>3</div>
+              <div style={{ fontSize: 9, color: "#EF4444", fontWeight: 600, marginTop: 2 }}>NEEDS ATTENTION</div>
+            </div>
+            <div style={{ flex: 1, background: "#FFFBEB", border: "1.5px solid #FDE68A", borderRadius: 10, padding: "10px 0", textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#D97706" }}>0</div>
+              <div style={{ fontSize: 9, color: "#D97706", fontWeight: 600, marginTop: 2 }}>MONITOR</div>
+            </div>
+            <div style={{ flex: 1, background: "#F0FDF4", border: "1.5px solid #BBF7D0", borderRadius: 10, padding: "10px 0", textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#22C55E" }}>14</div>
+              <div style={{ fontSize: 9, color: "#22C55E", fontWeight: 600, marginTop: 2 }}>ALL GOOD</div>
+            </div>
+          </div>
+
+          {/* Video walkaround */}
+          <div style={{ background: "#fff", border: "1.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden", marginBottom: 10 }}>
+            <div style={{ background: "#1A1A2E", height: 120, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative" }}>
+              <div style={{ width: 48, height: 48, borderRadius: 24, background: "rgba(255,107,53,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Play size={22} color="#fff" fill="#fff" />
+              </div>
+              <div style={{ position: "absolute", bottom: 8, left: 10, display: "flex", alignItems: "center", gap: 4 }}>
+                <Video size={10} color="rgba(255,255,255,0.7)" />
+                <span style={{ fontSize: 9, color: "rgba(255,255,255,0.7)" }}>0:47 · Tech walkaround by Marcus W.</span>
+              </div>
+            </div>
+            <div style={{ padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Video Walkaround</div>
+                <div style={{ fontSize: 11, color: "#6B7280" }}>Recorded during your inspection</div>
+              </div>
+              <button onClick={() => setShowVideo(true)} style={{ padding: "8px 16px", borderRadius: 8, background: "#0D3B45", border: "none", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                Watch
+              </button>
+            </div>
+          </div>
+
+          {/* Share report */}
+          <button style={{ width: "100%", padding: "13px 0", borderRadius: 12, background: "#fff", border: "1.5px solid #E5E7EB", color: "#0D3B45", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <Share2 size={15} /> Share report
+          </button>
+        </div>
+
+        {/* Modals */}
+        {showSignature && <SignatureModal onConfirm={handleConfirmSignature} onClose={() => setShowSignature(false)} />}
+        {showVideo && <VideoModal onClose={() => setShowVideo(false)} />}
+      </div>
+    </div>
+  );
+}
+
 // ── Main screen ────────────────────────────────────────────
 
-export default function CustomerPortalScreen() {
+export default function CustomerPortalScreen({ standaloneMode = false }) {
+  if (standaloneMode) {
+    return <StandaloneCustomerPortal />;
+  }
+
+  return <CustomerPortalScreenInner />;
+}
+
+function CustomerPortalScreenInner() {
   const [selectedCustomerId, setSelectedCustomerId] = useState("cust-003");
   const [chatExpanded, setChatExpanded] = useState(true);
   const [approvedItems, setApprovedItems] = useState(new Set(["svc-air-filter", "svc-serpentine-belt"]));
