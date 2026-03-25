@@ -754,7 +754,7 @@ export default function AICopilotScreen() {
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.textPrimary }}>
-              WrenchIQ AI Copilot
+              PrediiAgent Copilot
             </div>
             <div style={{ fontSize: 12, color: COLORS.textSecondary, display: "flex", alignItems: "center", gap: 6 }}>
               <span
@@ -961,7 +961,7 @@ export default function AICopilotScreen() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask WrenchIQ anything — repair data, estimates, scheduling, parts, customer history..."
+              placeholder="Ask PrediiAgent anything — repair data, estimates, scheduling, parts, customer history..."
               style={{
                 flex: 1,
                 border: "none",
@@ -997,7 +997,7 @@ export default function AICopilotScreen() {
               textAlign: "center",
             }}
           >
-            WrenchIQ AI has access to your repair history, OEM data, parts catalogs, and customer records.
+            PrediiAgent has access to your repair history, OEM data, parts catalogs, and customer records.
           </div>
         </div>
       </div>

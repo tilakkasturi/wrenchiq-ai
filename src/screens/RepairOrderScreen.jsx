@@ -9,6 +9,7 @@ import {
 } from "../data/demoData";
 import {
   Plus,
+  Zap,
   Brain,
   Clock,
   CheckCircle,
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 import { getTSBsForVehicle } from "../data/tsbData";
 import DVIScreen from "./DVIScreen";
+import NewROWizard from "../components/NewROWizard";
 
 // ── Column definitions ──────────────────────────────────────
 const COLUMNS = [
@@ -783,6 +785,7 @@ export default function RepairOrderScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoId, setSelectedRoId] = useState(null);
   const [dviRoId, setDviRoId] = useState(null);
+  const [showNewRO, setShowNewRO] = useState(false);
 
   const kanbanStatuses = [
     "checked_in",
@@ -921,29 +924,30 @@ export default function RepairOrderScreen() {
           </div>
 
           <button
+            onClick={() => setShowNewRO(true)}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 6,
-              padding: "9px 18px",
-              background: COLORS.accent,
+              gap: 7,
+              padding: "10px 20px",
+              background: `linear-gradient(135deg, ${COLORS.accent}, #E85D26)`,
               color: "#FFFFFF",
               border: "none",
-              borderRadius: 8,
-              fontWeight: 700,
-              fontSize: 13,
+              borderRadius: 10,
+              fontWeight: 800,
+              fontSize: 14,
               cursor: "pointer",
-              boxShadow: "0 2px 8px rgba(255,107,53,0.30)",
+              boxShadow: "0 4px 14px rgba(255,107,53,0.35)",
             }}
             onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "#E85D2B")
+              (e.currentTarget.style.opacity = "0.9")
             }
             onMouseLeave={(e) =>
-              (e.currentTarget.style.background = COLORS.accent)
+              (e.currentTarget.style.opacity = "1")
             }
           >
-            <Plus size={15} />
-            New Repair Order
+            <Zap size={15} />
+            Intelligent RO
           </button>
         </div>
 
@@ -1218,6 +1222,9 @@ export default function RepairOrderScreen() {
           </div>
         );
       })()}
+
+      {/* New RO Wizard */}
+      {showNewRO && <NewROWizard onClose={() => setShowNewRO(false)} />}
     </div>
   );
 }

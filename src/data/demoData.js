@@ -1134,6 +1134,254 @@ export const todayMetrics = {
   techTrend: 4,
 };
 
+// ── Historical Jobs Database (shop history) ──────────────────
+export const historicalJobs = [
+  {
+    id: "job-001", name: "Replace Brake Pads (Front)", category: "Brakes",
+    avgLaborHrs: 1.2, avgPartsCost: 85, avgTotal: 285, frequency: 47,
+    suggestedParts: ["p6", "p15"],
+    relatedJobs: [
+      { jobId: "job-003", name: "Replace Brake Rotors (Front)", pct: 68 },
+      { jobId: "job-010", name: "Brake Fluid Flush", pct: 45 },
+      { jobId: "job-013", name: "Tire Rotation & Balance", pct: 34 },
+    ],
+  },
+  {
+    id: "job-002", name: "Replace Brake Pads (Rear)", category: "Brakes",
+    avgLaborHrs: 1.0, avgPartsCost: 78, avgTotal: 265, frequency: 39,
+    suggestedParts: ["p7", "p15"],
+    relatedJobs: [
+      { jobId: "job-001", name: "Replace Brake Pads (Front)", pct: 72 },
+      { jobId: "job-010", name: "Brake Fluid Flush", pct: 40 },
+    ],
+  },
+  {
+    id: "job-003", name: "Replace Brake Rotors (Front, pair)", category: "Brakes",
+    avgLaborHrs: 1.5, avgPartsCost: 190, avgTotal: 390, frequency: 22,
+    suggestedParts: ["p8", "p6"],
+    relatedJobs: [
+      { jobId: "job-001", name: "Replace Brake Pads (Front)", pct: 92 },
+      { jobId: "job-010", name: "Brake Fluid Flush", pct: 55 },
+    ],
+  },
+  {
+    id: "job-004", name: "Engine Oil & Filter Change", category: "Maintenance",
+    avgLaborHrs: 0.5, avgPartsCost: 42, avgTotal: 185, frequency: 312,
+    suggestedParts: ["p1", "p2"],
+    relatedJobs: [
+      { jobId: "job-020", name: "Multi-Point Safety Inspection", pct: 85 },
+      { jobId: "job-013", name: "Tire Rotation & Balance", pct: 62 },
+      { jobId: "job-005", name: "Replace Engine Air Filter", pct: 28 },
+    ],
+  },
+  {
+    id: "job-005", name: "Replace Engine Air Filter", category: "Filters",
+    avgLaborHrs: 0.3, avgPartsCost: 28, avgTotal: 65, frequency: 89,
+    suggestedParts: ["p3"],
+    relatedJobs: [
+      { jobId: "job-006", name: "Replace Cabin Air Filter", pct: 58 },
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 45 },
+    ],
+  },
+  {
+    id: "job-006", name: "Replace Cabin Air Filter", category: "Filters",
+    avgLaborHrs: 0.3, avgPartsCost: 25, avgTotal: 55, frequency: 76,
+    suggestedParts: ["p4"],
+    relatedJobs: [
+      { jobId: "job-005", name: "Replace Engine Air Filter", pct: 62 },
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 40 },
+    ],
+  },
+  {
+    id: "job-007", name: "Replace Serpentine Belt", category: "Belts",
+    avgLaborHrs: 0.8, avgPartsCost: 58, avgTotal: 185, frequency: 34,
+    suggestedParts: ["p5"],
+    relatedJobs: [
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 38 },
+      { jobId: "job-011", name: "Coolant Flush & Fill", pct: 30 },
+    ],
+  },
+  {
+    id: "job-008", name: "Transmission Fluid Exchange", category: "Fluids",
+    avgLaborHrs: 1.0, avgPartsCost: 85, avgTotal: 295, frequency: 28,
+    suggestedParts: ["p10"],
+    relatedJobs: [
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 50 },
+      { jobId: "job-020", name: "Multi-Point Safety Inspection", pct: 42 },
+    ],
+  },
+  {
+    id: "job-009", name: "Replace Spark Plugs (4-cyl)", category: "Ignition",
+    avgLaborHrs: 1.0, avgPartsCost: 72, avgTotal: 245, frequency: 41,
+    suggestedParts: ["p12"],
+    relatedJobs: [
+      { jobId: "job-005", name: "Replace Engine Air Filter", pct: 48 },
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 35 },
+    ],
+  },
+  {
+    id: "job-010", name: "Brake Fluid Flush", category: "Brakes",
+    avgLaborHrs: 0.5, avgPartsCost: 18, avgTotal: 125, frequency: 52,
+    suggestedParts: ["p15"],
+    relatedJobs: [
+      { jobId: "job-001", name: "Replace Brake Pads (Front)", pct: 55 },
+      { jobId: "job-002", name: "Replace Brake Pads (Rear)", pct: 42 },
+    ],
+  },
+  {
+    id: "job-011", name: "Coolant Flush & Fill", category: "Fluids",
+    avgLaborHrs: 0.8, avgPartsCost: 32, avgTotal: 165, frequency: 31,
+    suggestedParts: ["p9"],
+    relatedJobs: [
+      { jobId: "job-008", name: "Transmission Fluid Exchange", pct: 35 },
+      { jobId: "job-007", name: "Replace Serpentine Belt", pct: 28 },
+    ],
+  },
+  {
+    id: "job-012", name: "Replace Wiper Blades", category: "Maintenance",
+    avgLaborHrs: 0.2, avgPartsCost: 38, avgTotal: 58, frequency: 67,
+    suggestedParts: ["p11"],
+    relatedJobs: [
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 52 },
+      { jobId: "job-020", name: "Multi-Point Safety Inspection", pct: 30 },
+    ],
+  },
+  {
+    id: "job-013", name: "Tire Rotation & Balance", category: "Tires",
+    avgLaborHrs: 0.5, avgPartsCost: 0, avgTotal: 65, frequency: 198,
+    suggestedParts: ["p13"],
+    relatedJobs: [
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 68 },
+      { jobId: "job-020", name: "Multi-Point Safety Inspection", pct: 55 },
+      { jobId: "job-017", name: "Wheel Alignment (4-wheel)", pct: 22 },
+    ],
+  },
+  {
+    id: "job-014", name: "Replace Brake Light Assembly", category: "Electrical",
+    avgLaborHrs: 0.5, avgPartsCost: 65, avgTotal: 145, frequency: 18,
+    suggestedParts: [],
+    relatedJobs: [
+      { jobId: "job-015", name: "Replace Headlight Bulb", pct: 35 },
+      { jobId: "job-020", name: "Multi-Point Safety Inspection", pct: 28 },
+    ],
+  },
+  {
+    id: "job-015", name: "Replace Headlight Bulb", category: "Electrical",
+    avgLaborHrs: 0.3, avgPartsCost: 45, avgTotal: 85, frequency: 24,
+    suggestedParts: [],
+    relatedJobs: [
+      { jobId: "job-014", name: "Replace Brake Light Assembly", pct: 30 },
+      { jobId: "job-012", name: "Replace Wiper Blades", pct: 22 },
+    ],
+  },
+  {
+    id: "job-016", name: "Replace Battery", category: "Electrical",
+    avgLaborHrs: 0.3, avgPartsCost: 165, avgTotal: 245, frequency: 29,
+    suggestedParts: [],
+    relatedJobs: [
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 32 },
+      { jobId: "job-020", name: "Multi-Point Safety Inspection", pct: 28 },
+    ],
+  },
+  {
+    id: "job-017", name: "Wheel Alignment (4-wheel)", category: "Tires",
+    avgLaborHrs: 1.0, avgPartsCost: 0, avgTotal: 165, frequency: 44,
+    suggestedParts: [],
+    relatedJobs: [
+      { jobId: "job-013", name: "Tire Rotation & Balance", pct: 58 },
+      { jobId: "job-001", name: "Replace Brake Pads (Front)", pct: 25 },
+    ],
+  },
+  {
+    id: "job-018", name: "A/C Recharge (R-134a)", category: "HVAC",
+    avgLaborHrs: 0.5, avgPartsCost: 85, avgTotal: 195, frequency: 19,
+    suggestedParts: [],
+    relatedJobs: [
+      { jobId: "job-006", name: "Replace Cabin Air Filter", pct: 45 },
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 28 },
+    ],
+  },
+  {
+    id: "job-019", name: "Replace Thermostat", category: "Cooling",
+    avgLaborHrs: 1.2, avgPartsCost: 45, avgTotal: 225, frequency: 12,
+    suggestedParts: ["p9"],
+    relatedJobs: [
+      { jobId: "job-011", name: "Coolant Flush & Fill", pct: 82 },
+      { jobId: "job-007", name: "Replace Serpentine Belt", pct: 25 },
+    ],
+  },
+  {
+    id: "job-020", name: "Multi-Point Safety Inspection", category: "Maintenance",
+    avgLaborHrs: 0.5, avgPartsCost: 0, avgTotal: 45, frequency: 280,
+    suggestedParts: ["p14"],
+    relatedJobs: [
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 78 },
+      { jobId: "job-013", name: "Tire Rotation & Balance", pct: 55 },
+    ],
+  },
+  {
+    id: "job-021", name: "Replace Timing Belt", category: "Engine",
+    avgLaborHrs: 4.0, avgPartsCost: 185, avgTotal: 780, frequency: 8,
+    suggestedParts: [],
+    relatedJobs: [
+      { jobId: "job-011", name: "Coolant Flush & Fill", pct: 72 },
+      { jobId: "job-007", name: "Replace Serpentine Belt", pct: 65 },
+      { jobId: "job-019", name: "Replace Thermostat", pct: 48 },
+    ],
+  },
+  {
+    id: "job-022", name: "Replace CV Axle", category: "Drivetrain",
+    avgLaborHrs: 2.0, avgPartsCost: 145, avgTotal: 435, frequency: 14,
+    suggestedParts: [],
+    relatedJobs: [
+      { jobId: "job-017", name: "Wheel Alignment (4-wheel)", pct: 55 },
+      { jobId: "job-013", name: "Tire Rotation & Balance", pct: 30 },
+    ],
+  },
+  {
+    id: "job-023", name: "Replace Oxygen Sensor", category: "Engine",
+    avgLaborHrs: 1.0, avgPartsCost: 125, avgTotal: 295, frequency: 16,
+    suggestedParts: [],
+    relatedJobs: [
+      { jobId: "job-009", name: "Replace Spark Plugs (4-cyl)", pct: 32 },
+      { jobId: "job-004", name: "Engine Oil & Filter Change", pct: 28 },
+    ],
+  },
+  {
+    id: "job-024", name: "Replace Alternator", category: "Electrical",
+    avgLaborHrs: 1.5, avgPartsCost: 285, avgTotal: 545, frequency: 11,
+    suggestedParts: ["p5"],
+    relatedJobs: [
+      { jobId: "job-007", name: "Replace Serpentine Belt", pct: 78 },
+      { jobId: "job-016", name: "Replace Battery", pct: 35 },
+    ],
+  },
+  {
+    id: "job-025", name: "Replace Water Pump", category: "Cooling",
+    avgLaborHrs: 2.5, avgPartsCost: 145, avgTotal: 520, frequency: 9,
+    suggestedParts: ["p9"],
+    relatedJobs: [
+      { jobId: "job-019", name: "Replace Thermostat", pct: 75 },
+      { jobId: "job-011", name: "Coolant Flush & Fill", pct: 88 },
+      { jobId: "job-007", name: "Replace Serpentine Belt", pct: 55 },
+    ],
+  },
+];
+
+export function getJobSuggestions(query) {
+  if (!query || query.length < 2) return [];
+  const q = query.toLowerCase();
+  const keywords = q.split(/\s+/);
+  return historicalJobs
+    .filter(job => {
+      const name = job.name.toLowerCase();
+      const cat = job.category.toLowerCase();
+      return keywords.every(kw => name.includes(kw) || cat.includes(kw));
+    })
+    .sort((a, b) => b.frequency - a.frequency)
+    .slice(0, 6);
+}
+
 // ── Helper functions ───────────────────────────────────────
 export function getCustomer(id) {
   return customers.find((c) => c.id === id);

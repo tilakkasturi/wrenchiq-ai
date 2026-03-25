@@ -55,24 +55,26 @@ export default function DashboardScreen({ onNavigate }) {
             {(
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { icon: AlertTriangle, color: "#F59E0B", title: "James Park's BMW X3 — estimate waiting 2 hrs", body: "Brake noise investigation estimate ($1,847) sent at 10:15 AM. High-LTV customer ($12,450). SIB-34-16-20 applies — front brake vibration is known at 60-65K miles. Send follow-up with TSB reference to build trust.", action: "Text James", actionColor: "#F59E0B" },
-                  { icon: Zap, color: "#22C55E", title: "TSB match: David Kim's CR-V — oil dilution", body: "TSB-19-052 applies to the 1.5T engine. Honda extended warranty was 6yr/80K — David's at 87.4K/6.5yr, just outside. Recommend attempting goodwill claim. P0420 catalytic code is likely related.", action: "Add TSB to RO", actionColor: "#22C55E" },
-                  { icon: Package, color: "#60A5FA", title: "Parts savings: eBay Motors vs O'Reilly", body: "Walker 16468 catalytic converter for David's CR-V: $298 on eBay Motors (AutoPartsWarehouse_CA, 99.2% seller rating) vs $342 at O'Reilly. Same part, $44 savings, ships from Sacramento.", action: "Order on eBay Motors", actionColor: "#60A5FA" },
-                  { icon: DollarSign, color: "#A78BFA", title: "Xero: 2 supplier bills due this week ($1,847)", body: "O'Reilly Auto Parts Net-30: $1,104 due Friday. Worldpac credit account: $743 due Thursday. Both within terms — no late fees yet. Review before end of day.", action: "Review in Xero", actionColor: "#A78BFA" },
+                  { icon: AlertTriangle, color: "#F59E0B", title: "James Park's BMW X3 — estimate waiting 2 hrs", body: "Brake noise investigation estimate ($1,847) sent at 10:15 AM. High-LTV customer ($12,450). SIB-34-16-20 applies — front brake vibration is known at 60-65K miles. Send follow-up with TSB reference to build trust.", action: "Text James", actionColor: "#F59E0B", nav: "trust" },
+                  { icon: Zap, color: "#22C55E", title: "TSB match: David Kim's CR-V — oil dilution", body: "TSB-19-052 applies to the 1.5T engine. Honda extended warranty was 6yr/80K — David's at 87.4K/6.5yr, just outside. Recommend attempting goodwill claim. P0420 catalytic code is likely related.", action: "Add TSB to RO", actionColor: "#22C55E", nav: "orders" },
+                  { icon: Package, color: "#60A5FA", title: "Parts savings: eBay Motors vs O'Reilly", body: "Walker 16468 catalytic converter for David's CR-V: $298 on eBay Motors (AutoPartsWarehouse_CA, 99.2% seller rating) vs $342 at O'Reilly. Same part, $44 savings, ships from Sacramento.", action: "Order on eBay Motors", actionColor: "#60A5FA", nav: "parts" },
+                  { icon: DollarSign, color: "#A78BFA", title: "Xero: 2 supplier bills due this week ($1,847)", body: "O'Reilly Auto Parts Net-30: $1,104 due Friday. Worldpac credit account: $743 due Thursday. Both within terms — no late fees yet. Review before end of day.", action: "Review in Xero", actionColor: "#A78BFA", nav: "analytics" },
                 ].map((insight, i) => (
                   <div key={i} style={{ background: "rgba(255,255,255,0.08)", borderRadius: 10, padding: "12px 14px", display: "flex", gap: 12, alignItems: "flex-start" }}>
                     <insight.icon size={16} color={insight.color} style={{ marginTop: 2, flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{insight.title}</div>
                       <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2, marginBottom: 8 }}>{insight.body}</div>
-                      <button style={{
-                        fontSize: 11, fontWeight: 700,
-                        color: insight.actionColor,
-                        background: "rgba(255,255,255,0.12)",
-                        border: `1px solid ${insight.actionColor}50`,
-                        borderRadius: 6, padding: "4px 10px",
-                        cursor: "pointer",
-                      }}>
+                      <button
+                        onClick={() => onNavigate?.(insight.nav)}
+                        style={{
+                          fontSize: 11, fontWeight: 700,
+                          color: insight.actionColor,
+                          background: "rgba(255,255,255,0.12)",
+                          border: `1px solid ${insight.actionColor}50`,
+                          borderRadius: 6, padding: "4px 10px",
+                          cursor: "pointer",
+                        }}>
                         {insight.action} →
                       </button>
                     </div>

@@ -567,7 +567,7 @@ function IntegrationsTab() {
     <div>
       <SectionHeader
         title="Integrations"
-        subtitle="Connected services powering WrenchIQ"
+        subtitle="Connected services powering PrediiAgent"
       />
 
       {/* Summary bar */}
@@ -654,7 +654,7 @@ function IntegrationsTab() {
           name="Claude AI (Anthropic)"
           status="active"
           lines={[
-            "Powers all AI features in WrenchIQ",
+            "Powers all AI features in PrediiAgent",
             "Model: Claude Sonnet 4.6",
             "Usage this month: 1,247 AI analyses",
           ]}
@@ -722,7 +722,7 @@ function AISettingsTab() {
     <div>
       <SectionHeader
         title="AI Settings"
-        subtitle="Configure Claude AI behavior across WrenchIQ"
+        subtitle="Configure Claude AI behavior across PrediiAgent"
       />
 
       {/* Model selection */}
@@ -1173,7 +1173,7 @@ function NotificationsTab() {
 function BillingTab() {
   return (
     <div>
-      <SectionHeader title="Billing" subtitle="WrenchIQ subscription and usage" />
+      <SectionHeader title="Billing" subtitle="PrediiAgent subscription and usage" />
 
       {/* Plan card */}
       <div
@@ -1202,7 +1202,7 @@ function BillingTab() {
           CURRENT PLAN
         </div>
         <div style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>
-          WrenchIQ Pro
+          PrediiAgent Pro
         </div>
         <div style={{ fontSize: 14, opacity: 0.8, marginBottom: 20 }}>
           All AI features · Unlimited repair orders · Priority support
