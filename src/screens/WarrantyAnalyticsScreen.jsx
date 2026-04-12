@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AlertTriangle, TrendingDown, FileText, Download, ChevronDown, Filter } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { OEM_ADVISORS, REJECTION_HISTORY, WARRANTY_CLAIMS, OEM_DEALER } from "../data/oemDemoData";
+import { useEditionName } from "../context/BrandingContext";
 
 const PRIMARY = "#0D3B45";
 const ACCENT = "#FF6B35";
@@ -502,6 +503,7 @@ function CoachingExportSection() {
 }
 
 export default function WarrantyAnalyticsScreen() {
+  const oemName = useEditionName("OEM");
   return (
     <div style={{
       background: "#F9FAFB",
@@ -521,7 +523,7 @@ export default function WarrantyAnalyticsScreen() {
             fontSize: 11, fontWeight: 600, color: "#6B7280",
             background: "#F3F4F6", borderRadius: 4, padding: "2px 8px",
           }}>
-            WrenchIQ-OEM
+            {oemName}
           </span>
         </div>
         <div style={{ fontSize: 13, color: "#6B7280" }}>

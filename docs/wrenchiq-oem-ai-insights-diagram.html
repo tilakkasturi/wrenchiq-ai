@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WrenchIQ-OEM — AI Insights Agent Architecture</title>
+<style>
+  :root {
+    --primary: #0D3B45;
+    --accent: #FF6B35;
+    --teal-mid: #1A5C6B;
+    --teal-light: #2A8C9E;
+    --orange-light: #FF8C5A;
+    --bg: #F0F4F5;
+    --card-bg: #FFFFFF;
+    --border: #C8D8DB;
+    --text: #1A2E32;
+    --muted: #5A7A82;
+    --green: #16A34A;
+    --amber: #D97706;
+    --red: #DC2626;
+    --purple: #7C3AED;
+    --blue: #2563EB;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    background: var(--primary);
+    color: white;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .topbar .logo {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .topbar h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
+  .topbar .subtitle { font-size: 12px; color: #8BBBC4; margin-left: auto; }
+  .topbar .badge {
+    background: var(--accent); color: white;
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Canvas wrapper ── */
+  #canvas {
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 52px);
+    overflow: auto;
+  }
+
+  #diagram-wrap {
+    position: relative;
+    width: 1600px;
+    height: 1120px;
+    margin: 24px auto;
+  }
+
+  /* ── Layer labels ── */
+  .layer-label {
+    position: absolute;
+    left: 0;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  /* ── SVG arrows ── */
+  #arrows-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  /* ── Node base ── */
+  .node {
+    position: absolute;
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+    user-select: none;
+    overflow: hidden;
+  }
+  .node:hover {
+    box-shadow: 0 6px 24px rgba(13,59,69,0.18);
+    transform: translateY(-2px);
+    border-color: var(--teal-light);
+    z-index: 50 !important;
+  }
+  .node.active {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.25), 0 6px 24px rgba(255,107,53,0.15) !important;
+    z-index: 60 !important;
+  }
+
+  .node-header {
+    padding: 8px 10px 6px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-bottom: 1px solid var(--border);
+  }
+  .node-icon {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .node-title {
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .node-sub {
+    font-size: 9px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .node-body {
+    padding: 7px 10px;
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .node-body .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    margin-bottom: 3px;
+  }
+  .node-body .item::before {
+    content: '•';
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .node-body .tag {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 8.5px;
+    font-weight: 600;
+    margin: 1px 2px 1px 0;
+    color: var(--text);
+  }
+  .node-body .tag.green { background: #DCFCE7; border-color: #16A34A; color: #15803D; }
+  .node-body .tag.amber { background: #FEF9C3; border-color: #D97706; color: #B45309; }
+  .node-body .tag.red   { background: #FEE2E2; border-color: #DC2626; color: #B91C1C; }
+  .node-body .tag.blue  { background: #DBEAFE; border-color: #2563EB; color: #1D4ED8; }
+  .node-body .tag.purple{ background: #EDE9FE; border-color: #7C3AED; color: #6D28D9; }
+  .node-body .tag.teal  { background: #CCFBF1; border-color: #0D9488; color: #0F766E; }
+  .node-body .tag.orange{ background: #FFEDD5; border-color: #EA580C; color: #C2410C; }
+
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 99px;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .badge-pill.success { background: #DCFCE7; color: #15803D; }
+  .badge-pill.warn    { background: #FEF9C3; color: #B45309; }
+  .badge-pill.error   { background: #FEE2E2; color: #B91C1C; }
+  .badge-pill.info    { background: #DBEAFE; color: #1D4ED8; }
+  .badge-pill.neutral { background: #F1F5F9; color: #475569; }
+
+  /* ── Detail panel ── */
+  #detail-panel {
+    position: fixed;
+    top: 52px;
+    right: -420px;
+    width: 380px;
+    height: calc(100vh - 52px);
+    background: white;
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 200;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  #detail-panel.open { right: 0; }
+  #detail-panel-header {
+    padding: 16px 20px;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  #detail-panel-header .dph-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  #detail-panel-header h2 { font-size: 14px; font-weight: 700; }
+  #detail-panel-header p  { font-size: 11px; color: #8BBBC4; margin-top: 1px; }
+  #detail-close {
+    margin-left: auto;
+    width: 28px; height: 28px;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  #detail-close:hover { background: rgba(255,255,255,0.25); }
+  #detail-body { padding: 20px; flex: 1; font-size: 12px; line-height: 1.6; color: var(--text); }
+  #detail-body h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin: 16px 0 8px;
+    border-bottom: 1px solid var(--bg);
+    padding-bottom: 4px;
+  }
+  #detail-body h3:first-child { margin-top: 0; }
+  #detail-body ul { padding-left: 16px; }
+  #detail-body ul li { margin-bottom: 5px; }
+  #detail-body .code-block {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: 'Menlo', monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    color: var(--primary);
+    margin: 8px 0;
+    overflow-x: auto;
+  }
+  #detail-body .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px;
+    background: var(--bg);
+    border-radius: 6px;
+    margin-bottom: 6px;
+  }
+  #detail-body .flow-step .step-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  #detail-body .flow-step .step-content strong { display: block; font-size: 11px; margin-bottom: 2px; }
+  #detail-body .flow-step .step-content span { font-size: 10px; color: var(--muted); }
+
+  /* ── Legend ── */
+  #legend {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    font-size: 10px;
+  }
+  #legend h4 { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+  .legend-line { width: 24px; height: 2px; position: relative; }
+  .legend-line.dashed { background: repeating-linear-gradient(90deg, #999 0, #999 4px, transparent 4px, transparent 8px); }
+
+  /* ── Annotation ── */
+  .annotation {
+    position: absolute;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    pointer-events: none;
+  }
+
+  /* ── Section bracket ── */
+  .section-bracket {
+    position: absolute;
+    border: 2px solid;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0.07;
+  }
+
+  /* ── Pulse dots ── */
+  @keyframes pulse-ring {
+    0%   { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    position: absolute;
+    top: 50%; right: 8px;
+    transform: translateY(-50%);
+  }
+  .pulse-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    animation: pulse-ring 1.5s ease-out infinite;
+  }
+
+  /* ── Flow animation on arrows ── */
+  @keyframes flow {
+    from { stroke-dashoffset: 20; }
+    to   { stroke-dashoffset: 0; }
+  }
+  .flow-arrow {
+    stroke-dasharray: 6 4;
+    animation: flow 0.8s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="logo">&#9881;</div>
+  <div>
+    <h1>WrenchIQ-OEM &mdash; AI Insights Agent Architecture</h1>
+  </div>
+  <span class="badge">OEM Edition</span>
+  <span class="subtitle">Click any node to inspect · Repair Order &rarr; 3C Story Writer &rarr; Warranty Approval</span>
+</div>
+
+<!-- Main canvas -->
+<div id="canvas">
+<div id="diagram-wrap">
+
+<!-- ── SVG arrows layer ── -->
+<svg id="arrows-svg" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ah-teal" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#1A5C6B"/>
+    </marker>
+    <marker id="ah-orange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#FF6B35"/>
+    </marker>
+    <marker id="ah-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#16A34A"/>
+    </marker>
+    <marker id="ah-amber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#D97706"/>
+    </marker>
+    <marker id="ah-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#DC2626"/>
+    </marker>
+    <marker id="ah-purple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#7C3AED"/>
+    </marker>
+    <marker id="ah-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563EB"/>
+    </marker>
+    <marker id="ah-muted" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#5A7A82"/>
+    </marker>
+  </defs>
+</svg>
+
+<!-- ── Section brackets (background shading) ── -->
+<div class="section-bracket" style="left:20px;top:14px;width:1540px;height:152px;border-color:#0D9488;background:#0D9488;"></div>
+<div class="section-bracket" style="left:20px;top:178px;width:1540px;height:270px;border-color:#2563EB;background:#2563EB;"></div>
+<div class="section-bracket" style="left:20px;top:460px;width:1540px;height:300px;border-color:#7C3AED;background:#7C3AED;"></div>
+<div class="section-bracket" style="left:20px;top:772px;width:1540px;height:280px;border-color:#16A34A;background:#16A34A;"></div>
+
+<!-- ── Layer annotations ── -->
+<div class="annotation" style="left:6px;top:38px;">Data Assets</div>
+<div class="annotation" style="left:6px;top:220px;">RO Pipeline</div>
+<div class="annotation" style="left:6px;top:570px;">AI Agent Layer</div>
+<div class="annotation" style="left:6px;top:840px;">Warranty Output</div>
+
+<!-- ═══════════════════════════════════════════
+     LAYER 1 — DATA ASSETS  (y: 20–160)
+     ═══════════════════════════════════════════ -->
+
+<!-- NHTSA Recalls -->
+<div class="node" id="n-recalls" style="left:36px;top:20px;width:190px;z-index:10;" onclick="openDetail('recalls')">
+  <div class="node-header" style="background:#FEF9C3;">
+    <div class="node-icon" style="background:#D97706;color:white;">&#9888;</div>
+    <div><div class="node-title">NHTSA Recalls</div><div class="node-sub">Safety Campaigns</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">20V-419 — GM Fuel Pump</div>
+    <div class="item">20V-418 — Toyota Fuel Pump</div>
+    <div class="item">19S32 — Ford Exhaust CO</div>
+    <div style="margin-top:5px;">
+      <span class="tag amber">NHTSA API</span>
+      <span class="tag">Open / Complete</span>
+    </div>
+  </div>
+</div>
+
+<!-- TSB Corpus (Predii) -->
+<div class="node" id="n-tsb" style="left:246px;top:20px;width:220px;z-index:10;" onclick="openDetail('tsb')">
+  <div class="node-header" style="background:#EDE9FE;">
+    <div class="node-icon" style="background:#7C3AED;color:white;">&#128196;</div>
+    <div><div class="node-title">TSB Corpus</div><div class="node-sub">Predii-Tagged Technical Bulletins</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">T-SB-0197-18 P0420 Catalyst</div>
+    <div class="item">T-SB-0131-19 GDI Carbon</div>
+    <div class="item">PIP5622E AFM Oil Consumption</div>
+    <div class="item">TSB 19-2346 10R80 Trans Fluid</div>
+    <div style="margin-top:5px;">
+      <span class="tag purple">Predii NLP Tagged</span>
+      <span class="tag">relevanceScore</span>
+    </div>
+  </div>
+</div>
+
+<!-- OEM Labor Opcodes -->
+<div class="node" id="n-opcodes" style="left:486px;top:20px;width:240px;z-index:10;" onclick="openDetail('opcodes')">
+  <div class="node-header" style="background:#DBEAFE;">
+    <div class="node-icon" style="background:#2563EB;color:white;">&#128295;</div>
+    <div><div class="node-title">OEM Labor Opcodes</div><div class="node-sub">Make-Specific Op Codes + Pre-Auth</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Toyota: 1762B44 (2.5 hr) — P0420 Catalyst</div>
+    <div class="item">GM: J4301 (4.5 hr) — AFM Lifter Repl.</div>
+    <div class="item">Ford: 307B08A (1.5 hr) — 10R80 Fluid</div>
+    <div class="item">Subaru: 12100AJ950 (8.0 hr) — Short Block</div>
+    <div style="margin-top:5px;">
+      <span class="tag blue">Pre-Auth Thresholds</span>
+      <span class="tag blue">Flat Rate Hours</span>
+    </div>
+  </div>
+</div>
+
+<!-- Predii Normalized Repairs -->
+<div class="node" id="n-predii-norm" style="left:746px;top:20px;width:220px;z-index:10;" onclick="openDetail('predii-norm')">
+  <div class="node-header" style="background:#CCFBF1;">
+    <div class="node-icon" style="background:#0D9488;color:white;">&#9881;</div>
+    <div><div class="node-title">Predii Normalization</div><div class="node-sub">Repair Classification + KG</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">vehicleOrigin: JAPANESE | DOMESTIC_US | GERMAN</div>
+    <div class="item">Labor classification by system/subsystem</div>
+    <div class="item">Technician efficiency mapping</div>
+    <div style="margin-top:5px;">
+      <span class="tag teal">Knowledge Graph</span>
+      <span class="tag teal">Cluster Analysis</span>
+    </div>
+  </div>
+</div>
+
+<!-- RO History / VIN Index -->
+<div class="node" id="n-ro-history" style="left:986px;top:20px;width:200px;z-index:10;" onclick="openDetail('ro-history')">
+  <div class="node-header" style="background:#F0FDF4;">
+    <div class="node-icon" style="background:#16A34A;color:white;">&#128196;</div>
+    <div><div class="node-title">RO History by VIN</div><div class="node-sub">MongoDB — Repair Record Store</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">All prior ROs indexed by VIN</div>
+    <div class="item">DTC history + freeze frames</div>
+    <div class="item">Parts & labor per job line</div>
+    <div style="margin-top:5px;">
+      <span class="tag green">172.16.80.7:27017</span>
+    </div>
+  </div>
+</div>
+
+<!-- DMS / CDK -->
+<div class="node" id="n-dms" style="left:1206px;top:20px;width:180px;z-index:10;" onclick="openDetail('dms')">
+  <div class="node-header" style="background:#FFF7ED;">
+    <div class="node-icon" style="background:#EA580C;color:white;">&#9875;</div>
+    <div><div class="node-title">DMS Connector</div><div class="node-sub">CDK · R&R · Dealertrack</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">RO pull on open</div>
+    <div class="item">3C push on approval</div>
+    <div class="item">Claim status sync</div>
+    <div style="margin-top:5px;">
+      <span class="tag orange">CDK Global</span>
+      <span class="tag">Reynolds</span>
+    </div>
+  </div>
+</div>
+
+<!-- OEM TIS / WCS -->
+<div class="node" id="n-oem-tis" style="left:1400px;top:20px;width:160px;z-index:10;" onclick="openDetail('oem-tis')">
+  <div class="node-header" style="background:#EDE9FE;">
+    <div class="node-icon" style="background:#6D28D9;color:white;">&#127760;</div>
+    <div><div class="node-title">OEM Portals</div><div class="node-sub">TIS / WPS / WAS / WCC</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Toyota TIS — EF9D-20</div>
+    <div class="item">GM WCC — J4301 auth</div>
+    <div class="item">Subaru SCA — WRS-92</div>
+    <div style="margin-top:5px;">
+      <span class="tag purple">Warranty API</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     LAYER 2 — REPAIR ORDER PIPELINE  (y: 182–440)
+     ═══════════════════════════════════════════ -->
+
+<!-- RO Entry -->
+<div class="node" id="n-ro-entry" style="left:36px;top:185px;width:170px;z-index:10;" onclick="openDetail('ro-entry')">
+  <div class="node-header" style="background:#DBEAFE;">
+    <div class="node-icon" style="background:#2563EB;color:white;">&#128203;</div>
+    <div><div class="node-title">RO Entry</div><div class="node-sub">Advisor / DMS Import</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">VIN decode (NHTSA vPIC)</div>
+    <div class="item">Customer concern text</div>
+    <div class="item">Mileage + technician assign</div>
+    <div style="margin-top:5px;">
+      <span class="badge-pill info">INTAKE Stage</span>
+    </div>
+  </div>
+</div>
+
+<!-- VIN Decode -->
+<div class="node" id="n-vin" style="left:226px;top:185px;width:160px;z-index:10;" onclick="openDetail('vin')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#0D3B45;color:white;">&#128663;</div>
+    <div><div class="node-title">VIN Decode</div><div class="node-sub">am3cVINService</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">NHTSA vPIC API</div>
+    <div class="item">YMME enrichment</div>
+    <div class="item">24-hr TTL cache</div>
+    <div style="margin-top:5px;">
+      <span class="tag">year/make/model/trim</span>
+    </div>
+  </div>
+</div>
+
+<!-- DVI Findings -->
+<div class="node" id="n-dvi" style="left:406px;top:185px;width:185px;z-index:10;" onclick="openDetail('dvi')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#16A34A;color:white;">&#128269;</div>
+    <div><div class="node-title">DVI Findings</div><div class="node-sub">am3cDVIService</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">GREEN → excluded from RO</div>
+    <div class="item">YELLOW → Recommendations</div>
+    <div class="item">RED actioned → Cause</div>
+    <div class="item">RED deferred → Recommendations</div>
+    <div style="margin-top:5px;">
+      <span class="tag green">GREEN</span>
+      <span class="tag amber">YELLOW</span>
+      <span class="tag red">RED</span>
+    </div>
+  </div>
+</div>
+
+<!-- DTC / OBD-II Scan -->
+<div class="node" id="n-dtc" style="left:611px;top:185px;width:185px;z-index:10;" onclick="openDetail('dtc')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#DC2626;color:white;">&#9888;</div>
+    <div><div class="node-title">DTC / Scan Data</div><div class="node-sub">am3cDTCService</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">P0420 Catalyst Efficiency</div>
+    <div class="item">P0521 Oil Pressure Sensor</div>
+    <div class="item">P0741 TCC Slip</div>
+    <div class="item">Freeze-frame: RPM, coolantTemp, MAP, fuelTrim</div>
+    <div style="margin-top:5px;">
+      <span class="tag red">Confirmed</span>
+      <span class="tag amber">Pending</span>
+      <span class="tag">Historical</span>
+    </div>
+  </div>
+</div>
+
+<!-- TSB Match -->
+<div class="node" id="n-tsb-match" style="left:816px;top:185px;width:185px;z-index:10;" onclick="openDetail('tsb-match')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#7C3AED;color:white;">&#9906;</div>
+    <div><div class="node-title">TSB Matcher</div><div class="node-sub">am3cTSBService</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">VIN + complaint → keyword extract</div>
+    <div class="item">Corpus scored by relevanceScore</div>
+    <div class="item">Top-3 returned for tech review</div>
+    <div class="item">Accept / Dismiss per TSB</div>
+    <div style="margin-top:5px;">
+      <span class="tag purple">Accept</span>
+      <span class="tag">Dismiss</span>
+    </div>
+  </div>
+</div>
+
+<!-- Recall Checker -->
+<div class="node" id="n-recall-check" style="left:1021px;top:185px;width:185px;z-index:10;" onclick="openDetail('recall-check')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#D97706;color:white;">&#128680;</div>
+    <div><div class="node-title">Recall Checker</div><div class="node-sub">nhtsaService + OEM Campaign</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Open recalls by VIN</div>
+    <div class="item">OEM campaign matching</div>
+    <div class="item">Required: no-charge repair</div>
+    <div class="item">WPS/WAS submission ref</div>
+    <div style="margin-top:5px;">
+      <span class="tag amber">Open</span>
+      <span class="tag green">Complete</span>
+    </div>
+    <div class="pulse-dot"></div>
+  </div>
+</div>
+
+<!-- Parts & Labor -->
+<div class="node" id="n-parts-labor" style="left:1226px;top:185px;width:180px;z-index:10;" onclick="openDetail('parts-labor')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#0D3B45;color:white;">&#128230;</div>
+    <div><div class="node-title">Parts + Labor Lines</div><div class="node-sub">OEM Part Numbers + Opcodes</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">OEM part # required</div>
+    <div class="item">Op code matched to job</div>
+    <div class="item">Flat-rate hrs vs. actual</div>
+    <div style="margin-top:5px;">
+      <span class="tag blue">laborHrs</span>
+      <span class="tag blue">actualHrs</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── RO Drilldown panel (detail cards stacked below pipeline) ── -->
+<div class="annotation" style="left:36px;top:344px;font-size:8px;">RO DRILLDOWN</div>
+
+<!-- RO-3001 Silverado example -->
+<div class="node" id="n-ro3001" style="left:36px;top:358px;width:280px;z-index:10;" onclick="openDetail('ro3001')">
+  <div class="node-header" style="background:#FFF7ED;">
+    <div class="node-icon" style="background:#EA580C;color:white;font-size:10px;font-weight:700;">RO</div>
+    <div><div class="node-title">RO-3001 · 2019 Silverado 1500</div><div class="node-sub">AFM/DOD Lifter · Oil Consumption</div></div>
+  </div>
+  <div class="node-body">
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px;">
+      <span class="tag red">P0521</span>
+      <span class="tag amber">P0014</span>
+      <span class="tag">P0008</span>
+      <span class="tag blue">TSB PIP5622E</span>
+      <span class="tag orange">J4301 · 4.5hr</span>
+    </div>
+    <div class="item">Pre-Auth: $2,500 (WCC required)</div>
+    <div class="item">GM Master Tech: Marcus Williams</div>
+    <div class="item">Warranty: active powertrain 5yr/60k</div>
+  </div>
+</div>
+
+<!-- RO-3003 Camry example -->
+<div class="node" id="n-ro3003" style="left:336px;top:358px;width:280px;z-index:10;" onclick="openDetail('ro3003')">
+  <div class="node-header" style="background:#EDE9FE;">
+    <div class="node-icon" style="background:#7C3AED;color:white;font-size:10px;font-weight:700;">RO</div>
+    <div><div class="node-title">RO-3003 · 2021 Toyota Camry</div><div class="node-sub">Fuel Pump Recall · Cold Hesitation</div></div>
+  </div>
+  <div class="node-body">
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px;">
+      <span class="tag purple">Recall 20V-418</span>
+      <span class="tag blue">EF9D-20 · 1.2hr</span>
+      <span class="tag teal">WAS Submit</span>
+    </div>
+    <div class="item">Toyota TIS submission required</div>
+    <div class="item">Tech: Darnell Jackson (Toyota Sr.)</div>
+    <div class="item">complianceScore: 94</div>
+  </div>
+</div>
+
+<!-- RO-3005 F-150 example -->
+<div class="node" id="n-ro3005" style="left:636px;top:358px;width:280px;z-index:10;" onclick="openDetail('ro3005')">
+  <div class="node-header" style="background:#DBEAFE;">
+    <div class="node-icon" style="background:#2563EB;color:white;font-size:10px;font-weight:700;">RO</div>
+    <div><div class="node-title">RO-3005 · 2020 F-150 5.0L</div><div class="node-sub">Trans Shudder · 10R80 TSB</div></div>
+  </div>
+  <div class="node-body">
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px;">
+      <span class="tag red">P0741</span>
+      <span class="tag amber">P07D5</span>
+      <span class="tag blue">TSB 19-2346</span>
+      <span class="tag orange">307B08A · 1.5hr</span>
+    </div>
+    <div class="item">Ford Master: Sophie Laurent</div>
+    <div class="item">Warranty: powertrain 5yr/60k</div>
+    <div class="item">complianceScore: 89</div>
+  </div>
+</div>
+
+<!-- RO-3010 Forester -->
+<div class="node" id="n-ro3010" style="left:936px;top:358px;width:280px;z-index:10;" onclick="openDetail('ro3010')">
+  <div class="node-header" style="background:#DCFCE7;">
+    <div class="node-icon" style="background:#16A34A;color:white;font-size:10px;font-weight:700;">RO</div>
+    <div><div class="node-title">RO-3010 · 2020 Forester CVT</div><div class="node-sub">CVT Shudder · Extended Warranty</div></div>
+  </div>
+  <div class="node-body">
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px;">
+      <span class="tag green">Ext. Warranty</span>
+      <span class="tag teal">31100FJ040 · 1.5hr</span>
+      <span class="tag">TSB 16-183-20R</span>
+    </div>
+    <div class="item">10yr/100k extended warranty coverage</div>
+    <div class="item">SCA submission: WRS-92</div>
+    <div class="item">James Park (Honda Master, 10yr)</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     LAYER 3 — AI AGENT LAYER  (y: 464–760)
+     ═══════════════════════════════════════════ -->
+
+<!-- Routing Agent -->
+<div class="node" id="n-routing-agent" style="left:36px;top:466px;width:200px;z-index:10;" onclick="openDetail('routing-agent')">
+  <div class="node-header" style="background:linear-gradient(135deg,#0D3B45,#1A5C6B);color:white;">
+    <div class="node-icon" style="background:rgba(255,255,255,0.2);color:white;">&#129302;</div>
+    <div><div class="node-title" style="color:white;">Routing Agent</div><div class="node-sub" style="color:#8BBBC4;">Warranty vs. Customer-Pay</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Parses: RO type, coverage dates, recall status</div>
+    <div class="item">Routes to: 3C Story Writer (warranty) or AM pipeline (customer-pay)</div>
+    <div class="item">Flags pre-auth requirements by opcode</div>
+    <div style="margin-top:5px;">
+      <span class="badge-pill info">LLM-powered</span>
+    </div>
+  </div>
+</div>
+
+<!-- 3C Story Writer Agent — main -->
+<div class="node" id="n-story-writer" style="left:256px;top:466px;width:340px;z-index:10;" onclick="openDetail('story-writer')">
+  <div class="node-header" style="background:linear-gradient(135deg,#FF6B35,#FF8C5A);">
+    <div class="node-icon" style="background:rgba(255,255,255,0.25);color:white;">&#9997;</div>
+    <div><div class="node-title" style="color:white;">3C Story Writer Agent</div><div class="node-sub" style="color:rgba(255,255,255,0.75);">Complaint · Cause · Correction · OEM-Compliant</div></div>
+  </div>
+  <div class="node-body">
+    <div style="display:flex;gap:12px;margin-bottom:6px;">
+      <div style="flex:1;background:#FFF7ED;border-radius:6px;padding:5px 7px;border-left:3px solid #2563EB;">
+        <div style="font-size:9px;font-weight:700;color:#2563EB;">COMPLAINT</div>
+        <div style="font-size:9px;color:#555;">Customer concern verbatim + DMS intake notes</div>
+      </div>
+      <div style="flex:1;background:#FFF7ED;border-radius:6px;padding:5px 7px;border-left:3px solid #D97706;">
+        <div style="font-size:9px;font-weight:700;color:#D97706;">CAUSE</div>
+        <div style="font-size:9px;color:#555;">DVI red + DTC codes + TSB citations</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:6px;">
+      <div style="flex:1;background:#FFF7ED;border-radius:6px;padding:5px 7px;border-left:3px solid #16A34A;">
+        <div style="font-size:9px;font-weight:700;color:#16A34A;">CORRECTION</div>
+        <div style="font-size:9px;color:#555;">OEM parts + op code + flat-rate hrs performed</div>
+      </div>
+      <div style="flex:1;background:#FFF7ED;border-radius:6px;padding:5px 7px;border-left:3px solid #7C3AED;">
+        <div style="font-size:9px;font-weight:700;color:#7C3AED;">RECOMMEND</div>
+        <div style="font-size:9px;color:#555;">DVI yellow deferred items + advisor upsell</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <span class="tag blue">Short Mode</span>
+      <span class="tag blue">Verbose Mode</span>
+      <span class="tag orange">LLM Rewrite</span>
+      <span class="badge-pill info" style="margin-left:auto;">claude-sonnet-4-6</span>
+    </div>
+  </div>
+</div>
+
+<!-- Classification Agent -->
+<div class="node" id="n-classify" style="left:616px;top:466px;width:185px;z-index:10;" onclick="openDetail('classify')">
+  <div class="node-header" style="background:linear-gradient(135deg,#1A5C6B,#2A8C9E);color:white;">
+    <div class="node-icon" style="background:rgba(255,255,255,0.2);color:white;">&#127760;</div>
+    <div><div class="node-title" style="color:white;">Classification Agent</div><div class="node-sub" style="color:#B0E0E8;">am3cClassificationService</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Heuristic rule-based NLP</div>
+    <div class="item">Confidence ≥0.9 → AUTO</div>
+    <div class="item">0.7–0.9 → REVIEW flag</div>
+    <div class="item">&lt;0.7 → FLAGGED</div>
+    <div style="margin-top:5px;">
+      <span class="badge-pill success">AUTO</span>
+      <span class="badge-pill warn">REVIEW</span>
+      <span class="badge-pill error">FLAGGED</span>
+    </div>
+  </div>
+</div>
+
+<!-- Factuality Agent -->
+<div class="node" id="n-factuality" style="left:821px;top:466px;width:200px;z-index:10;" onclick="openDetail('factuality')">
+  <div class="node-header" style="background:linear-gradient(135deg,#DC2626,#EF4444);color:white;">
+    <div class="node-icon" style="background:rgba(255,255,255,0.2);color:white;">&#9888;</div>
+    <div><div class="node-title" style="color:white;">Factuality Agent</div><div class="node-sub" style="color:#FECACA;">am3cFactualityService — 6 Rules</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">No fabrication (BLOCKING)</div>
+    <div class="item">No future prediction (BLOCKING)</div>
+    <div class="item">No blame assignment (BLOCKING)</div>
+    <div class="item">No guarantees (BLOCKING)</div>
+    <div class="item">No speculation (BLOCKING)</div>
+    <div class="item">Verbatim audit trail (WARNING)</div>
+    <div style="margin-top:5px;"><span class="badge-pill error">BLOCKING violations halt submission</span></div>
+  </div>
+</div>
+
+<!-- Score Agent -->
+<div class="node" id="n-score" style="left:1041px;top:466px;width:185px;z-index:10;" onclick="openDetail('score')">
+  <div class="node-header" style="background:linear-gradient(135deg,#2563EB,#3B82F6);color:white;">
+    <div class="node-icon" style="background:rgba(255,255,255,0.2);color:white;">&#128200;</div>
+    <div><div class="node-title" style="color:white;">Score Agent</div><div class="node-sub" style="color:#BFDBFE;">am3cScoreService</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Source coverage: 40%</div>
+    <div class="item">Factual compliance: 40%</div>
+    <div class="item">Completeness: 20%</div>
+    <div style="margin-top:5px;">
+      <span class="tag green">90+ Excellent</span>
+      <span class="tag blue">75–89 Good</span>
+      <span class="tag amber">60–74 Fair</span>
+      <span class="tag red">&lt;60 Review</span>
+    </div>
+  </div>
+</div>
+
+<!-- Opcode Validation Agent -->
+<div class="node" id="n-opcode-val" style="left:1246px;top:466px;width:200px;z-index:10;" onclick="openDetail('opcode-val')">
+  <div class="node-header" style="background:linear-gradient(135deg,#D97706,#F59E0B);color:white;">
+    <div class="node-icon" style="background:rgba(255,255,255,0.2);color:white;">&#128295;</div>
+    <div><div class="node-title" style="color:white;">Opcode Validator</div><div class="node-sub" style="color:#FDE68A;">OEM Compliance Gate</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Op code matches job type</div>
+    <div class="item">Flat-rate hrs within tolerance</div>
+    <div class="item">Pre-auth check vs. thresholds</div>
+    <div class="item">OEM part # vs. aftermarket flag</div>
+    <div style="margin-top:5px;">
+      <span class="badge-pill warn">Pre-Auth Gate</span>
+    </div>
+  </div>
+</div>
+
+<!-- Reference/Citation Agent -->
+<div class="node" id="n-references" style="left:256px;top:640px;width:220px;z-index:10;" onclick="openDetail('references')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#0D3B45;color:white;">&#128216;</div>
+    <div><div class="node-title">Reference / Citation Agent</div><div class="node-sub">am3cReferenceService</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">[DVI-1] from dvi stage</div>
+    <div class="item">[TSB-T-SB-0197-18] linked</div>
+    <div class="item">[DTC-P0420] cited in Cause</div>
+    <div class="item">[PART-2] OEM part # pinned</div>
+    <div class="item">[LABOR-1] op code + flat-rate</div>
+    <div style="margin-top:5px;"><span class="tag teal">Full audit trail</span></div>
+  </div>
+</div>
+
+<!-- Assembly Agent -->
+<div class="node" id="n-assembly" style="left:496px;top:640px;width:220px;z-index:10;" onclick="openDetail('assembly')">
+  <div class="node-header" style="background:#F0FDF4;">
+    <div class="node-icon" style="background:#16A34A;color:white;">&#9889;</div>
+    <div><div class="node-title">Assembly Agent</div><div class="node-sub">am3cAssemblyService</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Merges all source sections</div>
+    <div class="item">Inlines citation markers</div>
+    <div class="item">Resolves conflict between agents</div>
+    <div class="item">Outputs final 3C document object</div>
+    <div style="margin-top:5px;"><span class="badge-pill success">Warranty-Ready Doc</span></div>
+  </div>
+</div>
+
+<!-- LLM Service -->
+<div class="node" id="n-llm" style="left:736px;top:640px;width:200px;z-index:10;" onclick="openDetail('llm')">
+  <div class="node-header" style="background:linear-gradient(135deg,#FF6B35,#0D3B45);">
+    <div class="node-icon" style="background:rgba(255,255,255,0.2);color:white;">&#129504;</div>
+    <div><div class="node-title" style="color:white;">LLM Service</div><div class="node-sub" style="color:rgba(255,255,255,0.7);">am3cLLMService · Claude API</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Model: claude-sonnet-4-6</div>
+    <div class="item">Short: 1–2 sentence per section</div>
+    <div class="item">Verbose: customer-friendly explanation</div>
+    <div class="item">LLM Rewrite: 20-yr service writer style</div>
+    <div style="margin-top:5px;"><span class="badge-pill info">Anthropic API</span></div>
+  </div>
+</div>
+
+<!-- SMS Writeback -->
+<div class="node" id="n-sms-writeback" style="left:956px;top:640px;width:200px;z-index:10;" onclick="openDetail('sms-writeback')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#EA580C;color:white;">&#8635;</div>
+    <div><div class="node-title">SMS Writeback</div><div class="node-sub">am3cSMSWritebackService</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Tekmetric: /internal_notes</div>
+    <div class="item">Shopware: /notes</div>
+    <div class="item">Shopmonkey: /internal_note</div>
+    <div class="item">AutoLeap: /note_text</div>
+    <div style="margin-top:5px;">
+      <span class="tag">pending</span>
+      <span class="tag green">synced</span>
+      <span class="tag red">failed</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     LAYER 4 — WARRANTY OUTPUT  (y: 776–1060)
+     ═══════════════════════════════════════════ -->
+
+<!-- Warranty Compliance Gate -->
+<div class="node" id="n-compliance-gate" style="left:36px;top:780px;width:220px;z-index:10;" onclick="openDetail('compliance-gate')">
+  <div class="node-header" style="background:linear-gradient(135deg,#16A34A,#22C55E);color:white;">
+    <div class="node-icon" style="background:rgba(255,255,255,0.2);color:white;">&#9989;</div>
+    <div><div class="node-title" style="color:white;">Warranty Compliance Gate</div><div class="node-sub" style="color:#BBF7D0;">OEMSettingsScreen rules</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Score ≥ threshold (configurable)</div>
+    <div class="item">0 BLOCKING factuality violations</div>
+    <div class="item">Op code validated + pre-auth obtained</div>
+    <div class="item">OEM part # confirmed</div>
+    <div class="item">Narrative sections all populated</div>
+    <div style="margin-top:5px;">
+      <span class="badge-pill success">APPROVED → DMS push</span>
+    </div>
+  </div>
+</div>
+
+<!-- Claim Submission -->
+<div class="node" id="n-claim-submit" style="left:276px;top:780px;width:200px;z-index:10;" onclick="openDetail('claim-submit')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#2563EB;color:white;">&#128194;</div>
+    <div><div class="node-title">Claim Submission</div><div class="node-sub">OEM Portal Push</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">DMS push → CDK / R&R / Dealertrack</div>
+    <div class="item">OEM portal: TIS / WCC / WAS / SCA</div>
+    <div class="item">Warranty claim # returned</div>
+    <div class="item">Avg days to payment: 12.4</div>
+    <div style="margin-top:5px;">
+      <span class="badge-pill success">$72.4K approved/mo</span>
+    </div>
+  </div>
+</div>
+
+<!-- Rejection Analysis -->
+<div class="node" id="n-rejection" style="left:496px;top:780px;width:220px;z-index:10;" onclick="openDetail('rejection')">
+  <div class="node-header" style="background:#FEE2E2;">
+    <div class="node-icon" style="background:#DC2626;color:white;">&#10060;</div>
+    <div><div class="node-title">Rejection Analysis</div><div class="node-sub">Root-cause feedback loop</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">"Correction too vague" → score penalty</div>
+    <div class="item">"Op code mismatch" → opcode validator alert</div>
+    <div class="item">"Aftermarket part" → parts check flag</div>
+    <div class="item">"Pre-auth missing" → routing agent update</div>
+    <div class="item">"No DTC in cause" → factuality rule #5</div>
+    <div style="margin-top:5px;">
+      <span class="badge-pill error">14 rejections / $9.3K</span>
+    </div>
+  </div>
+</div>
+
+<!-- Fixed Ops Dashboard -->
+<div class="node" id="n-fixed-ops" style="left:736px;top:780px;width:220px;z-index:10;" onclick="openDetail('fixed-ops')">
+  <div class="node-header" style="background:linear-gradient(135deg,#0D3B45,#1A5C6B);color:white;">
+    <div class="node-icon" style="background:rgba(255,255,255,0.15);color:white;">&#128202;</div>
+    <div><div class="node-title" style="color:white;">Fixed Ops Director</div><div class="node-sub" style="color:#8BBBC4;">Warranty Performance Command</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">86% approval rate (↑ from 83%)</div>
+    <div class="item">127 claims submitted this month</div>
+    <div class="item">Per-advisor compliance scores</div>
+    <div class="item">Dollars at risk by rejection reason</div>
+    <div class="item">Multi-dealer rollup (Bay Area Auto Group)</div>
+    <div style="margin-top:5px;">
+      <span class="badge-pill success">$72.4K / $84.2K approved</span>
+    </div>
+  </div>
+</div>
+
+<!-- Audit Trail -->
+<div class="node" id="n-audit" style="left:976px;top:780px;width:200px;z-index:10;" onclick="openDetail('audit')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#475569;color:white;">&#128196;</div>
+    <div><div class="node-title">Audit Trail</div><div class="node-sub">Immutable record per RO</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Raw technician input verbatim</div>
+    <div class="item">Every edit: field, before, after, timestamp</div>
+    <div class="item">Override reason captured</div>
+    <div class="item">DMS push log (who, when)</div>
+    <div style="margin-top:5px;"><span class="tag">verbatim_audit rule #6</span></div>
+  </div>
+</div>
+
+<!-- Persona views -->
+<div class="node" id="n-personas" style="left:1196px;top:780px;width:350px;z-index:10;" onclick="openDetail('personas')">
+  <div class="node-header" style="background:#F8FAFC;">
+    <div class="node-icon" style="background:#0D3B45;color:white;">&#128101;</div>
+    <div><div class="node-title">OEM Persona Gateway</div><div class="node-sub">3 Role-Based Views</div></div>
+  </div>
+  <div class="node-body">
+    <div style="display:flex;gap:8px;">
+      <div style="flex:1;background:#DBEAFE;border-radius:6px;padding:6px;border-top:2px solid #2563EB;">
+        <div style="font-size:9px;font-weight:700;color:#1D4ED8;">Fixed Ops Director</div>
+        <div style="font-size:8.5px;color:#555;margin-top:2px;">Warranty analytics, multi-dealer rollup, approval KPIs</div>
+      </div>
+      <div style="flex:1;background:#FFF7ED;border-radius:6px;padding:6px;border-top:2px solid #EA580C;">
+        <div style="font-size:9px;font-weight:700;color:#C2410C;">Service Advisor</div>
+        <div style="font-size:8.5px;color:#555;margin-top:2px;">3C Story Writer, op code match, DMS push</div>
+      </div>
+      <div style="flex:1;background:#F0FDF4;border-radius:6px;padding:6px;border-top:2px solid #16A34A;">
+        <div style="font-size:9px;font-weight:700;color:#15803D;">Technician</div>
+        <div style="font-size:8.5px;color:#555;margin-top:2px;">Bay view, TSB match, DTC entry, voice notes → RO</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Trend / KPI bar at bottom -->
+<div class="node" id="n-trend-bar" style="left:36px;top:1000px;width:600px;z-index:10;" onclick="openDetail('trend-bar')">
+  <div class="node-header" style="background:#F8FAFC;">
+    <div class="node-icon" style="background:#0D3B45;color:white;">&#128200;</div>
+    <div><div class="node-title">Warranty Approval Trend (6-Month)</div><div class="node-sub">Bay Area Auto Group · DEMO-01</div></div>
+  </div>
+  <div class="node-body">
+    <div style="display:flex;gap:6px;align-items:flex-end;height:36px;margin-bottom:6px;">
+      <!-- Simple bar chart using divs -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;">
+        <div style="height:28px;background:#0D3B45;border-radius:2px;width:100%;opacity:0.55;"></div>
+        <span style="font-size:8px;color:#888;">Oct</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;">
+        <div style="height:30px;background:#0D3B45;border-radius:2px;width:100%;opacity:0.65;"></div>
+        <span style="font-size:8px;color:#888;">Nov</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;">
+        <div style="height:26px;background:#0D3B45;border-radius:2px;width:100%;opacity:0.6;"></div>
+        <span style="font-size:8px;color:#888;">Dec</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;">
+        <div style="height:33px;background:#1A5C6B;border-radius:2px;width:100%;"></div>
+        <span style="font-size:8px;color:#888;">Jan</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;">
+        <div style="height:35px;background:#2A8C9E;border-radius:2px;width:100%;"></div>
+        <span style="font-size:8px;color:#888;">Feb</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;">
+        <div style="height:36px;background:#FF6B35;border-radius:2px;width:100%;"></div>
+        <span style="font-size:8px;color:#888;">Mar</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div style="font-size:9px;color:#555;">79% → 83% → 81% → 84% → 85% → <strong style="color:#FF6B35;">86%</strong></div>
+      <span class="badge-pill success" style="margin-left:auto;">+7% over 6 months</span>
+    </div>
+  </div>
+</div>
+
+<!-- MCP Tool Layer note -->
+<div class="node" id="n-mcp" style="left:660px;top:1000px;width:280px;z-index:10;" onclick="openDetail('mcp')">
+  <div class="node-header">
+    <div class="node-icon" style="background:#0D3B45;color:white;">&#127381;</div>
+    <div><div class="node-title">MCP Tool Layer</div><div class="node-sub">Business Logic as Tools</div></div>
+  </div>
+  <div class="node-body">
+    <div style="display:flex;gap:4px;flex-wrap:wrap;">
+      <span class="tag teal">get_tsb_matches</span>
+      <span class="tag teal">get_recall_status</span>
+      <span class="tag blue">validate_opcode</span>
+      <span class="tag blue">lookup_preauth</span>
+      <span class="tag orange">push_to_dms</span>
+      <span class="tag orange">submit_warranty_claim</span>
+      <span class="tag purple">score_narrative</span>
+      <span class="tag red">check_factuality</span>
+    </div>
+    <div style="margin-top:5px;font-size:9px;color:var(--muted);">Each agent calls tools; tools call MongoDB + OEM APIs</div>
+  </div>
+</div>
+
+<!-- ADK / ALA note -->
+<div class="node" id="n-adk" style="left:960px;top:1000px;width:200px;z-index:10;" onclick="openDetail('adk')">
+  <div class="node-header" style="background:#EDE9FE;">
+    <div class="node-icon" style="background:#6D28D9;color:white;font-size:10px;font-weight:700;">SDK</div>
+    <div><div class="node-title">Agent SDK (ADK/ALA)</div><div class="node-sub">Orchestration layer</div></div>
+  </div>
+  <div class="node-body">
+    <div class="item">Router → Classification → Story → Score</div>
+    <div class="item">Parallel: Factuality + Opcode Validation</div>
+    <div class="item">Sequential: Assembly → Compliance Gate</div>
+    <div style="margin-top:5px;"><span class="badge-pill neutral">claude-sonnet-4-6</span></div>
+  </div>
+</div>
+
+</div><!-- end diagram-wrap -->
+</div><!-- end canvas -->
+
+<!-- ── Detail Panel ── -->
+<div id="detail-panel">
+  <div id="detail-panel-header">
+    <div class="dph-icon" id="dp-icon">&#9881;</div>
+    <div>
+      <h2 id="dp-title">Node Detail</h2>
+      <p id="dp-subtitle">Click a node to inspect</p>
+    </div>
+    <button id="detail-close" onclick="closeDetail()">&#10005;</button>
+  </div>
+  <div id="detail-body"></div>
+</div>
+
+<!-- ── Legend ── -->
+<div id="legend">
+  <h4>Legend</h4>
+  <div class="legend-row"><div class="legend-dot" style="background:#0D3B45;"></div><span>Core agent / primary node</span></div>
+  <div class="legend-row"><div class="legend-dot" style="background:#FF6B35;"></div><span>3C Story Writer (key flow)</span></div>
+  <div class="legend-row"><div class="legend-dot" style="background:#DC2626;"></div><span>Blocking / rejection path</span></div>
+  <div class="legend-row"><div class="legend-dot" style="background:#16A34A;"></div><span>Approval / output</span></div>
+  <div class="legend-row"><div class="legend-dot" style="background:#7C3AED;"></div><span>TSB / OEM knowledge</span></div>
+  <div class="legend-row"><div class="legend-dot" style="background:#D97706;"></div><span>Recall / pre-auth</span></div>
+  <div class="legend-row" style="margin-top:6px;">
+    <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#1A5C6B" stroke-width="2" marker-end="url(#ah-teal2)"/></svg>
+    <span>Primary data flow</span>
+  </div>
+  <div class="legend-row">
+    <svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" stroke="#FF6B35" stroke-width="2" stroke-dasharray="4 3"/></svg>
+    <span>Feedback / validation</span>
+  </div>
+</div>
+
+<script>
+// ── Node detail definitions ──
+const DETAILS = {
+  recalls: {
+    icon: '⚠', title: 'NHTSA Recalls', sub: 'Safety Campaign Data',
+    sections: [
+      { head: 'What it is', body: `<p>NHTSA (National Highway Traffic Safety Administration) recall data fetched in real-time by VIN using the <strong>vPIC API</strong>. Identifies open safety campaigns that must be performed at no charge to the vehicle owner.</p>` },
+      { head: 'Active recalls in demo data', body: `
+        <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>GM 20V-419</strong><span>Low-pressure fuel pump replacement — Equinox 1.5T. Op: K4521 (1.5 hr)</span></div></div>
+        <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>Toyota 20V-418</strong><span>Low-pressure fuel pump — Camry 2.5L. Op: EF9D-20 (1.2 hr) · WAS submission</span></div></div>
+        <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>Ford 19S32</strong><span>Exhaust leak → CO in cabin safety recall. Op: 19S32B (2.5 hr)</span></div></div>
+      ` },
+      { head: 'How it feeds the 3C Story', body: `<p>Recall checker runs on every RO open. If an open recall matches the VIN and the symptom overlaps the complaint, the Routing Agent flags the RO as <strong>warranty/recall</strong> rather than customer-pay. The recall number is cited in the Cause section: <em>[RECALL-20V-419] Open fuel pump recall identified per NHTSA vPIC. Repair performed per campaign guidelines.</em></p>` },
+      { head: 'Status values', body: `<div class="code-block">Open     — recall not yet performed on this VIN\nComplete — recall performed, date stamped\nN/A      — VIN not affected</div>` }
+    ]
+  },
+  tsb: {
+    icon: '📄', title: 'TSB Corpus', sub: 'Predii-Tagged Technical Service Bulletins',
+    sections: [
+      { head: 'What it is', body: `<p>Predii's curated corpus of OEM Technical Service Bulletins (TSBs), normalized and tagged with NLP metadata: affected symptoms, DTC codes, mileage ranges, and relevance keywords. Queried by <code>am3cTSBService.queryTSBCorpus()</code>.</p>` },
+      { head: 'Predii tagging schema', body: `<div class="code-block">tsbNumber:       "T-SB-0197-18"\ntitle:           "P0420 — Catalyst System Efficiency"\naffectedVehicles: "2018-2022 Toyota Camry/RAV4/Corolla"\naffectedCondition: "MIL illuminated; P0420 set"\nrelevanceScore:  0.97\nkeywords:        ["catalyst", "P0420", "o2 sensor", "bank 1"]\nsource:          "Toyota Technical Information System (TIS)"</div>` },
+      { head: 'Key TSBs in demo corpus', body: `<ul>
+        <li><strong>T-SB-0197-18</strong> — Toyota P0420 Catalyst (2018–22)</li>
+        <li><strong>T-SB-0131-19</strong> — Toyota GDI intake valve carbon (direct-injection)</li>
+        <li><strong>PIP5622E</strong> — GM AFM/DOD oil consumption diagnostic</li>
+        <li><strong>TSB 19-2346</strong> — Ford 10R80 transmission fluid exchange (shudder)</li>
+        <li><strong>TSB 16-183-20R</strong> — Subaru Lineartronic CVT fluid replacement</li>
+      </ul>` },
+      { head: 'Matching algorithm', body: `<p>1. Extract complaint keywords (stop-word filtered, >3 chars)<br>2. Score each corpus entry: <code>relevanceScore + 0.05×keyword_bonus</code><br>3. Return top-3 sorted by score<br>4. Technician Accept / Dismiss each match<br>5. Accepted TSBs are cited as <code>[TSB-T-SB-0197-18]</code> in Cause section</p>` }
+    ]
+  },
+  opcodes: {
+    icon: '🔧', title: 'OEM Labor Opcodes', sub: 'Make-Specific Operation Codes',
+    sections: [
+      { head: 'What they are', body: `<p>OEM-assigned operation codes that define the exact job performed, the standard flat-rate labor hours, and any pre-authorization requirements. Incorrect or mismatched op codes are the #2 rejection reason in the demo data.</p>` },
+      { head: 'Toyota opcodes', body: `<div class="code-block">1762A44  0.5 hr  P0420 catalyst preliminary check\n1762B44  2.5 hr  Catalyst replacement (pre-auth $1,200)\n1250344  2.0 hr  GDI intake valve carbon clean (TSB T-SB-0131-19)\nEF9D-20  1.2 hr  Fuel pump recall 20V-418 — WAS submit</div>` },
+      { head: 'GM opcodes', body: `<div class="code-block">J3205    1.5 hr  Oil consumption diagnostic (AFM)\nJ4301    4.5 hr  AFM/DOD lifter replacement (pre-auth $2,500)\nK4521    1.5 hr  Low-pressure fuel pump recall 20V-419</div>` },
+      { head: 'Ford opcodes', body: `<div class="code-block">307B08A  1.5 hr  10R80 trans fluid exchange (TSB 19-2346)\n19S32B   2.5 hr  Exhaust repair safety recall 19S32</div>` },
+      { head: 'Subaru opcodes', body: `<div class="code-block">12181AA010  0.5 hr  Oil consumption test (1,200-mi protocol)\n12100AJ950  8.0 hr  Engine short block FB25 (pre-auth $4,000) SCA WRS-92\n31100FJ040  1.5 hr  CVT fluid replacement (TSB 16-183-20R)\n31100FJ050  0.8 hr  CVT cooler line flush (TSB 02-177-21R)</div>` },
+      { head: 'Pre-authorization rules', body: `<ul>
+        <li>Toyota 3114C44 (CV axle bilateral): pre-auth required if >3.0 flat-rate hours</li>
+        <li>GM J4301 (AFM lifter): WCC authorization required, threshold $2,500</li>
+        <li>Subaru 12100AJ950 (short block): SCA authorization required, $4,000</li>
+        <li>Toyota 1762B44 (catalyst): pre-auth above $1,200</li>
+      </ul>` }
+    ]
+  },
+  'predii-norm': {
+    icon: '⚙', title: 'Predii Normalization', sub: 'Repair Classification + Knowledge Graph',
+    sections: [
+      { head: 'What it does', body: `<p>Predii's normalization layer classifies every repair by vehicle origin, system/subsystem, labor category, and technician efficiency. Powers the Knowledge Graph that backs the AI Insights agent.</p>` },
+      { head: 'vehicleOrigin classification', body: `<div class="code-block">JAPANESE      — Toyota, Honda, Nissan, Subaru\nGERMAN        — BMW, Mercedes, Audi, VW\nDOMESTIC_US   — Ford, GM, Chrysler/Stellantis\nOTHER         — KIA, Hyundai, Volvo, etc.</div>` },
+      { head: 'Key normalized fields per RO', body: `<div class="code-block">vehicleOrigin:     "JAPANESE"\nlaborTimeTracking: {\n  totalFlatHrs:   4.5,\n  totalActualHrs: 5.1,\n  elr:            185,   // effective labor rate\n  postedRate:     195\n}\nefficiency:        0.88  // per technician</div>` },
+      { head: 'Knowledge Graph use', body: `<p>The KG clusters repairs by VIN, make/model, mileage, and system. The AI Insights agent queries it to surface: most common repairs, upsell bundles, revenue by make, top technician efficiency. Backed by MongoDB at <code>172.16.80.7:27017</code>.</p>` }
+    ]
+  },
+  'ro-history': {
+    icon: '📄', title: 'RO History by VIN', sub: 'MongoDB Repair Record Store',
+    sections: [
+      { head: 'Purpose', body: `<p>Every repair order, indexed by VIN, stored in MongoDB. Enables: prior repair lookups on RO open, DTC pattern history, technician assignment history, warranty claim linkage.</p>` },
+      { head: 'MongoDB schema (per RO)', body: `<div class="code-block">roId, vin, customerId\nvehicle: { year, make, model, trim, engine }\nstatus: open|in_progress|completed\nserviceLines: [{\n  laborCode, description,\n  laborHrs (flat), actualHrs (clocked),\n  clockIn, clockOut,\n  partsInstalled: [{ partNumber, oem: bool }]\n}]\nlaborTimeTracking: { totalFlatHrs, totalActualHrs, elr }\nvehicleOrigin, technician\n3cDocument: { complaint, cause, correction }\nwarrantyClaimId, complianceScore</div>` },
+      { head: 'Connection', body: `<p>Read from <code>MONGODB_URI</code> in <code>.env.local</code>.<br>Host: <code>172.16.80.7:27017</code> (dst) | <code>172.16.80.16:27017</code> (src)<br>Never localhost.</p>` }
+    ]
+  },
+  dms: {
+    icon: '⛵', title: 'DMS Connector', sub: 'CDK · Reynolds & Reynolds · Dealertrack',
+    sections: [
+      { head: 'Role', body: `<p>The Dealer Management System (DMS) is the source-of-truth for every RO at a dealership. WrenchIQ-OEM pulls ROs from the DMS on open and pushes the completed 3C narrative back on approval.</p>` },
+      { head: 'Push payload format', body: `<div class="code-block">CDK:         PUT /api/v1/repair-orders/{id}\n             field: internal_notes\nReynolds:    PUT /api/v1/repair_orders/{id}\n             field: notes\nDealertrack: PUT /api/v2/work-orders/{id}\n             field: internal_note</div>` },
+      { head: 'Audit trail', body: `<p>Every DMS push is logged in OEMSettingsScreen's Audit Log: <em>"DMS Push — RO-2861 to CDK — Amy Chen — Mar 21 10:14 AM"</em>. Compliance overrides are also captured with reason field.</p>` }
+    ]
+  },
+  'oem-tis': {
+    icon: '🌐', title: 'OEM Portals', sub: 'Warranty Submission Systems',
+    sections: [
+      { head: 'Portal mapping', body: `<div class="code-block">Toyota  → TIS (Technical Info System)\n          WAS (Warranty Application System)\nGM      → WCC (Warranty Claim Center)\n          Global Connect\nFord    → WILIS / FSA (Field Service Action)\nHonda   → e-Service (warranty claims)\nSubaru  → SCA (Subaru Claims Application)\n          WRS (Warranty Repair Support)</div>` },
+      { head: 'Submission trigger', body: `<p>After Compliance Gate passes and DMS push succeeds, the OEM portal receives the claim package: 3C narrative, op code, flat-rate hours, OEM part numbers, and pre-authorization reference (if applicable).</p>` }
+    ]
+  },
+  'ro-entry': {
+    icon: '📋', title: 'RO Entry', sub: 'Stage 1: customer_intake',
+    sections: [
+      { head: 'What happens', body: `<p>The Advisor opens the RO (or DMS imports it). Customer concern text is captured, mileage is entered, and the VIN triggers the decode pipeline. This is the mandatory first stage of the ROContext pipeline.</p>` },
+      { head: 'ROContext initialized', body: `<div class="code-block">roId:         "RO-3001"\nvin:          "1GCRYDED8LZ456789"\ncurrentStage: "customer_intake"\nstageHistory: []\ntechNotes:    []\ndviFindings:  []\ntsbMatches:   []</div>` }
+    ]
+  },
+  vin: {
+    icon: '🚗', title: 'VIN Decode', sub: 'am3cVINService',
+    sections: [
+      { head: 'API call', body: `<p>Calls NHTSA vPIC API: <code>https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/{VIN}</code>. Maps response fields to internal YMME schema. 24-hour TTL cache via <code>VIN_CACHE</code> map.</p>` },
+      { head: 'Output schema', body: `<div class="code-block">{ year, make, model, trim, engine,\n  transmission, driveType, fuelType,\n  source: "nhtsa" | "demo" }</div>` }
+    ]
+  },
+  dvi: {
+    icon: '🔍', title: 'DVI Findings', sub: 'Digital Vehicle Inspection — am3cDVIService',
+    sections: [
+      { head: 'Routing logic', body: `<div class="flow-step"><div class="step-num">🟢</div><div class="step-content"><strong>GREEN</strong><span>Excluded entirely from 3C narrative</span></div></div>
+      <div class="flow-step"><div class="step-num">🟡</div><div class="step-content"><strong>YELLOW</strong><span>Routes to Recommendations section</span></div></div>
+      <div class="flow-step"><div class="step-num">🔴</div><div class="step-content"><strong>RED actioned</strong><span>Routes to Cause section with citation [DVI-N]</span></div></div>
+      <div class="flow-step"><div class="step-num">🔴</div><div class="step-content"><strong>RED deferred</strong><span>Routes to Recommendations (customer declined)</span></div></div>` },
+      { head: 'DVIFinding schema', body: `<div class="code-block">{ id, item, status: 'red'|'yellow'|'green',\n  techNote, actioned: boolean,\n  measurement?, oemSpec?, photoRef? }</div>` }
+    ]
+  },
+  dtc: {
+    icon: '⚠', title: 'DTC / Scan Data', sub: 'am3cDTCService',
+    sections: [
+      { head: 'DTC library (sample)', body: `<div class="code-block">P0420  Catalyst System Efficiency Below Threshold Bank 1\nP0521  Engine Oil Pressure Sensor/Switch Range\nP0741  TCC Circuit Performance or Stuck Off\nP0171  System Too Lean — Bank 1\nP0300  Random / Multiple Cylinder Misfire\nP07D5  Transmission Fluid Degraded</div>` },
+      { head: 'Status types', body: `<div class="code-block">confirmed  — present in current scan\npending    — set but not yet confirmed\nhistorical — stored from prior session</div>` },
+      { head: 'Freeze frame data', body: `<div class="code-block">{ rpm: 750, coolantTemp: 195,\n  mapKpa: 35, fuelTrimST: -2.3,\n  fuelTrimLT: 4.7, vehicleSpeed: 0,\n  engineLoad: 22.4 }</div>` },
+      { head: 'Role in 3C', body: `<p>Confirmed DTCs become citations in the Cause section: <em>"Diagnostic scan retrieved active DTC P0420... [DTC-P0420]"</em>. Factuality Rule #5 (no_speculation) requires every cause statement to reference an observed DTC or DVI finding.</p>` }
+    ]
+  },
+  'tsb-match': {
+    icon: '🔮', title: 'TSB Matcher', sub: 'am3cTSBService',
+    sections: [
+      { head: 'Matching flow', body: `
+        <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>Keyword extraction</strong><span>Remove stop-words from complaint, keep tokens >3 chars</span></div></div>
+        <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>Corpus scoring</strong><span>relevanceScore + 0.05 per matching keyword</span></div></div>
+        <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>Top-3 returned</strong><span>Sorted by score, presented to technician</span></div></div>
+        <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>Accept / Dismiss</strong><span>Accepted TSBs cited as [TSB-xxx] in Cause</span></div></div>
+      ` }
+    ]
+  },
+  'recall-check': {
+    icon: '🚨', title: 'Recall Checker', sub: 'nhtsaService + OEM Campaign Lookup',
+    sections: [
+      { head: 'Flow', body: `<p>On every RO open, the recall checker queries NHTSA by VIN and cross-references active OEM campaigns. Open recalls are surfaced to the advisor and flagged as required no-charge repairs. The Routing Agent then classifies the RO as a recall RO.</p>` },
+      { head: 'Warranty implication', body: `<p>Recall repairs use dedicated op codes (e.g., <code>K4521</code>, <code>EF9D-20</code>) and submit through OEM portals (WAS, WCC, SCA). They do not consume standard warranty coverage.</p>` }
+    ]
+  },
+  'parts-labor': {
+    icon: '📦', title: 'Parts + Labor Lines', sub: 'OEM Part Numbers + Op Codes',
+    sections: [
+      { head: 'Schema', body: `<div class="code-block">partsInstalled: [{\n  partNumber:  "90080-91215",\n  description: "Oxygen Sensor A/F Bank 1",\n  oem:         true,\n  quantity:    1,\n  unitCost:    287.50\n}]\nlaborOps: [{\n  opCode:    "1762B44",\n  description: "Replace catalytic converter",\n  flatRateHrs: 2.5,\n  actualHrs:   2.8\n}]</div>` },
+      { head: 'OEM part number requirement', body: `<p>Rejection reason #3 in demo: <em>"Aftermarket part used — OEM part number required"</em> ($2,100 Silverado). The Opcode Validator checks <code>oem: true</code> on all parts before allowing claim submission.</p>` }
+    ]
+  },
+  ro3001: {
+    icon: 'RO', title: 'RO-3001 · 2019 Chevrolet Silverado', sub: 'AFM/DOD Lifter Collapse — Oil Consumption',
+    sections: [
+      { head: 'Complaint', body: `<p><em>"Customer states engine oil level drops approximately one quart per 1,000 miles. Customer states oil pressure warning lamp illuminated briefly at idle. Condition progressively worsening over past 12,000 miles."</em></p>` },
+      { head: 'Cause', body: `<p>DTCs: P0521 (active), P0014 (pending), P0008 (stored). TSB PIP5622E matched — AFM oil consumption. Lifter valley inspection confirmed AFM/DOD lifter collapse on cylinders 1, 4, 6, 7. Consumption test: 0.8 qt/1,000 mi confirmed.</p>` },
+      { head: 'Correction', body: `<p>Op: J4301 (4.5 hr). Pre-auth obtained: WCC $2,500. All AFM/DOD lifters replaced. PCM calibration: AFM system disabled. Oil/filter replaced. Road tested 15 miles — no recurrence. <strong>complianceScore: 97</strong></p>` },
+      { head: 'Warranty coverage', body: `<p>Active GM powertrain warranty 5yr/60,000 mi. Marcus Williams (GM Master Tech, 12 yr). WCC submission required before repair start.</p>` }
+    ]
+  },
+  ro3003: {
+    icon: 'RO', title: 'RO-3003 · 2021 Toyota Camry', sub: 'Fuel Pump Recall 20V-418 + Cold Hesitation',
+    sections: [
+      { head: 'Recall component', body: `<p>Open NHTSA recall 20V-418 identified on VIN. Low-pressure fuel pump must be replaced at no charge under recall. Op code: EF9D-20 (1.2 hr). Submission via Toyota WAS (Warranty Application System).</p>` },
+      { head: 'Complaint', body: `<p><em>"Customer states vehicle hesitates and stumbles when accelerating from 20–45 mph during cold start conditions below 40°F."</em></p>` },
+      { head: 'Compliance', body: `<p>complianceScore: 94. TSB: T-SB-0131-19 matched (GDI intake valve carbon). Darnell Jackson (Toyota Senior, 8 yr). No aftermarket parts. Pre-auth not required for this op code.</p>` }
+    ]
+  },
+  ro3005: {
+    icon: 'RO', title: 'RO-3005 · 2020 F-150 5.0L V8', sub: 'Transmission Shudder — 10R80 TSB',
+    sections: [
+      { head: 'Complaint', body: `<p><em>"Customer states vehicle shudders and vibrates during light throttle acceleration between 30–45 mph. Condition occurs primarily when transmission is upshifting."</em></p>` },
+      { head: 'Cause', body: `<p>DTCs: P0741 (TCC slip, active), P07D5 (trans fluid degraded, pending). TSB 19-2346 matched — 10R80 transmission fluid exchange. Fluid sample confirmed degradation. Convertor clutch shudder pattern consistent with TSB.</p>` },
+      { head: 'Correction', body: `<p>Op: 307B08A (1.5 hr). Mercon ULV fluid exchanged per TSB procedure. Road tested 25 miles — shudder resolved. complianceScore: 89. Sophie Laurent (Ford Certified, 5 yr).</p>` }
+    ]
+  },
+  ro3010: {
+    icon: 'RO', title: 'RO-3010 · 2020 Subaru Forester', sub: 'CVT Shudder — Extended Warranty',
+    sections: [
+      { head: 'Extended warranty', body: `<p>10yr/100,000-mile extended warranty coverage confirmed for CVT. SCA (Subaru Claims Application) submission: WRS-92. No pre-auth required for 31100FJ040 at 1.5 hr.</p>` },
+      { head: 'Cause', body: `<p>TSB 16-183-20R matched — Lineartronic CVT fluid replacement procedure. Fluid degraded, friction modifier depleted. James Park (Honda Master, 10 yr — cross-certified Subaru).</p>` },
+      { head: 'Correction', body: `<p>Op: 31100FJ040 (1.5 hr). CVT fluid replaced with Subaru CVTF-II per TSB. CVT cooler line flush also performed (31100FJ050, 0.8 hr). complianceScore: 92.</p>` }
+    ]
+  },
+  'routing-agent': {
+    icon: '🤖', title: 'Routing Agent', sub: 'Warranty vs. Customer-Pay Classification',
+    sections: [
+      { head: 'Decision tree', body: `
+        <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>Recall check</strong><span>Open recall on VIN? → Recall RO path</span></div></div>
+        <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>Warranty coverage</strong><span>Within OEM warranty dates/miles? → Warranty path</span></div></div>
+        <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>Extended warranty</strong><span>Extended plan active? → Covered path</span></div></div>
+        <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>Customer-pay</strong><span>None of the above → AM3C pipeline</span></div></div>
+      ` },
+      { head: 'Pre-auth flag', body: `<p>Checks the op code pre-auth table. If the matched op code exceeds the authorization threshold, the agent flags the RO and blocks submission until WCC/WAS authorization is obtained and referenced in the narrative.</p>` }
+    ]
+  },
+  'story-writer': {
+    icon: '✍', title: '3C Story Writer Agent', sub: 'OEM-Compliant Complaint / Cause / Correction',
+    sections: [
+      { head: '7-stage pipeline', body: `
+        <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>customer_intake</strong><span>Required. Complaint text, VIN, mileage</span></div></div>
+        <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>mpi_dvi</strong><span>Optional. DVI findings routed by severity</span></div></div>
+        <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>tsb_match</strong><span>Optional. Top-3 TSBs ranked by relevance</span></div></div>
+        <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>diagnostic_scan</strong><span>Optional. DTCs + freeze frame</span></div></div>
+        <div class="flow-step"><div class="step-num">5</div><div class="step-content"><strong>tech_notes</strong><span>Required. Raw input → Classification Agent</span></div></div>
+        <div class="flow-step"><div class="step-num">6</div><div class="step-content"><strong>work_performed</strong><span>Required. Parts + labor ops, OEM part #s</span></div></div>
+        <div class="flow-step"><div class="step-num">7</div><div class="step-content"><strong>final_review</strong><span>Required. Factuality + Score + Opcode validation</span></div></div>
+      ` },
+      { head: 'OEM vs. AM differences', body: `<p>OEM edition enforces: (1) op code matching, (2) OEM-only parts, (3) pre-auth references, (4) DMS push, (5) portal submission. AM edition is customer-pay focused with SMS writeback only.</p>` }
+    ]
+  },
+  classify: {
+    icon: '🌐', title: 'Classification Agent', sub: 'am3cClassificationService',
+    sections: [
+      { head: 'How it works', body: `<p>Heuristic rule-based NLP — no LLM call. Applies ordered regex/keyword patterns to classify each tech note sentence into one of 4 sections.</p>` },
+      { head: 'Classification rules (priority order)', body: `<div class="code-block">1. COMPLAINT  — starts with "customer states/reports"\n               or: noise|smell|vibration|hesitation|stall\n2. CORRECTION — replaced|installed|performed|completed\n               reprogrammed|cleared|adjusted\n3. RECOMMEND  — recommend|suggest|advise|should|monitor\n               deferred|due|will need\n4. CAUSE      — found|diagnosed|confirmed|scan revealed\n               DTC|P0...|failed|worn|cracked|leaking</div>` },
+      { head: 'Confidence thresholds', body: `<div class="code-block">≥ 0.90  → AUTO   (auto-accepted, no human review)\n0.70–0.89 → REVIEW (advisor must confirm)\n< 0.70  → FLAGGED (requires manual classification)</div>` }
+    ]
+  },
+  factuality: {
+    icon: '⚠', title: 'Factuality Agent', sub: '6 Non-Negotiable Rules — am3cFactualityService',
+    sections: [
+      { head: 'Why this matters for warranty', body: `<p>OEM warranty reviewers reject narratives that contain speculation, blame, guarantees, or unsourced claims. These 6 rules enforce the professional language standard required for warranty approval. BLOCKING violations prevent DMS submission entirely.</p>` },
+      { head: 'The 6 rules', body: `
+        <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>no_fabrication (BLOCKING)</strong><span>Every claim must have a citation: [DVI-1], [TSB-x], [DTC-P0420]</span></div></div>
+        <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>no_future_prediction (BLOCKING)</strong><span>No "will fail", "may cause", "could lead to"</span></div></div>
+        <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>no_blame (BLOCKING)</strong><span>No fault assigned to customer, prior shop, or OEM</span></div></div>
+        <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>no_guarantees (BLOCKING)</strong><span>No "permanently fixed", "100% resolved", "guaranteed"</span></div></div>
+        <div class="flow-step"><div class="step-num">5</div><div class="step-content"><strong>no_speculation (BLOCKING)</strong><span>No "we think", "probably", "likely" in cause</span></div></div>
+        <div class="flow-step"><div class="step-num">6</div><div class="step-content"><strong>verbatim_audit (WARNING)</strong><span>Original tech input preserved in audit trail</span></div></div>
+      ` }
+    ]
+  },
+  score: {
+    icon: '📈', title: 'Score Agent', sub: 'am3cScoreService — 0–100 Quality Score',
+    sections: [
+      { head: 'Scoring weights', body: `<div class="code-block">sourceCoverage:    40%  — sentences citing [DVI/TSB/DTC] refs\nfactualCompliance: 40%  — no factuality violations\ncompleteness:      20%  — all sections populated</div>` },
+      { head: 'Score thresholds', body: `<div class="code-block">90–100  Excellent  (green)  — auto-submit enabled\n75–89   Good       (blue)   — submit with review\n60–74   Fair       (amber)  — advisor must address gaps\n0–59    Needs Review (red)  — blocked from submission</div>` },
+      { head: 'Connection to rejection', body: `<p>The #1 rejection reason in demo: <em>"Correction section too vague"</em>. This directly lowers sourceCoverage (no [LABOR-1] citation) and completeness. The Score Agent surfaces this as a "Fix before submit" banner in the UI.</p>` }
+    ]
+  },
+  'opcode-val': {
+    icon: '🔧', title: 'Opcode Validator', sub: 'OEM Compliance Gate',
+    sections: [
+      { head: 'Validation checks', body: `
+        <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>Op code × job type match</strong><span>Electrical op code on mechanical job → reject flag</span></div></div>
+        <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>Flat-rate hours tolerance</strong><span>Actual hours must be within ±20% of flat-rate or flagged</span></div></div>
+        <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>Pre-authorization check</strong><span>Dollar threshold × op code → blocks submission if no auth ref</span></div></div>
+        <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>OEM part number check</strong><span>All partsInstalled must have oem: true</span></div></div>
+      ` },
+      { head: 'Top rejection causes it prevents', body: `<ul>
+        <li>"Op code mismatch — electrical code for mechanical repair" (#2 rejection)</li>
+        <li>"Aftermarket part used" (#3 rejection — $2,100)</li>
+        <li>"Pre-authorization missing" (#4 rejection — $780)</li>
+        <li>"Op code pre-auth required 3.0+ hrs not submitted" (#7 rejection — $1,870)</li>
+      </ul>` }
+    ]
+  },
+  references: {
+    icon: '📖', title: 'Reference / Citation Agent', sub: 'am3cReferenceService',
+    sections: [
+      { head: 'Citation format', body: `<div class="code-block">[DVI-1]    from mpi_dvi stage finding\n[TSB-T-SB-0197-18]  accepted TSB match\n[DTC-P0420]  confirmed OBD-II code\n[PART-2]   OEM part installed\n[LABOR-1]  op code performed\n[INTAKE-1] customer concern verbatim</div>` },
+      { head: 'Why citations matter', body: `<p>The Factuality Agent (rule #1: no_fabrication) requires every factual claim to be cited. The Score Agent awards 40% of the score based on citation density. OEM warranty reviewers use citations to verify evidence trail.</p>` }
+    ]
+  },
+  assembly: {
+    icon: '⚡', title: 'Assembly Agent', sub: 'am3cAssemblyService',
+    sections: [
+      { head: 'Section source mapping', body: `<div class="code-block">complaint:       intake + classifiedNotes.complaint\ncause:           dviFindings.red + tsbMatches +\n                 dtcCodes + classifiedNotes.cause\ncorrection:      partsInstalled + laborOps +\n                 classifiedNotes.correction\nrecommendations: dviFindings.yellow +\n                 dviFindings.red_deferred +\n                 classifiedNotes.recommendation</div>` },
+      { head: 'Output', body: `<div class="code-block">assembledDocument: {\n  complaint:       "Customer states...",\n  cause:           "Scan retrieved P0420 [DTC-P0420]...",\n  correction:      "Catalyst replaced [PART-1]...",\n  recommendations: "Recommend cabin filter [DVI-3]...",\n  sources: [\n    { marker: "[DTC-P0420]", type: "DTC", ... },\n    { marker: "[TSB-T-SB-0197-18]", type: "TSB", ... }\n  ]\n}</div>` }
+    ]
+  },
+  llm: {
+    icon: '🧠', title: 'LLM Service', sub: 'am3cLLMService · Claude API',
+    sections: [
+      { head: 'Model', body: `<p><strong>claude-sonnet-4-6</strong> — called for narrative rewrite modes. Falls back to local text transformations if API key is missing.</p>` },
+      { head: 'Three modes', body: `
+        <div class="flow-step"><div class="step-num">S</div><div class="step-content"><strong>Short</strong><span>1–2 sentences per section, concise technical language for DMS field length limits</span></div></div>
+        <div class="flow-step"><div class="step-num">V</div><div class="step-content"><strong>Verbose</strong><span>3–5 sentences, customer-friendly. Uses "your vehicle", "we found", "we repaired"</span></div></div>
+        <div class="flow-step"><div class="step-num">L</div><div class="step-content"><strong>LLM Rewrite</strong><span>20-year service writer style. Professional, precise, cites all findings, warranty-ready tone</span></div></div>
+      ` },
+      { head: 'System prompt (LLM mode)', body: `<div class="code-block">"You are a 20-year automotive service writer.\nWrite a professional warranty-ready 3C narrative.\nCite every DTC, TSB, and DVI finding.\n2–3 sentences per section.\nNo speculation. No future predictions."</div>` }
+    ]
+  },
+  'sms-writeback': {
+    icon: '🔄', title: 'SMS Writeback', sub: 'am3cSMSWritebackService',
+    sections: [
+      { head: 'Purpose', body: `<p>After the 3C document is assembled and approved, push it back to the Shop Management System (AM) or DMS (OEM). Enables service writers to see the AI-generated narrative inside their native tool.</p>` },
+      { head: 'Target endpoints', body: `<div class="code-block">Tekmetric:   PUT /api/v1/repair-orders/{id}\n             body.internal_notes\nShopware:    PUT /api/v1/repair_orders/{id}\n             body.notes\nShopmonkey:  PUT /api/v2/work-orders/{id}\n             body.internal_note\nAutoLeap:    PUT /api/v1/repair-orders/{id}/notes\n             body.note_text</div>` },
+      { head: 'Status lifecycle', body: `<div class="code-block">pending  → synced  (success)\npending  → failed  → retrying → synced/failed</div>` }
+    ]
+  },
+  'compliance-gate': {
+    icon: '✅', title: 'Warranty Compliance Gate', sub: 'Final validation before DMS push',
+    sections: [
+      { head: 'Gate conditions (ALL must pass)', body: `
+        <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>Score ≥ threshold</strong><span>Configurable in OEMSettingsScreen (default 75)</span></div></div>
+        <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>Zero BLOCKING violations</strong><span>All 6 factuality rules clear</span></div></div>
+        <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>Op code validated</strong><span>Job type match + flat-rate tolerance</span></div></div>
+        <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>Pre-auth obtained</strong><span>Authorization reference in RO for flagged op codes</span></div></div>
+        <div class="flow-step"><div class="step-num">5</div><div class="step-content"><strong>OEM parts only</strong><span>No aftermarket part numbers</span></div></div>
+        <div class="flow-step"><div class="step-num">6</div><div class="step-content"><strong>All sections populated</strong><span>Complaint, Cause, Correction non-empty</span></div></div>
+      ` },
+      { head: 'On pass', body: `<p>DMS push triggered. OEM portal claim submitted. Audit log entry created. complianceScore stamped on RO document.</p>` },
+      { head: 'On fail', body: `<p>Red banner in advisor UI listing each failing condition. RO cannot be submitted until all gates pass. Compliance override available (captured with reason in audit log).</p>` }
+    ]
+  },
+  'claim-submit': {
+    icon: '📁', title: 'Claim Submission', sub: 'OEM Portal Push',
+    sections: [
+      { head: 'Submission package', body: `<div class="code-block">{\n  roId, dealerCode: "DEMO-01",\n  vin, odometer,\n  narrative: { complaint, cause, correction },\n  opCode, flatRateHrs,\n  partsInstalled: [{ partNumber, oem: true }],\n  preAuthRef?: "WCC-29847",\n  recallNumber?: "20V-419",\n  tsbReferences: ["PIP5622E"],\n  complianceScore: 97\n}</div>` },
+      { head: 'Performance metrics', body: `<p>Bay Area Auto Group demo: <strong>$72.4K approved / $84.2K submitted</strong> = 86% approval rate. Avg days to payment: 12.4. Prior month: 83%. 6-month trend: +7%.</p>` }
+    ]
+  },
+  rejection: {
+    icon: '❌', title: 'Rejection Analysis', sub: 'Feedback loop back to agents',
+    sections: [
+      { head: 'Top 10 rejection reasons (demo)', body: `<div class="code-block">1. "Correction too vague" — $1,240  (Tyler Beck)\n2. "Op code mismatch" — $890  (Carlos Reyes)\n3. "Aftermarket part" — $2,100  (Jessica Torres)\n4. "Pre-auth missing" — $780  (Tyler Beck)\n5. "Complaint too vague" — $1,560  (Carlos Reyes)\n6. "No DTC in cause" — $940  (Tyler Beck)\n7. "Pre-auth not submitted 3hr+" — $1,870  (Jessica Torres)\n8. "Duplicate claim 30-day window" — $650  (Carlos Reyes)\n9. "Missing cause section" — $1,120  (Tyler Beck)\n10. "Superseded part number" — $430  (Carlos Reyes)</div>` },
+      { head: 'Feedback loop', body: `<p>Each rejection type maps to an agent rule update: vague correction → score weight increase on Correction completeness; op code mismatch → Opcode Validator alert tuning; no DTC in cause → Factuality Rule #5 trigger pattern expansion.</p>` }
+    ]
+  },
+  'fixed-ops': {
+    icon: '📊', title: 'Fixed Ops Director', sub: 'Warranty Performance Command Center',
+    sections: [
+      { head: 'Dashboard KPIs', body: `<div class="code-block">Submitted:    127 claims / $84.2K\nApproved:     109 claims / $72.4K (86%)\nRejected:      14 claims / $9.3K\nPending:        4 claims\nAvg days pay: 12.4 days</div>` },
+      { head: 'Advisor leaderboard', body: `<div class="code-block">Ryan Cho        94 compliance  97% approval\nJessica Torres  89 compliance  88% approval\nDavid Kim       87 compliance  91% approval\nMaria Santos    91 compliance  93% approval\nTyler Beck      82 compliance  79% approval\nCarlos Reyes    78 compliance  76% approval</div>` },
+      { head: 'Multi-dealer rollup', body: `<p>OEMDealerGroupScreen aggregates across all rooftops in the Bay Area Auto Group. Fixed Ops Director can drill into per-location, per-make, per-advisor breakdowns.</p>` }
+    ]
+  },
+  audit: {
+    icon: '📄', title: 'Audit Trail', sub: 'Immutable record per RO document',
+    sections: [
+      { head: 'What is captured', body: `<div class="code-block">rawInput: []\n  — original tech note verbatim (Factuality Rule #6)\nedits: []\n  — { field, before, after, editedBy, timestamp }\noverride: { reason, overriddenBy, timestamp }\ndmsPushes: [{ target, status, syncedAt }]</div>` },
+      { head: 'Sample audit log entries', body: `<ul>
+        <li>"DMS Push — RO-2861 to CDK — Amy Chen — Mar 21 10:14 AM"</li>
+        <li>"Compliance Override — RO-2798 — Carlos Reyes — Mar 17 2:31 PM — Reason: Customer needed RO same day"</li>
+        <li>"Settings Change — Compliance threshold updated — Ryan Cho — Mar 15 9:08 AM"</li>
+      </ul>` }
+    ]
+  },
+  personas: {
+    icon: '👥', title: 'OEM Persona Gateway', sub: 'OEMGatewayScreen — 3 Role-Based Views',
+    sections: [
+      { head: 'Fixed Ops Director', body: `<p>Warranty Performance Command Center. Approval rate, per-advisor compliance scores, dollars at risk, rejection root causes, multi-dealer rollup. Badge: "86% approval rate".</p>` },
+      { head: 'Service Advisor', body: `<p>3C Story Writer (OEM-Compliant). AI-generated complaint/cause/correction, op code matching, warranty compliance gate, DMS push (CDK, R&R, Dealertrack). Badge: "3 ROs pending write-up".</p>` },
+      { head: 'Technician', body: `<p>OEM Bay View. Assigned jobs, TSB auto-match by VIN + complaint, op code lookup, DTC entry, voice note → RO narrative, warranty flag. Badge: "2 active jobs".</p>` }
+    ]
+  },
+  'trend-bar': {
+    icon: '📈', title: 'Warranty Approval Trend', sub: '6-Month Rolling — Bay Area Auto Group',
+    sections: [
+      { head: 'Monthly data', body: `<div class="code-block">Oct: 79% approval rate\nNov: 83%\nDec: 81%\nJan: 84%\nFeb: 85%\nMar: 86% ← current month</div>` },
+      { head: 'Interpretation', body: `<p>The upward trend reflects: (1) 3C Story Writer adoption by advisors, (2) Opcode Validator catching mismatches before submission, (3) Factuality Agent reducing vague narratives. Tyler Beck and Carlos Reyes remain below team average — targeted for coaching.</p>` }
+    ]
+  },
+  mcp: {
+    icon: '🎯', title: 'MCP Tool Layer', sub: 'Business Logic as Callable Tools',
+    sections: [
+      { head: 'What it is', body: `<p>Each agent in the pipeline calls tools exposed via an MCP (Model Context Protocol) server. Tools abstract business logic from the LLM calls — the LLM decides what to call, the tool executes deterministically.</p>` },
+      { head: 'Available tools', body: `<div class="code-block">get_tsb_matches(vin, complaint)  → TSBMatch[]\nget_recall_status(vin)           → RecallStatus\nvalidate_opcode(opCode, jobType) → ValidationResult\nlookup_preauth(opCode, amount)   → PreAuthRequirement\npush_to_dms(roId, document)      → PushResult\nsubmit_warranty_claim(roId)      → ClaimSubmission\nscore_narrative(document)        → ScoreResult\ncheck_factuality(document)       → Violation[]</div>` },
+      { head: 'Architecture note', body: `<p>This pattern (LLM + tools) is what the whiteboard refers to as "Bus logic as Tool" → "MCP" → "Claude". The Routing Agent decides which tools to call based on RO context; tools call MongoDB + OEM APIs for live data.</p>` }
+    ]
+  },
+  adk: {
+    icon: '🛠', title: 'Agent SDK (ADK/ALA)', sub: 'Orchestration of the agent pipeline',
+    sections: [
+      { head: 'Pipeline orchestration', body: `
+        <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>Routing Agent</strong><span>Sequential: must run first to determine warranty/recall/customer-pay path</span></div></div>
+        <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>3C Story Writer</strong><span>Sequential: depends on Routing Agent decision</span></div></div>
+        <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>Factuality + Opcode Validator</strong><span>Parallel: independent validation, both must pass</span></div></div>
+        <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>Score Agent</strong><span>Sequential: runs after Factuality (depends on violation count)</span></div></div>
+        <div class="flow-step"><div class="step-num">5</div><div class="step-content"><strong>Assembly Agent</strong><span>Sequential: combines all outputs into final 3C doc</span></div></div>
+        <div class="flow-step"><div class="step-num">6</div><div class="step-content"><strong>Compliance Gate</strong><span>Final gate: all conditions must pass before DMS push</span></div></div>
+      ` },
+      { head: 'Model', body: `<p>All agents use <strong>claude-sonnet-4-6</strong>. Classification and Opcode Validation are heuristic (no LLM call for speed). LLM called only for: Routing Agent decision, 3C Story Writer narrative generation, and LLM Rewrite mode.</p>` }
+    ]
+  }
+};
+
+function openDetail(id) {
+  const d = DETAILS[id];
+  if (!d) return;
+
+  // Update active node
+  document.querySelectorAll('.node.active').forEach(n => n.classList.remove('active'));
+  document.getElementById('n-' + id)?.classList.add('active');
+
+  document.getElementById('dp-icon').textContent = d.icon;
+  document.getElementById('dp-title').textContent = d.title;
+  document.getElementById('dp-subtitle').textContent = d.sub;
+
+  let html = '';
+  for (const s of d.sections) {
+    html += `<h3>${s.head}</h3>${s.body}`;
+  }
+  document.getElementById('detail-body').innerHTML = html;
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.querySelectorAll('.node.active').forEach(n => n.classList.remove('active'));
+}
+
+// ── Draw arrows after DOM ready ──
+window.addEventListener('load', () => {
+  const wrap = document.getElementById('diagram-wrap');
+  const svg  = document.getElementById('arrows-svg');
+
+  function midX(el) {
+    return el.offsetLeft + el.offsetWidth / 2;
+  }
+  function midY(el) {
+    return el.offsetTop + el.offsetHeight / 2;
+  }
+  function botY(el) {
+    return el.offsetTop + el.offsetHeight;
+  }
+  function topY(el) {
+    return el.offsetTop;
+  }
+  function rightX(el) {
+    return el.offsetLeft + el.offsetWidth;
+  }
+  function leftX(el) {
+    return el.offsetLeft;
+  }
+
+  function arrow(x1, y1, x2, y2, color='#1A5C6B', dashed=false, flow=false) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    const markerId = `ah-${color === '#1A5C6B' ? 'teal' : color === '#FF6B35' ? 'orange' : color === '#16A34A' ? 'green' : color === '#D97706' ? 'amber' : color === '#DC2626' ? 'red' : color === '#7C3AED' ? 'purple' : color === '#2563EB' ? 'blue' : 'muted'}`;
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', flow ? '2.5' : '1.8');
+    line.setAttribute('marker-end', `url(#${markerId})`);
+    if (dashed) {
+      line.setAttribute('stroke-dasharray', '6 4');
+      line.style.opacity = '0.7';
+    }
+    if (flow) {
+      line.classList.add('flow-arrow');
+    }
+    svg.appendChild(line);
+  }
+
+  function curvedArrow(x1, y1, x2, y2, color='#1A5C6B', dashed=false) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const cx = (x1 + x2) / 2;
+    const cy = Math.min(y1, y2) - 30;
+    const markerId = `ah-${color === '#1A5C6B' ? 'teal' : color === '#FF6B35' ? 'orange' : color === '#16A34A' ? 'green' : color === '#D97706' ? 'amber' : color === '#DC2626' ? 'red' : color === '#7C3AED' ? 'purple' : color === '#2563EB' ? 'blue' : 'muted'}`;
+    path.setAttribute('d', `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '1.8');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('marker-end', `url(#${markerId})`);
+    if (dashed) {
+      path.setAttribute('stroke-dasharray', '6 4');
+      path.style.opacity = '0.65';
+    }
+    svg.appendChild(path);
+  }
+
+  // Give browser time to layout
+  setTimeout(() => {
+    const nodes = {
+      recalls:       document.getElementById('n-recalls'),
+      tsb:           document.getElementById('n-tsb'),
+      opcodes:       document.getElementById('n-opcodes'),
+      prediiNorm:    document.getElementById('n-predii-norm'),
+      roHistory:     document.getElementById('n-ro-history'),
+      dms:           document.getElementById('n-dms'),
+      oemTis:        document.getElementById('n-oem-tis'),
+      roEntry:       document.getElementById('n-ro-entry'),
+      vin:           document.getElementById('n-vin'),
+      dvi:           document.getElementById('n-dvi'),
+      dtc:           document.getElementById('n-dtc'),
+      tsbMatch:      document.getElementById('n-tsb-match'),
+      recallCheck:   document.getElementById('n-recall-check'),
+      partsLabor:    document.getElementById('n-parts-labor'),
+      ro3001:        document.getElementById('n-ro3001'),
+      ro3003:        document.getElementById('n-ro3003'),
+      ro3005:        document.getElementById('n-ro3005'),
+      ro3010:        document.getElementById('n-ro3010'),
+      routingAgent:  document.getElementById('n-routing-agent'),
+      storyWriter:   document.getElementById('n-story-writer'),
+      classify:      document.getElementById('n-classify'),
+      factuality:    document.getElementById('n-factuality'),
+      score:         document.getElementById('n-score'),
+      opcodeVal:     document.getElementById('n-opcode-val'),
+      references:    document.getElementById('n-references'),
+      assembly:      document.getElementById('n-assembly'),
+      llm:           document.getElementById('n-llm'),
+      smsWriteback:  document.getElementById('n-sms-writeback'),
+      complianceGate:document.getElementById('n-compliance-gate'),
+      claimSubmit:   document.getElementById('n-claim-submit'),
+      rejection:     document.getElementById('n-rejection'),
+      fixedOps:      document.getElementById('n-fixed-ops'),
+      audit:         document.getElementById('n-audit'),
+      personas:      document.getElementById('n-personas'),
+      trendBar:      document.getElementById('n-trend-bar'),
+      mcp:           document.getElementById('n-mcp'),
+      adk:           document.getElementById('n-adk'),
+    };
+
+    // Layer 1 → Layer 2 flows (Data assets feed into RO pipeline)
+    arrow(midX(nodes.recalls),    botY(nodes.recalls),    midX(nodes.recallCheck),  topY(nodes.recallCheck),  '#D97706', false, true);
+    arrow(midX(nodes.tsb),        botY(nodes.tsb),        midX(nodes.tsbMatch),     topY(nodes.tsbMatch),     '#7C3AED', false, true);
+    arrow(midX(nodes.opcodes),    botY(nodes.opcodes),    midX(nodes.partsLabor),   topY(nodes.partsLabor),   '#2563EB', false, true);
+    arrow(midX(nodes.prediiNorm), botY(nodes.prediiNorm), midX(nodes.roEntry)+20,   topY(nodes.roEntry),      '#0D9488', false, true);
+    arrow(midX(nodes.roHistory),  botY(nodes.roHistory),  midX(nodes.dtc)-20,       topY(nodes.dtc),          '#16A34A', false, true);
+    arrow(midX(nodes.dms),        botY(nodes.dms),        midX(nodes.partsLabor)+20,topY(nodes.partsLabor),   '#EA580C', true);
+
+    // Layer 2 → RO drilldown (RO examples flow down from pipeline)
+    arrow(midX(nodes.roEntry),  botY(nodes.roEntry),  midX(nodes.ro3001)+40,  topY(nodes.ro3001),  '#5A7A82', true);
+    arrow(midX(nodes.recallCheck), botY(nodes.recallCheck), midX(nodes.ro3003)+40, topY(nodes.ro3003), '#D97706', true);
+    arrow(midX(nodes.tsbMatch),  botY(nodes.tsbMatch),  midX(nodes.ro3005)+40, topY(nodes.ro3005), '#7C3AED', true);
+    arrow(midX(nodes.roHistory), botY(nodes.roHistory), midX(nodes.ro3010)+40, topY(nodes.ro3010), '#16A34A', true);
+
+    // Layer 2 pipeline (left to right)
+    arrow(rightX(nodes.roEntry),  midY(nodes.roEntry),  leftX(nodes.vin),     midY(nodes.vin),    '#1A5C6B', false, true);
+    arrow(rightX(nodes.vin),      midY(nodes.vin),      leftX(nodes.dvi),     midY(nodes.dvi),    '#1A5C6B', false, true);
+    arrow(rightX(nodes.dvi),      midY(nodes.dvi),      leftX(nodes.dtc),     midY(nodes.dtc),    '#1A5C6B', false, true);
+    arrow(rightX(nodes.dtc),      midY(nodes.dtc),      leftX(nodes.tsbMatch),midY(nodes.tsbMatch),'#1A5C6B', false, true);
+    arrow(rightX(nodes.tsbMatch), midY(nodes.tsbMatch), leftX(nodes.recallCheck),midY(nodes.recallCheck),'#1A5C6B', false, true);
+    arrow(rightX(nodes.recallCheck),midY(nodes.recallCheck),leftX(nodes.partsLabor),midY(nodes.partsLabor),'#1A5C6B', false, true);
+
+    // RO drilldown → Layer 3 Agent layer
+    arrow(midX(nodes.ro3001), botY(nodes.ro3001), midX(nodes.routingAgent)+30, topY(nodes.routingAgent), '#EA580C', false, true);
+    arrow(midX(nodes.ro3003), botY(nodes.ro3003), midX(nodes.storyWriter)-40,  topY(nodes.storyWriter),  '#FF6B35', false, true);
+    arrow(midX(nodes.ro3005), botY(nodes.ro3005), midX(nodes.classify)+20,     topY(nodes.classify),     '#2563EB', false, true);
+    arrow(midX(nodes.ro3010), botY(nodes.ro3010), midX(nodes.factuality)-20,   topY(nodes.factuality),   '#16A34A', false, true);
+
+    // Layer 3: Agent pipeline (routing → story writer → classify → factuality → score → opcodeVal)
+    arrow(rightX(nodes.routingAgent), midY(nodes.routingAgent), leftX(nodes.storyWriter), midY(nodes.storyWriter), '#FF6B35', false, true);
+    arrow(rightX(nodes.storyWriter),  midY(nodes.storyWriter),  leftX(nodes.classify),    midY(nodes.classify),    '#FF6B35', false, true);
+    arrow(rightX(nodes.classify),     midY(nodes.classify),     leftX(nodes.factuality),  midY(nodes.factuality),  '#1A5C6B', false, true);
+    arrow(rightX(nodes.factuality),   midY(nodes.factuality),   leftX(nodes.score),       midY(nodes.score),       '#1A5C6B', false, true);
+    arrow(rightX(nodes.score),        midY(nodes.score),        leftX(nodes.opcodeVal),   midY(nodes.opcodeVal),   '#D97706', false, true);
+
+    // Story writer → references + assembly + llm (bottom sub-agents)
+    arrow(midX(nodes.storyWriter), botY(nodes.storyWriter), midX(nodes.references), topY(nodes.references), '#0D3B45', true);
+    arrow(midX(nodes.references),  botY(nodes.references),  midX(nodes.assembly),   topY(nodes.assembly)+30,'#0D3B45', false, true);
+    arrow(midX(nodes.assembly),    botY(nodes.assembly),    midX(nodes.llm)-20,     topY(nodes.llm),         '#16A34A', false, true);
+    arrow(midX(nodes.llm),         botY(nodes.llm),         midX(nodes.smsWriteback)-20, topY(nodes.smsWriteback), '#EA580C', true);
+
+    // Layer 3 → Layer 4: to compliance gate + claim submit
+    arrow(midX(nodes.score),        botY(nodes.score),         midX(nodes.complianceGate)+80, topY(nodes.complianceGate), '#16A34A', false, true);
+    arrow(midX(nodes.opcodeVal),    botY(nodes.opcodeVal),     midX(nodes.complianceGate)+100, topY(nodes.complianceGate), '#D97706', false, true);
+    arrow(midX(nodes.assembly),     botY(nodes.assembly)+30,   midX(nodes.complianceGate)+60,  topY(nodes.complianceGate), '#16A34A', true);
+
+    // Compliance gate → claim submit
+    arrow(rightX(nodes.complianceGate), midY(nodes.complianceGate), leftX(nodes.claimSubmit), midY(nodes.claimSubmit), '#16A34A', false, true);
+
+    // Claim submit → fixed ops
+    arrow(rightX(nodes.claimSubmit), midY(nodes.claimSubmit), leftX(nodes.fixedOps)-10, midY(nodes.fixedOps), '#2563EB', false, true);
+
+    // Rejection feedback loop (dashed back up)
+    curvedArrow(midX(nodes.rejection)-20, topY(nodes.rejection), midX(nodes.factuality)+40, botY(nodes.factuality), '#DC2626', true);
+
+    // Claim submit → audit
+    arrow(rightX(nodes.claimSubmit)+80, midY(nodes.claimSubmit), leftX(nodes.audit), midY(nodes.audit), '#475569', true);
+
+    // Fixed ops → personas
+    arrow(rightX(nodes.fixedOps), midY(nodes.fixedOps), leftX(nodes.personas), midY(nodes.personas), '#0D3B45', true);
+
+    // DMS layer connects to claim submit
+    arrow(midX(nodes.dms),  botY(nodes.dms)+60, midX(nodes.claimSubmit)+40, topY(nodes.claimSubmit), '#EA580C', true);
+    arrow(midX(nodes.oemTis), botY(nodes.oemTis)+60, midX(nodes.claimSubmit)+80, topY(nodes.claimSubmit), '#6D28D9', true);
+
+    // MCP connects to agents (conceptual)
+    arrow(midX(nodes.mcp), topY(nodes.mcp), midX(nodes.assembly)+60, botY(nodes.assembly), '#0D9488', true);
+
+    // ADK connects to routing agent
+    arrow(leftX(nodes.adk), midY(nodes.adk), rightX(nodes.smsWriteback), midY(nodes.smsWriteback)+10, '#7C3AED', true);
+
+    // LLM service connects to story writer (bidirectional via separate arrows)
+    arrow(leftX(nodes.llm)-10, midY(nodes.llm)-10, rightX(nodes.storyWriter), midY(nodes.storyWriter)+30, '#FF6B35', true);
+
+  }, 200);
+});
+</script>
+</body>
+</html>

@@ -3,6 +3,8 @@
 // Also accessible via the main WrenchIQ app through onOpenOEM in PersonaGatewayScreen.
 
 import { useState, useEffect, Component } from "react";
+import { useBranding } from "./context/BrandingContext";
+import BrandToggle from "./components/BrandToggle";
 
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -22,6 +24,7 @@ class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
+import { RecommendationsProvider } from "./context/RecommendationsContext";
 import OEMGatewayScreen from "./screens/OEMGatewayScreen";
 import PersonaShell from "./components/PersonaShell";
 import ROStoryWriterScreen from "./screens/ROStoryWriterScreen";
@@ -38,17 +41,17 @@ const PERSONA_DEFAULT_SCREEN = {
   oemTech:    "oemTechHome",
 };
 
-function resolveOEMScreen(persona, screenId, showWrenchIQBranding, onToggleBranding) {
+function resolveOEMScreen(persona, screenId) {
   if (persona === "fixedOps") {
     if (screenId === "fixedOpsHome")      return <FixedOpsDashboardScreen />;
     if (screenId === "warrantyAnalytics") return <WarrantyAnalyticsScreen />;
     if (screenId === "oemNetwork")        return <OEMDealerGroupScreen />;
-    if (screenId === "oemSettings")       return <OEMSettingsScreen showWrenchIQBranding={showWrenchIQBranding} onToggleBranding={onToggleBranding} />;
+    if (screenId === "oemSettings")       return <OEMSettingsScreen />;
   }
   if (persona === "oemAdvisor") {
-    if (screenId === "roWriter")   return <ROStoryWriterScreen />;
-    if (screenId === "oemParts")   return <OEMPartsScreen />;
-    if (screenId === "oemSettings") return <OEMSettingsScreen showWrenchIQBranding={showWrenchIQBranding} onToggleBranding={onToggleBranding} />;
+    if (screenId === "roWriter")    return <ROStoryWriterScreen />;
+    if (screenId === "oemParts")    return <OEMPartsScreen />;
+    if (screenId === "oemSettings") return <OEMSettingsScreen />;
   }
   if (persona === "oemTech") {
     if (screenId === "oemTechHome") return <OEMTechScreen />;
@@ -59,41 +62,45 @@ function resolveOEMScreen(persona, screenId, showWrenchIQBranding, onToggleBrand
 export default function WrenchIQOEMApp() {
   const [activePersona, setActivePersona] = useState(null);
   const [activeScreen, setActiveScreen]   = useState("roWriter");
-  const [showWrenchIQBranding, setShowWrenchIQBranding] = useState(true);
+  const { brand } = useBranding();
 
   useEffect(() => {
-    document.title = showWrenchIQBranding
+    document.title = brand === "WrenchIQ"
       ? "WrenchIQ-OEM — 3C Story Writer"
       : "PrediiPowered OEM — 3C Story Writer";
-  }, [showWrenchIQBranding]);
+  }, [brand]);
 
   // Boot directly into OEM gateway — no combined AM+OEM gateway
   if (!activePersona) {
     return (
-      <OEMGatewayScreen
-        onSelectPersona={(personaId) => {
-          setActivePersona(personaId);
-          setActiveScreen(PERSONA_DEFAULT_SCREEN[personaId] || "roWriter");
-        }}
-        standaloneMode={true}
-      />
+      <>
+        <OEMGatewayScreen
+          onSelectPersona={(personaId) => {
+            setActivePersona(personaId);
+            setActiveScreen(PERSONA_DEFAULT_SCREEN[personaId] || "roWriter");
+          }}
+          standaloneMode={true}
+        />
+        <BrandToggle />
+      </>
     );
   }
 
   return (
     <ErrorBoundary>
-      <PersonaShell
-        persona={activePersona}
-        activeScreen={activeScreen}
-        onNavigate={(id) => setActiveScreen(id)}
-        onExitPersona={() => {
-          setActivePersona(null);
-          setActiveScreen("roWriter");
-        }}
-        showWrenchIQBranding={showWrenchIQBranding}
-      >
-        {resolveOEMScreen(activePersona, activeScreen, showWrenchIQBranding, setShowWrenchIQBranding)}
-      </PersonaShell>
+      <RecommendationsProvider shopId="shop-001" edition="oem" persona={activePersona}>
+        <PersonaShell
+          persona={activePersona}
+          activeScreen={activeScreen}
+          onNavigate={(id) => setActiveScreen(id)}
+          onExitPersona={() => {
+            setActivePersona(null);
+            setActiveScreen("roWriter");
+          }}
+        >
+          {resolveOEMScreen(activePersona, activeScreen)}
+        </PersonaShell>
+      </RecommendationsProvider>
     </ErrorBoundary>
   );
 }

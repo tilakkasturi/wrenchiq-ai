@@ -21,6 +21,7 @@ import {
   MessageSquare,
   RotateCcw,
 } from "lucide-react";
+import AIInsightsStrip from "../components/AIInsightsStrip";
 import { COLORS } from "../theme/colors";
 import { SHOP } from "../data/demoData";
 
@@ -233,6 +234,14 @@ function TodayTab() {
   const [actedAlerts, setActedAlerts] = useState({});
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+      <AIInsightsStrip label="Recommendations" insights={[
+        { icon: "🏁", text: "Need $1,660 more to hit today's target — 3 pending approvals can close the gap", action: "View ROs", value: "$1,660 gap", color: "#F59E0B" },
+        { icon: "🔴", text: "Bay 3 idle 45 min — reassign Tom's Tucson to recover labor", action: "Reschedule", value: "Recover $280", color: "#EF4444" },
+        { icon: "📊", text: "Mike Reeves efficiency 85% this week — assign lighter jobs this afternoon", action: "Reassign", value: "+1.2 hrs", color: "#7C3AED" },
+        { icon: "💰", text: "Worldpac Net-30 ($743) due Thu · O'Reilly ($1,104) due Fri", action: "Pay Now", value: "$1,847 due", color: "#EF4444" },
+      ]} />
+
       {/* Revenue Hero */}
       <Card>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>

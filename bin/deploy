@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# bin/deploy — Build and deploy WrenchIQ.ai to wrenchiq-demo (172.16.40.19)
+#
+# Usage:
+#   bin/deploy
+
+set -euo pipefail
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+cd "$(dirname "$0")/.."
+
+echo "==> Building..."
+npm run build
+
+echo "==> Deploying to wrenchiq-demo (172.16.40.19)..."
+tar -czf - dist/ | ssh wrenchiq-demo "cd /opt/predii/wrenchiq && tar -xzf - --strip-components=0"
+
+echo "==> Done. wrenchiq-demo:/opt/predii/wrenchiq/dist"

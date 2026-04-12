@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
-  Sparkles, Send, Zap, ChevronUp, ChevronDown, X,
+  Sparkles, Send, Zap, X,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { repairOrders, customers, vehicles, getCustomer, getVehicle } from "../data/demoData";
+import { useRecommendations } from "../context/RecommendationsContext";
+import RecommendationCard from "./RecommendationCard";
 
 // ── Per-screen agent content ───────────────────────────────
 
@@ -154,6 +156,91 @@ const SCREEN_CONTEXT = {
       { type: "ok", icon: "📦", text: "PartsTech saved $847 this month searching 31 vendors vs single-source ordering.", action: "View Savings", value: "$847 saved", color: COLORS.success },
     ],
   },
+
+  // ── Persona-specific screen contexts ────────────────────────
+
+  advisorHome: {
+    label: "Watching: RO Queue & Board",
+    customerFocus: null,
+    suggestions: [
+      { type: "revenue", icon: "⏳", text: "David's estimate pending 2h 15m — send a nudge text before end of day.", action: "Text David", value: "+$2,190", color: COLORS.warning },
+      { type: "alert",   icon: "🔴", text: "Bay 3 idle 40 min — move Tom's Tucson forward to fill the gap.", action: "Reschedule", value: "Free bay", color: COLORS.danger },
+      { type: "upsell",  icon: "💡", text: "Monica: 3 items pending $294 — 100% lifetime approval rate. Call now.", action: "Call Monica", value: "+$294", color: COLORS.accent },
+      { type: "revenue", icon: "📊", text: "RO board: $5,842 today — need $658 more to hit daily target.", action: "View Board", value: "$658 gap", color: "#2563EB" },
+    ],
+  },
+
+  techHome: {
+    label: "Watching: My Jobs",
+    customerFocus: {
+      name: "David Kim",
+      vehicle: "2019 Honda CR-V",
+      roId: "RO-2024-1189",
+      status: "Active — Bay 3",
+      statusColor: COLORS.success,
+    },
+    suggestions: [
+      { type: "alert",   icon: "⚠️", text: "TSB-2022-015 applies to David's CR-V cat converter — add reference before closing.", action: "Add TSB note", value: "Warranty ref", color: COLORS.warning },
+      { type: "revenue", icon: "🔋", text: "Sarah's Tesla (UP NEXT): ADAS calibration TSB-2024-22-004 not yet flagged. Add to inspection.", action: "Flag TSB", value: "+$180", color: "#3B82F6" },
+      { type: "ok",      icon: "📊", text: "Efficiency today: 89% — 2.3 billed hrs of 3.5 available. Strong pace.", action: null, value: "89% eff.", color: COLORS.success },
+    ],
+  },
+
+  ownerHome: {
+    label: "Watching: Command Center",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert",   icon: "🏁", text: "Revenue at $5,840 — need $1,660 more to hit daily target. 3 pending approvals can close the gap.", action: "View ROs", value: "$1,660 gap", color: COLORS.warning },
+      { type: "alert",   icon: "🔴", text: "Bay 3 idle 45 min — move Tom's Tucson forward to recover $280 in labor.", action: "Reschedule", value: "Recover $280", color: COLORS.danger },
+      { type: "upsell",  icon: "📊", text: "Mike Reeves efficiency at 85% this week — assign lighter jobs this afternoon.", action: "Reassign", value: "+1.2 hrs", color: "#7C3AED" },
+      { type: "alert",   icon: "💰", text: "Worldpac Net-30 ($743) due Thursday · O'Reilly ($1,104) due Friday. Both in Xero.", action: "Pay Now", value: "$1,847 due", color: COLORS.danger },
+    ],
+  },
+
+  am3cWriter: {
+    label: "Watching: 3C Story Writer",
+    customerFocus: null,
+    suggestions: [
+      { type: "revenue", icon: "📝", text: "David Kim's CR-V: P0420 narrative ready — TSB-19-052 reference improves approval rate 40%.", action: "Insert TSB", value: "+40% approval", color: "#2563EB" },
+      { type: "alert",   icon: "⚠️", text: "Monica's Camry cause section is vague — add torque spec and part number for compliance.", action: "Enhance Cause", value: "Compliance risk", color: COLORS.warning },
+      { type: "ok",      icon: "✅", text: "Last 5 narratives accepted by service manager without edits. AI quality score: 96%.", action: null, value: "96% quality", color: COLORS.success },
+    ],
+  },
+
+  techDVI: {
+    label: "Watching: DVI Inspection",
+    customerFocus: {
+      name: "Sarah Chen",
+      vehicle: "2022 Tesla Model 3",
+      roId: "RO-2024-1192",
+      status: "Inspection in progress",
+      statusColor: "#3B82F6",
+    },
+    suggestions: [
+      { type: "alert",   icon: "📸", text: "Front brake finding — add photo to increase customer approval rate by 34% (shop avg).", action: "Take Photo", value: "+34% approval", color: COLORS.warning },
+      { type: "upsell",  icon: "🔋", text: "Tesla HVAC cabin filter due at 24K — Sarah is at 22K. Add proactive recommendation.", action: "Add Finding", value: "+$68", color: COLORS.accent },
+      { type: "ok",      icon: "✅", text: "VIN decoded — no open recalls for this Tesla. Items cross-referenced with TSB database.", action: null, value: "No recalls", color: COLORS.success },
+    ],
+  },
+
+  aroAgent: {
+    label: "Watching: ARO Agent",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert",   icon: "📉", text: "ARO is $108 below goal — 3 declined services account for $620 in recoverable revenue.", action: "Run Agent", value: "-$108 gap", color: COLORS.danger },
+      { type: "revenue", icon: "💡", text: "Brake flush declined by 4 customers this week. Advisors converting at 38% — goal is 60%.", action: "View Details", value: "+$356 opp", color: COLORS.accent },
+      { type: "upsell",  icon: "⚡", text: "Tech productivity: Marcus at 82% efficiency, goal 90%. 3 ROs flagged for review.", action: "Tech Report", value: "Efficiency gap", color: COLORS.warning },
+    ],
+  },
+  aiAgent: {
+    label: "Watching: AI Agent",
+    customerFocus: null,
+    suggestions: [
+      { type: "revenue", icon: "🤖", text: "AI prepared 3 RO narratives this morning — $4,280 in labor written, 0 sent back for edits.", action: "View Narratives", value: "$4,280 written", color: COLORS.success },
+      { type: "alert",   icon: "⚡", text: "David Kim RO pending advisor sign-off — AI flagged P0420 with TSB match. Review now.", action: "Review RO", value: "Flagged", color: COLORS.warning },
+      { type: "upsell",  icon: "💬", text: "AI spotted 4 upsell opportunities in today's queue worth $920. 1-tap to add.", action: "Review Opps", value: "+$920", color: COLORS.accent },
+    ],
+  },
 };
 
 // ── Live activity feed items ───────────────────────────────
@@ -298,25 +385,6 @@ const OWNER_CONTEXT = {
   ],
 };
 
-// ── Owner persona: NL command responses (AE-788) ───────────
-
-const NL_RESPONSES = [
-  { match: ["best tech", "top tech", "who is best"], response: "Best tech today: DeShawn Jackson — 94% efficiency, 72% upsell conversion on 2 jobs. Marcus at 89%. Kevin at 71% (below threshold)." },
-  { match: ["volvo", "bay 2", "move"], response: "Bay assignment updated — Volvo moved to Bay 2. Tech Kevin Liu notified." },
-  { match: ["open approval", "approvals", "pending approval"], response: "3 open approvals: Tom Wallace ($1,340) · 48 min, Angela Martinez ($287) · 22 min, Robert Taylor ($45) · 5 min." },
-  { match: ["worldpac", "spend", "parts spend"], response: "Worldpac spend: $3,240 this month vs $2,890 last month (+12%). You're 81% to the $4,000 rebate threshold." },
-  { match: ["revenue", "today", "target"], response: "Today: $5,840 / $7,500 target (78%). Need $1,660 more. 3 vehicles still in shop. On pace for $7,100 by close." },
-  { match: ["bay", "utilization", "bays"], response: "Bay utilization: 67%. Bays 1, 2, 4, 5 occupied. Bays 3 and 6 idle. Bay 3 idle 45+ min — reassignment recommended." },
-];
-
-function getNLResponse(query) {
-  const q = query.toLowerCase();
-  for (const r of NL_RESPONSES) {
-    if (r.match.some(m => q.includes(m))) return r.response;
-  }
-  return "I can answer questions about revenue, tech performance, bays, parts spend, and approvals. Try: 'What's my best tech?' or 'Show open approvals'.";
-}
-
 // ── Advisor persona context ─────────────────────────────────
 
 const ADVISOR_CONTEXT = {
@@ -332,49 +400,166 @@ const ADVISOR_CONTEXT = {
 
 // ── Main agent component ───────────────────────────────────
 
-export default function WrenchIQAgent({ activeScreen, persona = "admin", onHide }) {
+const TABS = [
+  { id: "aiSuggest",       label: "Chat" },
+  { id: "recommendations", label: "Recommendations" },
+  { id: "revenue",         label: "Revenue" },
+  { id: "liveFeed",        label: "Live Feed" },
+];
+
+export default function WrenchIQAgent({ activeScreen, persona = "admin", selectedRO = null, onHide }) {
   const [typedInput, setTypedInput] = useState("");
-  const [expanded, setExpanded] = useState(false);
-  const [nlResponse, setNlResponse] = useState(null);
+  const [activeTab, setActiveTab] = useState("aiSuggest");
+  const [now, setNow] = useState(new Date());
+  const [messages, setMessages] = useState([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const sessionIdRef = useRef(null);
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Recommendations from context (null = provider not mounted)
+  const recCtx = useRecommendations();
 
   // Persona-specific context override
   let ctx;
   if (persona === "owner") {
     ctx = OWNER_CONTEXT;
-  } else if (persona === "advisor") {
-    ctx = ADVISOR_CONTEXT;
+  } else if (persona === "advisor" && selectedRO?._liveRO) {
+    // Narrow to selected RO's customer
+    const liveRO = selectedRO._liveRO;
+    const demoCust = customers.find(c => c.id === selectedRO.custId);
+    const demoVeh  = vehicles.find(v => v.customerId === selectedRO.custId);
+    const custSrc  = selectedRO._customer || demoCust;
+    const vehSrc   = selectedRO._vehicle  || demoVeh;
+    const custName = custSrc
+      ? `${custSrc.firstName} ${custSrc.lastName}`
+      : selectedRO.custId;
+    const vehicle = vehSrc
+      ? `${vehSrc.year} ${vehSrc.make} ${vehSrc.model}`
+      : "Vehicle";
+    ctx = {
+      label: `Focused: ${custName} · ${vehicle}`,
+      customerFocus: {
+        name: custName,
+        vehicle,
+        roId: selectedRO.roNum,
+        status: liveRO.customerConcern || selectedRO.job,
+        statusColor: COLORS.warning,
+      },
+      suggestions: (liveRO.aiInsights || []).map((text, i) => ({
+        type: i === 0 ? "alert" : i === (liveRO.aiInsights.length - 1) ? "revenue" : "upsell",
+        icon: i === 0 ? "⚡" : i % 2 === 0 ? "🔧" : "💡",
+        text,
+        action: null,
+        value: null,
+        color: i === 0 ? COLORS.warning : i % 2 === 0 ? COLORS.accent : "#7C3AED",
+      })),
+    };
   } else {
-    ctx = SCREEN_CONTEXT[activeScreen] || SCREEN_CONTEXT.dashboard;
+    // Use screen-specific context if available, otherwise fall back to persona defaults
+    ctx = SCREEN_CONTEXT[activeScreen]
+      || (persona === "advisor" ? ADVISOR_CONTEXT : null)
+      || SCREEN_CONTEXT.dashboard;
   }
 
-  const handleSend = () => {
-    if (!typedInput.trim()) return;
-    if (persona === "owner") {
-      setNlResponse(getNLResponse(typedInput));
-    }
+  // Scroll chat to bottom when messages update
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSend = async () => {
+    const text = typedInput.trim();
+    if (!text || isStreaming) return;
     setTypedInput("");
+    setActiveTab("aiSuggest");
+
+    const userMsgId = `u-${Date.now()}`;
+    const agentMsgId = `a-${Date.now()}`;
+
+    setMessages(prev => [
+      ...prev,
+      { role: "user", text, id: userMsgId },
+      { role: "agent", text: "", id: agentMsgId },
+    ]);
+    setIsStreaming(true);
+
+    try {
+      // Create session once per panel lifecycle
+      if (!sessionIdRef.current) {
+        const r = await fetch("/api/agent/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: "WrenchIQ Chat" }),
+        });
+        const { sessionId } = await r.json();
+        sessionIdRef.current = sessionId;
+      }
+
+      // Stream the response
+      const res = await fetch(`/api/agent/sessions/${sessionIdRef.current}/stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop();
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith("data: ")) continue;
+          let data;
+          try { data = JSON.parse(line.slice(6)); } catch { continue; }
+          if (data.type === "agent.message") {
+            const chunk = (data.event?.content || [])
+              .filter(b => b.type === "text")
+              .map(b => b.text)
+              .join("");
+            if (chunk) {
+              setMessages(prev => prev.map(m =>
+                m.id === agentMsgId ? { ...m, text: m.text + chunk } : m
+              ));
+            }
+          }
+          if (data.type === "error") {
+            setMessages(prev => prev.map(m =>
+              m.id === agentMsgId ? { ...m, text: "Error: " + data.error } : m
+            ));
+          }
+        }
+      }
+    } catch (err) {
+      setMessages(prev => prev.map(m =>
+        m.id === agentMsgId ? { ...m, text: "Connection error: " + err.message } : m
+      ));
+    } finally {
+      setIsStreaming(false);
+    }
   };
 
   const totalOppValue = REVENUE_OPPS.reduce((sum, o) => sum + o.value, 0);
 
-  const panelHeight = expanded ? "calc(100vh - 72px)" : (persona === "owner" ? 420 : 390);
-
   return (
     <div style={{
-      position: "fixed",
-      right: 16,
-      bottom: 16,
       width: 300,
-      height: panelHeight,
+      flexShrink: 0,
+      height: "100%",
       background: "#fff",
-      borderRadius: 14,
-      boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)",
+      borderLeft: "1px solid #E5E7EB",
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
-      zIndex: 1000,
-      transition: "height 0.25s ease",
-      border: "1px solid #E5E7EB",
     }}>
       {/* ── Header ── */}
       <div style={{
@@ -395,15 +580,8 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", onHide 
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ width: 7, height: 7, borderRadius: 4, background: "#22C55E", boxShadow: "0 0 0 2px rgba(34,197,94,0.3)" }} />
             <button
-              onClick={() => setExpanded(e => !e)}
-              title={expanded ? "Collapse" : "Expand"}
-              style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 5, width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            >
-              {expanded ? <ChevronDown size={13} color="rgba(255,255,255,0.7)" /> : <ChevronUp size={13} color="rgba(255,255,255,0.7)" />}
-            </button>
-            <button
               onClick={onHide}
-              title="Hide agent"
+              title="Hide AI panel"
               style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 5, width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
             >
               <X size={12} color="rgba(255,255,255,0.7)" />
@@ -411,97 +589,194 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", onHide 
           </div>
         </div>
 
-        {/* Context chip */}
-        <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.08)", borderRadius: 6, padding: "5px 8px" }}>
-          <Zap size={10} color={COLORS.accent} />
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", fontWeight: 500 }}>{ctx.label}</span>
+        {/* Context chip + live clock */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.08)", borderRadius: 6, padding: "5px 8px", flex: 1, minWidth: 0 }}>
+            <Zap size={10} color={COLORS.accent} />
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ctx.label}</span>
+          </div>
+          <div style={{ flexShrink: 0, textAlign: "right" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", letterSpacing: 0.5, fontVariantNumeric: "tabular-nums" }}>
+              {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </div>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.45)", marginTop: 1 }}>
+              {now.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}
+            </div>
+          </div>
+        </div>
+
+        {/* Tab buttons */}
+        <div style={{ display: "flex", gap: 4 }}>
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                flex: 1,
+                fontSize: 9, fontWeight: 700,
+                padding: "5px 2px",
+                borderRadius: 6,
+                border: "none",
+                cursor: "pointer",
+                background: activeTab === tab.id ? COLORS.accent : "rgba(255,255,255,0.1)",
+                color: activeTab === tab.id ? "#fff" : "rgba(255,255,255,0.5)",
+                transition: "all 0.15s",
+                letterSpacing: 0.2,
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* ── Scrollable body ── */}
       <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px" }}>
 
-        {/* Customer focus card (context-specific) */}
-        {ctx.customerFocus && (
-          <div style={{ background: "#F0F9FF", borderRadius: 10, padding: "10px 11px", marginBottom: 10, border: "1.5px solid #BAE6FD" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 14, background: COLORS.primary, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 800 }}>
-                {ctx.customerFocus.name.split(" ").map(n => n[0]).join("")}
+        {/* ── Chat tab ── */}
+        {activeTab === "aiSuggest" && (
+          <>
+            {messages.length === 0 ? (
+              /* No conversation yet — show screen-context suggestions as starter prompts */
+              <>
+                {ctx.customerFocus && (
+                  <div style={{ background: "#F0F9FF", borderRadius: 10, padding: "10px 11px", marginBottom: 10, border: "1.5px solid #BAE6FD" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 14, background: COLORS.primary, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 800 }}>
+                        {ctx.customerFocus.name.split(" ").map(n => n[0]).join("")}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary }}>{ctx.customerFocus.name}</div>
+                        <div style={{ fontSize: 10, color: COLORS.textSecondary }}>{ctx.customerFocus.vehicle}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: 3, background: ctx.customerFocus.statusColor }} />
+                      <span style={{ fontSize: 10, color: ctx.customerFocus.statusColor, fontWeight: 600 }}>{ctx.customerFocus.status}</span>
+                    </div>
+                    <div style={{ fontSize: 9.5, color: COLORS.textMuted, fontFamily: "monospace" }}>{ctx.customerFocus.roId}</div>
+                  </div>
+                )}
+                <div style={{ fontSize: 9, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Suggested prompts</div>
+                {ctx.suggestions.map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setTypedInput(item.text); }}
+                    style={{
+                      display: "block", width: "100%", textAlign: "left",
+                      background: "#F9FAFB", border: "1px solid #E5E7EB",
+                      borderRadius: 8, padding: "8px 10px", marginBottom: 6,
+                      cursor: "pointer", fontSize: 11, color: COLORS.textPrimary,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    <span style={{ marginRight: 5 }}>{item.icon}</span>{item.text}
+                  </button>
+                ))}
+              </>
+            ) : (
+              /* Conversation history */
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {messages.map(msg => (
+                  <div key={msg.id} style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: msg.role === "user" ? "flex-end" : "flex-start",
+                  }}>
+                    <div style={{
+                      maxWidth: "88%",
+                      background: msg.role === "user" ? COLORS.primary : "#F3F4F6",
+                      color: msg.role === "user" ? "#fff" : COLORS.textPrimary,
+                      borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                      padding: "8px 11px",
+                      fontSize: 11.5,
+                      lineHeight: 1.55,
+                      whiteSpace: "pre-wrap",
+                    }}>
+                      {msg.text || (msg.role === "agent" && isStreaming
+                        ? <span style={{ opacity: 0.5 }}>Thinking…</span>
+                        : null
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
               </div>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary }}>{ctx.customerFocus.name}</div>
-                <div style={{ fontSize: 10, color: COLORS.textSecondary }}>{ctx.customerFocus.vehicle}</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
-              <div style={{ width: 6, height: 6, borderRadius: 3, background: ctx.customerFocus.statusColor }} />
-              <span style={{ fontSize: 10, color: ctx.customerFocus.statusColor, fontWeight: 600 }}>{ctx.customerFocus.status}</span>
-            </div>
-            <div style={{ fontSize: 9.5, color: COLORS.textMuted, fontFamily: "monospace" }}>{ctx.customerFocus.roId}</div>
-          </div>
+            )}
+          </>
         )}
 
-        {/* Suggestions for this screen */}
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase", paddingBottom: 6 }}>
-            AI Suggestions
-          </div>
-          {ctx.suggestions.map((item, i) => (
-            <SuggestionCard key={i} item={item} />
-          ))}
-        </div>
+        {/* ── Recommendations tab ── */}
+        {activeTab === "recommendations" && (
+          <>
+            {recCtx?.loading
+              ? (
+                <div style={{ textAlign: "center", padding: "32px 12px", color: COLORS.textMuted, fontSize: 12 }}>
+                  Loading recommendations…
+                </div>
+              )
+              : recCtx && recCtx.recommendations.length > 0
+                ? [...recCtx.recommendations]
+                    .sort((a, b) => {
+                      const order = { high: 0, medium: 1, low: 2 };
+                      return (order[a.priority] ?? 3) - (order[b.priority] ?? 3);
+                    })
+                    .map(rec => (
+                      <RecommendationCard key={rec.id} recommendation={rec} persona={persona} />
+                    ))
+                : (
+                  <div style={{ textAlign: "center", padding: "32px 12px", color: COLORS.textMuted, fontSize: 12 }}>
+                    No recommendations yet.
+                  </div>
+                )
+            }
+          </>
+        )}
 
-        {/* Revenue opportunities */}
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 6 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Revenue Pipeline</span>
-            <span style={{ fontSize: 10, fontWeight: 800, color: COLORS.accent }}>${totalOppValue.toLocaleString()}</span>
-          </div>
-          <div style={{ background: "#FAFAFA", borderRadius: 10, padding: "4px 10px 2px", border: "1px solid #F3F4F6" }}>
-            {REVENUE_OPPS.map((opp) => <OppRow key={opp.id} opp={opp} />)}
-          </div>
-        </div>
+        {/* ── Revenue tab ── */}
+        {activeTab === "revenue" && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Revenue Pipeline</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: COLORS.accent }}>${totalOppValue.toLocaleString()}</span>
+            </div>
+            <div style={{ background: "#FAFAFA", borderRadius: 10, padding: "4px 10px 2px", border: "1px solid #F3F4F6" }}>
+              {REVENUE_OPPS.map((opp) => <OppRow key={opp.id} opp={opp} />)}
+            </div>
+          </>
+        )}
 
-        {/* Live activity feed */}
-        <div style={{ marginBottom: 4 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, paddingBottom: 6 }}>
-            <div style={{ width: 6, height: 6, borderRadius: 3, background: "#22C55E" }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Live Feed</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {FEED_ITEMS.map((item) => <FeedItem key={item.id} item={item} />)}
-          </div>
-        </div>
+        {/* ── Live Feed tab ── */}
+        {activeTab === "liveFeed" && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+              <div style={{ width: 6, height: 6, borderRadius: 3, background: "#22C55E" }} />
+              <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Live Feed</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {FEED_ITEMS.map((item) => <FeedItem key={item.id} item={item} />)}
+            </div>
+          </>
+        )}
+
       </div>
-
-      {/* ── NL response (AE-788 owner natural language commands) ── */}
-      {nlResponse && (
-        <div style={{ margin: "0 12px 0", padding: "8px 10px", background: "#F0FDF4", borderRadius: 8, border: "1px solid #BBF7D0", borderLeft: `3px solid ${COLORS.success}` }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: COLORS.success, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 4 }}>AI Response</div>
-          <div style={{ fontSize: 11, color: COLORS.textPrimary, lineHeight: 1.5 }}>{nlResponse}</div>
-          <button onClick={() => setNlResponse(null)} style={{ fontSize: 9, color: COLORS.textMuted, background: "none", border: "none", cursor: "pointer", marginTop: 4, padding: 0 }}>Dismiss</button>
-        </div>
-      )}
 
       {/* ── Ask Agent input ── */}
       <div style={{ borderTop: "1px solid #E5E7EB", padding: "10px 12px", flexShrink: 0, background: "#FAFAFA" }}>
-        {persona === "owner" && (
-          <div style={{ fontSize: 9, color: COLORS.textMuted, marginBottom: 5 }}>
-            Try: "What's my best tech?" · "Show open approvals" · "Worldpac spend"
-          </div>
-        )}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", borderRadius: 10, border: "1px solid #E5E7EB", padding: "7px 10px" }}>
-          <Sparkles size={12} color={COLORS.accent} style={{ flexShrink: 0 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", borderRadius: 10, border: `1px solid ${isStreaming ? COLORS.accent : "#E5E7EB"}`, padding: "7px 10px", transition: "border-color 0.15s" }}>
+          <Sparkles size={12} color={isStreaming ? COLORS.accent : COLORS.textMuted} style={{ flexShrink: 0 }} />
           <input
             value={typedInput}
             onChange={(e) => setTypedInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder={persona === "owner" ? "Ask anything about your shop…" : "Ask WrenchIQ AI anything…"}
+            placeholder={isStreaming ? "Agent is responding…" : "Ask WrenchIQ AI anything…"}
+            disabled={isStreaming}
             style={{ flex: 1, border: "none", outline: "none", fontSize: 11, background: "transparent", color: COLORS.textPrimary }}
           />
           <button
             onClick={handleSend}
-            style={{ background: typedInput ? COLORS.accent : "#E5E7EB", border: "none", borderRadius: 6, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "background 0.15s" }}
+            disabled={isStreaming || !typedInput.trim()}
+            style={{ background: typedInput.trim() && !isStreaming ? COLORS.accent : "#E5E7EB", border: "none", borderRadius: 6, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: typedInput.trim() && !isStreaming ? "pointer" : "default", flexShrink: 0, transition: "background 0.15s" }}
           >
             <Send size={11} color="#fff" />
           </button>

@@ -6,6 +6,7 @@ import {
   Shield, Target, Clock,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import AIInsightsStrip from "../components/AIInsightsStrip";
 
 // ─── 100-Location Data ────────────────────────────────────────
 const REGIONS = [
@@ -469,6 +470,13 @@ export default function MultiLocationScreen() {
     : ALL_LOCATIONS.filter(l => l.region === activeRegion);
 
   return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <AIInsightsStrip insights={[
+        { icon: "🔴", text: "2 locations in alert — Phoenix 7 and Dallas 4. Combined Google rating drop: 3.6★ avg", action: "Review Locations", value: "Action needed", color: "#EF4444" },
+        { icon: "💰", text: "Network hit $2.1M this week — top 10 locations drove 34% of revenue. Houston 3 is #1", action: "See Top 10", value: "$2.1M", color: "#22C55E" },
+        { icon: "📦", text: "Cross-location parts transfer approved — $12,400 in excess inventory redistributed", action: "Track Transfer", value: "$12,400 saved", color: "#3B82F6" },
+        { icon: "🎯", text: "59 locations haven't enabled pre-arrival AI message — enable all to lift approval rate 23%", action: "Enable All", value: "+23% ARO", color: "#F59E0B" },
+      ]} />
     <div style={{ padding: "24px 28px" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
@@ -543,6 +551,7 @@ export default function MultiLocationScreen() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

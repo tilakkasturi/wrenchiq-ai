@@ -1,5 +1,5 @@
 // AE-775 — Combined Gateway: WrenchIQ-AM + WrenchIQ-OEM with API demo
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Wrench, ClipboardList, ArrowRight, Shield, Menu, Sparkles,
   CheckCircle, Clock, ChevronRight, Building2, FileText,
@@ -9,6 +9,8 @@ import {
 import { COLORS } from "../theme/colors";
 import { SHOP, customers, vehicles } from "../data/demoData";
 import { WARRANTY_CLAIMS } from "../data/oemDemoData";
+import BrandWordmark from "../components/BrandWordmark";
+import { useEditionName } from "../context/BrandingContext";
 
 // ── AM data ─────────────────────────────────────────────────
 const QUEUE = [
@@ -21,10 +23,26 @@ function getVehicle(custId) { return vehicles.find(v => v.customerId === custId)
 function initials(first, last) { return `${first[0]}${last[0]}`.toUpperCase(); }
 
 const AM_PERSONAS = [
-  { id: "advisor",  label: "Service Advisor", tagline: "Manage Relationships & Bay",    detail: "RO queue & board · Bay utilization · Customer Trust Engine · Parts Intelligence", accent: "#2563EB", badge: "4 screens" },
-  { id: "tech",     label: "Technician",       tagline: "iPad DVI & Job Board",           detail: "My jobs queue · 8-point MPI · YES/WATCH/NO findings · AI diagnosis assist",         accent: "#16A34A", badge: "2 jobs today" },
-  { id: "owner",    label: "Shop Owner",        tagline: "Command Center",                 detail: "Revenue vs target · Bay grid · Supplier rebates · Team performance · AI alerts",     accent: COLORS.accent, badge: "2 AI alerts" },
-  { id: "customer", label: "Car Owner",         tagline: "Customer Portal",                detail: "Magic link access · Live repair progress · Digital estimate approval",               accent: "#7C3AED", badge: "Awaiting approval" },
+  {
+    id: "advisor",  label: "Service Advisor", tagline: "Manage Relationships & Bay",
+    detail: "RO queue & board · Bay utilization · Customer Trust Engine · Parts Intelligence",
+    accent: "#2563EB", badge: "DEFAULT",
+    isDefault: true,
+    insights: [
+      { icon: "⏳", text: "David's estimate pending 2h", value: "+$2,190", color: "#F59E0B" },
+      { icon: "🔴", text: "Bay 3 idle 40 min", value: "Action needed", color: "#EF4444" },
+      { icon: "💡", text: "3 approvals awaiting", value: "$920 total", color: "#22C55E" },
+    ],
+  },
+  {
+    id: "owner", label: "Shop Owner", tagline: "Command Center",
+    detail: "Revenue vs target · Bay grid · Supplier rebates · Team performance · AI alerts",
+    accent: COLORS.accent, badge: "2 AI alerts",
+    insights: [
+      { icon: "🏁", text: "Need $1,660 to hit target", value: "78% there", color: "#F59E0B" },
+      { icon: "🔴", text: "Bay 3 idle 45 min", value: "Recover $280", color: "#EF4444" },
+    ],
+  },
 ];
 
 const OEM_PERSONAS = [
@@ -156,14 +174,129 @@ function CodeBlock({ text, bg = "rgba(0,0,0,0.5)" }) {
   );
 }
 
+// ── Format AI response text into readable JSX ────────────────
+function formatAIResponse(text) {
+  if (!text) return null;
+  const lines = text.split("\n");
+  const nodes = [];
+  let listItems = [];
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      nodes.push(
+        <ul key={`ul-${nodes.length}`} style={{ margin: "6px 0", paddingLeft: 16, display: "flex", flexDirection: "column", gap: 3 }}>
+          {listItems.map((item, i) => (
+            <li key={i} style={{ fontSize: 11, color: "rgba(255,255,255,0.72)", lineHeight: 1.5 }}>{renderInline(item)}</li>
+          ))}
+        </ul>
+      );
+      listItems = [];
+    }
+  };
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushList();
+      return;
+    }
+    // Bullet list
+    if (/^[-•*]\s+/.test(trimmed)) {
+      listItems.push(trimmed.replace(/^[-•*]\s+/, ""));
+      return;
+    }
+    // Numbered list
+    if (/^\d+\.\s+/.test(trimmed)) {
+      listItems.push(trimmed.replace(/^\d+\.\s+/, ""));
+      return;
+    }
+    flushList();
+    // Heading (## or bold-only line)
+    if (/^#{1,3}\s/.test(trimmed)) {
+      const heading = trimmed.replace(/^#{1,3}\s+/, "");
+      nodes.push(
+        <div key={idx} style={{ fontWeight: 700, fontSize: 11, color: "#FF6B35", marginTop: nodes.length ? 8 : 0, marginBottom: 2 }}>{heading}</div>
+      );
+      return;
+    }
+    // Bold label: "**Label:** rest"
+    if (/^\*\*[^*]+\*\*/.test(trimmed)) {
+      nodes.push(
+        <div key={idx} style={{ fontSize: 11, color: "rgba(255,255,255,0.72)", lineHeight: 1.55 }}>{renderInline(trimmed)}</div>
+      );
+      return;
+    }
+    // Normal paragraph
+    nodes.push(
+      <div key={idx} style={{ fontSize: 11, color: "rgba(255,255,255,0.72)", lineHeight: 1.55 }}>{renderInline(trimmed)}</div>
+    );
+  });
+  flushList();
+  return <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>{nodes}</div>;
+}
+
+function renderInline(text) {
+  // Replace **bold** with <strong>
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (/^\*\*[^*]+\*\*$/.test(part)) {
+      return <strong key={i} style={{ color: "#fff", fontWeight: 700 }}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
 // ── Main gateway ─────────────────────────────────────────────
 export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onOpenOEM }) {
+  const amName  = useEditionName("AM");
+  const oemName = useEditionName("OEM");
   const [activeTab, setActiveTab]        = useState("AM");     // "AM" | "OEM" | "API"
   const [hoveredPersona, setHoveredPersona] = useState(null);
   const [selectedCust, setSelectedCust]  = useState(null);
   const [apiEdition, setApiEdition]      = useState("OEM");   // "AM" | "OEM"
   const [apiView, setApiView]            = useState("postman"); // "postman" | "ui"
   const [copied, setCopied]              = useState(false);
+
+  // ── Knowledge Graph + AI Chat state ──────────────────────────
+  const [kgStats, setKgStats]        = useState(null);
+  const [topClusters, setTopClusters] = useState([]);
+  const [messages, setMessages]      = useState([]);
+  const [inputText, setInputText]    = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    fetch("/api/knowledge-graph/clusters?limit=5")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!d) return; setKgStats(d); setTopClusters((d.clusters || []).slice(0, 5)); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  async function sendMessage(text) {
+    const q = (text || inputText).trim();
+    if (!q || chatLoading) return;
+    setInputText("");
+    const history = [...messages, { role: "user", content: q }];
+    setMessages(history);
+    setChatLoading(true);
+    try {
+      const res = await fetch("/api/knowledge-graph/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: q, history: history.slice(-6) }),
+      });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+      setMessages([...history, { role: "assistant", content: data.answer || "No response." }]);
+    } catch {
+      setMessages([...history, { role: "assistant", content: "Could not reach the knowledge graph." }]);
+    } finally {
+      setChatLoading(false);
+    }
+  }
 
   function handleCopy() {
     navigator.clipboard?.writeText(API_REQUESTS[apiEdition]).catch(() => {});
@@ -183,13 +316,8 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
     }}>
 
       {/* ── Wordmark ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-        <div style={{ width: 38, height: 38, borderRadius: 10, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Wrench size={19} color="#fff" style={{ transform: "rotate(-45deg)" }} />
-        </div>
-        <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.8, color: "#fff" }}>
-          WrenchIQ<span style={{ color: COLORS.accent }}>.ai</span>
-        </span>
+      <div style={{ marginBottom: 6 }}>
+        <BrandWordmark size="xl" />
       </div>
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>
         Predii, Inc. · "The Dealership's Intelligence. The Neighborhood's Trust."
@@ -206,8 +334,8 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
         border: "1px solid rgba(255,255,255,0.1)",
       }}>
         {[
-          { key: "AM",  label: "WrenchIQ-AM",  sub: "Independent & Multi-Location Shops",    badge: "AM",  color: COLORS.accent, badgeBg: "rgba(255,107,53,0.15)", badgeBorder: "rgba(255,107,53,0.3)",  activeBg: "rgba(255,107,53,0.15)" },
-          { key: "OEM", label: "WrenchIQ-OEM", sub: "Franchise Dealerships (Toyota, Ford…)",  badge: "OEM", color: "#4DB6AC",     badgeBg: "rgba(77,182,172,0.15)",  badgeBorder: "rgba(77,182,172,0.3)", activeBg: "rgba(13,59,69,0.9)" },
+          { key: "AM",  label: amName,  sub: "Independent & Multi-Location Shops",    badge: "AM",  color: COLORS.accent, badgeBg: "rgba(255,107,53,0.15)", badgeBorder: "rgba(255,107,53,0.3)",  activeBg: "rgba(255,107,53,0.15)" },
+          { key: "OEM", label: oemName, sub: "Franchise Dealerships (Toyota, Ford…)",  badge: "OEM", color: "#4DB6AC",     badgeBg: "rgba(77,182,172,0.15)",  badgeBorder: "rgba(77,182,172,0.3)", activeBg: "rgba(13,59,69,0.9)" },
           { key: "API", label: "API",           sub: "Postman · Request · Response · UI diff", badge: "REST",color: "#C084FC",     badgeBg: "rgba(192,132,252,0.15)", badgeBorder: "rgba(192,132,252,0.3)",activeBg: "rgba(88,28,135,0.4)" },
         ].map((e) => {
           const active = activeTab === e.key;
@@ -424,122 +552,263 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
             {SHOP.name} · {SHOP.address.split(",").slice(1, 3).join(",").trim()}
           </div>
 
-          {/* Hero: AI Agent Advisor LITE */}
+          {/* Hero: AI Insights Powered Personas */}
           <div style={{
             width: "100%", maxWidth: 880,
             background: "rgba(255,255,255,0.04)",
             border: "1.5px solid rgba(255,107,53,0.35)",
-            borderRadius: 20, padding: "28px 32px 24px",
+            borderRadius: 20, padding: "24px 28px",
             marginBottom: 20,
             position: "relative", overflow: "hidden",
           }}>
             <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, borderRadius: "50%", background: "rgba(255,107,53,0.08)", pointerEvents: "none" }} />
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+
+            {/* Title row */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(255,107,53,0.18)", border: "1.5px solid rgba(255,107,53,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <ClipboardList size={24} color={COLORS.accent} />
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,107,53,0.18)", border: "1.5px solid rgba(255,107,53,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Sparkles size={22} color={COLORS.accent} />
                 </div>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.4 }}>AI Agent Service Advisor</span>
-                    <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.accent, background: "rgba(255,107,53,0.15)", border: "1px solid rgba(255,107,53,0.35)", borderRadius: 5, padding: "2px 7px", letterSpacing: 0.5 }}>LITE</span>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.4 }}>AI Insights Powered Personas</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.accent, background: "rgba(255,107,53,0.15)", border: "1px solid rgba(255,107,53,0.35)", borderRadius: 5, padding: "2px 7px", letterSpacing: 0.5 }}>LIVE</span>
                   </div>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 3 }}>
-                    Intelligent RO · AI-powered intake from greeting to tech board in &lt; 3 min
+                    Every role. Every screen. Real-time intelligence from 100K+ repair orders.
                   </div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 8, padding: "6px 12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 8, padding: "6px 12px", flexShrink: 0 }}>
                 <div style={{ width: 7, height: 7, borderRadius: 4, background: "#22C55E", boxShadow: "0 0 0 2px rgba(34,197,94,0.25)" }} />
-                <span style={{ fontSize: 10, color: "#22C55E", fontWeight: 700 }}>{QUEUE.length} customers waiting</span>
+                <span style={{ fontSize: 10, color: "#22C55E", fontWeight: 700 }}>Live AI insights active</span>
               </div>
             </div>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>
-                Waiting Queue — {QUEUE.length} customers
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                {QUEUE.map((q) => {
-                  const c = customers.find(x => x.id === q.custId);
-                  if (!c) return null;
-                  const veh = getVehicle(c.id);
-                  const sel = selectedCust?.id === c.id;
-                  return (
-                    <div key={q.custId} onClick={() => setSelectedCust(sel ? null : c)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 12,
-                        padding: "10px 14px", borderRadius: 10, cursor: "pointer",
-                        border: sel ? `1.5px solid ${COLORS.accent}` : "1px solid rgba(255,255,255,0.1)",
-                        background: sel ? `${COLORS.accent}18` : "rgba(255,255,255,0.04)",
-                        transition: "all 0.12s",
-                      }}>
-                      <div style={{ width: 34, height: 34, borderRadius: "50%", background: sel ? COLORS.accent : "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-                        {initials(c.firstName, c.lastName)}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: "#fff" }}>{c.firstName} {c.lastName}</div>
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 1 }}>
-                          {veh ? `${veh.year} ${veh.make} ${veh.model} · ${veh.licensePlate}` : "No vehicle"}
-                        </div>
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontStyle: "italic", marginTop: 1 }}>"{q.concern}"</div>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: q.waitMin > 20 ? "#FCA5A5" : "#86EFAC" }}>
-                          <Clock size={10} /> {q.waitMin}m
-                        </div>
-                        {sel && <CheckCircle size={14} color={COLORS.accent} />}
-                      </div>
-                    </div>
-                  );
-                })}
+
+            {/* Insight preview chips */}
+            <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginBottom: 18 }}>
+              {[
+                { icon: "⏳", text: "David's estimate pending 2h — nudge to close", value: "+$2,190", color: "#F59E0B" },
+                { icon: "🔴", text: "Bay 3 idle 40 min — fill the gap", value: "$280 recover", color: "#EF4444" },
+                { icon: "⚠️", text: "TSB-22-015 on active CR-V — warranty ref", value: "Compliance", color: "#FF6B35" },
+                { icon: "✅", text: "Marcus efficiency 89% — on track", value: "+4% avg", color: "#22C55E" },
+              ].map((chip, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "5px 10px" }}>
+                  <span style={{ fontSize: 11 }}>{chip.icon}</span>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)" }}>{chip.text}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: chip.color, background: `${chip.color}18`, border: `1px solid ${chip.color}30`, borderRadius: 4, padding: "1px 5px" }}>{chip.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Role insight breakdown */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 18 }}>
+              {[
+                { label: "Service Advisor", icon: "🎯", desc: "Queue prioritization · estimate nudges · upsell timing · customer approval rates", color: "#2563EB" },
+                { label: "Technician",      icon: "🔧", desc: "TSB auto-match · DTC cross-reference · efficiency tracking · DVI AI assist", color: "#16A34A" },
+                { label: "Shop Owner",      icon: "📊", desc: "Revenue vs target · bay utilization · team performance · supplier rebates", color: COLORS.accent },
+              ].map((c) => (
+                <div key={c.label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "12px 14px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                    <span style={{ fontSize: 14 }}>{c.icon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: c.color }}>{c.label}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>{c.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button
+                onClick={() => onSelectPersona("advisor")}
+                style={{
+                  background: "#2563EB", border: "none", borderRadius: 10,
+                  padding: "11px 24px", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 8,
+                  fontSize: 13, fontWeight: 700, color: "#fff",
+                  boxShadow: "0 4px 16px rgba(37,99,235,0.35)", transition: "all 0.15s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "none"}
+              >
+                <ClipboardList size={15} />
+                Enter as Service Advisor
+                <ArrowRight size={14} />
+              </button>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+                Or select a persona below · AI insights adapt to each role
               </div>
             </div>
-            <button
-              onClick={() => onSelectPersona("advisorLite", selectedCust ? { initialCust: selectedCust, initialStep: 2 } : {})}
-              style={{
-                background: COLORS.accent, border: "none", borderRadius: 12,
-                padding: "13px 28px", cursor: "pointer",
-                display: "flex", alignItems: "center", gap: 8,
-                fontSize: 14, fontWeight: 700, color: "#fff",
-                boxShadow: "0 4px 20px rgba(255,107,53,0.4)", transition: "all 0.15s",
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
-              onMouseLeave={e => e.currentTarget.style.transform = "none"}
-            >
-              <Sparkles size={16} />
-              {selectedCust ? `Start Intake — ${selectedCust.firstName} ${selectedCust.lastName}` : "Launch Intelligent RO"}
-              <ArrowRight size={15} />
-            </button>
           </div>
 
           {/* AM persona cards */}
           <div style={{ display: "flex", gap: 12, width: "100%", maxWidth: 880, marginBottom: 0 }}>
             {AM_PERSONAS.map((p) => {
               const isHov = hoveredPersona === p.id;
+              const isActive = isHov || p.isDefault;
               return (
                 <button key={p.id}
                   onClick={() => onSelectPersona(p.id)}
                   onMouseEnter={() => setHoveredPersona(p.id)}
                   onMouseLeave={() => setHoveredPersona(null)}
                   style={{
-                    flex: 1, background: isHov ? "#fff" : "rgba(255,255,255,0.04)",
-                    border: isHov ? `1.5px solid ${p.accent}` : "1.5px solid rgba(255,255,255,0.1)",
+                    flex: 1, background: isHov ? "#fff" : p.isDefault ? "rgba(37,99,235,0.08)" : "rgba(255,255,255,0.04)",
+                    border: isActive ? `1.5px solid ${p.accent}` : "1.5px solid rgba(255,255,255,0.1)",
                     borderRadius: 14, padding: "14px 16px",
                     cursor: "pointer", textAlign: "left", transition: "all 0.15s",
                     transform: isHov ? "translateY(-2px)" : "none",
                   }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                  {/* Header row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: isHov ? "#111827" : "#fff" }}>{p.label}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: isHov ? p.accent : "rgba(255,255,255,0.4)", background: isHov ? `${p.accent}18` : "rgba(255,255,255,0.07)", borderRadius: 5, padding: "2px 7px" }}>{p.badge}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: isHov ? p.accent : (p.isDefault ? p.accent : "rgba(255,255,255,0.4)"), background: isHov ? `${p.accent}18` : (p.isDefault ? `${p.accent}20` : "rgba(255,255,255,0.07)"), borderRadius: 5, padding: "2px 7px" }}>{p.badge}</span>
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: isHov ? p.accent : "rgba(255,255,255,0.45)", marginBottom: 4 }}>{p.tagline}</div>
-                  <div style={{ fontSize: 10, color: isHov ? "#6B7280" : "rgba(255,255,255,0.28)", lineHeight: 1.4 }}>{p.detail}</div>
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                    <ChevronRight size={13} color={isHov ? p.accent : "rgba(255,255,255,0.2)"} />
+                  <div style={{ fontSize: 11, fontWeight: 600, color: isHov ? p.accent : (p.isDefault ? p.accent : "rgba(255,255,255,0.45)"), marginBottom: 4 }}>{p.tagline}</div>
+                  <div style={{ fontSize: 10, color: isHov ? "#6B7280" : "rgba(255,255,255,0.28)", lineHeight: 1.4, marginBottom: 10 }}>{p.detail}</div>
+
+                  {/* AI Insights preview */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
+                    {p.insights.map((ins, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, background: isHov ? "#F9FAFB" : "rgba(255,255,255,0.05)", borderRadius: 5, padding: "4px 7px" }}>
+                        <span style={{ fontSize: 10 }}>{ins.icon}</span>
+                        <span style={{ fontSize: 10, color: isHov ? "#374151" : "rgba(255,255,255,0.55)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ins.text}</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: ins.color, flexShrink: 0 }}>{ins.value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* AI badge + arrow */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: isHov ? p.accent : "rgba(255,255,255,0.3)", background: isHov ? `${p.accent}12` : "rgba(255,255,255,0.05)", border: `1px solid ${isHov ? `${p.accent}30` : "rgba(255,255,255,0.08)"}`, borderRadius: 4, padding: "2px 6px", display: "flex", alignItems: "center", gap: 3 }}>
+                      <Sparkles size={8} />
+                      AI Insights
+                    </span>
+                    <ChevronRight size={13} color={isActive ? p.accent : "rgba(255,255,255,0.2)"} />
                   </div>
                 </button>
               );
             })}
+          </div>
+
+          {/* ── Knowledge Graph + AI Insights ── */}
+          <div style={{ width: "100%", maxWidth: 880, marginTop: 20, display: "flex", gap: 16 }}>
+
+            {/* KG mini panel */}
+            <div style={{ flex: "0 0 260px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "18px 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <BarChart3 size={14} color={COLORS.accent} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>Knowledge Graph</span>
+                {kgStats && (
+                  <span style={{ marginLeft: "auto", fontSize: 9, color: "rgba(255,255,255,0.3)" }}>
+                    {(kgStats.total_ros || 0).toLocaleString()} ROs
+                  </span>
+                )}
+              </div>
+              {topClusters.length === 0 ? (
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center", padding: "24px 0" }}>
+                  Loading clusters…
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {topClusters.map((c, i) => {
+                    const maxROs = topClusters[0]?.ro_count || 1;
+                    const pct = Math.round((c.ro_count / maxROs) * 100);
+                    return (
+                      <div key={i}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
+                            {c.cluster_label || c._id}
+                          </span>
+                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
+                            {(c.ro_count || 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
+                          <div style={{ height: "100%", borderRadius: 2, background: COLORS.accent, width: `${pct}%`, transition: "width 0.6s ease" }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {kgStats && (
+                <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 5 }}>
+                  {[
+                    ["Clusters", (kgStats.total_clusters || 0).toLocaleString()],
+                    ["Avg RO value", kgStats.avg_ro_value ? `$${Math.round(kgStats.avg_ro_value).toLocaleString()}` : "–"],
+                  ].map(([label, val]) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{label}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>{val}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* AI Insights chat */}
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "18px 20px", display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <Sparkles size={14} color={COLORS.accent} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>AI Insights</span>
+                <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: COLORS.accent, background: "rgba(255,107,53,0.12)", border: "1px solid rgba(255,107,53,0.25)", borderRadius: 4, padding: "2px 7px" }}>LIVE</span>
+              </div>
+
+              {/* Message area */}
+              <div style={{ flex: 1, minHeight: 130, maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                {messages.length === 0 && (
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.22)", padding: "20px 0 6px", textAlign: "center" }}>Ask a question below to get started</div>
+                )}
+                {messages.map((m, i) => (
+                  <div key={i} style={{
+                    padding: "8px 12px", borderRadius: 10, fontSize: 11, lineHeight: 1.55,
+                    background: m.role === "user" ? "rgba(255,107,53,0.12)" : "rgba(255,255,255,0.05)",
+                    border: m.role === "user" ? "1px solid rgba(255,107,53,0.22)" : "1px solid rgba(255,255,255,0.07)",
+                    color: m.role === "user" ? "#fff" : "rgba(255,255,255,0.72)",
+                    alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+                    maxWidth: "90%",
+                  }}>
+                    {m.role === "user" ? m.content : formatAIResponse(m.content)}
+                  </div>
+                ))}
+                {chatLoading && (
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", padding: "2px 8px" }}>Thinking…</div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Suggested questions — always visible */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
+                {[
+                  "What are the top repair categories?",
+                  "Which makes have the most ROs?",
+                  "Show brake cluster stats",
+                ].map((q) => (
+                  <button key={q} onClick={() => sendMessage(q)}
+                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 10, color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", gap: 5, transition: "background 0.12s" }}>
+                    <Zap size={9} color={COLORS.accent} />
+                    {q}
+                  </button>
+                ))}
+              </div>
+
+              {/* Input row */}
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  value={inputText}
+                  onChange={e => setInputText(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && sendMessage()}
+                  placeholder="Ask about your repair data…"
+                  style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.11)", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#fff", outline: "none", fontFamily: "inherit" }}
+                />
+                <button onClick={() => sendMessage()} disabled={chatLoading || !inputText.trim()}
+                  style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#fff", opacity: (chatLoading || !inputText.trim()) ? 0.45 : 1, transition: "opacity 0.15s" }}>
+                  <Send size={12} />
+                  Ask
+                </button>
+              </div>
+            </div>
           </div>
         </>
       )}
@@ -642,7 +911,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
                 {/* AM UI preview */}
                 {apiEdition === "AM" && (
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>WrenchIQ-AM — Customer-Facing Summary</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>{amName} — Customer-Facing Summary</div>
                     <div style={{ background: "#fff", borderRadius: 12, padding: "16px", border: "1px solid #E5E7EB" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                         <div style={{ width: 32, height: 32, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -676,7 +945,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
                 {/* OEM UI preview */}
                 {apiEdition === "OEM" && (
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>WrenchIQ-OEM — Warranty RO Narrative</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>{oemName} — Warranty RO Narrative</div>
                     <div style={{ background: "#fff", borderRadius: 12, padding: "16px", border: "1px solid #E5E7EB" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                         <div style={{ width: 32, height: 32, borderRadius: 8, background: "#0D3B45", display: "flex", alignItems: "center", justifyContent: "center" }}>

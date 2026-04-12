@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# bin/export-db — Export wrenchiq collections used by WrenchIQ-AM and WrenchIQ-OEM
+#
+# Collections exported:
+#   wrenchiq_ro       — 100k ROs, powers Knowledge Graph + AI Insights
+#   wrenchiq_clusters — KG clusters
+#   recommendations   — AI recommendations panel
+#
+# Usage:
+#   bin/export-db
+#
+# Reads MONGODB_URI / MONGODB_DB from .env.local.
+# Output: wrenchiq-export-<date>.tar.gz containing one .json.gz per collection.
+
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if [[ ! -f .env.local ]]; then
+  echo "ERROR: .env.local not found" >&2
+  exit 1
+fi
+
+MONGODB_URI=$(grep '^MONGODB_URI=' .env.local | cut -d= -f2-)
+MONGODB_DB=$(grep '^MONGODB_DB='  .env.local | cut -d= -f2-)
+
+if [[ -z "$MONGODB_URI" || -z "$MONGODB_DB" ]]; then
+  echo "ERROR: MONGODB_URI or MONGODB_DB missing from .env.local" >&2
+  exit 1
+
+fi
+
+COLLECTIONS=(wrenchiq_ro wrenchiq_clusters recommendations)
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+OUTDIR="wrenchiq-export-${TIMESTAMP}"
+TARBALL="${OUTDIR}.tar.gz"
+
+mkdir -p "${OUTDIR}"
+
+for COLL in "${COLLECTIONS[@]}"; do
+  OUTFILE="${OUTDIR}/${COLL}.json.gz"
+  echo "==> Exporting ${MONGODB_DB}.${COLL}..."
+  mongoexport \
+    --uri="${MONGODB_URI}/${MONGODB_DB}" \
+    --collection="${COLL}" \
+    | gzip > "${OUTFILE}"
+  echo "    ${OUTFILE} ($(du -sh "${OUTFILE}" | cut -f1))"
+done
+
+tar -czf "${TARBALL}" "${OUTDIR}"
+rm -rf "${OUTDIR}"
+
+echo ""
+echo "==> Done: ${TARBALL} ($(du -sh "${TARBALL}" | cut -f1))"
+echo ""
+echo "To import on another host:"
+echo "  tar -xzf ${TARBALL}"
+echo "  for f in ${OUTDIR}/*.json.gz; do"
+echo "    coll=\$(basename \$f .json.gz)"
+echo "    gunzip -c \$f | mongoimport --uri=\$MONGODB_URI/${MONGODB_DB} --collection=\$coll --drop"
+echo "  done"

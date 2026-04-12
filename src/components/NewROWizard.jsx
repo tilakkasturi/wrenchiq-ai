@@ -107,11 +107,12 @@ function todayAt(offsetHours) {
 }
 
 // ── Main Component ──────────────────────────────────────────
-export default function NewROWizard({ onClose }) {
+// prefill: { lead: { customerName, phone, channel, message }, draft: { symptom, urgency, estimatedARO, advisorNote, services } }
+export default function NewROWizard({ onClose, prefill = null }) {
   const [plateInput, setPlateInput]     = useState("");
   const [customer, setCustomer]         = useState(null);
   const [vehicle, setVehicle]           = useState(null);
-  const [symptomInput, setSymptomInput] = useState("");
+  const [symptomInput, setSymptomInput] = useState(prefill?.draft?.symptom || "");
   const [suggestions, setSuggestions]   = useState([]);
   const [showDrop, setShowDrop]         = useState(false);
   const [addedJobs, setAddedJobs]       = useState([]);
@@ -234,6 +235,35 @@ export default function NewROWizard({ onClose }) {
             <X size={15} color={COLORS.textSecondary} />
           </button>
         </div>
+
+        {/* ── ROAgent Banner ── */}
+        {prefill && (
+          <div style={{
+            margin: "12px 26px 0",
+            padding: "10px 14px",
+            background: "#EFF6FF",
+            border: "1px solid #BFDBFE",
+            borderRadius: 10,
+            display: "flex", alignItems: "flex-start", gap: 10,
+          }}>
+            <Zap size={14} color="#2563EB" style={{ marginTop: 1, flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1D4ED8", marginBottom: 2 }}>
+                ROAgent — Pre-filled from {prefill.lead.channel} ({prefill.lead.customerName})
+              </div>
+              {prefill.draft?.advisorNote && (
+                <div style={{ fontSize: 12, color: "#1E40AF" }}>
+                  {prefill.draft.advisorNote}
+                </div>
+              )}
+              {prefill.draft?.estimatedARO && (
+                <div style={{ fontSize: 11, color: "#3B82F6", marginTop: 2 }}>
+                  Estimated ARO: ${prefill.draft.estimatedARO.toLocaleString()}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── Body ── */}
         <div style={{

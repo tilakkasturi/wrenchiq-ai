@@ -892,6 +892,31 @@ function SectionAPIs({ edition }) {
 function SectionArch({ edition }) {
   return (
     <div>
+      {edition === "AM" && (
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.accent, textTransform: "uppercase", letterSpacing: 0.8 }}>
+              WrenchIQ-AM — System Architecture
+            </div>
+            <a
+              href="/architecture-am.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, textDecoration: "none", display: "flex", alignItems: "center", gap: 4, background: `${COLORS.accent}12`, border: `1px solid ${COLORS.accent}30`, borderRadius: 6, padding: "4px 10px" }}
+            >
+              ↗ Open full screen
+            </a>
+          </div>
+          <div style={{ border: `1.5px solid ${COLORS.accent}30`, borderRadius: 12, overflow: "hidden", background: "#F0F4F5" }}>
+            <iframe
+              src="/architecture-am.html"
+              title="WrenchIQ-AM Architecture Diagram"
+              style={{ width: "100%", height: 520, border: "none", display: "block" }}
+            />
+          </div>
+        </div>
+      )}
+
       <SectionTitle>Tech Stack</SectionTitle>
       <Table
         headers={["Layer", "Technology"]}
@@ -904,9 +929,10 @@ function SectionArch({ edition }) {
           ["Backend",     "Node.js on AWS ECS/Fargate"],
           ["Database",    "PostgreSQL (RDS) + Redis (ElastiCache) + S3"],
           ["SMS",         "Twilio — approval links, status updates"],
-          ["Payments",    "Stripe + DigniFi + Sunbit"],
+          ["Payments",    "Square (Web SDK · Terminal API · Reader SDK) + DigniFi + Sunbit"],
+          ["Accounting",  "Xero (GL sync · invoice lifecycle · credit notes) + QuickBooks"],
           ["Build",       "Vite → dist/ — base path /wrenchiq-ai"],
-          ["Security",    "SOC 2 Type II · PCI-DSS · CCPA"],
+          ["Security",    "SOC 2 Type II · PCI-DSS (Square tokenizes) · CCPA"],
         ]}
       />
 
@@ -1151,7 +1177,7 @@ export default function SpecificationsPanel({ onClose }) {
   const activeSection = SECTIONS.find(s => s.id === section);
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 2000, display: "flex", flexDirection: "column", background: "#fff", fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 10000, display: "flex", flexDirection: "column", background: "#fff", fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif" }}>
 
       {/* Top bar */}
       <div style={{ height: 52, background: COLORS.primary, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", flexShrink: 0 }}>

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# bin/import-prod — One-time import from production repair_smith backup
+#                   into wrenchiq.RepairOrder (100 sampled ROs)
+#
+# Reads:  repair_smith_prod-PDRMS-Cluster-Production-Backup.repair_orders
+# Writes: wrenchiq.RepairOrder  (drops existing, then inserts 100 docs)
+#
+# Usage:
+#   bin/import-prod
+#
+# MongoDB URI is read from .env.local (MONGODB_URI).
+
+set -euo pipefail
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+cd "$(dirname "$0")/.."
+
+echo "Importing from production backup..."
+node scripts/importFromProd.js

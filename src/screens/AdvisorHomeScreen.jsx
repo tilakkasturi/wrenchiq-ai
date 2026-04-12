@@ -3,10 +3,14 @@ import { useState, useEffect } from "react";
 import {
   User, Car, Clock, ChevronRight, Plus, Search, Mic,
   CheckCircle, Send, MessageSquare, Mail, X, ChevronLeft,
-  Wrench, BarChart2, FileText, AlertCircle, Zap
+  Wrench, BarChart2, FileText, AlertCircle, Zap, Brain, Sparkles
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
-import { customers, vehicles } from "../data/demoData";
+import { customers, vehicles, repairOrders } from "../data/demoData";
+import { fetchActiveRepairOrders } from "../services/repairOrderService";
+import CheckoutModal from "../components/CheckoutModal";
+import AIInsightsStrip from "../components/AIInsightsStrip";
+import { DollarSign } from "lucide-react";
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
@@ -32,6 +36,11 @@ const QUEUE = [
     concern: "90K service + brake inspection",
   },
   {
+    custId: "cust-003",
+    waitMin: 19,
+    concern: "Check engine light came on 3 days ago",
+  },
+  {
     custId: "cust-005",
     waitMin: 22,
     concern: "A/C blowing warm air",
@@ -40,6 +49,11 @@ const QUEUE = [
     custId: "cust-007",
     waitMin: 31,
     concern: "Oil change + tire rotation",
+  },
+  {
+    custId: "cust-008",
+    waitMin: 37,
+    concern: "60K service + steering vibration at highway speed",
   },
 ];
 
@@ -81,6 +95,35 @@ const BOARD_ROS = [
     job: "Brake service + 65K inspection",
     column: "queue",
     minAgo: 4,
+    _liveRO: {
+      customerConcern: "Brakes feel spongy, squealing at low speed",
+      loyaltyTier: "loyal",
+      preferredContact: "text",
+      customerApprovalRate: 0.88,
+      customerVisitCount: 9,
+      customerLTV: 6840,
+      totalEstimate: 892.50,
+      totalLabor: 390.00,
+      totalPartsCharged: 412.50,
+      grossMarginDollars: 318.75,
+      grossMarginPct: 36,
+      effectiveLaborRate: 198,
+      totalFlaggedHrs: 2.0,
+      totalActualHrs: 1.97,
+      declinedTotal: 0,
+      dtcs: [],
+      services: [
+        { name: "Front Brake Pad & Rotor Replacement", laborHrs: 1.4, laborCost: 273, partsCost: 178.50 },
+        { name: "Rear Brake Pad Replacement", laborHrs: 0.6, laborCost: 117, partsCost: 89.00 },
+        { name: "65K Multi-Point Inspection", laborHrs: 0.3, laborCost: 58.50, partsCost: 0 },
+      ],
+      aiInsights: [
+        "James is a loyal customer (9 visits, $6,840 LTV) — prioritize throughput and a smooth pickup experience.",
+        "BMW X3 brakes: verify brake fluid condition while in. Flush ($189) has 78% acceptance rate on European vehicles at this mileage.",
+        "65K inspection may reveal cabin filter (last replaced 20K ago) and DSC sensor — flag before customer waits.",
+        "High approval rate (88%) — present any upsells confidently; James rarely declines aligned recommendations.",
+      ],
+    },
   },
   {
     roNum: "RO-2024-1188",
@@ -88,20 +131,107 @@ const BOARD_ROS = [
     job: "Oil change + tire rotation",
     column: "queue",
     minAgo: 9,
+    _liveRO: {
+      customerConcern: "Due for oil change, tires pulling slightly left",
+      loyaltyTier: "regular",
+      preferredContact: "email",
+      customerApprovalRate: 0.72,
+      customerVisitCount: 4,
+      customerLTV: 2210,
+      totalEstimate: 189.95,
+      totalLabor: 97.50,
+      totalPartsCharged: 68.45,
+      grossMarginDollars: 72.80,
+      grossMarginPct: 38,
+      effectiveLaborRate: 187,
+      totalFlaggedHrs: 0.8,
+      totalActualHrs: 0.52,
+      declinedTotal: 149,
+      dtcs: [],
+      services: [
+        { name: "Full Synthetic Oil Change (5W-20)", laborHrs: 0.4, laborCost: 52, partsCost: 38.45 },
+        { name: "Tire Rotation & Balance", laborHrs: 0.4, laborCost: 52, partsCost: 30.00 },
+      ],
+      aiInsights: [
+        "Robert's F-150 is pulling left — check alignment while on the lift. Alignment ($149) declined at last visit; re-present with photo evidence from inspection.",
+        "2022 F-150 at ~48K miles: brake inspection and cabin air filter are overdue. Add to MPI checklist.",
+        "Regular tier customer (4 visits) — this is a trust-building visit. Fast turnaround + text update will increase loyalty score.",
+        "Tire tread depth check: F-150 owners drive high mileage annually — proactive tire recommendation could convert to a $1,200+ sale.",
+      ],
+    },
   },
   {
     roNum: "RO-2024-1189",
     custId: "cust-003",
     job: "Check engine — P0420 cat converter",
-    column: "diagnosing",
-    minAgo: 23,
+    column: "queue",
+    minAgo: 19,
+    _liveRO: {
+      customerConcern: "Check engine light came on 3 days ago, no performance issues noticed",
+      loyaltyTier: "vip",
+      preferredContact: "call",
+      customerApprovalRate: 0.94,
+      customerVisitCount: 17,
+      customerLTV: 14320,
+      totalEstimate: 1640.00,
+      totalLabor: 520.00,
+      totalPartsCharged: 960.00,
+      grossMarginDollars: 621.60,
+      grossMarginPct: 38,
+      effectiveLaborRate: 204,
+      totalFlaggedHrs: 2.8,
+      totalActualHrs: 2.55,
+      declinedTotal: 0,
+      dtcs: ["P0420"],
+      services: [
+        { name: "Catalytic Converter Replacement (OEM-equiv)", laborHrs: 2.2, laborCost: 429, partsCost: 785.00 },
+        { name: "O2 Sensor Upstream (verify)", laborHrs: 0.4, laborCost: 78, partsCost: 98.00 },
+        { name: "Exhaust Inspection", laborHrs: 0.2, laborCost: 39, partsCost: 0 },
+      ],
+      aiInsights: [
+        "VIP customer — Monica has 17 visits and $14,320 LTV. Highest-priority handling; consider complimentary loaner or Lyft voucher.",
+        "P0420 on a 2021 Camry at this mileage often indicates early catalyst degradation — verify upstream O2 sensor first to avoid unnecessary cat replacement.",
+        "94% approval rate: Monica trusts your recommendations implicitly. Explain the diagnosis clearly and she will approve.",
+        "Camry catalytic converter: check for active TSB (SB-0115-21) covering partial warranty extension to 80K miles — could save Monica $400+.",
+        "High LTV customer: follow up within 24 hrs of pickup with a personal text to reinforce trust and ensure satisfaction.",
+      ],
+    },
   },
   {
     roNum: "RO-2024-1190",
     custId: "cust-008",
     job: "60K major service + alignment",
-    column: "diagnosing",
-    minAgo: 41,
+    column: "queue",
+    minAgo: 37,
+    _liveRO: {
+      customerConcern: "60K service due, steering wheel vibrates at highway speed",
+      loyaltyTier: "regular",
+      preferredContact: "text",
+      customerApprovalRate: 0.81,
+      customerVisitCount: 5,
+      customerLTV: 3890,
+      totalEstimate: 1245.00,
+      totalLabor: 680.00,
+      totalPartsCharged: 445.00,
+      grossMarginDollars: 460.65,
+      grossMarginPct: 37,
+      effectiveLaborRate: 193,
+      totalFlaggedHrs: 3.5,
+      totalActualHrs: 3.52,
+      declinedTotal: 280,
+      dtcs: [],
+      services: [
+        { name: "60K Major Service (oil, filters, plugs, fluids)", laborHrs: 2.5, laborCost: 487.50, partsCost: 312.00 },
+        { name: "4-Wheel Alignment", laborHrs: 0.7, laborCost: 136.50, partsCost: 0 },
+        { name: "Tire Balance (4 wheels)", laborHrs: 0.4, laborCost: 78, partsCost: 0 },
+      ],
+      aiInsights: [
+        "Steering vibration at highway speed points to wheel balance or tire issue — address before alignment for accurate results.",
+        "Toyota RAV4 60K: timing check, serpentine belt inspection, and differential fluid are often overlooked. Add to estimate proactively.",
+        "Priya declined brake fluid flush ($140) and cabin filter ($89) at last visit — re-present with updated mileage context ($280 opportunity).",
+        "81% approval rate: Priya responds well to text updates with photos. Send inspection photo via SMS when diagnosis is complete.",
+      ],
+    },
   },
   {
     roNum: "RO-2024-1192",
@@ -109,6 +239,36 @@ const BOARD_ROS = [
     job: "A/C recharge + cabin filter",
     column: "approval",
     minAgo: 58,
+    _liveRO: {
+      customerConcern: "A/C not blowing cold, musty smell from vents",
+      loyaltyTier: "vip",
+      preferredContact: "text",
+      customerApprovalRate: 0.91,
+      customerVisitCount: 14,
+      customerLTV: 11250,
+      totalEstimate: 468.00,
+      totalLabor: 195.00,
+      totalPartsCharged: 218.00,
+      grossMarginDollars: 178.60,
+      grossMarginPct: 38,
+      effectiveLaborRate: 201,
+      totalFlaggedHrs: 1.5,
+      totalActualHrs: 1.0,
+      declinedTotal: 195,
+      dtcs: [],
+      services: [
+        { name: "A/C Evac & Recharge (R-134a)", laborHrs: 0.8, laborCost: 156, partsCost: 88.00 },
+        { name: "Cabin Air Filter Replacement", laborHrs: 0.2, laborCost: 39, partsCost: 48.00 },
+        { name: "A/C Leak Check & Dye Test", laborHrs: 0.5, laborCost: 97.50, partsCost: 82.00 },
+      ],
+      aiInsights: [
+        "VIP customer (14 visits, $11,250 LTV) — David's approval is pending. Send a text update with the estimate link now.",
+        "Musty smell indicates a likely dirty evaporator core — recommend A/C disinfectant treatment ($59) alongside cabin filter for complete fix.",
+        "2019 Honda CR-V A/C: check for known compressor oil consumption issue (TSB 19-048). Flag if refrigerant loss exceeds spec.",
+        "David declined the serpentine belt replacement ($195) at 65K — now at 72K, belt risk is elevated. Re-present with urgency framing.",
+        "91% approval rate: David is highly receptive. Personal text from advisor typically converts 20% better than automated messages.",
+      ],
+    },
   },
   {
     roNum: "RO-2024-1183",
@@ -116,6 +276,35 @@ const BOARD_ROS = [
     job: "Transmission fluid + spark plugs",
     column: "approval",
     minAgo: 74,
+    _liveRO: {
+      customerConcern: "Rough shifting at low speed, due for 90K service",
+      loyaltyTier: "loyal",
+      preferredContact: "call",
+      customerApprovalRate: 0.79,
+      customerVisitCount: 8,
+      customerLTV: 5620,
+      totalEstimate: 724.50,
+      totalLabor: 390.00,
+      totalPartsCharged: 248.50,
+      grossMarginDollars: 261.00,
+      grossMarginPct: 36,
+      effectiveLaborRate: 196,
+      totalFlaggedHrs: 2.5,
+      totalActualHrs: 2.0,
+      declinedTotal: 340,
+      dtcs: [],
+      services: [
+        { name: "Transmission Fluid Service (CVT)", laborHrs: 1.2, laborCost: 234, partsCost: 118.50 },
+        { name: "Spark Plug Replacement (4 cyl)", laborHrs: 0.8, laborCost: 156, partsCost: 68.00 },
+        { name: "90K Multi-Point Inspection", laborHrs: 0.3, laborCost: 58.50, partsCost: 0 },
+      ],
+      aiInsights: [
+        "Rough CVT shifting at 90K is a known pattern on Hyundai Tucson — verify fluid condition and check for TSB 21-AT-002 before approving transmission service.",
+        "Tom declined timing belt check ($185) and coolant flush ($155) at last two visits — $340 outstanding opportunity. Re-present as a safety item at 90K.",
+        "Loyal customer (8 visits) — prefers a phone call for estimates. Call Tom directly with the diagnosis to boost approval likelihood.",
+        "If CVT fluid is dark or has a burnt smell, recommend extended transmission service flush ($120 add-on) to protect against further wear.",
+      ],
+    },
   },
   {
     roNum: "RO-2024-1179",
@@ -123,6 +312,35 @@ const BOARD_ROS = [
     job: "Strut replacement + wheel alignment",
     column: "pickup",
     minAgo: 192,
+    _liveRO: {
+      customerConcern: "Clunking noise over bumps, front end bouncy",
+      loyaltyTier: "vip",
+      preferredContact: "text",
+      customerApprovalRate: 0.96,
+      customerVisitCount: 21,
+      customerLTV: 18940,
+      totalEstimate: 1380.00,
+      totalLabor: 780.00,
+      totalPartsCharged: 480.00,
+      grossMarginDollars: 524.40,
+      grossMarginPct: 38,
+      effectiveLaborRate: 205,
+      totalFlaggedHrs: 4.0,
+      totalActualHrs: 3.81,
+      declinedTotal: 0,
+      dtcs: [],
+      services: [
+        { name: "Front Strut Assembly Replacement (pair)", laborHrs: 2.8, laborCost: 546, partsCost: 392.00 },
+        { name: "4-Wheel Alignment Post-Strut", laborHrs: 0.7, laborCost: 136.50, partsCost: 0 },
+        { name: "Sway Bar End Link Inspection", laborHrs: 0.2, laborCost: 39, partsCost: 88.00 },
+      ],
+      aiInsights: [
+        "Sarah is your highest-LTV customer ($18,940, 21 visits) — vehicle is ready. Send pickup notification text immediately.",
+        "Sway bar end links were marginal during inspection — replacement was deferred ($240). Mention this verbally at pickup to plant the seed for next visit.",
+        "Sarah's 2022 Tesla Model 3 (veh-007) is also due for tire rotation — schedule while she's here if she has time.",
+        "VIP follow-up: send a satisfaction check-in text tomorrow morning to maintain Sarah's loyalty and invite a Google review.",
+      ],
+    },
   },
   {
     roNum: "RO-2024-1181",
@@ -130,6 +348,35 @@ const BOARD_ROS = [
     job: "Brake pad + rotor replacement",
     column: "pickup",
     minAgo: 247,
+    _liveRO: {
+      customerConcern: "Grinding noise when braking, brake pedal pulsating",
+      loyaltyTier: "loyal",
+      preferredContact: "text",
+      customerApprovalRate: 0.85,
+      customerVisitCount: 7,
+      customerLTV: 5100,
+      totalEstimate: 892.00,
+      totalLabor: 468.00,
+      totalPartsCharged: 328.00,
+      grossMarginDollars: 320.40,
+      grossMarginPct: 36,
+      effectiveLaborRate: 197,
+      totalFlaggedHrs: 2.4,
+      totalActualHrs: 2.38,
+      declinedTotal: 185,
+      dtcs: [],
+      services: [
+        { name: "Front & Rear Brake Pad Replacement", laborHrs: 1.6, laborCost: 312, partsCost: 218.00 },
+        { name: "Front Rotor Resurfacing", laborHrs: 0.8, laborCost: 156, partsCost: 110.00 },
+        { name: "Brake Fluid Flush", laborHrs: 0.3, laborCost: 58.50, partsCost: 38.00 },
+      ],
+      aiInsights: [
+        "Angela's Subaru Outback is ready — vehicle has been waiting 4+ hours. Notify now to avoid dissatisfaction.",
+        "Angela declined the serpentine belt replacement ($185) at intake — at 95K miles on a 2018 Outback, this is an imminent failure risk. Mention at pickup.",
+        "Brake job complete: 2018 Outback at 95K may also need rear wheel bearing inspection — listen for noise during final road test.",
+        "Loyal customer with strong LTV ($5,100) — a quick personal call at pickup (vs. just a text) will significantly reinforce trust.",
+      ],
+    },
   },
 ];
 
@@ -249,9 +496,81 @@ function StatCard({ label, value, sub, accent }) {
   );
 }
 
+function KGIntakePanel() {
+  const [loading, setLoading] = useState(true);
+  const [bullets, setBullets] = useState([]);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const question =
+      "In 3 short bullet points, what are the top service patterns and upsell opportunities we should prioritize at intake today based on our repair order database?";
+    fetch("/api/knowledge-graph/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, history: [] }),
+    })
+      .then((r) => r.text())
+      .then((text) => {
+        const data = text ? JSON.parse(text) : {};
+        if (!data.answer) throw new Error("no answer");
+        const lines = data.answer
+          .split(/\n/)
+          .map((l) => l.replace(/^[•\-\*\d\.\s]+/, "").trim())
+          .filter((l) => l.length > 20)
+          .slice(0, 4);
+        setBullets(lines);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div
+      style={{
+        marginTop: 16,
+        background: "linear-gradient(160deg, #0D3B45 0%, #0a2c35 100%)",
+        borderRadius: 12,
+        padding: "14px 16px",
+        border: "1px solid rgba(255,255,255,0.08)",
+        flexShrink: 0,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+        <Brain size={13} color={COLORS.accent} />
+        <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.accent, letterSpacing: 0.5, textTransform: "uppercase" }}>
+          KG Intake Intelligence
+        </span>
+        <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.07)", borderRadius: 3, padding: "1px 5px" }}>
+          LIVE
+        </span>
+      </div>
+
+      {loading && (
+        <div>
+          {[95, 80, 88].map((w, i) => (
+            <div key={i} style={{ height: 9, background: "rgba(255,255,255,0.09)", borderRadius: 4, marginBottom: 7, width: `${w}%`, animation: "kgFade 1.4s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />
+          ))}
+          <style>{`@keyframes kgFade { 0%,100% { opacity:0.4 } 50% { opacity:0.85 } }`}</style>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>KG unavailable — start server to enable</div>
+      )}
+
+      {!loading && !error && bullets.map((b, i) => (
+        <div key={i} style={{ display: "flex", gap: 7, marginBottom: 7 }}>
+          <span style={{ color: COLORS.accent, fontSize: 13, lineHeight: 1.3, flexShrink: 0, marginTop: 1 }}>›</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.78)", lineHeight: 1.45 }}>{b}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function QueueCard({ item, isFirst, onStart }) {
-  const cust = customers.find((c) => c.id === item.custId);
-  const veh = getVehicleForCustomer(item.custId);
+  const cust = customers.find((c) => c.id === item.custId) || item._customer;
+  const veh = getVehicleForCustomer(item.custId) || item._vehicle;
   if (!cust || !veh) return null;
 
   return (
@@ -335,30 +654,46 @@ function QueueCard({ item, isFirst, onStart }) {
   );
 }
 
-function ROCard({ ro }) {
-  const cust = customers.find((c) => c.id === ro.custId);
-  const veh = getVehicleForCustomer(ro.custId);
+function ROCard({ ro, colId, onCheckout, paidRos, onSelect, selected }) {
+  const cust = customers.find((c) => c.id === ro.custId) || ro._customer;
+  const veh = getVehicleForCustomer(ro.custId) || ro._vehicle;
   if (!cust || !veh) return null;
 
   const hr = Math.floor(ro.minAgo / 60);
   const min = ro.minAgo % 60;
   const timeLabel = hr > 0 ? `${hr}h ${min}m` : `${min}m`;
+  const paid = paidRos && paidRos[ro.roNum];
+  const [hovered, setHovered] = useState(false);
+  const aiCount = ro._liveRO?.aiInsights?.length || 0;
 
   return (
     <div
+      onClick={() => onSelect?.(ro.roNum)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: COLORS.bgCard,
-        border: `1px solid ${COLORS.border}`,
+        background: selected ? "#F5F3FF" : COLORS.bgCard,
+        border: `1px solid ${selected ? "#7C3AED" : paid ? "#86EFAC" : hovered ? COLORS.primaryLight : COLORS.border}`,
         borderRadius: 8,
         padding: "10px 12px",
         marginBottom: 8,
+        cursor: "pointer",
+        transition: "border-color 0.15s, box-shadow 0.15s",
+        boxShadow: selected ? "0 0 0 2px #EDE9FE" : hovered ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.3 }}>
           {ro.roNum}
         </span>
-        <span style={{ fontSize: 11, color: COLORS.textMuted }}>{timeLabel}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          {aiCount > 0 && (
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#7C3AED", background: "#EDE9FE", border: "1px solid #C4B5FD", borderRadius: 4, padding: "1px 5px" }}>
+              AI {aiCount}
+            </span>
+          )}
+          <span style={{ fontSize: 11, color: COLORS.textMuted }}>{timeLabel}</span>
+        </div>
       </div>
       <div style={{ fontWeight: 700, fontSize: 13, color: COLORS.textPrimary, marginTop: 4 }}>
         {cust.firstName} {cust.lastName}
@@ -367,6 +702,35 @@ function ROCard({ ro }) {
         {veh.year} {veh.make} {veh.model}
       </div>
       <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3 }}>{ro.job}</div>
+
+      {/* Paid badge */}
+      {paid && (
+        <div style={{ marginTop: 8, padding: "5px 8px", background: "#DCFCE7", border: "1px solid #86EFAC", borderRadius: 5, display: "flex", alignItems: "center", gap: 5 }}>
+          <CheckCircle size={11} color="#16A34A" />
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#15803D" }}>
+            PAID ${paid.amount} &mdash; {paid.method}
+          </span>
+        </div>
+      )}
+
+      {/* Finalize & Checkout — only on Ready for Pickup */}
+      {colId === "pickup" && !paid && (
+        <button
+          onClick={() => onCheckout(ro.roNum)}
+          style={{
+            marginTop: 8, width: "100%",
+            padding: "7px 0",
+            background: `linear-gradient(135deg, ${COLORS.accent}, #E85D26)`,
+            color: "#fff", border: "none", borderRadius: 6,
+            fontSize: 12, fontWeight: 700, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+            boxShadow: "0 3px 10px rgba(255,107,53,0.3)",
+          }}
+        >
+          <DollarSign size={12} />
+          Finalize &amp; Checkout
+        </button>
+      )}
     </div>
   );
 }
@@ -1199,14 +1563,62 @@ function WizardModal({ onClose, preloadCustId }) {
 
 // ── Main Screen ───────────────────────────────────────────────────────────
 
-export default function AdvisorHomeScreen() {
+const KANBAN_TO_COLUMN = {
+  checked_in:   'queue',
+  inspecting:   'diagnosing',
+  estimate_sent: 'approval',
+  approved:     'diagnosing',
+  in_progress:  'diagnosing',
+  ready:        'pickup',
+};
+
+export default function AdvisorHomeScreen({ onRoSelect }) {
   const [activeTab, setActiveTab] = useState("queue");
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardPreloadCustId, setWizardPreloadCustId] = useState(null);
+  const [checkoutRoId, setCheckoutRoId] = useState(null);
+  const [paidRos, setPaidRos] = useState({});
+  const [liveROs, setLiveROs] = useState(null);
+  const [selectedRoNum, setSelectedRoNum] = useState(null);
 
-  const nextUp = QUEUE[0];
-  const nextUpCust = customers.find((c) => c.id === nextUp.custId);
-  const nextUpVeh = getVehicleForCustomer(nextUp.custId);
+  useEffect(() => {
+    fetchActiveRepairOrders().then(ros => {
+      if (ros && ros.length > 0) setLiveROs(ros);
+    });
+  }, []);
+
+  const activeQueue = liveROs
+    ? liveROs
+        .filter(ro => ro.status === 'checked_in')
+        .map(ro => ({
+          custId:    ro.customerId,
+          waitMin:   ro.dateIn ? Math.max(1, Math.round((Date.now() - new Date(ro.dateIn)) / 60000)) : 5,
+          concern:   ro.serviceType || ro.services?.[0]?.name || 'Service',
+          _customer: ro._customer,
+          _vehicle:  ro._vehicle,
+        }))
+    : QUEUE;
+
+  const activeBoardROs = liveROs
+    ? liveROs.map(ro => ({
+        roNum:     ro.id,
+        custId:    ro.customerId,
+        job:       ro.serviceType || ro.services?.[0]?.name || 'Service',
+        column:    KANBAN_TO_COLUMN[ro.status] || 'queue',
+        minAgo:    ro.dateIn ? Math.max(0, Math.round((Date.now() - new Date(ro.dateIn)) / 60000)) : 0,
+        _customer: ro._customer,
+        _vehicle:  ro._vehicle,
+        _liveRO:   ro,
+      }))
+    : BOARD_ROS;
+
+  const nextUp = activeQueue[0];
+  const nextUpCust = nextUp
+    ? (customers.find((c) => c.id === nextUp.custId) || nextUp._customer)
+    : null;
+  const nextUpVeh = nextUp
+    ? (getVehicleForCustomer(nextUp.custId) || nextUp._vehicle)
+    : null;
 
   function openWizard(custId = null) {
     setWizardPreloadCustId(custId);
@@ -1273,6 +1685,13 @@ export default function AdvisorHomeScreen() {
         </button>
       </div>
 
+      <AIInsightsStrip label="Recommendations" insights={[
+        { icon: "⏳", text: "David's estimate pending 2h 15m — send nudge to close", action: "Text David", value: "+$2,190", color: "#F59E0B" },
+        { icon: "🔴", text: "Bay 3 idle 40 min — reassign Tom's Tucson to fill", action: "Reschedule", value: "Free bay", color: "#EF4444" },
+        { icon: "💡", text: "Monica: 3 items pending — 100% lifetime approval rate", action: "Call Monica", value: "+$294", color: "#FF6B35" },
+        { icon: "📊", text: "Today $5,842 — need $658 more to hit daily target", action: "View Board", value: "$658 gap", color: "#3B82F6" },
+      ]} />
+
       {/* Two-column body */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden", gap: 0 }}>
         {/* Left: Queue */}
@@ -1289,6 +1708,7 @@ export default function AdvisorHomeScreen() {
           }}
         >
           {/* Next Up card */}
+          {nextUp && nextUpCust && nextUpVeh ? (
           <div
             style={{
               background: COLORS.primary,
@@ -1347,12 +1767,18 @@ export default function AdvisorHomeScreen() {
               Start Intake
             </button>
           </div>
+          ) : (
+          <div style={{ background: COLORS.primary, borderRadius: 12, padding: "16px", marginBottom: 16, textAlign: "center" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.6)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>Next Up</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>No customers waiting</div>
+          </div>
+          )}
 
           {/* Queue section */}
           <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10 }}>
-            Waiting Queue · {QUEUE.length} customers
+            Waiting Queue · {activeQueue.length} customers
           </div>
-          {QUEUE.map((item, i) => (
+          {activeQueue.map((item, i) => (
             <QueueCard
               key={item.custId}
               item={item}
@@ -1360,6 +1786,8 @@ export default function AdvisorHomeScreen() {
               onStart={(id) => openWizard(id)}
             />
           ))}
+
+          <KGIntakePanel />
         </div>
 
         {/* Right: Board */}
@@ -1375,7 +1803,7 @@ export default function AdvisorHomeScreen() {
           {/* Kanban board */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
             {BOARD_COLUMNS.map((col) => {
-              const colROs = BOARD_ROS.filter((r) => r.column === col.id);
+              const colROs = activeBoardROs.filter((r) => r.column === col.id);
               return (
                 <div key={col.id}>
                   {/* Column header */}
@@ -1423,7 +1851,13 @@ export default function AdvisorHomeScreen() {
 
                   {/* RO cards */}
                   {colROs.map((ro) => (
-                    <ROCard key={ro.roNum} ro={ro} />
+                    <ROCard key={ro.roNum} ro={ro} colId={col.id} onCheckout={setCheckoutRoId} paidRos={paidRos} onSelect={(roNum) => {
+                          const next = roNum === selectedRoNum ? null : roNum;
+                          setSelectedRoNum(next);
+                          const boardRo = next ? activeBoardROs.find(r => r.roNum === next) : null;
+                          if (onRoSelect) onRoSelect(boardRo || null);
+                        }}
+                        selected={selectedRoNum === ro.roNum} />
                   ))}
 
                   {colROs.length === 0 && (
@@ -1454,6 +1888,36 @@ export default function AdvisorHomeScreen() {
           preloadCustId={wizardPreloadCustId}
         />
       )}
+
+      {/* Checkout modal */}
+      {checkoutRoId && (() => {
+        const boardRo = activeBoardROs.find(r => r.roNum === checkoutRoId);
+        const fullRo = repairOrders.find(r => r.id === checkoutRoId);
+        if (!boardRo) return null;
+        const cust = customers.find(c => c.id === boardRo.custId) || boardRo._customer;
+        const veh = getVehicleForCustomer(boardRo.custId) || boardRo._vehicle;
+        // Build a minimal RO shape if the full RO isn't in demoData
+        const ro = fullRo || {
+          id: boardRo.roNum,
+          services: [{ name: boardRo.job, laborCost: 195, partsCost: 0, status: "complete" }],
+          totalLabor: 195,
+          totalParts: 0,
+          shopSupplies: 19.95,
+        };
+        return (
+          <CheckoutModal
+            ro={ro}
+            customer={cust}
+            vehicle={veh}
+            onClose={() => setCheckoutRoId(null)}
+            onPaid={(roId, amount, method) => {
+              setPaidRos(prev => ({ ...prev, [roId]: { amount, method } }));
+              setCheckoutRoId(null);
+            }}
+          />
+        );
+      })()}
+
     </div>
   );
 }

@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Camera, Mic, Sparkles, CheckCircle, Video, X, Clock } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import AIInsightsStrip from "../components/AIInsightsStrip";
 
 // ─── Inspection Data ────────────────────────────────────────────────────────
 
@@ -770,6 +771,13 @@ export default function TechDVIScreen({ roData = DEFAULT_RO, onComplete, onBack 
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{progressPct}%</span>
         </div>
       </div>
+
+      <AIInsightsStrip insights={[
+        { icon: "📸", text: "Add photo to front brake finding — shops with photos see 34% higher customer approval", action: "Take Photo", value: "+34% approval", color: "#F59E0B" },
+        { icon: "🔋", text: "Tesla HVAC cabin filter due at 24K — Sarah is at 22K, add proactive recommendation", action: "Add Finding", value: "+$68", color: "#FF6B35" },
+        { icon: "✅", text: "VIN decoded — no open recalls for this Tesla, all TSBs cross-referenced", value: "No recalls", color: "#22C55E" },
+        { icon: "⚠️", text: "ADAS phantom braking TSB-2024-22-004 not yet checked for this Model 3", action: "Check TSB", value: "TSB pending", color: "#7C3AED" },
+      ]} />
 
       {/* ── Section tabs ── */}
       <div

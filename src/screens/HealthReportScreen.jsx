@@ -5,6 +5,7 @@ import {
   Star, ArrowRight, User, FileText, Check, X,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import AIInsightsStrip from "../components/AIInsightsStrip";
 
 // ─── Inspection Items ─────────────────────────────────────────
 const INSPECTION_SECTIONS = [
@@ -374,6 +375,13 @@ export default function HealthReportScreen() {
   }));
 
   return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <AIInsightsStrip insights={[
+        { icon: "⏳", text: "Sarah opened the health report 2× but hasn't approved — send 1-tap approve link via text", action: "Send Approve Link", value: "+$287–420", color: "#F59E0B" },
+        { icon: "🎥", text: "DeShawn's brake inspection video is 47s — customers who watch approve 31% more often", action: "Resend with Video", value: "+31% approval", color: "#3B82F6" },
+        { icon: "💡", text: "Dealer comparison showing $333 savings is on her report — your strongest close point", action: "View Report", value: "Save $333", color: "#22C55E" },
+        { icon: "📱", text: "Portal opened 3 times — customer is engaged, ideal time to call", action: "Call Sarah", value: "High intent", color: "#FF6B35" },
+      ]} />
     <div style={{ padding: "24px 28px" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
@@ -533,6 +541,7 @@ export default function HealthReportScreen() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

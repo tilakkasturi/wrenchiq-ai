@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WrenchIQ-AM — Service Advisor Architecture</title>
+<style>
+:root {
+  --primary:   #0D3B45;
+  --teal-mid:  #1A5C6B;
+  --teal-lt:   #2A8C9E;
+  --accent:    #FF6B35;
+  --bg:        #EEF3F5;
+  --card:      #FFFFFF;
+  --border:    #C4D4D8;
+  --text:      #1A2E32;
+  --muted:     #577880;
+  --green:     #16A34A;
+  --amber:     #D97706;
+  --red:       #DC2626;
+  --purple:    #7C3AED;
+  --blue:      #2563EB;
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh;
+}
+
+/* ── Topbar ── */
+.topbar{
+  background:var(--primary); color:#fff;
+  padding:0 28px; height:52px;
+  display:flex; align-items:center; gap:14px;
+  position:sticky; top:0; z-index:300;
+  box-shadow:0 2px 12px rgba(0,0,0,.35);
+}
+.topbar .logo{
+  width:30px;height:30px;background:var(--accent);
+  border-radius:7px;display:flex;align-items:center;
+  justify-content:center;font-size:13px;font-weight:700;
+  color:#fff;letter-spacing:-0.5px;flex-shrink:0;
+}
+.topbar h1{font-size:15px;font-weight:700;letter-spacing:.2px;}
+.topbar .pill{
+  background:var(--accent);color:#fff;
+  font-size:9.5px;font-weight:700;
+  padding:2px 9px;border-radius:99px;letter-spacing:.4px;
+}
+.topbar .hint{margin-left:auto;font-size:11px;color:#7BB8C4;}
+
+/* ── Predii Orchestration Banner ── */
+#orch-banner{
+  background:linear-gradient(135deg,#0D3B45 0%,#1A5C6B 60%,#0D3B45 100%);
+  border-bottom:3px solid var(--accent);
+  padding:0 28px; height:72px;
+  display:flex; align-items:stretch; gap:0;
+  position:relative; overflow:hidden;
+}
+#orch-banner::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(-45deg,transparent,transparent 30px,rgba(255,255,255,.015) 30px,rgba(255,255,255,.015) 60px);
+}
+.orch-label{
+  display:flex;flex-direction:column;justify-content:center;
+  padding-right:24px;border-right:1px solid rgba(255,255,255,.12);
+  margin-right:24px;flex-shrink:0;z-index:1;
+}
+.orch-label .title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+.orch-label .sub{font-size:13px;font-weight:700;color:#fff;margin-top:2px;}
+.orch-chips{display:flex;align-items:center;gap:10px;flex-wrap:wrap;z-index:1;}
+.orch-chip{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;padding:6px 12px;
+  cursor:pointer;transition:background .2s,border-color .2s;
+}
+.orch-chip:hover{background:rgba(255,255,255,.15);border-color:var(--accent);}
+.orch-chip .ci{font-size:12px;font-weight:700;font-family:monospace;color:#fff;}
+.orch-chip .ct{display:flex;flex-direction:column;}
+.orch-chip .ct strong{font-size:10px;color:#fff;font-weight:700;}
+.orch-chip .ct span{font-size:8.5px;color:#8FC4CE;margin-top:1px;}
+
+/* ── Column headers ── */
+.col-headers{
+  display:grid;
+  grid-template-columns:1fr 1fr 1.1fr 1fr;
+  gap:0;padding:0 20px;
+  border-bottom:2px solid var(--border);
+}
+.col-hdr{
+  padding:10px 14px;
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;user-select:none;
+}
+.ch-icon{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;font-family:monospace;
+  flex-shrink:0;
+}
+.ch-label{font-size:11.5px;font-weight:700;}
+.ch-sub{font-size:9px;opacity:.7;margin-top:1px;}
+.ch-count{
+  margin-left:auto;font-size:9px;font-weight:700;
+  background:rgba(0,0,0,.1);padding:2px 7px;border-radius:99px;
+}
+.ch-toggle{font-size:12px;transition:transform .25s;margin-left:6px;}
+.col-hdr.collapsed .ch-toggle{transform:rotate(-90deg);}
+
+.col-hdr-data   {border-left:4px solid #16A34A;background:#F0FDF4;}
+.col-hdr-tools  {border-left:4px solid #2563EB;background:#EFF6FF;}
+.col-hdr-agents {border-left:4px solid #FF6B35;background:#FFF7ED;}
+.col-hdr-outcome{border-left:4px solid #7C3AED;background:#F5F3FF;}
+
+/* ── Main grid ── */
+#diagram-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1.1fr 1fr;
+  gap:0;padding:0 20px 28px;
+  align-items:start;position:relative;
+}
+
+/* ── Column ── */
+.col{padding:0 10px;position:relative;}
+.col.col-data   {border-left:4px solid #16A34A;background:rgba(22,163,74,.02);}
+.col.col-tools  {border-left:4px solid #2563EB;background:rgba(37,99,235,.02);}
+.col.col-agents {border-left:4px solid #FF6B35;background:rgba(255,107,53,.03);}
+.col.col-outcome{border-left:4px solid #7C3AED;background:rgba(124,58,237,.02);}
+.col.col-tools::before,
+.col.col-agents::before,
+.col.col-outcome::before{
+  content:'';position:absolute;left:-1px;top:0;bottom:0;
+  width:1px;background:var(--border);
+}
+
+.col-body{
+  overflow:hidden;
+  transition:max-height .3s ease,opacity .3s ease;
+  max-height:9999px;opacity:1;
+}
+.col-body.collapsed{max-height:0;opacity:0;}
+
+/* ── Node base ── */
+.node{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:10px;margin-bottom:10px;
+  cursor:pointer;
+  transition:box-shadow .2s,transform .15s,border-color .2s,opacity .2s;
+  overflow:hidden;
+}
+.node:hover{box-shadow:0 4px 20px rgba(13,59,69,.16);transform:translateY(-1px);z-index:10;}
+.node.active{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(255,107,53,.2),0 4px 20px rgba(255,107,53,.12)!important;}
+
+.node-hd{
+  padding:8px 10px;display:flex;align-items:center;
+  gap:8px;border-bottom:1px solid var(--border);
+}
+.node-ico{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;font-family:monospace;
+  flex-shrink:0;
+}
+.node-title{font-size:11px;font-weight:700;line-height:1.25;}
+.node-sub{font-size:8.5px;color:var(--muted);margin-top:1px;}
+.node-body{padding:7px 10px;}
+.li{
+  font-size:9.5px;color:var(--muted);line-height:1.5;
+  display:flex;align-items:flex-start;gap:5px;margin-bottom:2px;
+}
+.li::before{content:'·';color:var(--accent);flex-shrink:0;}
+
+/* ── Tags ── */
+.tag{
+  display:inline-block;padding:1px 6px;border-radius:4px;
+  font-size:8.5px;font-weight:600;margin:1px 2px 1px 0;border:1px solid currentColor;
+}
+.tg{color:#15803D;background:#DCFCE7;border-color:#86EFAC;}
+.tb{color:#1D4ED8;background:#DBEAFE;border-color:#93C5FD;}
+.ta{color:#B45309;background:#FEF3C7;border-color:#FCD34D;}
+.tr{color:#B91C1C;background:#FEE2E2;border-color:#FCA5A5;}
+.tp{color:#6D28D9;background:#EDE9FE;border-color:#C4B5FD;}
+.tt{color:#0F766E;background:#CCFBF1;border-color:#5EEAD4;}
+.to{color:#C2410C;background:#FFEDD5;border-color:#FDBA74;}
+.tm{color:#475569;background:#F1F5F9;border-color:#CBD5E1;}
+
+/* ── Agent node header ── */
+.agent-hd{background:linear-gradient(135deg,#FF6B35,#FF8C5A);}
+.agent-hd .node-title{color:#fff;}
+.agent-hd .node-sub{color:rgba(255,255,255,.75);}
+
+/* ── 3C mini-sections ── */
+.sections-3c{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:6px 0;}
+.sec-3c{border-radius:6px;padding:5px 7px;border-left:3px solid;}
+.sec-3c .sl{font-size:9px;font-weight:700;margin-bottom:2px;}
+.sec-3c .sb{font-size:8.5px;color:var(--muted);line-height:1.4;}
+
+/* ── Pipeline bar ── */
+.pipeline-bar{
+  background:linear-gradient(90deg,#FF6B35 0%,#D97706 50%,#16A34A 100%);
+  height:3px;border-radius:2px;margin:6px 0;
+}
+
+/* ── Outcome node ── */
+.outcome-node{
+  background:linear-gradient(135deg,#0D3B45,#1A5C6B);
+  color:#fff;border-radius:12px;padding:14px 16px;
+  margin-bottom:10px;cursor:pointer;
+  transition:box-shadow .2s,transform .15s;
+}
+.outcome-node:hover{box-shadow:0 6px 24px rgba(13,59,69,.3);transform:translateY(-2px);}
+.outcome-node.active{box-shadow:0 0 0 3px rgba(255,107,53,.3)!important;}
+.outcome-node h3{font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+.kpi-box{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:6px 8px;text-align:center;}
+.kpi-box .kv{font-size:16px;font-weight:700;color:var(--accent);}
+.kpi-box .kl{font-size:8px;color:rgba(255,255,255,.6);margin-top:1px;}
+
+/* ── SVG arrows ── */
+#svg-arrows{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;overflow:visible;
+}
+@keyframes flow-r{from{stroke-dashoffset:16;}to{stroke-dashoffset:0;}}
+.flow-path{stroke-dasharray:5 4;animation:flow-r .7s linear infinite;}
+
+/* ── Detail panel ── */
+#dp{
+  position:fixed;top:52px;right:-420px;width:390px;
+  height:calc(100vh - 52px);background:#fff;
+  border-left:1px solid var(--border);
+  box-shadow:-4px 0 20px rgba(0,0,0,.1);
+  transition:right .3s ease;z-index:400;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#dp.open{right:0;}
+#dp-hdr{
+  padding:16px 18px;background:var(--primary);color:#fff;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+#dp-hdr .dph-ico{
+  width:36px;height:36px;border-radius:9px;
+  background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;font-family:monospace;color:#fff;
+}
+#dp-hdr h2{font-size:14px;font-weight:700;}
+#dp-hdr p{font-size:10.5px;color:#88BCC8;margin-top:2px;}
+#dp-close{
+  margin-left:auto;width:28px;height:28px;border:none;
+  background:rgba(255,255,255,.12);color:#fff;border-radius:6px;
+  cursor:pointer;font-size:15px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+#dp-close:hover{background:rgba(255,255,255,.22);}
+.chain-trace{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 18px;background:#F8FAFC;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;flex-wrap:wrap;
+}
+.ct-step{
+  font-size:9px;font-weight:600;padding:3px 8px;
+  border-radius:99px;color:#fff;
+}
+.ct-arrow{font-size:10px;color:var(--muted);}
+#dp-body{
+  padding:18px;flex:1;overflow-y:auto;
+  font-size:12px;line-height:1.65;color:var(--text);
+}
+#dp-body h3{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.2px;color:var(--muted);
+  margin:16px 0 8px;border-bottom:1px solid #F1F5F9;padding-bottom:4px;
+}
+#dp-body h3:first-child{margin-top:0;}
+#dp-body .code-block{
+  background:#F8FAFC;border:1px solid var(--border);border-radius:7px;
+  padding:10px 13px;font-family:'Menlo','Consolas',monospace;
+  font-size:9.5px;line-height:1.7;color:#0D3B45;margin:7px 0;overflow-x:auto;
+}
+#dp-body .step{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 10px;background:#F8FAFC;border-radius:7px;margin-bottom:5px;
+}
+#dp-body .step .sn{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;flex-shrink:0;
+}
+#dp-body .step strong{display:block;font-size:11px;margin-bottom:2px;}
+#dp-body .step span{font-size:10px;color:var(--muted);}
+
+/* ── Legend ── */
+#legend{
+  position:fixed;bottom:18px;left:18px;background:#fff;
+  border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;z-index:200;
+  box-shadow:0 3px 12px rgba(0,0,0,.1);font-size:10px;
+}
+#legend h4{
+  font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--muted);margin-bottom:7px;
+}
+.lr{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+.ld{width:10px;height:10px;border-radius:2px;}
+
+/* ── AM vs OEM comparison chip ── */
+.vs-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:#F0FDF4;border:1px solid #86EFAC;
+  border-radius:5px;padding:2px 7px;
+  font-size:8.5px;font-weight:600;color:#15803D;margin-top:5px;
+}
+.vs-chip.oem{background:#EDE9FE;border-color:#C4B5FD;color:#6D28D9;}
+</style>
+</head>
+<body>
+
+<!-- ── Topbar ── -->
+<div class="topbar">
+  <div class="logo">AM</div>
+  <h1>WrenchIQ-AM &mdash; Service Advisor Architecture</h1>
+  <span class="pill">Aftermarket Edition</span>
+  <span class="hint">Click any node to inspect &nbsp;&middot;&nbsp; Data Assets &rarr; Tools &rarr; AI Agents &rarr; Outcomes</span>
+</div>
+
+<!-- ── Predii Orchestration Banner ── -->
+<div id="orch-banner">
+  <div class="orch-label">
+    <span class="title">Predii Platform</span>
+    <span class="sub">Orchestration Layer</span>
+  </div>
+  <div class="orch-chips">
+    <div class="orch-chip" onclick="openDetail('orch-adk')">
+      <span class="ci">SDK</span>
+      <div class="ct"><strong>Agent SDK (ADK)</strong><span>Intake &rarr; Classify &rarr; Assemble &rarr; Score &rarr; Writeback</span></div>
+    </div>
+    <div class="orch-chip" onclick="openDetail('orch-llm')">
+      <span class="ci">LLM</span>
+      <div class="ct"><strong>claude-sonnet-4-6</strong><span>3C narrative &middot; Short / Verbose / LLM Rewrite modes</span></div>
+    </div>
+    <div class="orch-chip" onclick="openDetail('orch-kg')">
+      <span class="ci">KG</span>
+      <div class="ct"><strong>Knowledge Graph</strong><span>Repair clusters &middot; upsell patterns &middot; advisor copilot</span></div>
+    </div>
+    <div class="orch-chip" onclick="openDetail('orch-norm')">
+      <span class="ci">NLP</span>
+      <div class="ct"><strong>Predii NLP Normalization</strong><span>TSB tagging &middot; tech-note classification &middot; repair clustering</span></div>
+    </div>
+    <div class="orch-chip" onclick="openDetail('orch-sms')">
+      <span class="ci">SMS</span>
+      <div class="ct"><strong>SMS Writeback</strong><span>Tekmetric &middot; Shop-Ware &middot; Shopmonkey &middot; AutoLeap</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Column headers ── -->
+<div class="col-headers">
+  <div class="col-hdr col-hdr-data" onclick="toggleCol('col-data','hdr-data')">
+    <div id="hdr-data" style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="ch-icon" style="background:#16A34A;color:white;">DB</div>
+      <div><div class="ch-label" style="color:#166534;">Data Assets</div><div class="ch-sub">Feeds the AM tool layer</div></div>
+      <div class="ch-count" style="background:#BBF7D0;color:#166534;">8 assets</div>
+      <span class="ch-toggle">&#9660;</span>
+    </div>
+  </div>
+  <div class="col-hdr col-hdr-tools" onclick="toggleCol('col-tools','hdr-tools')">
+    <div id="hdr-tools" style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="ch-icon" style="background:#2563EB;color:white;">FN</div>
+      <div><div class="ch-label" style="color:#1E40AF;">MCP &amp; Tools</div><div class="ch-sub">Direct calls and MCP-exposed tools</div></div>
+      <div class="ch-count" style="background:#BFDBFE;color:#1E40AF;">7 tools</div>
+      <span class="ch-toggle">&#9660;</span>
+    </div>
+  </div>
+  <div class="col-hdr col-hdr-agents" onclick="toggleCol('col-agents','hdr-agents')">
+    <div id="hdr-agents" style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="ch-icon" style="background:#FF6B35;color:white;">AI</div>
+      <div><div class="ch-label" style="color:#9A3412;">AI Agents</div><div class="ch-sub">Customer-pay RO processing pipeline</div></div>
+      <div class="ch-count" style="background:#FFEDD5;color:#9A3412;">7 agents</div>
+      <span class="ch-toggle">&#9660;</span>
+    </div>
+  </div>
+  <div class="col-hdr col-hdr-outcome" onclick="toggleCol('col-outcome','hdr-outcome')">
+    <div id="hdr-outcome" style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div class="ch-icon" style="background:#7C3AED;color:white;">OUT</div>
+      <div><div class="ch-label" style="color:#4C1D95;">Outcomes</div><div class="ch-sub">Approved RO &middot; SMS sync &middot; AI insights</div></div>
+      <div class="ch-count" style="background:#EDE9FE;color:#4C1D95;">6 outcomes</div>
+      <span class="ch-toggle">&#9660;</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main diagram grid ── -->
+<div id="diagram-grid" style="position:relative;">
+  <svg id="svg-arrows" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="mh-green"  markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#16A34A"/></marker>
+      <marker id="mh-blue"   markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#2563EB"/></marker>
+      <marker id="mh-orange" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#FF6B35"/></marker>
+      <marker id="mh-purple" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#7C3AED"/></marker>
+      <marker id="mh-amber"  markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#D97706"/></marker>
+      <marker id="mh-red"    markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#DC2626"/></marker>
+      <marker id="mh-teal"   markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#0D9488"/></marker>
+      <marker id="mh-muted"  markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#94A3B8"/></marker>
+    </defs>
+  </svg>
+
+  <!-- ═══════ COLUMN A: DATA ASSETS ═══════ -->
+  <div class="col col-data" id="col-data">
+    <div class="col-body" id="col-data-body">
+
+      <!-- RO History / Kanban -->
+      <div class="node" id="nd-ro" onclick="activateNode(this,'ro')">
+        <div class="node-hd" style="background:#F0FDF4;">
+          <div class="node-ico" style="background:#16A34A;color:#fff;">RO</div>
+          <div><div class="node-title">RO History &amp; Kanban</div><div class="node-sub">MongoDB · demoData.js · 5 live ROs</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">6-column Kanban: Checked In → Inspecting → Estimate Sent → Approved → In Progress → Ready</div>
+          <div class="li">Per-RO: customer, vehicle, services[], totalEstimate, grossMarginPct, effectiveLaborRate</div>
+          <div class="li">Service lines: laborHrs, laborCost, partsCost per job</div>
+          <div style="margin-top:6px;">
+            <span class="tag tb">172.16.80.7:27017</span>
+            <span class="tag tg">6 statuses</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Intelligence -->
+      <div class="node" id="nd-customer" onclick="activateNode(this,'customer')">
+        <div class="node-hd" style="background:#EFF6FF;">
+          <div class="node-ico" style="background:#2563EB;color:#fff;">CUS</div>
+          <div><div class="node-title">Customer Intelligence</div><div class="node-sub">LTV · tier · approval rate · visit history</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">loyaltyTier: VIP / loyal / regular — e.g. James Park (VIP, $12,450 LTV, 11 visits)</div>
+          <div class="li">customerApprovalRate: 0–1 (e.g. Sarah Chen 94%, Robert Taylor 88%)</div>
+          <div class="li">preferredContact: SMS / email / call</div>
+          <div class="li">declinedTotal — unapproved items for follow-up</div>
+          <div style="margin-top:6px;">
+            <span class="tag tb">8 customers</span>
+            <span class="tag ta">LTV $1.6K–$15.9K</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TSB Corpus -->
+      <div class="node" id="nd-tsb" onclick="activateNode(this,'tsb')">
+        <div class="node-hd" style="background:#F5F3FF;">
+          <div class="node-ico" style="background:#7C3AED;color:#fff;">TSB</div>
+          <div><div class="node-title">TSB Corpus</div><div class="node-sub">Predii NLP-tagged technical bulletins</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">T-SB-0197-18 · P0420 Catalyst (Toyota, score 0.97)</div>
+          <div class="li">T-SB-0131-19 · GDI Carbon buildup (Toyota, 0.89)</div>
+          <div class="li">PIP5622E · AFM Oil Consumption (GM, 0.94)</div>
+          <div class="li">TSB 19-2346 · 10R80 Trans shudder (Ford, 0.91)</div>
+          <div style="margin-top:6px;">
+            <span class="tag tp">Predii NLP</span>
+            <span class="tag tp">relevanceScore</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DVI Findings -->
+      <div class="node" id="nd-dvi" onclick="activateNode(this,'dvi')">
+        <div class="node-hd" style="background:#F0FDF4;">
+          <div class="node-ico" style="background:#16A34A;color:#fff;">DVI</div>
+          <div><div class="node-title">DVI Findings</div><div class="node-sub">MPI · photos · measurements · OEM spec</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">4–8 findings per vehicle (green / yellow / red)</div>
+          <div class="li">Each: item, techNote, measurement, oemSpec, photoRef, actioned</div>
+          <div class="li">Routes: RED actioned → Cause · RED deferred → Recommend · YELLOW → Recommend · GREEN → excluded</div>
+          <div style="margin-top:6px;">
+            <span class="tag tr">RED → Cause</span>
+            <span class="tag ta">YELLOW → Rec.</span>
+            <span class="tag tg">GREEN → Skip</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DTC Codes -->
+      <div class="node" id="nd-dtc" onclick="activateNode(this,'dtc')">
+        <div class="node-hd" style="background:#FEF2F2;">
+          <div class="node-ico" style="background:#DC2626;color:#fff;">DTC</div>
+          <div><div class="node-title">DTC / OBD-II Scan</div><div class="node-sub">Freeze frame · severity · possible causes</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">P0420 Catalyst efficiency (moderate, powertrain)</div>
+          <div class="li">P0300 Random misfire (critical), C0050 ABS circuit</div>
+          <div class="li">Freeze frame: rpm, coolantTemp, mapKpa, fuelTrimST/LT</div>
+          <div style="margin-top:6px;">
+            <span class="tag tr">Confirmed</span>
+            <span class="tag ta">Pending</span>
+            <span class="tag tm">Historical</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tech Notes -->
+      <div class="node" id="nd-technotes" onclick="activateNode(this,'technotes')">
+        <div class="node-hd" style="background:#FFFBEB;">
+          <div class="node-ico" style="background:#D97706;color:#fff;">TEC</div>
+          <div><div class="node-title">Tech Notes</div><div class="node-sub">Raw technician input · 10–40 lines per RO</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Unstructured free text from technician</div>
+          <div class="li">Contains: observations, part numbers, measurements, recommendations</div>
+          <div class="li">Pre-classified in demo registry (section + confidence per line)</div>
+          <div style="margin-top:6px;">
+            <span class="tag ta">Raw input → Classification Agent</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social Media Leads -->
+      <div class="node" id="nd-social" onclick="activateNode(this,'social')">
+        <div class="node-hd" style="background:#FFF7ED;">
+          <div class="node-ico" style="background:#EA580C;color:#fff;">SOC</div>
+          <div><div class="node-title">Social Media Leads</div><div class="node-sub">Instagram · TikTok · Google · Facebook</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Jasmine Torres (IG, hot) — brake grinding, $280–620 est.</div>
+          <div class="li">Marcus Webb (TikTok, hot) — oil change discovery</div>
+          <div class="li">Priya Nair (IG, warm) — check engine, dealer defector</div>
+          <div class="li">Robert Chen (Google, booked) — RO-2241 AC service</div>
+          <div style="margin-top:6px;">
+            <span class="tag to">hot</span>
+            <span class="tag ta">warm</span>
+            <span class="tag tg">booked</span>
+            <span class="tag tr">urgent</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shop Metrics -->
+      <div class="node" id="nd-metrics" onclick="activateNode(this,'metrics')">
+        <div class="node-hd" style="background:#CCFBF1;">
+          <div class="node-ico" style="background:#0D9488;color:#fff;">KPI</div>
+          <div><div class="node-title">Shop Metrics</div><div class="node-sub">Peninsula Precision Auto · Palo Alto CA</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Today's revenue, car count, avg RO, bay utilization (75%), tech efficiency (91%)</div>
+          <div class="li">laborRate: $195/hr · targetELR: $185/hr · 6 bays</div>
+          <div class="li">Technician efficiency per tech (actual vs. flat-rate hrs)</div>
+          <div style="margin-top:6px;">
+            <span class="tag tt">KG-backed</span>
+            <span class="tag tg">Live recharts</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- col-data -->
+
+  <!-- ═══════ COLUMN B: MCP & TOOLS ═══════ -->
+  <div class="col col-tools" id="col-tools">
+    <div class="col-body" id="col-tools-body">
+
+      <!-- decode_vin -->
+      <div class="node" id="nt-vin" onclick="activateNode(this,'tool-vin')">
+        <div class="node-hd" style="background:#EFF6FF;">
+          <div class="node-ico" style="background:#0D3B45;color:#fff;">VIN</div>
+          <div><div class="node-title">decode_vin</div><div class="node-sub">NHTSA vPIC API · 24-hr TTL cache</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Input: VIN string</div>
+          <div class="li">Returns: year, make, model, trim, engine, transmission, driveType, fuelType</div>
+          <div class="li">Demo fallback: 10 hardcoded VINs (Toyota, Honda, Ford, Subaru, GM)</div>
+          <div style="margin-top:5px;"><span class="tag tm">direct API</span> <span class="tag tm">am3cVINService</span></div>
+          <div style="margin-top:4px;font-size:8.5px;color:var(--muted);">Data: <strong>RO entry</strong> → feeds: <strong>3C Writer context</strong></div>
+        </div>
+      </div>
+
+      <!-- query_tsb_matches -->
+      <div class="node" id="nt-tsb" onclick="activateNode(this,'tool-tsb')">
+        <div class="node-hd" style="background:#EFF6FF;">
+          <div class="node-ico" style="background:#7C3AED;color:#fff;">TSB</div>
+          <div><div class="node-title">query_tsb_matches</div><div class="node-sub">Predii corpus · keyword scoring</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Input: VIN, complaint text, DTC codes</div>
+          <div class="li">Extract keywords → score corpus → top-3 TSBMatch[]</div>
+          <div class="li">Composite score: baseRelevance + 0.05/keyword match</div>
+          <div style="margin-top:5px;"><span class="tag tp">via MCP</span> <span class="tag tp">am3cTSBService</span></div>
+          <div style="margin-top:4px;font-size:8.5px;color:var(--muted);">Data: <strong>TSB Corpus</strong> → feeds: <strong>3C Cause section</strong></div>
+        </div>
+      </div>
+
+      <!-- route_dvi_findings -->
+      <div class="node" id="nt-dvi" onclick="activateNode(this,'tool-dvi')">
+        <div class="node-hd" style="background:#EFF6FF;">
+          <div class="node-ico" style="background:#16A34A;color:#fff;">DVI</div>
+          <div><div class="node-title">route_dvi_findings</div><div class="node-sub">Status routing · am3cDVIService</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Input: DVIFinding[] from MPI inspection</div>
+          <div class="li">Routes each by status: RED actioned → Cause · YELLOW → Recommendations</div>
+          <div class="li">Returns: enrichedFindings[] with routed_to field + citation markers</div>
+          <div style="margin-top:5px;"><span class="tag tm">internal lib</span></div>
+          <div style="margin-top:4px;font-size:8.5px;color:var(--muted);">Data: <strong>DVI Findings</strong> → feeds: <strong>3C Cause + Recommendations</strong></div>
+        </div>
+      </div>
+
+      <!-- classify_tech_notes -->
+      <div class="node" id="nt-classify" onclick="activateNode(this,'tool-classify')">
+        <div class="node-hd" style="background:#EFF6FF;">
+          <div class="node-ico" style="background:#D97706;color:#fff;">CLS</div>
+          <div><div class="node-title">classify_tech_notes</div><div class="node-sub">Heuristic NLP · am3cClassificationService</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Input: raw tech note strings[]</div>
+          <div class="li">Rules (priority): complaint → correction → recommendation → cause</div>
+          <div class="li">Returns: { text, section, confidence, status: AUTO|REVIEW|FLAGGED }</div>
+          <div style="margin-top:5px;"><span class="tag tm">internal lib</span> <span class="tag tg">no LLM cost</span></div>
+          <div style="margin-top:4px;font-size:8.5px;color:var(--muted);">Data: <strong>Tech Notes</strong> → feeds: <strong>3C all sections</strong></div>
+        </div>
+      </div>
+
+      <!-- check_factuality -->
+      <div class="node" id="nt-factuality" onclick="activateNode(this,'tool-factuality')">
+        <div class="node-hd" style="background:#EFF6FF;">
+          <div class="node-ico" style="background:#DC2626;color:#fff;">FCT</div>
+          <div><div class="node-title">check_factuality</div><div class="node-sub">6-rule regex validator · am3cFactualityService</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Input: assembled 3C document</div>
+          <div class="li">Runs 6 regex checks: no_fabrication, no_future_prediction, no_blame, no_guarantees, no_speculation, verbatim_audit</div>
+          <div class="li">Returns: Violation[] — BLOCKING violations prevent SMS writeback</div>
+          <div style="margin-top:5px;"><span class="tag tr">BLOCKING violations halt sync</span></div>
+        </div>
+      </div>
+
+      <!-- score_narrative -->
+      <div class="node" id="nt-score" onclick="activateNode(this,'tool-score')">
+        <div class="node-hd" style="background:#EFF6FF;">
+          <div class="node-ico" style="background:#2563EB;color:#fff;">SCR</div>
+          <div><div class="node-title">score_narrative</div><div class="node-sub">Predii Score 0–100 · am3cScoreService</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Source coverage: 40% — [DVI/TSB/DTC/TECH] citation density</div>
+          <div class="li">Factual compliance: 40% — zero violations = full points</div>
+          <div class="li">Completeness: 20% — all 3C sections populated</div>
+          <div style="margin-top:5px;">
+            <span class="tag tg">90+ Excellent</span>
+            <span class="tag tb">75–89 Good</span>
+            <span class="tag ta">60–74 Fair</span>
+            <span class="tag tr">&lt;60 Review</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- writeback_to_sms -->
+      <div class="node" id="nt-writeback" onclick="activateNode(this,'tool-writeback')">
+        <div class="node-hd" style="background:#EFF6FF;">
+          <div class="node-ico" style="background:#EA580C;color:#fff;">WBK</div>
+          <div><div class="node-title">writeback_to_sms</div><div class="node-sub">am3cSMSWritebackService · 4 SMS targets</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Tekmetric: PUT /api/v1/repair-orders/{id} → internal_notes</div>
+          <div class="li">Shop-Ware: PUT /api/v1/repair_orders/{id} → notes</div>
+          <div class="li">Shopmonkey: PUT /api/v2/work-orders/{id} → internal_note</div>
+          <div class="li">AutoLeap: PUT /api/v1/repair-orders/{id}/notes → note_text</div>
+          <div style="margin-top:5px;"><span class="tag tm">direct API</span> <span class="tag tg">retry logic</span></div>
+          <div class="vs-chip">AM only — 4 SMS targets (not DMS)</div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- col-tools -->
+
+  <!-- ═══════ COLUMN C: AI AGENTS ═══════ -->
+  <div class="col col-agents" id="col-agents">
+    <div class="col-body" id="col-agents-body">
+
+      <!-- 3C Story Writer -->
+      <div class="node" id="na-3c" onclick="activateNode(this,'agent-3c')">
+        <div class="node-hd agent-hd">
+          <div class="node-ico" style="background:rgba(255,255,255,.25);color:#fff;">3C</div>
+          <div><div class="node-title">3C Story Writer</div><div class="node-sub">Complaint · Cause · Correction · Customer-pay</div></div>
+        </div>
+        <div class="node-body">
+          <div class="pipeline-bar"></div>
+          <div class="sections-3c">
+            <div class="sec-3c" style="border-color:#2563EB;background:#EFF6FF;">
+              <div class="sl" style="color:#2563EB;">COMPLAINT</div>
+              <div class="sb">Customer concern verbatim — e.g. "engine light on, rough idle"</div>
+            </div>
+            <div class="sec-3c" style="border-color:#D97706;background:#FFFBEB;">
+              <div class="sl" style="color:#D97706;">CAUSE</div>
+              <div class="sb">DVI red [DVI-1] + DTCs [DTC-P0420] + TSB citations [TSB-x]</div>
+            </div>
+            <div class="sec-3c" style="border-color:#16A34A;background:#F0FDF4;">
+              <div class="sl" style="color:#16A34A;">CORRECTION</div>
+              <div class="sb">Parts installed [PART-x] + labor performed [LABOR-x]</div>
+            </div>
+            <div class="sec-3c" style="border-color:#7C3AED;background:#F5F3FF;">
+              <div class="sl" style="color:#7C3AED;">RECOMMEND</div>
+              <div class="sb">DVI yellow deferred + advisor upsell items</div>
+            </div>
+          </div>
+          <div style="margin-top:4px;">
+            <span class="tag tb">Short</span>
+            <span class="tag tb">Verbose</span>
+            <span class="tag to">LLM Rewrite</span>
+            <span class="tag tm">claude-sonnet-4-6</span>
+          </div>
+          <div style="margin-top:5px;font-size:8.5px;color:var(--muted);">
+            7-stage: intake → DVI → TSB → scan → notes → work → review
+          </div>
+          <div class="vs-chip">AM: customer-friendly tone · no opcode system</div>
+        </div>
+      </div>
+
+      <!-- Classification Agent -->
+      <div class="node" id="na-classify" onclick="activateNode(this,'agent-classify')">
+        <div class="node-hd" style="background:#FFFBEB;">
+          <div class="node-ico" style="background:#D97706;color:#fff;">CLS</div>
+          <div><div class="node-title">Classification Agent</div><div class="node-sub">am3cClassificationService · heuristic NLP</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Calls: classify_tech_notes tool</div>
+          <div class="li">AUTO (≥0.90) — accepted without review</div>
+          <div class="li">REVIEW (0.70–0.89) — advisor must confirm section</div>
+          <div class="li">FLAGGED (&lt;0.70) — manual classification required</div>
+          <div style="margin-top:5px;">
+            <span class="tag tg">AUTO</span>
+            <span class="tag ta">REVIEW</span>
+            <span class="tag tr">FLAGGED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Factuality Agent -->
+      <div class="node" id="na-factuality" onclick="activateNode(this,'agent-factuality')">
+        <div class="node-hd" style="background:#FEF2F2;">
+          <div class="node-ico" style="background:#DC2626;color:#fff;">FCT</div>
+          <div><div class="node-title">Factuality Agent</div><div class="node-sub">am3cFactualityService · 6 blocking rules</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li"><strong>BLOCKING:</strong> no_fabrication — every claim must cite [DVI/TSB/DTC/TECH]</div>
+          <div class="li"><strong>BLOCKING:</strong> no_future_prediction — no "will fail", "may cause"</div>
+          <div class="li"><strong>BLOCKING:</strong> no_blame — no fault to customer or prior shop</div>
+          <div class="li"><strong>BLOCKING:</strong> no_guarantees — no "permanently fixed"</div>
+          <div class="li"><strong>BLOCKING:</strong> no_speculation — no "probably", "we think"</div>
+          <div class="li"><strong>WARNING:</strong> verbatim_audit — preserve original tech input</div>
+          <div style="margin-top:5px;"><span class="tag tr">Calls: check_factuality</span></div>
+        </div>
+      </div>
+
+      <!-- Score Agent -->
+      <div class="node" id="na-score" onclick="activateNode(this,'agent-score')">
+        <div class="node-hd" style="background:#EFF6FF;">
+          <div class="node-ico" style="background:#2563EB;color:#fff;">SCR</div>
+          <div><div class="node-title">Score Agent</div><div class="node-sub">Predii Score · data-grounding quality gate</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Calls: score_narrative tool</div>
+          <div class="li">Source coverage 40% — [DVI/TSB/DTC/TECH] citation density in Cause + Correction</div>
+          <div class="li">Factual compliance 40% — 5 BLOCKING rules clear</div>
+          <div class="li">Completeness 20% — complaint, cause, correction all populated</div>
+          <div style="margin-top:5px;font-size:8.5px;color:var(--muted);">complianceScore stored on RO document</div>
+        </div>
+      </div>
+
+      <!-- 3CFinal Agent -->
+      <div class="node" id="na-3cfinal" onclick="activateNode(this,'agent-3cfinal')">
+        <div class="node-hd" style="background:#F0FDF4;">
+          <div class="node-ico" style="background:#16A34A;color:#fff;">FIN</div>
+          <div><div class="node-title">3CFinal Agent</div><div class="node-sub">am3cAssemblyService · final document build</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Merges: DVI red + TSB accepted + DTC codes + classified notes + parts + labor</div>
+          <div class="li">Inlines citation markers: [DVI-1], [TSB-T-SB-0197-18], [DTC-P0420], [PART-A112]</div>
+          <div class="li">Superscript references: ¹²³ for refs 1–9, (10)+ for larger</div>
+          <div class="li">Output: assembledDocument { complaint, cause, correction, recommendations, sources[] }</div>
+          <div style="margin-top:5px;"><span class="tag tg">Customer-Ready Doc</span></div>
+        </div>
+      </div>
+
+      <!-- SMS Writeback Agent -->
+      <div class="node" id="na-writeback" onclick="activateNode(this,'agent-writeback')">
+        <div class="node-hd" style="background:#FFF7ED;">
+          <div class="node-ico" style="background:#EA580C;color:#fff;">WBK</div>
+          <div><div class="node-title">SMS Writeback Agent</div><div class="node-sub">am3cSMSWritebackService · sync to SMS</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Calls: writeback_to_sms tool after score ≥ threshold + 0 BLOCKING violations</div>
+          <div class="li">Formats: divider + timestamp + 3C sections in SMS-readable plain text</div>
+          <div class="li">Status: pending → synced | failed → retrying</div>
+          <div style="margin-top:5px;">
+            <span class="tag tg">synced</span>
+            <span class="tag tr">failed</span>
+            <span class="tag ta">retrying</span>
+          </div>
+          <div class="vs-chip">AM: SMS targets (not DMS)</div>
+        </div>
+      </div>
+
+      <!-- Advisor Copilot -->
+      <div class="node" id="na-copilot" onclick="activateNode(this,'agent-copilot')">
+        <div class="node-hd" style="background:linear-gradient(135deg,#0D3B45,#1A5C6B);">
+          <div class="node-ico" style="background:rgba(255,255,255,.15);color:#fff;">COP</div>
+          <div><div class="node-title" style="color:#fff;">Advisor Copilot</div><div class="node-sub" style="color:#8FC4CE;">AIAgentScreen · KG Q&amp;A · auto-brief</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Auto-briefs on load: repair trends, upsells, anomalies</div>
+          <div class="li">6 quick actions: Today's trends, Bundle opps, By make, Brake insights, Top revenue, Oil upsells</div>
+          <div class="li">Queries: POST /api/knowledge-graph/ask → { answer, data_used[] }</div>
+          <div class="li">Parses: Bottom Line / Data Shows / Why / At the Counter</div>
+          <div style="margin-top:5px;"><span class="tag tt">KG-backed</span> <span class="tag tm">claude-sonnet-4-6</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- col-agents -->
+
+  <!-- ═══════ COLUMN D: OUTCOMES ═══════ -->
+  <div class="col col-outcome" id="col-outcome">
+    <div class="col-body" id="col-outcome-body">
+
+      <!-- Shop KPI summary -->
+      <div class="outcome-node" id="no-kpi" onclick="activateNode(this,'outcome-kpi')">
+        <h3><span style="background:rgba(255,255,255,.15);border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:1px;">KPI</span>Shop Performance</h3>
+        <div class="kpi-row">
+          <div class="kpi-box"><div class="kv">$6.8K</div><div class="kl">Today's Revenue</div></div>
+          <div class="kpi-box"><div class="kv">91%</div><div class="kl">Tech Efficiency</div></div>
+          <div class="kpi-box"><div class="kv">$856</div><div class="kl">Avg Repair Order</div></div>
+          <div class="kpi-box"><div class="kv">75%</div><div class="kl">Bay Utilization</div></div>
+        </div>
+        <div style="font-size:9px;color:rgba(255,255,255,.55);">Peninsula Precision Auto · Palo Alto, CA · $195/hr labor</div>
+      </div>
+
+      <!-- 3C Narrative + Customer Approval -->
+      <div class="node" id="no-approval" onclick="activateNode(this,'outcome-approval')">
+        <div class="node-hd" style="background:#F0FDF4;">
+          <div class="node-ico" style="background:#16A34A;color:#fff;">APR</div>
+          <div><div class="node-title">Customer-Pay Approval</div><div class="node-sub">3C doc → customer portal → 1-tap approve</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">3C narrative with [REF] markers delivered via SMS/email link</div>
+          <div class="li">Customer portal: itemized estimate (labor + parts per job)</div>
+          <div class="li">1-tap approve, partial approve, or decline with reason</div>
+          <div class="li">declinedTotal tracked per customer for follow-up</div>
+          <div style="margin-top:5px;">
+            <span class="tag tg">Approved → In Progress</span>
+            <span class="tag tr">Declined → follow-up</span>
+          </div>
+          <div class="vs-chip">AM: customer approval (not OEM warranty gate)</div>
+        </div>
+      </div>
+
+      <!-- SMS Writeback outcome -->
+      <div class="node" id="no-sms" onclick="activateNode(this,'outcome-sms')">
+        <div class="node-hd" style="background:#FFF7ED;">
+          <div class="node-ico" style="background:#EA580C;color:#fff;">SMS</div>
+          <div><div class="node-title">SMS Writeback</div><div class="node-sub">3C narrative synced to shop management system</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Internal notes populated in Tekmetric / Shop-Ware / Shopmonkey / AutoLeap</div>
+          <div class="li">Formatted: timestamp + divider + Complaint / Cause / Correction / Recommendations</div>
+          <div class="li">Audit trail: every push logged with timestamp + target + status</div>
+          <div style="margin-top:5px;">
+            <span class="tag to">Tekmetric</span>
+            <span class="tag to">Shop-Ware</span>
+            <span class="tag tm">Shopmonkey</span>
+            <span class="tag tm">AutoLeap</span>
+          </div>
+          <div class="vs-chip">AM: 4 SMS targets · OEM uses DMS (CDK/R&amp;R)</div>
+        </div>
+      </div>
+
+      <!-- Upsell Recommendations -->
+      <div class="node" id="no-upsell" onclick="activateNode(this,'outcome-upsell')">
+        <div class="node-hd" style="background:#F5F3FF;">
+          <div class="node-ico" style="background:#7C3AED;color:#fff;">UPS</div>
+          <div><div class="node-title">Upsell Recommendations</div><div class="node-sub">DVI yellow · KG bundle patterns · approval likelihood</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Per-RO: 4 AI insights tailored to customer tier + vehicle history</div>
+          <div class="li">KG co-occurrence: "brakes + rotors bundle", "oil + tire rotation"</div>
+          <div class="li">Customer approval rate factored: VIP (94%) vs. regular (72%)</div>
+          <div class="li">Revenue impact ($) per recommendation shown to advisor</div>
+          <div style="margin-top:5px;"><span class="tag tp">KG-backed</span> <span class="tag tg">LTV-aware</span></div>
+        </div>
+      </div>
+
+      <!-- AI Insights -->
+      <div class="node" id="no-insights" onclick="activateNode(this,'outcome-insights')">
+        <div class="node-hd" style="background:linear-gradient(135deg,#0D3B45,#1A5C6B);">
+          <div class="node-ico" style="background:rgba(255,255,255,.15);color:#fff;">INS</div>
+          <div><div class="node-title" style="color:#fff;">AI Insights</div><div class="node-sub" style="color:#8FC4CE;">AIAgentScreen · AIInsightsScreen · KG patterns</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Repair patterns: most common jobs, avg mileage at visit, co-occurrence clusters</div>
+          <div class="li">Upsell bundles: "what else at oil change?", "what with brakes?"</div>
+          <div class="li">By vehicle: top repairs for Ford/Toyota/Honda/Chevy</div>
+          <div class="li">Shop performance: revenue, tech efficiency, bay utilization by day</div>
+          <div style="margin-top:5px;"><span class="tag tt">POST /api/knowledge-graph/ask</span></div>
+        </div>
+      </div>
+
+      <!-- Social → RO Conversion -->
+      <div class="node" id="no-social-conv" onclick="activateNode(this,'outcome-social')">
+        <div class="node-hd" style="background:#FFF7ED;">
+          <div class="node-ico" style="background:#D97706;color:#fff;">CVT</div>
+          <div><div class="node-title">Social Lead → RO</div><div class="node-sub">SocialInboxScreen · AI draft reply · booking</div></div>
+        </div>
+        <div class="node-body">
+          <div class="li">Hot lead: AI draft reply pre-populated → advisor edits + sends</div>
+          <div class="li">Booked: appointment confirmed → RO created (e.g. RO-2241)</div>
+          <div class="li">Urgent: negative review risk → respond &lt;30 min SLA</div>
+          <div class="li">Channels: Instagram, TikTok, Google Business, Facebook</div>
+          <div style="margin-top:5px;">
+            <span class="tag to">hot → book</span>
+            <span class="tag tg">booked → RO</span>
+            <span class="tag tr">urgent → escalate</span>
+          </div>
+          <div class="vs-chip">AM only — no social inbox in OEM edition</div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- col-outcome -->
+
+</div><!-- diagram-grid -->
+
+<!-- ── Detail Panel ── -->
+<div id="dp">
+  <div id="dp-hdr">
+    <div class="dph-ico" id="dp-ico">AM</div>
+    <div><h2 id="dp-title">Select a node</h2><p id="dp-sub">Click any node to inspect</p></div>
+    <button id="dp-close" onclick="closeDetail()">&#10005;</button>
+  </div>
+  <div class="chain-trace" id="chain-trace-bar" style="display:none;"></div>
+  <div id="dp-body"></div>
+</div>
+
+<!-- ── Legend ── -->
+<div id="legend">
+  <h4>Columns</h4>
+  <div class="lr"><div class="ld" style="background:#16A34A;"></div><span>Data Assets</span></div>
+  <div class="lr"><div class="ld" style="background:#2563EB;"></div><span>MCP &amp; Tools</span></div>
+  <div class="lr"><div class="ld" style="background:#FF6B35;"></div><span>AI Agents</span></div>
+  <div class="lr"><div class="ld" style="background:#7C3AED;"></div><span>Outcomes</span></div>
+  <div class="lr" style="margin-top:5px;border-top:1px solid #eee;padding-top:5px;">
+    <span style="font-size:9px;color:#888;">Click node to trace chain</span>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// Detail content
+// ════════════════════════════════════════
+const DETAILS = {
+  'orch-adk': { icon:'SDK', title:'Agent SDK (ADK)', sub:'AM pipeline orchestration',
+    chain:[],
+    body:`<h3>AM pipeline order</h3>
+      <div class="step"><div class="sn">1</div><div><strong>3C Story Writer</strong><span>Requires: customer_intake + tech_notes + work_performed stages minimum</span></div></div>
+      <div class="step"><div class="sn">2</div><div><strong>Classification Agent (parallel)</strong><span>Classifies tech notes while DVI + TSB + DTC are being ingested</span></div></div>
+      <div class="step"><div class="sn">3</div><div><strong>Factuality Agent (parallel)</strong><span>Runs alongside Score Agent — independent checks</span></div></div>
+      <div class="step"><div class="sn">4</div><div><strong>Score Agent</strong><span>Sequential after factuality — uses violation count in scoring</span></div></div>
+      <div class="step"><div class="sn">5</div><div><strong>3CFinal Agent</strong><span>Assembles all sources into final narrative with inline citations</span></div></div>
+      <div class="step"><div class="sn">6</div><div><strong>SMS Writeback Agent</strong><span>Triggered on score ≥ threshold + 0 BLOCKING violations</span></div></div>
+      <h3>Key difference from OEM</h3>
+      <p>No Compliance Gate / Opcode Validator / pre-auth steps. AM pipeline is leaner — the writeback agent is the final gate. Customer approval handled separately via portal link, not inline in the pipeline.</p>`
+  },
+  'orch-llm': { icon:'LLM', title:'claude-sonnet-4-6', sub:'3C narrative generation',
+    chain:[],
+    body:`<h3>When LLM is called</h3>
+      <p>Only for the LLM Rewrite mode of the 3C Story Writer. Short and Verbose modes use local heuristic text transformations (fast, no API cost).</p>
+      <h3>Prompt context sent</h3>
+      <div class="code-block">RO: {roId}  Vehicle: {year} {make} {model}\n\nCurrent 3C:\nCOMPLAINT: {complaint}\nCAUSE: {cause}\nCORRECTION: {correction}\n\nFindings:\n- DTCs: {code}: {description}\n- TSBs: {tsbNumber}: {title}\n- DVI red: {items}\n- Tech notes: {rawNotes}</div>
+      <h3>Response</h3>
+      <div class="code-block">{ complaint, cause, correction,\n  usedLLM: true, fallback?: false }</div>
+      <h3>Fallback</h3><p>Local heuristic rewrites when no API key or CORS failure. Short mode: first sentence per classified block. Verbose mode: customer-friendly rephrasing with "your vehicle" framing.</p>`
+  },
+  'orch-kg': { icon:'KG', title:'Knowledge Graph', sub:'Repair clusters · upsell patterns · copilot',
+    chain:[],
+    body:`<h3>What the KG contains</h3>
+      <p>Every repair order indexed by VIN, make/model, mileage, system/subsystem, and technician. Enables the Advisor Copilot to answer pattern questions without per-query LLM inference.</p>
+      <h3>API endpoints</h3>
+      <div class="code-block">GET /api/knowledge-graph/clusters?limit=N\n  → { cluster_count, node_count, nodes[] }\n\nPOST /api/knowledge-graph/ask\n  body: { question, history[] }\n  → { answer, data_used: string[] }</div>
+      <h3>Sample questions answered</h3>
+      <ul><li>"What jobs almost always happen together?"</li><li>"Which makes come in most?"</li><li>"What's the highest revenue repair this month?"</li><li>"What else gets done at oil change visits?"</li></ul>`
+  },
+  'orch-norm': { icon:'NLP', title:'Predii NLP Normalization', sub:'TSB tagging · tech-note classification',
+    chain:[],
+    body:`<h3>Role in AM pipeline</h3>
+      <p>Predii normalizes every TSB with symptom keywords and DTC codes — enabling the query_tsb_matches tool to score relevance without full LLM inference. Classification heuristics are also Predii-tuned to automotive language patterns.</p>
+      <h3>TSB enrichment schema</h3>
+      <div class="code-block">{ tsbNumber, title, affectedVehicles,\n  affectedCondition, relevanceScore,\n  keywords: string[],\n  dtcCodes: string[],\n  source: "Toyota TIS" }</div>
+      <h3>vehicleOrigin normalization</h3>
+      <div class="code-block">JAPANESE      → Toyota, Honda, Nissan, Subaru\nGERMAN        → BMW, Mercedes, Audi, VW\nDOMESTIC_US   → Ford, GM, Chrysler\nOTHER         → KIA, Hyundai, Volvo</div>`
+  },
+  'orch-sms': { icon:'SMS', title:'SMS Writeback', sub:'4 target shop management systems',
+    chain:[],
+    body:`<h3>Writeback targets</h3>
+      <div class="code-block">Tekmetric:   PUT /api/v1/repair-orders/{id}\n             field: internal_notes\nShop-Ware:   PUT /api/v1/repair_orders/{id}\n             field: notes\nShopmonkey:  PUT /api/v2/work-orders/{id}\n             field: internal_note\nAutoLeap:    PUT /api/v1/repair-orders/{id}/notes\n             field: note_text</div>
+      <h3>AM vs. OEM difference</h3>
+      <p>OEM uses DMS (CDK, Reynolds & Reynolds, Dealertrack). AM independent shops use SMS (Shop Management Systems). Same writeback pattern, different target APIs. This is a key Predii differentiator — one 3C pipeline, two integration layers.</p>
+      <h3>Payload format</h3>
+      <div class="code-block">───────────────────────────────\nWrenchIQ 3C Narrative — 2024-11-15 14:32\n───────────────────────────────\nCOMPLAINT:\n{complaint text}\n\nCAUSE:\n{cause text with [REF] markers}\n\nCORRECTION:\n{correction text}\n\nRECOMMENDATIONS:\n{deferred items}\n───────────────────────────────</div>`
+  },
+  'ro': { icon:'RO', title:'RO History & Kanban', sub:'6-column workflow · 5 live demo ROs',
+    chain:['RO History', '#16A34A', '→', 'decode_vin + classify', '#2563EB', '→', '3C Writer', '#FF6B35', '→', 'Customer Approval', '#7C3AED'],
+    body:`<h3>6-column Kanban</h3>
+      <div class="code-block">Checked In   → Inspecting → Estimate Sent\nApproved     → In Progress → Ready</div>
+      <h3>Service line schema</h3>
+      <div class="code-block">serviceLines: [{\n  name, laborHrs, laborCost, partsCost\n}]\ntotalEstimate, totalLabor, totalPartsCharged\ngrossMarginDollars, grossMarginPct\neffectiveLaborRate, totalFlaggedHrs\ndeclinedTotal</div>
+      <h3>Demo ROs</h3>
+      <ul>
+        <li>RO-2024-1187 — James Park, brakes + 65K inspect, $892.50</li>
+        <li>RO-2024-1188 — Robert Taylor, oil + tires, $189.95</li>
+        <li>RO-2024-1189 — Monica Rodriguez, P0420 catalytic, $1,640</li>
+        <li>RO-2024-1190 — Priya Sharma, 60K service + alignment, $1,245</li>
+      </ul>`
+  },
+  'customer': { icon:'CUS', title:'Customer Intelligence', sub:'LTV · tier · approval rate · visit history',
+    chain:['Customer Data', '#16A34A', '→', 'Copilot context', '#FF6B35', '→', 'Upsell Recs', '#7C3AED'],
+    body:`<h3>Customer schema</h3>
+      <div class="code-block">{ firstName, lastName, phone, email,\n  loyaltyTier: "VIP"|"loyal"|"regular",\n  customerApprovalRate: 0–1,\n  customerVisitCount, customerLTV,\n  preferredContact: "sms"|"email"|"call",\n  declinedTotal }</div>
+      <h3>Demo customers</h3>
+      <div class="code-block">Sarah Chen     VIP   $8,420 LTV  9 visits  94% approval\nDavid Kim      loyal $5,230 LTV  4 visits  87% approval\nJames Park     VIP  $12,450 LTV 11 visits  96% approval\nAngela Martinez loyal $4,120 LTV  8 visits  79% approval\nRobert Taylor  VIP  $15,870 LTV 22 visits  88% approval</div>
+      <h3>How it feeds the pipeline</h3>
+      <p>Approval rate informs upsell recommendation priority — high-approval customers get more aggressive bundles. LTV tier surfaces in the Advisor Copilot's "at the counter" action suggestions.</p>`
+  },
+  'tsb': { icon:'TSB', title:'TSB Corpus', sub:'Predii NLP-tagged technical bulletins',
+    chain:['TSB Corpus', '#16A34A', '→', 'query_tsb_matches', '#2563EB', '→', '3C Writer', '#FF6B35', '→', 'Cause section', '#7C3AED'],
+    body:`<h3>Key TSBs in AM demo</h3>
+      <div class="code-block">T-SB-0197-18  Toyota  P0420 Catalyst     score:0.97\nT-SB-0131-19  Toyota  GDI Carbon         score:0.89\nPIP5622E      GM      AFM Oil Consump.   score:0.94\nTSB 19-2346   Ford    10R80 Trans        score:0.91\n16-183-20R    Subaru  CVT Fluid          score:0.88</div>
+      <h3>Accepted TSB → citation</h3>
+      <p>Accepted TSBs are cited inline: <em>"Per T-SB-0197-18 [TSB-T-SB-0197-18], post-cat O2 waveform confirmed catalyst efficiency below threshold..."</em></p>
+      <h3>AM vs. OEM TSB usage</h3>
+      <p>In AM mode, accepted TSBs are used to: (1) strengthen the Cause narrative for customer-facing clarity, (2) justify a repair cost to a customer who might otherwise decline. In OEM mode they are used primarily for warranty claim backing.</p>`
+  },
+  'dvi': { icon:'DVI', title:'DVI Findings', sub:'MPI · green/yellow/red routing',
+    chain:['DVI Findings', '#16A34A', '→', 'route_dvi_findings', '#2563EB', '→', '3C Cause + Rec.', '#FF6B35', '→', 'Customer Approval', '#7C3AED'],
+    body:`<h3>Routing logic</h3>
+      <div class="step"><div class="sn" style="background:#16A34A;">G</div><div><strong>GREEN (passed)</strong><span>Excluded from narrative entirely</span></div></div>
+      <div class="step"><div class="sn" style="background:#D97706;">Y</div><div><strong>YELLOW (advisory)</strong><span>Routes to Recommendations section [DVI-N]</span></div></div>
+      <div class="step"><div class="sn" style="background:#DC2626;">R</div><div><strong>RED actioned</strong><span>Routes to Cause section with citation [DVI-N]</span></div></div>
+      <div class="step"><div class="sn" style="background:#DC2626;">R</div><div><strong>RED deferred</strong><span>Customer declined — routes to Recommendations</span></div></div>
+      <h3>DVIFinding schema</h3>
+      <div class="code-block">{ id, item, status: 'red'|'yellow'|'green',\n  techNote, actioned: boolean,\n  measurement?, oemSpec?, photoRef? }</div>`
+  },
+  'dtc': { icon:'DTC', title:'DTC / OBD-II Scan', sub:'Freeze frame · severity · possible causes',
+    chain:['DTC Codes', '#16A34A', '→', '3C Writer', '#FF6B35', '→', 'Cause section [DTC-x]', '#7C3AED'],
+    body:`<h3>DTC library (sample)</h3>
+      <div class="code-block">P0420  Catalyst Efficiency Below Threshold  moderate\nP0300  Random / Multiple Cylinder Misfire   critical\nP0303  Cylinder 3 Misfire Detected          critical\nC0050  ABS Wheel Speed Sensor Circuit       moderate\nU0101  Lost Communication CAN Bus           moderate</div>
+      <h3>Freeze frame</h3>
+      <div class="code-block">{ rpm, coolantTemp, mapKpa,\n  fuelTrimST, fuelTrimLT,\n  vehicleSpeed, engineLoad }</div>
+      <h3>Role in 3C</h3>
+      <p>Confirmed DTCs cited in Cause: <em>"Scan retrieved active DTC P0420 [DTC-P0420]. Post-cat O2 waveform confirmed catalyst efficiency at 0.48 (OEM threshold 0.65)."</em></p>`
+  },
+  'technotes': { icon:'TEC', title:'Tech Notes', sub:'Raw technician input · 10–40 lines',
+    chain:['Tech Notes', '#16A34A', '→', 'classify_tech_notes', '#2563EB', '→', 'Classification Agent', '#FF6B35', '→', '3C all sections', '#7C3AED'],
+    body:`<h3>What they look like (raw)</h3>
+      <div class="code-block">"Customer states check engine light on for 3 weeks\nFound P0420 confirmed, P0136 pending\nPost-cat O2 sensor waveform mirrors pre-cat\nReplaced catalytic converter bank 1\nCleared all DTCs, road test 15 miles\nRecommend inspect rear O2 sensor at next visit"</div>
+      <h3>After classification</h3>
+      <div class="code-block">{ text: "Customer states check engine...", section: "complaint", confidence: 0.95, status: "AUTO" }\n{ text: "Found P0420 confirmed...", section: "cause", confidence: 0.91, status: "AUTO" }\n{ text: "Replaced catalytic...", section: "correction", confidence: 0.94, status: "AUTO" }\n{ text: "Recommend inspect...", section: "recommendation", confidence: 0.87, status: "REVIEW" }</div>`
+  },
+  'social': { icon:'SOC', title:'Social Media Leads', sub:'SocialInboxScreen · 4 channels',
+    chain:['Social Leads', '#16A34A', '→', 'AI Draft Reply', '#FF6B35', '→', 'Social Lead → RO', '#7C3AED'],
+    body:`<h3>Lead schema</h3>
+      <div class="code-block">{ channel: "instagram"|"tiktok"|"google"|"facebook",\n  score: "hot"|"warm"|"booked"|"urgent",\n  intent, message, vehicleGuess,\n  aiDraft: "pre-written reply",\n  thread: [{ role, text, time }],\n  conversionStage }</div>
+      <h3>Demo leads</h3>
+      <ul>
+        <li><strong>Jasmine Torres</strong> (Instagram, hot) — "grinding sound when braking" → $280–620 est., AI draft ready</li>
+        <li><strong>Marcus Webb</strong> (TikTok, hot) — discovered shop via video → oil change offer</li>
+        <li><strong>Priya Nair</strong> (Instagram, warm) — check engine, frustrated with dealer → free diagnostic</li>
+        <li><strong>Robert Chen</strong> (Google, booked) — AC service, Tuesday 10 AM → RO-2241</li>
+        <li><strong>Diana Moss</strong> (Facebook, urgent) — "car worse after service" → Google review risk, &lt;30 min SLA</li>
+      </ul>`
+  },
+  'metrics': { icon:'KPI', title:'Shop Metrics', sub:'Peninsula Precision Auto · Palo Alto CA',
+    chain:['Shop KPIs', '#16A34A', '→', 'KG clusters', '#FF6B35', '→', 'AI Insights', '#7C3AED'],
+    body:`<h3>Shop config</h3>
+      <div class="code-block">{ name: "Peninsula Precision Auto",\n  address: "2847 El Camino Real, Palo Alto CA",\n  laborRate: 195,  targetElr: 185,\n  bays: 6, owner: "Tilak Kasturi",\n  hours: "7AM–6PM Mon–Fri" }</div>
+      <h3>Today's KPIs (demo)</h3>
+      <div class="code-block">Revenue:      $6,842  (+12% trend)\nCar count:    8       (+3 scheduled)\nAvg RO:       $856    (+8%)\nBay util.:    75%     (5/6 bays active)\nTech effic.:  91%     (+4%)</div>`
+  },
+  'tool-vin': { icon:'VIN', title:'decode_vin', sub:'NHTSA vPIC API · am3cVINService',
+    chain:['RO Entry', '#16A34A', '→', 'decode_vin', '#2563EB', '→', '3C Writer context', '#FF6B35'],
+    body:`<h3>Function</h3>
+      <div class="code-block">decodeVIN(vin: string, demoMode?: boolean)\n  → { year, make, model, trim, engine,\n      transmission, driveType, fuelType,\n      source: "nhtsa"|"demo" }</div>
+      <h3>NHTSA call</h3>
+      <div class="code-block">GET https://vpic.nhtsa.dot.gov/api/vehicles/\n    decodevinvalues/{vin}?format=json</div>
+      <h3>Cache</h3><p>24-hour TTL VIN_CACHE map. 10 hardcoded demo VINs bypass API in demo mode.</p>`
+  },
+  'tool-tsb': { icon:'TSB', title:'query_tsb_matches', sub:'Predii corpus · keyword scoring',
+    chain:['TSB Corpus', '#16A34A', '→', 'query_tsb_matches', '#2563EB', '→', '3C Cause', '#FF6B35', '→', 'Customer Approval', '#7C3AED'],
+    body:`<h3>Function</h3>
+      <div class="code-block">queryTSBCorpus({ vin, make, model, year,\n                 dtcCodes?, complaintKeywords?,\n                 limit?: 3 })\n  → { matches: TSBMatch[], noMatch: bool }</div>
+      <h3>Scoring</h3>
+      <div class="code-block">score = tsb.relevanceScore + 0.05 × keyword_matches\nSort by score desc → return top 3</div>
+      <h3>TSBMatch shape</h3>
+      <div class="code-block">{ tsbNumber, title, affectedCondition,\n  relevanceScore: 0–1,\n  source: "Toyota TIS",\n  accepted: null|true|false,\n  dismissalReason?: string }</div>`
+  },
+  'tool-dvi': { icon:'DVI', title:'route_dvi_findings', sub:'am3cDVIService · status routing',
+    chain:['DVI Findings', '#16A34A', '→', 'route_dvi_findings', '#2563EB', '→', '3C Writer', '#FF6B35'],
+    body:`<h3>Function</h3>
+      <div class="code-block">ingestDVIFindings(findings: DVIFinding[])\n  → enrichedFindings[] with routed_to field\n\nformatDVIForCause(findings[])     → string[]\nformatDVIForRecommendations(f[])  → string[]</div>
+      <h3>Routing map</h3>
+      <div class="code-block">green             → excluded (routed_to: null)\nyellow            → recommendations\nred + actioned    → cause\nred + deferred    → recommendations</div>
+      <h3>Example Cause output</h3>
+      <div class="code-block">"Catalytic converter [DVI-1]: efficiency below\n OEM threshold (0.48 vs 0.65 spec). Confirmed\n by DVI inspection."</div>`
+  },
+  'tool-classify': { icon:'CLS', title:'classify_tech_notes', sub:'Heuristic NLP · am3cClassificationService',
+    chain:['Tech Notes', '#16A34A', '→', 'classify_tech_notes', '#2563EB', '→', 'Classification Agent', '#FF6B35', '→', '3C sections', '#7C3AED'],
+    body:`<h3>Function</h3>
+      <div class="code-block">classifyBatch(notes: string[])\n  → { notes: [{ text, section, confidence,\n                 status: "AUTO"|"REVIEW"|"FLAGGED" }] }</div>
+      <h3>Classification rules (priority order)</h3>
+      <div class="code-block">1. complaint   — "customer states/reports", noise|vibration|smell|stall\n2. correction  — replaced|installed|performed|completed|cleared\n3. recommend   — recommend|suggest|advise|due|monitor|deferred\n4. cause       — found|diagnosed|confirmed|scan revealed|DTC|P0|failed|worn|leaking</div>
+      <h3>No LLM needed</h3>
+      <p>Runs in &lt;1ms per sentence. Fully deterministic. Enables high-volume classification without API cost.</p>`
+  },
+  'tool-factuality': { icon:'FCT', title:'check_factuality', sub:'6-rule regex validator',
+    chain:['3C Document', '#FF6B35', '→', 'check_factuality', '#2563EB', '→', 'Factuality Agent', '#FF6B35', '→', 'SMS Writeback gate', '#7C3AED'],
+    body:`<h3>The 6 rules</h3>
+      <div class="code-block">1. no_fabrication    BLOCKING — all claims need [REF] cite\n2. no_future_pred.  BLOCKING — no "will fail", "may cause"\n3. no_blame         BLOCKING — no fault to customer/prior shop\n4. no_guarantees    BLOCKING — no "permanently fixed"\n5. no_speculation   BLOCKING — no "probably", "we think"\n6. verbatim_audit   WARNING  — preserve original tech input</div>
+      <h3>Violation response</h3>
+      <div class="code-block">{ ruleId: "no_speculation",\n  violated: true,\n  matches: ["we think the catalytic..."],\n  suggestion: "Replace with observed evidence" }</div>
+      <h3>Why this matters for AM</h3>
+      <p>Customer-facing narratives with speculation or blame create legal liability and erode trust. Factuality rules protect the shop.</p>`
+  },
+  'tool-score': { icon:'SCR', title:'score_narrative', sub:'Predii Score 0–100',
+    chain:['3C Document', '#FF6B35', '→', 'score_narrative', '#2563EB', '→', 'Score Agent', '#FF6B35', '→', 'SMS gate', '#7C3AED'],
+    body:`<h3>Scoring weights</h3>
+      <div class="code-block">sourceCoverage:    40% — [DVI/TSB/DTC/TECH] citation density\nfactualCompliance: 40% — no violations\ncompleteness:      20% — complaint + cause + correction populated</div>
+      <h3>Thresholds</h3>
+      <div class="code-block">90–100  Excellent  — auto-writeback enabled\n75–89   Good       — writeback with advisory note\n60–74   Fair       — advisor must review before sync\n0–59    Block      — blocked from SMS writeback</div>
+      <h3>complianceScore</h3>
+      <p>Stored on the RO document. Feeds the AI Insights agent for per-advisor performance tracking.</p>`
+  },
+  'tool-writeback': { icon:'WBK', title:'writeback_to_sms', sub:'am3cSMSWritebackService · 4 targets',
+    chain:['3C Final Doc', '#16A34A', '→', 'writeback_to_sms', '#2563EB', '→', 'SMS Writeback Agent', '#FF6B35', '→', 'SMS synced', '#7C3AED'],
+    body:`<h3>Target mapping</h3>
+      <div class="code-block">Tekmetric:  PUT /api/v1/repair-orders/{id}\n            body.internal_notes\nShop-Ware:  PUT /api/v1/repair_orders/{id}\n            body.notes\nShopmonkey: PUT /api/v2/work-orders/{id}\n            body.internal_note\nAutoLeap:   PUT /api/v1/repair-orders/{id}/notes\n            body.note_text</div>
+      <h3>Status lifecycle</h3>
+      <div class="code-block">pending → synced  (200 OK — audit entry created)\npending → failed  → retrying → synced|failed</div>`
+  },
+  'agent-3c': { icon:'3C', title:'3C Story Writer', sub:'Customer-pay narrative · 7-stage pipeline',
+    chain:['DVI + DTC + TSB', '#16A34A', '→', 'route + query + classify', '#2563EB', '→', '3C Writer', '#FF6B35', '→', 'Customer Approval', '#7C3AED'],
+    body:`<h3>7-stage ROContext pipeline</h3>
+      <div class="step"><div class="sn">1</div><div><strong>customer_intake (required)</strong><span>VIN, customer concern, mileage</span></div></div>
+      <div class="step"><div class="sn">2</div><div><strong>mpi_dvi (optional)</strong><span>DVI findings routed by severity → Cause / Recommendations</span></div></div>
+      <div class="step"><div class="sn">3</div><div><strong>tsb_match (optional)</strong><span>Top-3 TSBs ranked by Predii relevance score</span></div></div>
+      <div class="step"><div class="sn">4</div><div><strong>diagnostic_scan (optional)</strong><span>DTCs + freeze frame data</span></div></div>
+      <div class="step"><div class="sn">5</div><div><strong>tech_notes (required)</strong><span>Raw input → Classification Agent</span></div></div>
+      <div class="step"><div class="sn">6</div><div><strong>work_performed (required)</strong><span>Parts installed + labor operations</span></div></div>
+      <div class="step"><div class="sn">7</div><div><strong>final_review (required)</strong><span>Factuality + Score check before writeback</span></div></div>
+      <h3>AM vs. OEM difference</h3>
+      <p>No opcode system, no pre-auth steps, no DMS push. Tone is customer-friendly (verbose mode default). SMS writeback replaces DMS submission.</p>`
+  },
+  'agent-classify': { icon:'CLS', title:'Classification Agent', sub:'Heuristic NLP · no LLM',
+    chain:['Tech Notes', '#16A34A', '→', 'classify_tech_notes', '#2563EB', '→', 'Classification Agent', '#FF6B35', '→', '3C sections', '#7C3AED'],
+    body:`<h3>Priority rules</h3>
+      <div class="code-block">1. complaint   confidence 0.88–0.97\n2. correction  confidence 0.87–0.94\n3. recommend   confidence 0.85–0.93\n4. cause       confidence 0.88–0.95</div>
+      <h3>Status thresholds</h3>
+      <div class="code-block">≥ 0.90  AUTO   — accepted, no human review\n0.70–0.89 REVIEW — advisor must confirm\n&lt; 0.70  FLAGGED — manual classification</div>
+      <h3>Why no LLM here</h3>
+      <p>Heuristics run in &lt;1ms vs. 1–3s for LLM. With 10–40 tech note lines per RO and multiple ROs per day, deterministic classification keeps the pipeline fast and cost-free for routine notes.</p>`
+  },
+  'agent-factuality': { icon:'FCT', title:'Factuality Agent', sub:'6 blocking rules',
+    chain:['3C Document', '#FF6B35', '→', 'check_factuality', '#2563EB', '→', 'Factuality Agent', '#FF6B35', '→', 'Score / SMS gate', '#7C3AED'],
+    body:`<h3>Why these rules exist for AM</h3>
+      <p>Customer-facing repair narratives carry legal weight. A "will fail" prediction creates warranty-like liability. "Customer neglected oil changes" creates defamation risk. These rules protect the shop from legal exposure while maintaining credibility.</p>
+      <h3>Rule → rejection mapping</h3>
+      <div class="code-block">no_fabrication   → "claim not supported by inspection"\nno_speculation   → "diagnosis lacks observed evidence"\nno_blame         → "unprofessional, customer dispute risk"\nno_guarantees    → "creates warranty obligation"\nno_future_pred.  → "creates liability for non-repair"</div>`
+  },
+  'agent-score': { icon:'SCR', title:'Score Agent', sub:'Predii Score · data-grounding quality',
+    chain:['3C Document', '#FF6B35', '→', 'score_narrative', '#2563EB', '→', 'Score Agent', '#FF6B35', '→', 'Writeback gate', '#7C3AED'],
+    body:`<h3>Why score matters for AM</h3>
+      <p>A high-scoring 3C narrative is more likely to: (1) be approved by the customer because it cites real evidence, (2) be accepted by the shop management system without advisor edits, (3) survive a customer dispute because citations are traceable.</p>
+      <h3>Scoring dimensions</h3>
+      <div class="code-block">Source coverage (40%):    [DVI/TSB/DTC/TECH] per sentence\nFactual compliance (40%): violation count × penalty\nCompleteness (20%):       all 3 sections present</div>
+      <h3>complianceScore on RO</h3>
+      <p>Stored on every RO document. Advisor Copilot uses this to surface low-scoring narratives before customer sends: "RO-2401 Predii Score 68 — needs stronger Cause section".</p>`
+  },
+  'agent-3cfinal': { icon:'FIN', title:'3CFinal Agent', sub:'am3cAssemblyService · final build',
+    chain:['All sources', '#16A34A', '→', 'assemble', '#FF6B35', '→', '3CFinal Agent', '#FF6B35', '→', 'Writeback', '#7C3AED'],
+    body:`<h3>Section source mapping</h3>
+      <div class="code-block">complaint:       intake + classifiedNotes.complaint\ncause:           dviFindings.red + tsbMatches.accepted\n                 + dtcCodes + classifiedNotes.cause\ncorrection:      partsInstalled + laborOps\n                 + classifiedNotes.correction\nrecommendations: dviFindings.yellow + dviFindings.red_deferred\n                 + classifiedNotes.recommendation</div>
+      <h3>Citation markers</h3>
+      <div class="code-block">[DVI-1]           inspection finding\n[TSB-T-SB-0197-18] accepted TSB\n[DTC-P0420]       OBD-II code\n[TECH-1]          classified tech note\n[PART-A112]       OEM part installed\n[LABOR-3]         labor operation</div>
+      <h3>Superscript refs</h3>
+      <p>¹²³⁴⁵⁶⁷⁸⁹ for refs 1–9, (10)+ for larger. Enables compact inline citations in customer-facing narratives.</p>`
+  },
+  'agent-writeback': { icon:'WBK', title:'SMS Writeback Agent', sub:'Final gate for AM pipeline',
+    chain:['3CFinal Doc', '#16A34A', '→', 'writeback_to_sms', '#2563EB', '→', 'SMS Writeback Agent', '#FF6B35', '→', 'SMS synced', '#7C3AED'],
+    body:`<h3>Gate conditions</h3>
+      <div class="step"><div class="sn">1</div><div><strong>Score ≥ threshold</strong><span>Configurable in AM3CAdminScreen (default 60)</span></div></div>
+      <div class="step"><div class="sn">2</div><div><strong>Zero BLOCKING violations</strong><span>All 5 factuality BLOCKING rules clear</span></div></div>
+      <div class="step"><div class="sn">3</div><div><strong>Complaint + Cause + Correction populated</strong><span>All required sections non-empty</span></div></div>
+      <h3>On pass</h3>
+      <p>Calls writeback_to_sms with formatted payload. Status: pending → synced. Audit entry created.</p>
+      <h3>AM vs. OEM</h3>
+      <p>This is the final gate in AM (no opcode or pre-auth check). OEM has a more complex Compliance Gate with 6 conditions including opcode validation and OEM-only parts verification.</p>`
+  },
+  'agent-copilot': { icon:'COP', title:'Advisor Copilot', sub:'AIAgentScreen · KG Q&A · auto-brief',
+    chain:['Shop Metrics + KG', '#16A34A', '→', 'KG ask', '#2563EB', '→', 'Advisor Copilot', '#FF6B35', '→', 'AI Insights', '#7C3AED'],
+    body:`<h3>Auto-brief on load</h3>
+      <div class="code-block">"As a service advisor starting my day,\n briefly tell me the most important repair patterns,\n upsell opportunities, and anything unusual\n in the recent repair history I should know about.\n Be specific with numbers and actionable."</div>
+      <h3>6 quick actions</h3>
+      <ul>
+        <li>Today's trends — repair patterns, what to watch</li>
+        <li>Bundle opportunities — upsell pitches</li>
+        <li>By make — vehicle makes coming in, typical needs</li>
+        <li>Brake insights — brake jobs + co-occurring repairs</li>
+        <li>Top revenue jobs — highest value repairs, customer segments</li>
+        <li>Oil change upsells — what to recommend at oil visits</li>
+      </ul>
+      <h3>Answer format</h3>
+      <div class="code-block">**Bottom Line:**    → headline finding\n**What the data shows:** → numbered evidence\n**Why this answer:**     → data sources\n**At the counter:**     → advisor action phrase</div>`
+  },
+  'outcome-kpi': { icon:'KPI', title:'Shop Performance KPIs', sub:'Peninsula Precision Auto',
+    chain:null,
+    body:`<h3>Today's metrics</h3>
+      <div class="code-block">Revenue:      $6,842  (+12%)\nCar count:    8 cars  (+3 scheduled)\nAvg RO:       $856    (+8%)\nBay util.:    75%     (5/6 active)\nTech effic.:  91%     (+4%)</div>
+      <h3>Technician efficiency</h3>
+      <p>Efficiency = actualHrs / flatRateHrs per technician. Feeds the AI Insights agent for performance ranking and coaching recommendations. laborTimeTracking.elr tracks effective labor rate vs. shop target ($185 target vs. $195 list).</p>`
+  },
+  'outcome-approval': { icon:'APR', title:'Customer-Pay Approval', sub:'3C doc → portal → 1-tap approve',
+    chain:['3CFinal Agent', '#FF6B35', '→', 'Customer Portal', '#7C3AED', '→', 'Approved / Declined', '#7C3AED'],
+    body:`<h3>Approval flow</h3>
+      <div class="step"><div class="sn">1</div><div><strong>3C narrative ready</strong><span>Score ≥ threshold + 0 BLOCKING violations</span></div></div>
+      <div class="step"><div class="sn">2</div><div><strong>Portal link sent</strong><span>Via SMS or email (preferredContact per customer)</span></div></div>
+      <div class="step"><div class="sn">3</div><div><strong>Customer views estimate</strong><span>Itemized: labor + parts per service line + 3C narrative</span></div></div>
+      <div class="step"><div class="sn">4</div><div><strong>1-tap decision</strong><span>Approve all / Approve partial / Decline with reason</span></div></div>
+      <div class="step"><div class="sn">5</div><div><strong>RO advances</strong><span>Approved → In Progress Kanban column</span></div></div>
+      <h3>AM vs. OEM difference</h3>
+      <p>AM: customer approves before work starts. OEM: warranty approval comes after work is completed (claim is retrospective). Completely different approval flows.</p>`
+  },
+  'outcome-sms': { icon:'SMS', title:'SMS Writeback', sub:'3C synced to shop management system',
+    chain:['SMS Writeback Agent', '#FF6B35', '→', 'writeback_to_sms', '#2563EB', '→', 'SMS synced', '#7C3AED'],
+    body:`<h3>What gets synced</h3>
+      <p>The full formatted 3C narrative is written to the <code>internal_notes</code> field of the RO in the shop's SMS. This means technicians, advisors, and management can view the AI-generated narrative in their native tool without logging into WrenchIQ separately.</p>
+      <h3>4 SMS targets</h3>
+      <div class="code-block">Tekmetric   → market leader, most common in demo shops\nShop-Ware   → OEM preferred for independent dealers\nShopmonkey  → fast-growing, API-first\nAutoLeap    → multi-location shops</div>
+      <h3>Audit trail</h3>
+      <p>Every push logged: target, status, timestamp, advisor. Available in AM3CAdminScreen audit log.</p>`
+  },
+  'outcome-upsell': { icon:'UPS', title:'Upsell Recommendations', sub:'DVI yellow · KG bundles · approval-aware',
+    chain:['Customer Data + KG', '#16A34A', '→', 'Advisor Copilot', '#FF6B35', '→', 'Upsell Recs', '#7C3AED'],
+    body:`<h3>How recommendations are generated</h3>
+      <p>Per-RO AI insights combine: (1) DVI yellow items deferred by customer, (2) KG co-occurrence patterns, (3) customer approval rate to prioritize high-likelihood upsells, (4) customer LTV tier for pricing sensitivity.</p>
+      <h3>Sample per-RO insights</h3>
+      <ul>
+        <li>"James Park has approved brake work 4 of last 4 times — lead with full brake service ($420)"</li>
+        <li>"Monica Rodriguez: P0420 resolved, but rear O2 sensor borderline — $189 upsell, 94% approval rate"</li>
+        <li>"Robert Taylor: 22 visits, VIP — cabin filter + tire rotation bundle adds $85 with near-zero friction"</li>
+      </ul>
+      <h3>KG bundles</h3>
+      <p>"Brake pads + rotors cooccur 78% of visits", "Oil change + tire rotation cooccur 61%", "Transmission flush cooccurs with 60K service 43%".</p>`
+  },
+  'outcome-insights': { icon:'INS', title:'AI Insights', sub:'KG Q&A · pattern discovery · advisor brief',
+    chain:['Shop KG', '#16A34A', '→', 'KG ask', '#2563EB', '→', 'Advisor Copilot', '#FF6B35', '→', 'AI Insights', '#7C3AED'],
+    body:`<h3>Question categories (AIInsightsScreen)</h3>
+      <ul>
+        <li><strong>Repair Patterns</strong> — most common jobs, avg mileage, co-occurrence clusters</li>
+        <li><strong>Upsell & Bundling</strong> — what pairs with oil changes, brakes, A/C service</li>
+        <li><strong>By Vehicle</strong> — top repairs for Ford/Toyota/Honda/Chevy/Subaru</li>
+        <li><strong>Shop Performance</strong> — revenue by day, tech efficiency, bay utilization trends</li>
+      </ul>
+      <h3>Answer structure</h3>
+      <div class="code-block">Bottom Line:          one-sentence headline\nWhat the data shows:  3–5 numbered evidence points\nWhy this answer:      data sources cited\nAt the counter:       1 actionable advisor phrase</div>`
+  },
+  'outcome-social': { icon:'CVT', title:'Social Lead → RO Conversion', sub:'SocialInboxScreen',
+    chain:['Social Leads', '#16A34A', '→', 'AI Draft', '#FF6B35', '→', 'Booked → RO created', '#7C3AED'],
+    body:`<h3>Conversion flow</h3>
+      <div class="step"><div class="sn">1</div><div><strong>Lead arrives</strong><span>Instagram DM / TikTok comment / Google message / Facebook inquiry</span></div></div>
+      <div class="step"><div class="sn">2</div><div><strong>AI draft generated</strong><span>Pre-written warm reply with intent match (brake concern → brake special offer)</span></div></div>
+      <div class="step"><div class="sn">3</div><div><strong>Advisor reviews + sends</strong><span>Edits AI draft, sends via channel API</span></div></div>
+      <div class="step"><div class="sn">4</div><div><strong>Customer books</strong><span>Appointment confirmed → conversionStage: "booked"</span></div></div>
+      <div class="step"><div class="sn">5</div><div><strong>RO created</strong><span>e.g. RO-2241 linked to Robert Chen's AC service booking</span></div></div>
+      <h3>Urgent SLA</h3>
+      <p>Diana Moss (Facebook, "car worse after service") — flagged urgent, &lt;30 min SLA to respond. Risk: Google review retaliation. AI draft de-escalates: "We're sorry to hear this — come in today at no charge."</p>`
+  },
+};
+
+// ════════════════════════════════════════
+// Interaction
+// ════════════════════════════════════════
+function openDetail(id) {
+  const d = DETAILS[id]; if (!d) return;
+  document.querySelectorAll('.node.active,.outcome-node.active').forEach(n=>n.classList.remove('active'));
+  document.getElementById('dp-ico').textContent   = d.icon;
+  document.getElementById('dp-title').textContent = d.title;
+  document.getElementById('dp-sub').textContent   = d.sub;
+  document.getElementById('dp-body').innerHTML    = d.body;
+  const ctBar = document.getElementById('chain-trace-bar');
+  if (d.chain && d.chain.length) {
+    ctBar.style.display='flex';
+    let html='';
+    for (let i=0;i<d.chain.length;i+=2){
+      if(i>0) html+='<span class="ct-arrow">→</span>';
+      html+=`<span class="ct-step" style="background:${d.chain[i+1]}">${d.chain[i]}</span>`;
+    }
+    ctBar.innerHTML=html;
+  } else { ctBar.style.display='none'; }
+  document.getElementById('dp').classList.add('open');
+}
+
+function activateNode(el, id) {
+  document.querySelectorAll('.node.active,.outcome-node.active').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  openDetail(id);
+}
+
+function closeDetail(){
+  document.getElementById('dp').classList.remove('open');
+  document.querySelectorAll('.node.active,.outcome-node.active').forEach(n=>n.classList.remove('active'));
+}
+
+// ── Column visibility + arrow sync ──
+const colVisible = {'col-data':true,'col-tools':true,'col-agents':true,'col-outcome':true};
+const arrowGroups = [];
+function registerArrow(el,fromCol,toCol){ arrowGroups.push({el,fromCol,toCol}); }
+function syncArrowVisibility(){
+  for(const {el,fromCol,toCol} of arrowGroups){
+    const v = colVisible[fromCol] && colVisible[toCol];
+    el.style.transition='opacity 0.25s ease';
+    el.style.opacity = v ? '' : '0';
+    el.style.pointerEvents = v ? '' : 'none';
+  }
+}
+function toggleCol(colId,hdrId){
+  const body=document.getElementById(colId+'-body');
+  const hdr=document.getElementById(hdrId);
+  body.classList.toggle('collapsed');
+  const toggle=hdr.querySelector('.ch-toggle');
+  if(toggle) hdr.classList.toggle('collapsed');
+  colVisible[colId]=!colVisible[colId];
+  syncArrowVisibility();
+}
+
+// ── SVG arrows ──
+window.addEventListener('load',()=>{ setTimeout(drawArrows,300); });
+let resizeTimer;
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{
+    document.getElementById('svg-arrows').innerHTML=`<defs>
+      <marker id="mh-green"  markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#16A34A"/></marker>
+      <marker id="mh-blue"   markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#2563EB"/></marker>
+      <marker id="mh-orange" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#FF6B35"/></marker>
+      <marker id="mh-purple" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#7C3AED"/></marker>
+      <marker id="mh-amber"  markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#D97706"/></marker>
+      <marker id="mh-red"    markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#DC2626"/></marker>
+      <marker id="mh-teal"   markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#0D9488"/></marker>
+      <marker id="mh-muted"  markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="#94A3B8"/></marker>
+    </defs>`;
+    drawArrows();
+  },150);
+});
+
+function drawArrows(){
+  const svg   = document.getElementById('svg-arrows');
+  const grid  = document.getElementById('diagram-grid');
+  const gRect = grid.getBoundingClientRect();
+  arrowGroups.length = 0; // clear registry
+
+  function nr(id){
+    const el=document.getElementById(id); if(!el) return null;
+    const r=el.getBoundingClientRect();
+    const sx=window.scrollX, sy=window.scrollY;
+    const gl=gRect.left+sx, gt=gRect.top+sy;
+    return {
+      left:r.left+sx-gl, top:r.top+sy-gt,
+      right:r.right+sx-gl, bottom:r.bottom+sy-gt,
+      cx:(r.left+r.right)/2+sx-gl,
+      cy:(r.top+r.bottom)/2+sy-gt
+    };
+  }
+
+  const COL_MAP={'nd-':'col-data','nt-':'col-tools','na-':'col-agents','no-':'col-outcome'};
+  function nc(id){ for(const[p,c] of Object.entries(COL_MAP)) if(id.startsWith(p)) return c; return null; }
+
+  function addArrow(x1,y1,x2,y2,color,dashed,flow,fromCol,toCol){
+    const ckey={
+      '#16A34A':'green','#2563EB':'blue','#FF6B35':'orange',
+      '#7C3AED':'purple','#D97706':'amber','#DC2626':'red',
+      '#0D9488':'teal','#94A3B8':'muted'
+    }[color]||'muted';
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    const cpY=(y1+y2)/2;
+    const d=`M ${x1} ${y1} C ${x1+40} ${cpY} ${x2-40} ${cpY} ${x2} ${y2}`;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',d); path.setAttribute('stroke',color);
+    path.setAttribute('stroke-width',flow?'2.5':'1.6');
+    path.setAttribute('fill','none');
+    path.setAttribute('marker-end',`url(#mh-${ckey})`);
+    path.style.opacity=flow?'0.75':'0.45';
+    if(dashed){path.setAttribute('stroke-dasharray','5 4');path.style.opacity='0.35';}
+    if(flow) path.classList.add('flow-path');
+    g.appendChild(path);
+    const hit=document.createElementNS('http://www.w3.org/2000/svg','path');
+    hit.setAttribute('d',d); hit.setAttribute('stroke','transparent');
+    hit.setAttribute('stroke-width','12'); hit.setAttribute('fill','none');
+    hit.addEventListener('mouseenter',()=>{path.style.opacity='1';path.setAttribute('stroke-width',flow?'3':'2.5');});
+    hit.addEventListener('mouseleave',()=>{path.style.opacity=flow?'0.75':'0.45';path.setAttribute('stroke-width',flow?'2.5':'1.6');});
+    g.appendChild(hit);
+    svg.appendChild(g);
+    if(fromCol&&toCol) registerArrow(g,fromCol,toCol);
+  }
+
+  function conn(from,to,color,dashed,flow){
+    const a=nr(from),b=nr(to); if(!a||!b) return;
+    addArrow(a.right,a.cy,b.left,b.cy,color,dashed,flow,nc(from),nc(to));
+  }
+
+  // Data → Tools
+  const dataToTools=[
+    ['nd-ro',        'nt-vin',       '#16A34A',false,true ],
+    ['nd-tsb',       'nt-tsb',       '#7C3AED',false,true ],
+    ['nd-dvi',       'nt-dvi',       '#16A34A',false,true ],
+    ['nd-technotes', 'nt-classify',  '#D97706',false,true ],
+    ['nd-dtc',       'nt-factuality','#DC2626',true, false],
+    ['nd-metrics',   'nt-score',     '#0D9488',true, false],
+    ['nd-customer',  'nt-writeback', '#2563EB',true, false],
+  ];
+  // Tools → Agents
+  const toolsToAgents=[
+    ['nt-vin',       'na-3c',       '#0D3B45',false,true ],
+    ['nt-tsb',       'na-3c',       '#7C3AED',false,true ],
+    ['nt-dvi',       'na-3c',       '#16A34A',false,true ],
+    ['nt-classify',  'na-classify', '#D97706',false,true ],
+    ['nt-factuality','na-factuality','#DC2626',false,true],
+    ['nt-score',     'na-score',    '#2563EB',false,true ],
+    ['nt-writeback', 'na-writeback','#EA580C',false,true ],
+  ];
+  // Agents → Outcomes
+  const agentsToOut=[
+    ['na-3c',        'no-approval', '#FF6B35',false,true ],
+    ['na-3c',        'no-kpi',      '#FF6B35',true, false],
+    ['na-classify',  'no-kpi',      '#D97706',true, false],
+    ['na-factuality','no-approval', '#DC2626',true, false],
+    ['na-score',     'no-insights', '#2563EB',true, false],
+    ['na-3cfinal',   'no-sms',      '#16A34A',false,true ],
+    ['na-3cfinal',   'no-approval', '#16A34A',true, false],
+    ['na-writeback', 'no-sms',      '#EA580C',false,true ],
+    ['na-copilot',   'no-insights', '#0D3B45',false,true ],
+    ['na-copilot',   'no-upsell',   '#0D3B45',true, false],
+  ];
+  // Social special
+  const socialConn=[
+    ['nd-social',    'no-social-conv','#EA580C',false,true],
+  ];
+
+  [...dataToTools,...toolsToAgents,...agentsToOut,...socialConn]
+    .forEach(([f,t,c,d,fl])=>conn(f,t,c,d,fl));
+
+  // Agent flow within col C (light internal arrows)
+  const agentFlow=[
+    ['na-3c','na-classify','#D97706',true,false],
+    ['na-classify','na-factuality','#DC2626',true,false],
+    ['na-factuality','na-score','#2563EB',true,false],
+    ['na-score','na-3cfinal','#16A34A',true,false],
+    ['na-3cfinal','na-writeback','#EA580C',false,true],
+  ];
+  agentFlow.forEach(([f,t,c,d,fl])=>conn(f,t,c,d,fl));
+}
+</script>
+</body>
+</html>

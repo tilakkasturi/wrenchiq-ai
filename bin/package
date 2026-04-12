@@ -1,0 +1,94 @@
+#!/bin/bash
+# WrenchIQ — Build & Package Distribution
+#
+# Usage:
+#   bin/package            # auto-increments version, builds, packages
+#   bin/package --no-build # skip vite build, just repackage existing dist/
+#
+# Output: releases/wrenchiq-deploy-YYYY-MM-DD-HHMM-vMAJOR.MINOR.tar.gz
+#         + deploy-remote.sh alongside it
+#
+# Version scheme: MAJOR.MINOR — minor increments each release up to 10,
+#                 then major bumps and minor resets to 0.
+
+set -e
+cd "$(dirname "$0")/.."
+
+NO_BUILD=0
+for arg in "$@"; do
+  [ "$arg" = "--no-build" ] && NO_BUILD=1
+done
+
+NODE="$(PATH="/opt/homebrew/opt/node@24/bin:$PATH" which node 2>/dev/null || which node)"
+
+# ── Read & increment version ──────────────────────────────────
+VERSION_FILE="version.json"
+MAJOR=$(python3 -c "import json; v=json.load(open('$VERSION_FILE')); print(v['major'], end='')")
+MINOR=$(python3 -c "import json; v=json.load(open('$VERSION_FILE')); print(v['minor'], end='')")
+
+# Increment
+NEW_MINOR=$((MINOR + 1))
+NEW_MAJOR=$MAJOR
+if [ "$NEW_MINOR" -gt 10 ]; then
+  NEW_MINOR=0
+  NEW_MAJOR=$((MAJOR + 1))
+fi
+
+VERSION="v${NEW_MAJOR}.${NEW_MINOR}"
+DATETIME=$(date +"%Y-%m-%d-%H%M")
+FILENAME="wrenchiq-deploy-${DATETIME}-${VERSION}.tar.gz"
+RELEASES_DIR="releases"
+
+echo "==> WrenchIQ Package"
+echo "    Version : ${VERSION}  (was v${MAJOR}.${MINOR})"
+echo "    File    : ${RELEASES_DIR}/${FILENAME}"
+echo ""
+
+# ── Build ─────────────────────────────────────────────────────
+if [ "$NO_BUILD" -eq 0 ]; then
+  echo "==> Building frontend..."
+  PATH="/opt/homebrew/opt/node@24/bin:$PATH" npm run build
+  echo ""
+fi
+
+# ── Write version into dist for runtime visibility ────────────
+echo "{\"version\":\"${VERSION}\",\"built\":\"${DATETIME}\"}" > dist/version.json
+
+# ── Create releases dir ───────────────────────────────────────
+mkdir -p "$RELEASES_DIR"
+
+# ── Package ───────────────────────────────────────────────────
+echo "==> Packaging..."
+tar -czf "${RELEASES_DIR}/${FILENAME}" \
+  dist/ \
+  server/ \
+  package.json \
+  package-lock.json \
+  .env.example \
+  start.sh \
+  version.json \
+  2>&1 | grep -v LIBARCHIVE || true
+
+# Also write a copy of deploy-remote.sh into releases/ alongside the tarball
+cp deploy-remote.sh "${RELEASES_DIR}/deploy-remote.sh" 2>/dev/null || true
+
+SIZE=$(du -sh "${RELEASES_DIR}/${FILENAME}" | cut -f1)
+echo "    Size    : ${SIZE}"
+
+# ── Save current symlink ──────────────────────────────────────
+ln -sf "${FILENAME}" "${RELEASES_DIR}/wrenchiq-deploy-latest.tar.gz" 2>/dev/null || true
+
+# ── Commit version bump ───────────────────────────────────────
+echo "{" > "$VERSION_FILE"
+echo "  \"major\": ${NEW_MAJOR}," >> "$VERSION_FILE"
+echo "  \"minor\": ${NEW_MINOR}" >> "$VERSION_FILE"
+echo "}" >> "$VERSION_FILE"
+
+echo ""
+echo "  ✓ ${RELEASES_DIR}/${FILENAME}"
+echo "  ✓ ${RELEASES_DIR}/wrenchiq-deploy-latest.tar.gz (symlink)"
+echo "  ✓ version.json updated to ${VERSION}"
+echo ""
+echo "  Deploy with:"
+echo "    scp ${RELEASES_DIR}/${FILENAME} ${RELEASES_DIR}/deploy-remote.sh <host>:~/Downloads/"
+echo "    ssh <host> 'bash ~/Downloads/deploy-remote.sh'"

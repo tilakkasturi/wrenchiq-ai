@@ -1,23 +1,29 @@
 // PersonaShell — wraps each persona with their own nav + top bar
 import { useState } from "react";
+import { useAppVersion, useAppBuilt } from "../hooks/useAppVersion";
 import {
   Wrench, ClipboardList, ClipboardCheck, Package, Shield, Calendar,
   BarChart3, Settings, Building2, Sparkles, Bell, Search,
   LogOut, Hammer, CheckSquare, BarChart, Users, Truck,
-  Home, Smartphone, Menu,
+  Home, Smartphone, Menu, FileText, Brain, Activity,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { SHOP } from "../data/demoData";
 import WrenchIQAgent from "./WrenchIQAgent";
+import BrandWordmark from "./BrandWordmark";
+import { useBranding } from "../context/BrandingContext";
 
 // ── Per-persona nav configs ──────────────────────────────────
 
 const PERSONA_NAV = {
   advisor: [
-    { id: "advisorHome", label: "RO Queue & Board", icon: ClipboardList },
-    { id: "parts",       label: "Parts Intelligence", icon: Package },
-    { id: "scheduling",  label: "Scheduling",         icon: Calendar },
-    { id: "trust",       label: "Trust Engine",       icon: Shield },
+    { id: "advisorHome",  label: "RO Queue & Board",  icon: ClipboardList },
+    { id: "aroAgent",     label: "ARO Agent",          icon: Activity },
+    { id: "am3cWriter",   label: "3C Story Writer",   icon: FileText },
+    { id: "parts",        label: "Parts Intelligence", icon: Package },
+    { id: "scheduling",   label: "Scheduling",         icon: Calendar },
+    { id: "trust",        label: "Trust Engine",       icon: Shield },
+    { id: "aiAgent",      label: "AI Agent",           icon: Brain },
   ],
   advisorLite: [],
   tech: [
@@ -86,36 +92,20 @@ const PERSONA_USER = {
 
 // ── Shell component ─────────────────────────────────────────
 
-// ── PrediiPowered wordmark ───────────────────────────────────
-function PrediiPoweredMark({ size = "md" }) {
-  const isSmall = size === "sm";
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: isSmall ? 4 : 6 }}>
-      {/* Predii 3-curves SVG */}
-      <svg width={isSmall ? 14 : 18} height={isSmall ? 14 : 18} viewBox="0 0 24 24" fill="none">
-        <path d="M4 8 Q12 2 20 8"  stroke="#FF6B35" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-        <path d="M4 12 Q12 6 20 12" stroke="#FF6B35" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-        <path d="M4 16 Q12 10 20 16" stroke="#FF6B35" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
-      </svg>
-      <span style={{ fontSize: isSmall ? 11 : 13, fontWeight: 800, letterSpacing: -0.3, color: "#0D3B45" }}>
-        Predii<span style={{ color: "#FF6B35" }}>Powered</span>
-        <sup style={{ fontSize: isSmall ? 7 : 8, color: "#9CA3AF", fontWeight: 600 }}>™</sup>
-      </span>
-    </div>
-  );
-}
-
 export default function PersonaShell({
   persona,
   activeScreen,
+  selectedRO = null,
   onNavigate,
   onExitPersona,
   onOpenSpecs,
   children,
   showAgent = true,
-  showWrenchIQBranding = true,
 }) {
-  const [agentVisible, setAgentVisible] = useState(persona === "owner" || persona === "advisor");
+  const [agentVisible, setAgentVisible] = useState(persona !== "tech");
+  const { brand } = useBranding();
+  const appVersion = useAppVersion();
+  const appBuilt = useAppBuilt();
   const navItems = PERSONA_NAV[persona] || [];
   const personaColor = PERSONA_COLORS[persona] || COLORS.primary;
   const personaLabel = PERSONA_LABELS[persona] || persona;
@@ -133,10 +123,7 @@ export default function PersonaShell({
           padding: "0 16px",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 18, height: 18, borderRadius: 5, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Wrench size={10} color="#fff" style={{ transform: "rotate(-45deg)" }} />
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>WrenchIQ<span style={{ color: COLORS.accent }}>.ai</span></span>
+            <BrandWordmark size="sm" />
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             {onOpenSpecs && (
@@ -186,9 +173,7 @@ export default function PersonaShell({
             title="Back to home"
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
           >
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Wrench size={18} color="#fff" style={{ transform: "rotate(-45deg)" }} />
-            </div>
+            <BrandWordmark size="nav" />
           </button>
         </div>
 
@@ -236,7 +221,10 @@ export default function PersonaShell({
         </div>
       </div>
 
-      {/* ── Main area ── */}
+      {/* ── Main area + AI panel ── */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", minWidth: 0 }}>
+
+      {/* Screen content column */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
 
         {/* Top bar */}
@@ -253,18 +241,7 @@ export default function PersonaShell({
               title="Back to home"
               style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0 }}
             >
-              {showWrenchIQBranding ? (
-                <>
-                  <div style={{ width: 24, height: 24, borderRadius: 6, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Wrench size={13} color="#fff" style={{ transform: "rotate(-45deg)" }} />
-                  </div>
-                  <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.5, color: COLORS.textPrimary }}>
-                    WrenchIQ<span style={{ color: COLORS.accent }}>.ai</span>
-                  </span>
-                </>
-              ) : (
-                <PrediiPoweredMark size="md" />
-              )}
+                <BrandWordmark size="bar" />
             </button>
 
             {/* Persona badge */}
@@ -369,18 +346,7 @@ export default function PersonaShell({
           flexShrink: 0,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {showWrenchIQBranding ? (
-              <>
-                <div style={{ width: 18, height: 18, borderRadius: 5, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Wrench size={10} color="#fff" style={{ transform: "rotate(-45deg)" }} />
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: -0.3, color: COLORS.textPrimary }}>
-                  WrenchIQ<span style={{ color: COLORS.accent }}>.ai</span>
-                </span>
-              </>
-            ) : (
-              <PrediiPoweredMark size="sm" />
-            )}
+            <BrandWordmark size="sm" />
             {["fixedOps", "oemAdvisor", "oemTech"].includes(persona) ? (
               <span style={{ fontSize: 9, fontWeight: 800, background: "#E0F2F1", color: "#0D3B45", border: "1px solid #80CBC4", borderRadius: 4, padding: "1px 5px" }}>OEM</span>
             ) : (
@@ -389,18 +355,22 @@ export default function PersonaShell({
           </div>
           <div style={{ fontSize: 10, color: "#9CA3AF" }}>
             <span style={{ fontWeight: 600, color: "#6B7280", letterSpacing: 0.5 }}>PREDII CONFIDENTIAL</span>
+            {appVersion && <span style={{ color: "#D1D5DB", marginLeft: 8 }}>{appVersion}{appBuilt ? ` · ${appBuilt}` : ""}</span>}
           </div>
         </div>
-      </div>
+      </div>{/* end screen content column */}
 
-      {/* Floating AI Agent */}
+      {/* AI Panel — right column, full height */}
       {agentVisible && persona !== "tech" && (
         <WrenchIQAgent
           activeScreen={activeScreen}
           persona={persona}
+          selectedRO={selectedRO}
           onHide={() => setAgentVisible(false)}
         />
       )}
+
+      </div>{/* end main area + AI panel */}
     </div>
   );
 }
