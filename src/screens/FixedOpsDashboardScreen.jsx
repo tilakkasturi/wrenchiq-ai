@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { BarChart3, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Users, Clock, Download, ChevronRight } from "lucide-react";
+import { BarChart3, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Users, Clock, Download, ChevronRight, Sparkles, ArrowRight } from "lucide-react";
+import { useRecommendations } from "../context/RecommendationsContext";
 import { COLORS } from "../theme/colors";
 import { OEM_ADVISORS, WARRANTY_CLAIMS, REJECTION_HISTORY, OEM_DEALER } from "../data/oemDemoData";
+import { useEditionName } from "../context/BrandingContext";
 
 const PRIMARY = "#0D3B45";
 const ACCENT = "#FF6B35";
@@ -418,11 +420,18 @@ function RecentRejectionsTable({ history }) {
 }
 
 export default function FixedOpsDashboardScreen() {
+  const oemName = useEditionName("OEM");
   const advisors = OEM_ADVISORS.filter(a => a.id !== "adv-001");
   const avgCompliance = Math.round(
     advisors.reduce((s, a) => s + a.complianceScore, 0) / advisors.length
   );
   const { thisMonth, trend } = WARRANTY_CLAIMS;
+
+  // Recommendations banner
+  const recCtx = useRecommendations();
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const oemInsights = recCtx ? recCtx.getForScreen("fixedOpsDashboard") : [];
+  const showBanner = recCtx && !recCtx.loading && oemInsights.length > 0 && !bannerDismissed;
 
   return (
     <div style={{
@@ -432,6 +441,50 @@ export default function FixedOpsDashboardScreen() {
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       color: TEXT_DARK,
     }}>
+      {/* Fixed Ops AI Insights banner */}
+      {showBanner && (
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "#FFF7ED",
+          border: "1px solid #FED7AA",
+          borderLeft: "3px solid #FF6B35",
+          borderRadius: 8,
+          padding: "10px 16px",
+          marginBottom: 16,
+          gap: 12,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Sparkles size={14} color="#FF6B35" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#9A3412" }}>
+              {oemInsights.length} Fixed Ops insight{oemInsights.length > 1 ? "s" : ""} available
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#FF6B35",
+                background: "rgba(255,107,53,0.1)",
+                border: "1px solid rgba(255,107,53,0.3)",
+                borderRadius: 6,
+                padding: "4px 10px",
+                cursor: "pointer",
+              }}
+            >
+              View
+              <ArrowRight size={12} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Page header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
@@ -443,7 +496,7 @@ export default function FixedOpsDashboardScreen() {
             fontSize: 11, fontWeight: 600, color: "#6B7280",
             background: "#F3F4F6", borderRadius: 4, padding: "2px 8px",
           }}>
-            WrenchIQ-OEM
+            {oemName}
           </span>
         </div>
         <div style={{ fontSize: 13, color: "#6B7280" }}>

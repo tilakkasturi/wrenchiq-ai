@@ -12,6 +12,7 @@ import {
   Activity,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import AIInsightsStrip from "../components/AIInsightsStrip";
 import { financials, technicians, SHOP } from "../data/demoData";
 import {
   BarChart,
@@ -1342,6 +1343,12 @@ export default function AnalyticsScreen() {
         WebkitFontSmoothing: "antialiased",
       }}
     >
+      <AIInsightsStrip insights={[
+        { icon: "📉", text: "Parts margin 48.2% — below 53% target. BMW X3 brake job used OEM at low markup", action: "Review parts", value: "-$420 margin", color: "#EF4444" },
+        { icon: "🏦", text: "Worldpac Net-30 ($743) due Thu · O'Reilly ($1,104) due Fri — both in Xero AP aging", action: "Pay Now", value: "$1,847 due", color: "#F59E0B" },
+        { icon: "🎯", text: "Mike Reeves efficiency dropped to 85% — assign him lighter jobs this afternoon", action: "Reassign", value: "Recover 1.2 hrs", color: "#7C3AED" },
+        { icon: "💰", text: "Month-to-date revenue $68,420 vs $72,000 target — on track if today hits $7,500", value: "95% to target", color: "#22C55E" },
+      ]} />
       <div
         style={{
           maxWidth: 900,

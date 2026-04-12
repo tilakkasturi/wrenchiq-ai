@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Wrench, ChevronRight, BarChart3, ClipboardList, Hammer, Shield, Building2, CheckCircle } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { OEM_DEALER, WARRANTY_CLAIMS } from "../data/oemDemoData";
+import { useEditionName } from "../context/BrandingContext";
 
 const OEM_PERSONAS = [
   {
@@ -41,6 +42,8 @@ const OEM_PERSONAS = [
 ];
 
 export default function OEMGatewayScreen({ onSelectPersona, onBack, standaloneMode = false }) {
+  const amName  = useEditionName("AM");
+  const oemName = useEditionName("OEM");
   const [hovered, setHovered] = useState(null);
 
   return (
@@ -156,7 +159,7 @@ export default function OEMGatewayScreen({ onSelectPersona, onBack, standaloneMo
         })}
       </div>
 
-      {/* What WrenchIQ-OEM includes */}
+      {/* What OEM edition includes */}
       <div style={{
         width: "100%", maxWidth: 780,
         background: "rgba(255,255,255,0.03)",
@@ -188,7 +191,7 @@ export default function OEMGatewayScreen({ onSelectPersona, onBack, standaloneMo
             onClick={onBack}
             style={{ background: "none", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "7px 16px", cursor: "pointer", color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}
           >
-            ← Switch to WrenchIQ-AM
+            ← Switch to {amName}
           </button>
         )}
         <button

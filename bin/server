@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# bin/server — Start the WrenchIQ API server (Express + MongoDB)
+#
+# Usage:
+#   bin/server
+#
+# Listens on $API_PORT (default 3001). MongoDB URI read from .env.local.
+
+set -euo pipefail
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+cd "$(dirname "$0")/.."
+
+node server/index.js

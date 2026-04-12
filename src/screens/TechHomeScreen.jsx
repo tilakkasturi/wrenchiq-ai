@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { Clock, QrCode, ChevronDown, ChevronRight, CheckCircle, Wrench, Car } from "lucide-react";
+import AIInsightsStrip from "../components/AIInsightsStrip";
 import { COLORS } from "../theme/colors";
 
 const TECH = {
@@ -297,10 +298,18 @@ export default function TechHomeScreen({ onOpenDVI }) {
         </div>
 
         {/* Stats row */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
           <StatCard label="Jobs Today" value="3" sub="1 active now" />
           <StatCard label="Completed" value="1" sub="of 4 assigned" />
           <StatCard label="Efficiency" value="89%" sub="+4% vs avg" />
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <AIInsightsStrip label="Recommendations" insights={[
+            { icon: "⚠️", text: "TSB-2022-015 applies to David's CR-V — add warranty ref before closing", action: "Add TSB", value: "Warranty ref", color: "#F59E0B" },
+            { icon: "🔋", text: "Sarah's Tesla next — ADAS calibration TSB-2024-22-004 not yet flagged", action: "Flag TSB", value: "+$180", color: "#3B82F6" },
+            { icon: "✅", text: "Efficiency 89% today — on track to finish all 3 jobs before shift ends", value: "+4% avg", color: "#22C55E" },
+          ]} />
         </div>
 
         {/* Active / queued jobs */}

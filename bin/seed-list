@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# bin/seed-list — Print all customer batches and their visit counts
+#
+# Usage:
+#   bin/seed-list
+
+set -euo pipefail
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+cd "$(dirname "$0")/.."
+
+node scripts/seedRepairOrders.js --list

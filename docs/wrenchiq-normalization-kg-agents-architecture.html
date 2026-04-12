@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WrenchIQ.ai — Intelligence Platform Architecture</title>
+<style>
+:root {
+  --primary:   #0D3B45;
+  --teal-mid:  #1A5C6B;
+  --teal-lt:   #2A8C9E;
+  --accent:    #FF6B35;
+  --accent-lt: #FF8C5A;
+  --bg:        #EEF3F5;
+  --card:      #FFFFFF;
+  --border:    #C4D4D8;
+  --text:      #1A2E32;
+  --muted:     #577880;
+  --green:     #16A34A;
+  --amber:     #D97706;
+  --red:       #DC2626;
+  --purple:    #7C3AED;
+  --blue:      #2563EB;
+  --indigo:    #4F46E5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Topbar ── */
+.topbar {
+  background: var(--primary);
+  color: #fff;
+  padding: 0 28px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 300;
+  box-shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+.topbar .logo {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.topbar .logo svg { width: 18px; height: 18px; fill: #fff; }
+.topbar h1 { font-size: 16px; font-weight: 700; letter-spacing: .2px; }
+.topbar h1 span { color: var(--accent); }
+.topbar .badge {
+  background: rgba(255,107,53,.18);
+  border: 1px solid rgba(255,107,53,.4);
+  color: var(--accent-lt);
+  font-size: 10px; font-weight: 700;
+  padding: 2px 10px; border-radius: 99px; letter-spacing: .5px;
+}
+.topbar .hint { margin-left: auto; font-size: 11px; color: #7BB8C4; font-style: italic; }
+
+/* ── Tab Nav ── */
+.tab-nav {
+  background: var(--teal-mid);
+  display: flex;
+  gap: 0;
+  padding: 0 28px;
+  border-bottom: 3px solid var(--accent);
+}
+.tab-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.6);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 13px 20px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -3px;
+  transition: all .2s;
+  display: flex; align-items: center; gap: 7px;
+}
+.tab-btn:hover { color: rgba(255,255,255,.85); }
+.tab-btn.active { color: #fff; border-bottom-color: var(--accent); }
+.tab-icon { font-size: 14px; }
+
+/* ── Main content ── */
+.main { padding: 28px; max-width: 1400px; margin: 0 auto; }
+
+/* ── Panels ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Section headers ── */
+.section-hdr {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px;
+}
+.section-hdr .icon-box {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.section-hdr h2 { font-size: 20px; font-weight: 700; color: var(--primary); }
+.section-hdr p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ============================================================
+   OVERVIEW PANEL
+   ============================================================ */
+.overview-intro {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--teal-mid) 100%);
+  border-radius: 16px;
+  padding: 32px 36px;
+  color: #fff;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.overview-intro::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    -45deg, transparent, transparent 40px,
+    rgba(255,255,255,.02) 40px, rgba(255,255,255,.02) 80px
+  );
+}
+.overview-intro h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; position: relative; }
+.overview-intro h2 span { color: var(--accent); }
+.overview-intro p { font-size: 14px; color: rgba(255,255,255,.75); max-width: 700px; line-height: 1.6; position: relative; }
+
+/* Data flow diagram */
+.flow-diagram {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr 40px 1fr 40px 1fr;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 28px;
+}
+.flow-box {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 20px 18px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all .25s;
+  position: relative;
+  overflow: hidden;
+}
+.flow-box:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(13,59,69,.15); }
+.flow-box.active-flow { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,107,53,.15); }
+.flow-box .fb-icon {
+  width: 44px; height: 44px;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+.flow-box h3 { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+.flow-box p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.flow-box .fb-badge {
+  position: absolute; top: 12px; right: 12px;
+  font-size: 9px; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px;
+  letter-spacing: .4px;
+}
+.flow-arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent); font-size: 22px;
+}
+
+/* Three pillar cards */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.pillar-card {
+  background: var(--card);
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all .25s;
+}
+.pillar-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(13,59,69,.12); }
+.pillar-hdr {
+  padding: 18px 20px;
+  display: flex; align-items: center; gap: 12px;
+  color: #fff;
+}
+.pillar-hdr .p-icon { font-size: 22px; }
+.pillar-hdr h3 { font-size: 15px; font-weight: 700; }
+.pillar-hdr .p-num { margin-left: auto; font-size: 26px; font-weight: 800; opacity: .4; }
+.pillar-body { padding: 16px 20px; }
+.pillar-body ul { list-style: none; }
+.pillar-body ul li {
+  font-size: 12.5px; color: var(--muted);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--bg);
+  display: flex; align-items: center; gap: 8px;
+}
+.pillar-body ul li::before { content: '▸'; color: var(--accent); font-size: 10px; }
+.pillar-body ul li:last-child { border-bottom: none; }
+.pillar-foot {
+  padding: 12px 20px;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.pillar-foot .goto-btn {
+  font-size: 11px; font-weight: 700;
+  color: var(--teal-lt);
+  background: none; border: none; cursor: pointer;
+  letter-spacing: .3px;
+  display: flex; align-items: center; gap: 5px;
+}
+.pillar-foot .goto-btn:hover { color: var(--accent); }
+
+/* KPI strip */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.kpi-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px 18px;
+  border-left: 4px solid var(--accent);
+}
+.kpi-card .kv { font-size: 28px; font-weight: 800; color: var(--primary); }
+.kpi-card .kl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* ============================================================
+   NORMALIZATION PANEL
+   ============================================================ */
+.norm-pipeline {
+  background: var(--card);
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  padding: 24px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.norm-pipeline h3 {
+  font-size: 14px; font-weight: 700; color: var(--primary);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.pipeline-steps {
+  display: flex; align-items: center; gap: 0;
+  flex-wrap: nowrap; overflow-x: auto;
+}
+.ps {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+  min-width: 110px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all .2s;
+  border: 2px solid transparent;
+}
+.ps:hover, .ps.active { background: var(--primary); color: #fff; border-color: var(--accent); }
+.ps:hover .ps-n, .ps.active .ps-n { color: rgba(255,255,255,.6); }
+.ps:hover .ps-t, .ps.active .ps-t { color: #fff; }
+.ps-n { font-size: 10px; font-weight: 700; letter-spacing: .5px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
+.ps-t { font-size: 12px; font-weight: 600; color: var(--text); }
+.ps-arrow { color: var(--accent); font-size: 18px; padding: 0 6px; flex-shrink: 0; }
+
+.norm-domains {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.nd-card {
+  background: var(--card);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all .2s;
+}
+.nd-card:hover { border-color: var(--teal-lt); box-shadow: 0 4px 16px rgba(13,59,69,.1); }
+.nd-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,107,53,.12); }
+.nd-hdr {
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.nd-hdr .nd-icon { font-size: 18px; }
+.nd-hdr h4 { font-size: 13px; font-weight: 700; color: var(--primary); }
+.nd-hdr .nd-tag {
+  margin-left: auto;
+  font-size: 9px; font-weight: 700; letter-spacing: .5px;
+  padding: 2px 7px; border-radius: 99px;
+}
+.nd-body { padding: 14px 16px; }
+.nd-body p { font-size: 12px; color: var(--muted); line-height: 1.55; margin-bottom: 10px; }
+.nd-chain {
+  display: flex; align-items: center; gap: 6px;
+  flex-wrap: wrap;
+}
+.nd-chain .node {
+  background: var(--primary);
+  color: rgba(255,255,255,.8);
+  font-size: 10px; font-weight: 600;
+  padding: 3px 9px; border-radius: 6px;
+}
+.nd-chain .node.accent { background: var(--accent); color: #fff; }
+.nd-chain .arrow { color: var(--muted); font-size: 12px; }
+
+.nd-detail {
+  background: var(--card);
+  border-radius: 12px;
+  border: 2px solid var(--accent);
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  display: none;
+}
+.nd-detail.visible { display: block; animation: fadeIn .2s ease; }
+.nd-detail h4 { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 14px; }
+.nd-detail .metric-row {
+  display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.nd-metric {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  flex: 1; min-width: 120px;
+}
+.nd-metric .mv { font-size: 20px; font-weight: 800; color: var(--green); }
+.nd-metric .ml { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.nd-detail .step-list { list-style: none; }
+.nd-detail .step-list li {
+  display: flex; gap: 12px;
+  padding: 8px 0; border-bottom: 1px solid var(--bg);
+  font-size: 12.5px;
+}
+.nd-detail .step-list li:last-child { border-bottom: none; }
+.nd-detail .step-list .sn {
+  background: var(--primary); color: #fff;
+  width: 20px; height: 20px; border-radius: 99px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+
+/* ============================================================
+   KNOWLEDGE GRAPH PANEL
+   ============================================================ */
+.kg-header-card {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--teal-mid) 100%);
+  border-radius: 14px;
+  padding: 24px 28px;
+  color: #fff;
+  margin-bottom: 24px;
+  display: flex; align-items: center; gap: 28px;
+}
+.kg-header-card .kg-intro { flex: 1; }
+.kg-header-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+.kg-header-card p { font-size: 13px; color: rgba(255,255,255,.7); line-height: 1.6; }
+.kg-stack-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.kg-chip {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.85);
+  font-size: 11px; font-weight: 600;
+  padding: 4px 12px; border-radius: 99px;
+}
+.kg-chip.accent { background: rgba(255,107,53,.3); border-color: var(--accent); color: #fff; }
+
+.kg-topology {
+  background: var(--card);
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.kg-topology h3 { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+
+/* Graph SVG area */
+.graph-canvas {
+  width: 100%;
+  min-height: 340px;
+  position: relative;
+}
+.graph-canvas svg { width: 100%; height: 340px; }
+
+.kg-layers {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.layer-card {
+  background: var(--card);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all .2s;
+}
+.layer-card:hover { border-color: var(--teal-lt); transform: translateY(-2px); }
+.layer-card.selected { border-color: var(--accent); }
+.layer-hdr {
+  padding: 14px 16px;
+  color: #fff;
+  display: flex; align-items: center; gap: 10px;
+}
+.layer-hdr .l-num {
+  width: 28px; height: 28px; border-radius: 99px;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+}
+.layer-hdr h4 { font-size: 13px; font-weight: 700; }
+.layer-body { padding: 14px 16px; font-size: 12px; color: var(--muted); line-height: 1.55; }
+.layer-body ul { list-style: none; margin-top: 8px; }
+.layer-body ul li {
+  padding: 4px 0;
+  display: flex; align-items: flex-start; gap: 6px;
+}
+.layer-body ul li::before { content: '◆'; color: var(--accent); font-size: 8px; margin-top: 4px; flex-shrink: 0; }
+
+.kg-analytics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.kga-card {
+  background: var(--card);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  padding: 18px 20px;
+}
+.kga-card h4 { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.kga-card p { font-size: 12px; color: var(--muted); line-height: 1.55; }
+.formula-box {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: var(--primary);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   AGENTS PANEL
+   ============================================================ */
+.agent-runtime {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--teal-mid) 100%);
+  border-radius: 14px;
+  padding: 24px 28px;
+  color: #fff;
+  margin-bottom: 24px;
+}
+.agent-runtime h3 { font-size: 17px; font-weight: 800; margin-bottom: 14px; }
+.runtime-flow {
+  display: flex; align-items: center; gap: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.rf-box {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  text-align: center;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+.rf-box .rf-icon { font-size: 18px; margin-bottom: 4px; }
+.rf-box .rf-t { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.9); }
+.rf-arrow { color: var(--accent); font-size: 20px; padding: 0 8px; flex-shrink: 0; }
+
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.agent-card {
+  background: var(--card);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.agent-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(13,59,69,.12); }
+.agent-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,107,53,.12); }
+.agent-card .a-num {
+  position: absolute; top: 10px; right: 12px;
+  font-size: 10px; font-weight: 800; color: var(--border);
+}
+.agent-card .a-icon { font-size: 24px; margin-bottom: 10px; }
+.agent-card h4 { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 5px; line-height: 1.3; }
+.agent-card .a-tag {
+  display: inline-block;
+  font-size: 9px; font-weight: 700; letter-spacing: .5px;
+  padding: 2px 7px; border-radius: 99px;
+}
+.agent-card .a-role {
+  font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4;
+}
+
+.agent-detail {
+  background: var(--card);
+  border-radius: 14px;
+  border: 2px solid var(--accent);
+  padding: 24px;
+  margin-bottom: 24px;
+  display: none;
+}
+.agent-detail.visible { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; animation: fadeIn .2s ease; }
+.ad-section h4 { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+.capability-list { list-style: none; }
+.capability-list li {
+  font-size: 12.5px; color: var(--muted);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--bg);
+  display: flex; align-items: flex-start; gap: 8px;
+  line-height: 1.4;
+}
+.capability-list li:last-child { border-bottom: none; }
+.capability-list li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+.sample-box {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.6;
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+}
+.capability-matrix {
+  background: var(--card);
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.capability-matrix h3 {
+  font-size: 14px; font-weight: 700; color: var(--primary);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.cm-table { width: 100%; border-collapse: collapse; }
+.cm-table th {
+  background: var(--bg);
+  font-size: 11px; font-weight: 700; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--muted);
+  padding: 10px 16px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.cm-table td {
+  font-size: 12.5px; color: var(--text);
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--bg);
+}
+.cm-table tr:last-child td { border-bottom: none; }
+.cm-table tr:hover td { background: var(--bg); }
+.dot { width: 8px; height: 8px; border-radius: 99px; display: inline-block; }
+.dot.yes { background: var(--green); }
+.dot.no  { background: var(--border); }
+.dot.warn { background: var(--amber); }
+
+/* Orchestration */
+.orch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.orch-card {
+  background: var(--card);
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  overflow: hidden;
+}
+.orch-hdr {
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.orch-hdr .o-icon { font-size: 16px; }
+.orch-hdr h4 { font-size: 13px; font-weight: 700; color: var(--primary); }
+.orch-hdr .o-badge {
+  margin-left: auto;
+  font-size: 9px; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px;
+}
+.orch-body { padding: 14px 16px; }
+.event-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--bg);
+  font-size: 12px;
+}
+.event-row:last-child { border-bottom: none; }
+.event-row .trigger {
+  background: var(--primary);
+  color: rgba(255,255,255,.85);
+  font-size: 10px; font-weight: 600;
+  padding: 3px 8px; border-radius: 6px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.event-row .handler { color: var(--teal-lt); font-weight: 600; }
+.event-row .desc { color: var(--muted); }
+
+/* Phases */
+.phases {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.phase-chip {
+  background: var(--card);
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  padding: 10px 14px;
+  flex: 1; min-width: 160px;
+}
+.phase-chip .ph-num { font-size: 10px; font-weight: 800; color: var(--accent); letter-spacing: .5px; margin-bottom: 4px; }
+.phase-chip .ph-agents { font-size: 12px; font-weight: 600; color: var(--primary); }
+
+/* ============================================================
+   SHARED
+   ============================================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .3; }
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 99px;
+  background: var(--green);
+  display: inline-block;
+  animation: pulse-dot 1.8s infinite;
+}
+.tag-green  { background: rgba(22,163,74,.12);  color: var(--green);  }
+.tag-amber  { background: rgba(217,119,6,.12);  color: var(--amber);  }
+.tag-blue   { background: rgba(37,99,235,.12);  color: var(--blue);   }
+.tag-purple { background: rgba(124,58,237,.12); color: var(--purple); }
+.tag-red    { background: rgba(220,38,38,.12);  color: var(--red);    }
+.tag-teal   { background: rgba(42,140,158,.12); color: var(--teal-lt);}
+.tag-accent { background: rgba(255,107,53,.15); color: var(--accent); }
+.bg-teal    { background: var(--primary); }
+.bg-blue    { background: var(--blue); }
+.bg-purple  { background: var(--purple); }
+.bg-green   { background: var(--green); }
+.bg-accent  { background: var(--accent); }
+.bg-amber   { background: var(--amber); }
+.divider { border: none; border-top: 2px solid var(--bg); margin: 24px 0; }
+.footnote {
+  text-align: center; font-size: 11px; color: var(--border);
+  padding: 20px 0 8px;
+  letter-spacing: .3px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .pillars { grid-template-columns: 1fr; }
+  .flow-diagram { grid-template-columns: 1fr; }
+  .flow-arrow { transform: rotate(90deg); }
+  .norm-domains { grid-template-columns: 1fr 1fr; }
+  .kg-layers { grid-template-columns: 1fr 1fr; }
+  .agents-grid { grid-template-columns: repeat(3, 1fr); }
+  .agent-detail.visible { grid-template-columns: 1fr; }
+  .kg-analytics { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ Topbar ══ -->
+<div class="topbar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
+    </svg>
+  </div>
+  <h1>WrenchIQ<span>.ai</span></h1>
+  <div class="badge">Intelligence Platform</div>
+  <div class="hint">Click any element to explore &nbsp;·&nbsp; Predii, Inc. Confidential</div>
+</div>
+
+<!-- ══ Tab Nav ══ -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('overview')">
+    <span class="tab-icon">◈</span> Overview
+  </button>
+  <button class="tab-btn" onclick="switchTab('norm')">
+    <span class="tab-icon">⬡</span> I. Normalization
+  </button>
+  <button class="tab-btn" onclick="switchTab('kg')">
+    <span class="tab-icon">◉</span> II. Knowledge Graph
+  </button>
+  <button class="tab-btn" onclick="switchTab('agents')">
+    <span class="tab-icon">◎</span> III. LLM Agents
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     OVERVIEW PANEL
+══════════════════════════════════════════ -->
+<div class="main">
+<div id="panel-overview" class="panel active">
+
+  <div class="overview-intro">
+    <h2>The <span>Intelligence / Context Layer</span> for AI Applications</h2>
+    <p>Three tightly coupled capability pillars transform a legacy shop management system from a passive data recorder into an active intelligence system — normalizing messy automotive data, organizing it into a live knowledge graph, and deploying purpose-built AI agents across the repair lifecycle.</p>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kv">&gt;92%</div>
+      <div class="kl">Normalization accuracy &amp; recall across parts, complaints, DTCs, labor ops, and VINs</div>
+    </div>
+    <div class="kpi-card" style="border-left-color:var(--blue)">
+      <div class="kv" style="color:var(--blue)">Agentic API</div>
+      <div class="kl">Fully API-driven, agentic architecture — every capability exposed as a composable service</div>
+    </div>
+    <div class="kpi-card" style="border-left-color:var(--purple)">
+      <div class="kv" style="color:var(--purple)">Modular</div>
+      <div class="kl">Independently deployable pillars — normalization, graph, and agents scale and version separately</div>
+    </div>
+    <div class="kpi-card" style="border-left-color:var(--green)">
+      <div class="kv" style="color:var(--green)">~10%</div>
+      <div class="kl">AI infra cost vs full-cloud LLM — hybrid orchestration routes to smaller hosted models + frontier LLM only when needed</div>
+    </div>
+  </div>
+
+  <!-- Data flow -->
+  <div class="flow-diagram">
+    <div class="flow-box" onclick="switchTab('norm')">
+      <div class="fb-icon" style="background:rgba(255,107,53,.12)">📥</div>
+      <div class="fb-badge tag-amber">INGESTION</div>
+      <h3>Raw DMS/SMS Data</h3>
+      <p>Free-text parts, complaints, labor ops, technician notes, DTC codes, VINs from any source</p>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" onclick="switchTab('norm')">
+      <div class="fb-icon" style="background:rgba(37,99,235,.12)">⬡</div>
+      <div class="fb-badge tag-blue">PILLAR I</div>
+      <h3>Predii Normalization</h3>
+      <p>NLP pipeline maps raw input to canonical PCdb, YMME, labor guide, and DTC standards</p>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" onclick="switchTab('kg')">
+      <div class="fb-icon" style="background:rgba(124,58,237,.12)">◉</div>
+      <div class="fb-badge tag-purple">PILLAR II</div>
+      <h3>Knowledge Graph</h3>
+      <p>Neo4j property graph with 4 layers — Operational, Historical, Predictive, Embedding</p>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" onclick="switchTab('agents')">
+      <div class="fb-icon" style="background:rgba(22,163,74,.12)">◎</div>
+      <div class="fb-badge tag-green">PILLAR III</div>
+      <h3>LLM Agents</h3>
+      <p>10 purpose-built agents automate, advise, and act across every stage of the repair order</p>
+    </div>
+  </div>
+
+  <!-- Three pillars -->
+  <div class="pillars">
+    <div class="pillar-card" onclick="switchTab('norm')">
+      <div class="pillar-hdr" style="background:var(--blue)">
+        <div class="p-icon">⬡</div>
+        <div>
+          <h3>Predii Normalization</h3>
+          <div style="font-size:11px;opacity:.7">6 Domain Pipelines</div>
+        </div>
+        <div class="p-num">I</div>
+      </div>
+      <div class="pillar-body">
+        <ul>
+          <li>Parts: NPT → PT → PTN (PCdb standard)</li>
+          <li>Complaints: symptom extraction + severity scoring</li>
+          <li>DTC codes: structured enrichment + TSB linking</li>
+          <li>Labor ops: shop text → LaborGuide codes</li>
+          <li>VIN/YMME: canonical vehicle record + labor multiplier</li>
+          <li>Technician notes: finding extraction + inspection items</li>
+        </ul>
+      </div>
+      <div class="pillar-foot">
+        <span class="live-dot"></span>
+        <span style="font-size:11px;color:var(--muted);margin-left:6px">2M+ parts corpus</span>
+        <button class="goto-btn">Explore → </button>
+      </div>
+    </div>
+
+    <div class="pillar-card" onclick="switchTab('kg')">
+      <div class="pillar-hdr" style="background:var(--purple)">
+        <div class="p-icon">◉</div>
+        <div>
+          <h3>Predii Knowledge Graph</h3>
+          <div style="font-size:11px;opacity:.7">Neo4j · pgvector · MongoDB · Redis</div>
+        </div>
+        <div class="p-num">II</div>
+      </div>
+      <div class="pillar-body">
+        <ul>
+          <li>Layer 1: Operational — live RO, DVI, appointments</li>
+          <li>Layer 2: Historical — patterns, technician performance</li>
+          <li>Layer 3: Predictive — ML-derived nodes + confidence</li>
+          <li>Layer 4: Embedding — 1536-dim vectors for RAG</li>
+          <li>Multi-tenant scoped by ShopLocation</li>
+          <li>Immutable event log for full audit trail</li>
+        </ul>
+      </div>
+      <div class="pillar-foot">
+        <span class="live-dot"></span>
+        <span style="font-size:11px;color:var(--muted);margin-left:6px">4-hr Redis hot cache</span>
+        <button class="goto-btn">Explore → </button>
+      </div>
+    </div>
+
+    <div class="pillar-card" onclick="switchTab('agents')">
+      <div class="pillar-hdr" style="background:var(--green)">
+        <div class="p-icon">◎</div>
+        <div>
+          <h3>LLM-Powered Agents</h3>
+          <div style="font-size:11px;opacity:.7">Claude Sonnet · Opus · Anthropic SDK</div>
+        </div>
+        <div class="p-num">III</div>
+      </div>
+      <div class="pillar-body">
+        <ul>
+          <li>Service Advisor — context-aware RO assistant</li>
+          <li>Diagnostic 3C — complaint → cause → correction</li>
+          <li>Parts Intelligence — margin + rebate + fitment</li>
+          <li>Customer Communication — SMS/email drafts</li>
+          <li>Quality Control — comeback risk before close</li>
+          <li>+5 more agents (Tech Assignment, Predictive…)</li>
+        </ul>
+      </div>
+      <div class="pillar-foot">
+        <span class="live-dot"></span>
+        <span style="font-size:11px;color:var(--muted);margin-left:6px">~5,100 token context</span>
+        <button class="goto-btn">Explore → </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">PREDII CONFIDENTIAL &nbsp;·&nbsp; WrenchIQ.ai Intelligence Platform Architecture v1.2 &nbsp;·&nbsp; 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     NORMALIZATION PANEL
+══════════════════════════════════════════ -->
+<div id="panel-norm" class="panel">
+  <div class="section-hdr">
+    <div class="icon-box bg-blue" style="color:#fff;font-size:20px">⬡</div>
+    <div>
+      <h2>Predii Normalization</h2>
+      <p>Converting raw, inconsistent automotive data into structured canonical representations aligned to industry standards</p>
+    </div>
+  </div>
+
+  <!-- Master pipeline -->
+  <div class="norm-pipeline">
+    <h3>⬡ Universal Normalization Pipeline</h3>
+    <div class="pipeline-steps">
+      <div class="ps" onclick="activateStep(this, 0)">
+        <div class="ps-n">Input</div>
+        <div class="ps-t">Raw DMS/SMS Text</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="ps" onclick="activateStep(this, 1)">
+        <div class="ps-n">Step 1</div>
+        <div class="ps-t">Entity Detection</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="ps" onclick="activateStep(this, 2)">
+        <div class="ps-n">Step 2</div>
+        <div class="ps-t">Classification</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="ps" onclick="activateStep(this, 3)">
+        <div class="ps-n">Step 3</div>
+        <div class="ps-t">Disambiguation</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="ps" onclick="activateStep(this, 4)">
+        <div class="ps-n">Step 4</div>
+        <div class="ps-t">Canonical Mapping</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="ps active" onclick="activateStep(this, 5)">
+        <div class="ps-n">Output</div>
+        <div class="ps-t">Graph Node</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 domain cards -->
+  <div class="norm-domains">
+
+    <div class="nd-card" id="nd-parts" onclick="selectDomain('parts')">
+      <div class="nd-hdr">
+        <div class="nd-icon">🔩</div>
+        <h4>Parts Normalization</h4>
+        <div class="nd-tag tag-blue">NPT → PTN</div>
+      </div>
+      <div class="nd-body">
+        <p>Resolves every part description — regardless of who typed it — to its canonical PCdb PartTerminologyName, linking supplier SKUs and OEM codes.</p>
+        <div class="nd-chain">
+          <div class="node">Raw text</div>
+          <div class="arrow">→</div>
+          <div class="node">NPT</div>
+          <div class="arrow">→</div>
+          <div class="node">PT</div>
+          <div class="arrow">→</div>
+          <div class="node accent">PTN (PCdb)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nd-card" id="nd-complaint" onclick="selectDomain('complaint')">
+      <div class="nd-hdr">
+        <div class="nd-icon">💬</div>
+        <h4>Complaint Normalization</h4>
+        <div class="nd-tag tag-amber">NLP → Structured</div>
+      </div>
+      <div class="nd-body">
+        <p>Extracts symptom tokens, affected systems, severity (SAFETY/SOON/MONITOR), and DTC hints from free-text customer complaints.</p>
+        <div class="nd-chain">
+          <div class="node">Raw complaint</div>
+          <div class="arrow">→</div>
+          <div class="node">Symptom tokens</div>
+          <div class="arrow">→</div>
+          <div class="node accent">Structured JSON</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nd-card" id="nd-dtc" onclick="selectDomain('dtc')">
+      <div class="nd-hdr">
+        <div class="nd-icon">🔎</div>
+        <h4>DTC Normalization</h4>
+        <div class="nd-tag tag-red">Scan → Enriched</div>
+      </div>
+      <div class="nd-body">
+        <p>Maps raw scan tool codes (P0301, C0035, U0073) to structured DTC nodes enriched with common causes, linked TSBs, and avg labor cost.</p>
+        <div class="nd-chain">
+          <div class="node">DTC code</div>
+          <div class="arrow">→</div>
+          <div class="node">Cause candidates</div>
+          <div class="arrow">→</div>
+          <div class="node accent">RepairJob template</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nd-card" id="nd-labor" onclick="selectDomain('labor')">
+      <div class="nd-hdr">
+        <div class="nd-icon">⏱</div>
+        <h4>Labor Op Normalization</h4>
+        <div class="nd-tag tag-green">Text → LaborGuide</div>
+      </div>
+      <div class="nd-body">
+        <p>Converts shop-specific labor descriptions to standard LaborGuide codes (Mitchell1 / ALLDATA) with flat-rate hours adjusted for vehicle type.</p>
+        <div class="nd-chain">
+          <div class="node">Shop text</div>
+          <div class="arrow">→</div>
+          <div class="node">Category + Op</div>
+          <div class="arrow">→</div>
+          <div class="node accent">Flat-rate hours</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nd-card" id="nd-vin" onclick="selectDomain('vin')">
+      <div class="nd-hdr">
+        <div class="nd-icon">🚗</div>
+        <h4>VIN / YMME Normalization</h4>
+        <div class="nd-tag tag-purple">VIN → YMME Record</div>
+      </div>
+      <div class="nd-body">
+        <p>Decodes VIN to canonical YMME + Predii enrichment: labor multiplier, parts availability score, vehicle origin, avg RO value.</p>
+        <div class="nd-chain">
+          <div class="node">17-char VIN</div>
+          <div class="arrow">→</div>
+          <div class="node">NHTSA decode</div>
+          <div class="arrow">→</div>
+          <div class="node accent">Enriched YMME</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nd-card" id="nd-tech" onclick="selectDomain('tech')">
+      <div class="nd-hdr">
+        <div class="nd-icon">🔧</div>
+        <h4>Tech Note Normalization</h4>
+        <div class="nd-tag tag-teal">Notes → Findings</div>
+      </div>
+      <div class="nd-body">
+        <p>Parses post-repair technician notes to extract completed work, deferred findings, and monitor items — each stored as InspectionItem nodes in the graph.</p>
+        <div class="nd-chain">
+          <div class="node">Free-text note</div>
+          <div class="arrow">→</div>
+          <div class="node">Extracted findings</div>
+          <div class="arrow">→</div>
+          <div class="node accent">InspectionItem nodes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Domain detail (revealed on click) -->
+  <div class="nd-detail" id="nd-detail-parts">
+    <h4>🔩 Parts Normalization — Detail</h4>
+    <div class="metric-row">
+      <div class="nd-metric"><div class="mv">&gt;92%</div><div class="ml">Auto-resolution rate</div></div>
+      <div class="nd-metric"><div class="mv">&gt;97%</div><div class="ml">PTN precision</div></div>
+      <div class="nd-metric"><div class="mv">&gt;88%</div><div class="ml">Novel NPT recall</div></div>
+      <div class="nd-metric"><div class="mv">&lt;120ms</div><div class="ml">Avg latency/part</div></div>
+    </div>
+    <ul class="step-list">
+      <li><div class="sn">1</div><div><strong>Tokenization:</strong> Lowercase, strip punctuation, expand abbreviations (brk→brake, fr→front, alt→alternator)</div></li>
+      <li><div class="sn">2</div><div><strong>NER:</strong> Fine-tuned model on 2M+ automotive part descriptions identifies part tokens vs noise</div></li>
+      <li><div class="sn">3</div><div><strong>Category Classification:</strong> Multi-label prediction (Brakes / Filters / Electrical / Engine / Suspension / HVAC)</div></li>
+      <li><div class="sn">4</div><div><strong>PTN Candidate Ranking:</strong> Vector search retrieves top-5 PCdb candidates; scored by semantic similarity + vehicle fitment</div></li>
+      <li><div class="sn">5</div><div><strong>Disambiguation:</strong> &gt;0.92 confidence = auto-accept · 0.70–0.92 = advisor one-click · &lt;0.70 = human review queue</div></li>
+      <li><div class="sn">6</div><div><strong>Alias Registration:</strong> Accepted mapping stored as PartAlias node — future occurrences auto-resolve without ML inference</div></li>
+    </ul>
+  </div>
+
+  <div class="nd-detail" id="nd-detail-complaint">
+    <h4>💬 Complaint Normalization — Detail</h4>
+    <div class="metric-row">
+      <div class="nd-metric"><div class="mv">4</div><div class="ml">Severity levels (SAFETY/SOON/MONITOR/MAINT)</div></div>
+      <div class="nd-metric"><div class="mv">12+</div><div class="ml">Vehicle systems classified</div></div>
+      <div class="nd-metric"><div class="mv">Graph</div><div class="ml">Lookup on same YMME for cause candidates</div></div>
+    </div>
+    <ul class="step-list">
+      <li><div class="sn">1</div><div><strong>Symptom Extraction:</strong> NLP extracts symptom tokens from raw complaint narrative</div></li>
+      <li><div class="sn">2</div><div><strong>System Classification:</strong> Affected system predicted (Suspension / Engine / Brakes / Electrical / HVAC…)</div></li>
+      <li><div class="sn">3</div><div><strong>Severity Scoring:</strong> Urgency classified as SAFETY, SOON, MONITOR, or MAINTENANCE</div></li>
+      <li><div class="sn">4</div><div><strong>DTC Hint Detection:</strong> Possible DTC family detected from symptoms (P0xxx, C0xxx, B0xxx, U0xxx)</div></li>
+      <li><div class="sn">5</div><div><strong>Graph Lookup:</strong> Ranked cause candidates returned from similar complaints on same YMME in historical graph</div></li>
+    </ul>
+  </div>
+
+  <div class="nd-detail" id="nd-detail-dtc">
+    <h4>🔎 DTC Normalization — Detail</h4>
+    <div class="metric-row">
+      <div class="nd-metric"><div class="mv">P/C/B/U</div><div class="ml">All OBD-II code families supported</div></div>
+      <div class="nd-metric"><div class="mv">TSBs</div><div class="ml">Auto-linked at DVI scan time</div></div>
+      <div class="nd-metric"><div class="mv">Pre-fill</div><div class="ml">RepairJob template auto-generated</div></div>
+    </div>
+    <ul class="step-list">
+      <li><div class="sn">1</div><div><strong>DTC Node Created:</strong> Each scanned code becomes a structured graph node with system, category, and description</div></li>
+      <li><div class="sn">2</div><div><strong>Common Causes Surfaced:</strong> Ranked hypotheses shown to technician with frequency scores from historical repairs</div></li>
+      <li><div class="sn">3</div><div><strong>TSB Matching:</strong> Related TSBs automatically fetched and displayed for the vehicle YMME</div></li>
+      <li><div class="sn">4</div><div><strong>RepairJob Template:</strong> Complaint field, cause candidates, and suggested parts list pre-populated</div></li>
+    </ul>
+  </div>
+
+  <div class="nd-detail" id="nd-detail-labor">
+    <h4>⏱ Labor Op Normalization — Detail</h4>
+    <div class="metric-row">
+      <div class="nd-metric"><div class="mv">Mitchell1</div><div class="ml">LaborGuide integration</div></div>
+      <div class="nd-metric"><div class="mv">ALLDATA</div><div class="ml">LaborGuide integration</div></div>
+      <div class="nd-metric"><div class="mv">1.0–1.3×</div><div class="ml">Vehicle complexity multiplier</div></div>
+    </div>
+    <ul class="step-list">
+      <li><div class="sn">1</div><div><strong>Shop text parsed:</strong> e.g. "R&R front brakes both sides"</div></li>
+      <li><div class="sn">2</div><div><strong>Normalized:</strong> Category=BRAKES, Sub=DISC_BRAKE, Position=FRONT, Operation=REPLACE</div></li>
+      <li><div class="sn">3</div><div><strong>LaborGuide code:</strong> BRK-DISC-FRONT-RR (Mitchell1) / 04000 (ALLDATA)</div></li>
+      <li><div class="sn">4</div><div><strong>Flat-rate hours:</strong> Adjusted for vehicle (German luxury = 1.15–1.30× domestic)</div></li>
+    </ul>
+  </div>
+
+  <div class="nd-detail" id="nd-detail-vin">
+    <h4>🚗 VIN / YMME Normalization — Detail</h4>
+    <div class="metric-row">
+      <div class="nd-metric"><div class="mv">NHTSA</div><div class="ml">VIN decode source</div></div>
+      <div class="nd-metric"><div class="mv">1.0–1.3×</div><div class="ml">Labor multiplier range</div></div>
+      <div class="nd-metric"><div class="mv">4 Origins</div><div class="ml">JAPANESE / GERMAN / DOMESTIC_US / OTHER</div></div>
+    </div>
+    <ul class="step-list">
+      <li><div class="sn">1</div><div><strong>VIN decoded:</strong> Year, make, model, trim, engine, fuel type, drive type, transmission</div></li>
+      <li><div class="sn">2</div><div><strong>Predii enrichment:</strong> Vehicle origin classification (JAPANESE / GERMAN / DOMESTIC_US / OTHER)</div></li>
+      <li><div class="sn">3</div><div><strong>LaborMultiplier:</strong> Complexity factor applied to all flat-rate estimates for this vehicle</div></li>
+      <li><div class="sn">4</div><div><strong>Graph node created:</strong> Vehicle node with partsAvailability, avgRoValue, and OMS schedule attached</div></li>
+    </ul>
+  </div>
+
+  <div class="nd-detail" id="nd-detail-tech">
+    <h4>🔧 Technician Note Normalization — Detail</h4>
+    <div class="metric-row">
+      <div class="nd-metric"><div class="mv">3 Types</div><div class="ml">Completed / Monitor / Finding</div></div>
+      <div class="nd-metric"><div class="mv">Auto</div><div class="ml">InspectionItem nodes created</div></div>
+      <div class="nd-metric"><div class="mv">PTN-linked</div><div class="ml">Every finding ties to canonical part term</div></div>
+    </div>
+    <ul class="step-list">
+      <li><div class="sn">1</div><div><strong>NLP parse:</strong> Free-text note split into distinct repair actions</div></li>
+      <li><div class="sn">2</div><div><strong>Completed work:</strong> PTN + position extracted for each completed repair</div></li>
+      <li><div class="sn">3</div><div><strong>Deferred findings:</strong> "30% life" → InspectionItem status=MONITOR with percentage remaining</div></li>
+      <li><div class="sn">4</div><div><strong>Fluid findings:</strong> "ATF level low topped off" → PTN-ATF node + finding record</div></li>
+      <li><div class="sn">5</div><div><strong>All findings linked back:</strong> Every InspectionItem connected to the source RepairOrder</div></li>
+    </ul>
+  </div>
+
+  <div class="footnote">PREDII CONFIDENTIAL &nbsp;·&nbsp; Part I: Normalization</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     KNOWLEDGE GRAPH PANEL
+══════════════════════════════════════════ -->
+<div id="panel-kg" class="panel">
+  <div class="section-hdr">
+    <div class="icon-box bg-purple" style="color:#fff;font-size:20px">◉</div>
+    <div>
+      <h2>Predii Knowledge Graph (PKG)</h2>
+      <p>A property graph connecting every entity in the repair lifecycle with typed, weighted edges — enabling pattern detection, prediction, and semantic search</p>
+    </div>
+  </div>
+
+  <div class="kg-header-card">
+    <div class="kg-intro">
+      <h3>Graph Infrastructure</h3>
+      <p>The PKG is the persistent intelligence store for WrenchIQ.ai. Every normalized entity lands in the graph. Every agent reads from it. Every outcome writes back to it — creating a continuous improvement loop.</p>
+      <div class="kg-stack-chips">
+        <div class="kg-chip accent">Neo4j AuraDB</div>
+        <div class="kg-chip">pgvector / Weaviate</div>
+        <div class="kg-chip">MongoDB Event Store</div>
+        <div class="kg-chip">Redis 4hr Cache</div>
+        <div class="kg-chip">Cypher + RAG</div>
+      </div>
+    </div>
+    <div style="text-align:center;flex-shrink:0">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="65" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
+        <circle cx="70" cy="70" r="45" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
+        <!-- center node -->
+        <circle cx="70" cy="70" r="14" fill="#FF6B35"/>
+        <text x="70" y="74" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">RO</text>
+        <!-- outer nodes -->
+        <circle cx="70" cy="18" r="10" fill="rgba(255,255,255,.15)"/>
+        <text x="70" y="22" text-anchor="middle" fill="#fff" font-size="7">Vehicle</text>
+        <circle cx="118" cy="44" r="10" fill="rgba(255,255,255,.15)"/>
+        <text x="118" y="48" text-anchor="middle" fill="#fff" font-size="7">Customer</text>
+        <circle cx="118" cy="96" r="10" fill="rgba(255,255,255,.15)"/>
+        <text x="118" y="100" text-anchor="middle" fill="#fff" font-size="7">Parts</text>
+        <circle cx="70" cy="122" r="10" fill="rgba(255,255,255,.15)"/>
+        <text x="70" y="126" text-anchor="middle" fill="#fff" font-size="7">Tech</text>
+        <circle cx="22" cy="96" r="10" fill="rgba(255,255,255,.15)"/>
+        <text x="22" y="100" text-anchor="middle" fill="#fff" font-size="7">TSB</text>
+        <circle cx="22" cy="44" r="10" fill="rgba(255,255,255,.15)"/>
+        <text x="22" y="48" text-anchor="middle" fill="#fff" font-size="7">Labor</text>
+        <!-- edges -->
+        <line x1="70" y1="56" x2="70" y2="28" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+        <line x1="82" y1="62" x2="109" y2="50" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+        <line x1="82" y1="78" x2="109" y2="90" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+        <line x1="70" y1="84" x2="70" y2="112" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+        <line x1="58" y1="78" x2="31" y2="90" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+        <line x1="58" y1="62" x2="31" y2="50" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 4 Layers -->
+  <div style="margin-bottom:8px">
+    <div class="section-hdr" style="margin-bottom:12px">
+      <h2 style="font-size:16px">Graph Layers</h2>
+    </div>
+  </div>
+  <div class="kg-layers">
+    <div class="layer-card" id="layer-1" onclick="selectLayer(1)">
+      <div class="layer-hdr" style="background:var(--blue)">
+        <div class="l-num">1</div>
+        <h4>Operational</h4>
+      </div>
+      <div class="layer-body">
+        Real-time data from active repair orders, appointments, DVI sessions, and customer interactions. Updated continuously.
+        <ul>
+          <li>Active RO status tracking</li>
+          <li>Live bay assignments</li>
+          <li>DVI session state</li>
+          <li>Open TSB matching at intake</li>
+        </ul>
+      </div>
+    </div>
+    <div class="layer-card" id="layer-2" onclick="selectLayer(2)">
+      <div class="layer-hdr" style="background:var(--teal-mid)">
+        <div class="l-num">2</div>
+        <h4>Historical</h4>
+      </div>
+      <div class="layer-body">
+        All closed ROs, 3C data, parts used, technician performance, and customer interaction history. Training ground for patterns.
+        <ul>
+          <li>YMME complaint frequency</li>
+          <li>Technician efficiency history</li>
+          <li>Part comeback rates</li>
+          <li>Customer visit cadence</li>
+        </ul>
+      </div>
+    </div>
+    <div class="layer-card" id="layer-3" onclick="selectLayer(3)">
+      <div class="layer-hdr" style="background:var(--purple)">
+        <div class="l-num">3</div>
+        <h4>Predictive</h4>
+      </div>
+      <div class="layer-body">
+        ML-derived nodes tagged <code>source: PREDICTED</code> with confidence scores. Built over Layers 1 &amp; 2.
+        <ul>
+          <li>PredictedNextService</li>
+          <li>ChurnRiskScore</li>
+          <li>PartFailurePattern</li>
+          <li>RevenueOpportunity</li>
+        </ul>
+      </div>
+    </div>
+    <div class="layer-card" id="layer-4" onclick="selectLayer(4)">
+      <div class="layer-hdr" style="background:var(--accent)">
+        <div class="l-num">4</div>
+        <h4>Embedding</h4>
+      </div>
+      <div class="layer-body">
+        Every node with a summary field is embedded to 1536-dim vectors in pgvector. Enables semantic search + RAG retrieval.
+        <ul>
+          <li>RepairJob 3C narratives</li>
+          <li>TSB titles + descriptions</li>
+          <li>Customer concerns</li>
+          <li>OEM maintenance schedules</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Graph analytics -->
+  <div class="section-hdr" style="margin-bottom:16px">
+    <h2 style="font-size:16px">Graph Analytics</h2>
+  </div>
+  <div class="kg-analytics">
+    <div class="kga-card">
+      <h4>🔍 Repair Pattern Detection</h4>
+      <p>Identifies PTNs with abnormal comeback rates on a specific YMME — enabling proactive brand switches and quality alerts before patterns become costly.</p>
+      <div class="formula-box">MATCH (p:Part)-[:NORMALIZED_TO]->(ptn:PartTerm)
+WITH ptn, count(p) as totalInstalls,
+     sum(CASE WHEN ro.isComeback THEN 1 ELSE 0 END) as comebacks
+WHERE totalInstalls > 10
+RETURN ptn.name, comebacks * 1.0 / totalInstalls AS comebackRate
+ORDER BY comebackRate DESC</div>
+    </div>
+    <div class="kga-card">
+      <h4>👨‍🔧 Technician Expertise Scoring</h4>
+      <p>Two-axis scoring: volume (RO count on origin/category) and quality (efficiency + ELR vs shop benchmark). Powers the Tech Assignment Agent.</p>
+      <div class="formula-box">ExpertiseScore(tech, origin) =
+  0.4 × normalize(roCount)
++ 0.4 × normalize(avgEfficiency)
++ 0.2 × normalize(avgELR / shopBenchmarkELR)
+
+Range: 0.0 – 10.0</div>
+    </div>
+    <div class="kga-card">
+      <h4>💰 Customer Lifetime Value Projection</h4>
+      <p>Forward-looking CLV combines average ticket, visit frequency, and ML-predicted retention to prioritize outreach and trust investment.</p>
+      <div class="formula-box">CLV = avgTicketSize
+    × expectedVisitsPerYear
+    × predictedRetentionYears
+
+predictedRetentionYears = f(
+  visitFrequency, lastVisitGap,
+  trustScore, vehicleAge
+)</div>
+    </div>
+    <div class="kga-card">
+      <h4>🏷 Supplier Rebate Intelligence</h4>
+      <p>Real-time gap tracking to rebate thresholds. Surfaces exact dollar amount needed and projects close date at current purchase pace.</p>
+      <div class="formula-box">MATCH (shop)-[:HAS_REBATE]->(rbt:Rebate {status:'IN_PROGRESS'})
+RETURN rbt.name,
+  rbt.thresholdAmount - rbt.currentSpend AS gap,
+  rbt.rebatePercent,
+  rbt.estimatedEarning,
+  rbt.periodEnd
+ORDER BY gap ASC</div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Multi-tenancy -->
+  <div class="kga-card" style="margin-bottom:24px">
+    <h4>🏢 Multi-Tenancy &amp; Event Sourcing</h4>
+    <p style="margin-bottom:10px">Each <strong>ShopLocation</strong> owns its subgraph. Cross-shop aggregate queries run on anonymized rollup nodes — no shop's data is ever exposed to another. Every write to the graph is an immutable event appended to the MongoDB event log, enabling full audit trail, warranty dispute replay, and ML training data generation.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="formula-box" style="flex:1;min-width:200px">SL-001 → owns → RepairOrder, Customer,
+             Vehicle, Technician
+
+SL-AGGREGATE → anonymized rollup →
+  PartFailurePattern, LaborBenchmark</div>
+      <div class="formula-box" style="flex:1;min-width:200px">EventLog record:
+  eventType: REPAIR_JOB_CREATED
+  aggregateId: RO-20240315-00142
+  actorId: USER-advisor-007
+  shopId: SL-001
+  at: 2024-03-15T08:30:00Z</div>
+    </div>
+  </div>
+
+  <div class="footnote">PREDII CONFIDENTIAL &nbsp;·&nbsp; Part II: Knowledge Graph</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     AGENTS PANEL
+══════════════════════════════════════════ -->
+<div id="panel-agents" class="panel">
+  <div class="section-hdr">
+    <div class="icon-box bg-green" style="color:#fff;font-size:20px">◎</div>
+    <div>
+      <h2>LLM-Powered Agents</h2>
+      <p>10 purpose-built AI agents operating on PKG context to automate, advise, and act across the repair order lifecycle</p>
+    </div>
+  </div>
+
+  <!-- Agent runtime flow -->
+  <div class="agent-runtime">
+    <h3>Shared Agent Runtime</h3>
+    <div class="runtime-flow">
+      <div class="rf-box"><div class="rf-icon">⚡</div><div class="rf-t">User Action / System Event</div></div>
+      <div class="rf-arrow">→</div>
+      <div class="rf-box"><div class="rf-icon">◉</div><div class="rf-t">Context Assembler ← PKG</div></div>
+      <div class="rf-arrow">→</div>
+      <div class="rf-box"><div class="rf-icon">📝</div><div class="rf-t">Prompt Builder + Persona</div></div>
+      <div class="rf-arrow">→</div>
+      <div class="rf-box" style="border-color:rgba(255,107,53,.5)"><div class="rf-icon">🤖</div><div class="rf-t">Claude Sonnet / Opus</div></div>
+      <div class="rf-arrow">→</div>
+      <div class="rf-box"><div class="rf-icon">⚙️</div><div class="rf-t">Output Parser → JSON</div></div>
+      <div class="rf-arrow">→</div>
+      <div class="rf-box"><div class="rf-icon">✅</div><div class="rf-t">Action Executor</div></div>
+      <div class="rf-arrow">→</div>
+      <div class="rf-box"><div class="rf-icon">🔄</div><div class="rf-t">Feedback Loop → Graph</div></div>
+    </div>
+  </div>
+
+  <!-- 10 Agent cards -->
+  <div class="agents-grid">
+    <div class="agent-card" id="ac-1" onclick="selectAgent(1)">
+      <div class="a-num">8.1</div>
+      <div class="a-icon">💼</div>
+      <h4>Service Advisor</h4>
+      <div class="a-tag tag-blue">Primary Assistant</div>
+      <div class="a-role">Context-aware RO assistant for advisors across the full repair lifecycle</div>
+    </div>
+    <div class="agent-card" id="ac-2" onclick="selectAgent(2)">
+      <div class="a-num">8.2</div>
+      <div class="a-icon">🔬</div>
+      <h4>Diagnostic 3C Composer</h4>
+      <div class="a-tag tag-purple">AI Writing</div>
+      <div class="a-role">Generates professional complaint → cause → correction narratives</div>
+    </div>
+    <div class="agent-card" id="ac-3" onclick="selectAgent(3)">
+      <div class="a-num">8.3</div>
+      <div class="a-icon">🔩</div>
+      <h4>Parts Intelligence</h4>
+      <div class="a-tag tag-green">Margin + Rebate</div>
+      <div class="a-role">Optimizes parts selection for margin, fitment, rebates, and spiff eligibility</div>
+    </div>
+    <div class="agent-card" id="ac-4" onclick="selectAgent(4)">
+      <div class="a-num">8.4</div>
+      <div class="a-icon">📱</div>
+      <h4>Customer Communication</h4>
+      <div class="a-tag tag-amber">SMS + Email</div>
+      <div class="a-role">Drafts all customer-facing messages grounded in live RO context</div>
+    </div>
+    <div class="agent-card" id="ac-5" onclick="selectAgent(5)">
+      <div class="a-num">8.5</div>
+      <div class="a-icon">👨‍🔧</div>
+      <h4>Tech Assignment</h4>
+      <div class="a-tag tag-teal">Expertise Routing</div>
+      <div class="a-role">Recommends optimal technician per repair job based on expertise graph</div>
+    </div>
+    <div class="agent-card" id="ac-6" onclick="selectAgent(6)">
+      <div class="a-num">8.6</div>
+      <div class="a-icon">📅</div>
+      <h4>Predictive Maintenance</h4>
+      <div class="a-tag tag-blue">Proactive</div>
+      <div class="a-role">Generates proactive service recommendations for every vehicle in the customer base</div>
+    </div>
+    <div class="agent-card" id="ac-7" onclick="selectAgent(7)">
+      <div class="a-num">8.7</div>
+      <div class="a-icon">📊</div>
+      <h4>Shop Analytics</h4>
+      <div class="a-tag tag-purple">NL → Insights</div>
+      <div class="a-role">Answers natural language questions about shop performance from the aggregate graph</div>
+    </div>
+    <div class="agent-card" id="ac-8" onclick="selectAgent(8)">
+      <div class="a-num">8.8</div>
+      <div class="a-icon">🛡</div>
+      <h4>Quality Control</h4>
+      <div class="a-tag tag-red">Gate Keeper</div>
+      <div class="a-role">Predicts comeback risk before close. Can hold an RO pending review.</div>
+    </div>
+    <div class="agent-card" id="ac-9" onclick="selectAgent(9)">
+      <div class="a-num">8.9</div>
+      <div class="a-icon">📋</div>
+      <h4>Warranty &amp; TSB</h4>
+      <div class="a-tag tag-green">Compliance</div>
+      <div class="a-role">Surfaces TSBs and recalls at intake, documents OEM reimbursement claims</div>
+    </div>
+    <div class="agent-card" id="ac-10" onclick="selectAgent(10)">
+      <div class="a-num">8.10</div>
+      <div class="a-icon">💰</div>
+      <h4>Revenue Intelligence</h4>
+      <div class="a-tag tag-accent">Real-time Alerts</div>
+      <div class="a-role">Surfaces revenue optimization opportunities to owner and advisor in real time</div>
+    </div>
+  </div>
+
+  <!-- Agent detail reveal -->
+  <div class="agent-detail" id="agent-detail">
+    <div class="ad-section" id="ad-left"></div>
+    <div class="ad-section" id="ad-right"></div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Capability matrix -->
+  <div class="capability-matrix">
+    <h3>Agent Capability Matrix</h3>
+    <table class="cm-table">
+      <thead>
+        <tr>
+          <th>Agent</th>
+          <th>Reads Graph</th>
+          <th>Writes Graph</th>
+          <th>Sends Message</th>
+          <th>Can Block Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Service Advisor</td><td><span class="dot yes"></span></td><td><span class="dot no"></span></td><td><span class="dot no"></span></td><td><span class="dot no"></span></td></tr>
+        <tr><td>Diagnostic 3C Composer</td><td><span class="dot yes"></span></td><td><span class="dot warn"></span> drafts</td><td><span class="dot no"></span></td><td><span class="dot no"></span></td></tr>
+        <tr><td>Parts Intelligence</td><td><span class="dot yes"></span></td><td><span class="dot warn"></span> suggestions</td><td><span class="dot no"></span></td><td><span class="dot no"></span></td></tr>
+        <tr><td>Customer Communication</td><td><span class="dot yes"></span></td><td><span class="dot warn"></span> log</td><td><span class="dot yes"></span></td><td><span class="dot no"></span></td></tr>
+        <tr><td>Tech Assignment</td><td><span class="dot yes"></span></td><td><span class="dot warn"></span> recommendation</td><td><span class="dot no"></span></td><td><span class="dot no"></span></td></tr>
+        <tr><td>Predictive Maintenance</td><td><span class="dot yes"></span></td><td><span class="dot yes"></span> predicted nodes</td><td><span class="dot warn"></span> via scheduler</td><td><span class="dot no"></span></td></tr>
+        <tr><td>Shop Analytics</td><td><span class="dot yes"></span></td><td><span class="dot no"></span></td><td><span class="dot no"></span></td><td><span class="dot no"></span></td></tr>
+        <tr><td>Quality Control</td><td><span class="dot yes"></span></td><td><span class="dot yes"></span> flags</td><td><span class="dot no"></span></td><td><span class="dot yes" style="background:var(--red)"></span> holds RO</td></tr>
+        <tr><td>Warranty / TSB</td><td><span class="dot yes"></span></td><td><span class="dot yes"></span> TSB links</td><td><span class="dot no"></span></td><td><span class="dot no"></span></td></tr>
+        <tr><td>Revenue Intelligence</td><td><span class="dot yes"></span></td><td><span class="dot no"></span></td><td><span class="dot yes"></span> owner alerts</td><td><span class="dot no"></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Orchestration -->
+  <div class="section-hdr" style="margin-bottom:16px"><h2 style="font-size:16px">Agent Orchestration</h2></div>
+  <div class="orch-grid" style="margin-bottom:24px">
+    <div class="orch-card">
+      <div class="orch-hdr">
+        <div class="o-icon">⚡</div>
+        <h4>Reactive Mode — Event-Driven</h4>
+        <div class="o-badge tag-blue">Real-time</div>
+      </div>
+      <div class="orch-body">
+        <div class="event-row"><div class="trigger">RO created</div><div><span class="handler">Predictive Maintenance</span> — check OMS + open TSBs</div></div>
+        <div class="event-row"><div class="trigger">DVI complete</div><div><span class="handler">Parts Intelligence</span> — pre-fill parts list from findings</div></div>
+        <div class="event-row"><div class="trigger">Estimate sent</div><div><span class="handler">Customer Communication</span> — draft approval SMS</div></div>
+        <div class="event-row"><div class="trigger">RO closing</div><div><span class="handler">Quality Control</span> — comeback risk check, hold if HIGH</div></div>
+        <div class="event-row"><div class="trigger">RO closed</div><div><span class="handler">Revenue Intelligence</span> — update shop metrics + rebate progress</div></div>
+      </div>
+    </div>
+    <div class="orch-card">
+      <div class="orch-hdr">
+        <div class="o-icon">🕐</div>
+        <h4>Proactive Mode — Scheduled Scans</h4>
+        <div class="o-badge tag-green">Scheduled</div>
+      </div>
+      <div class="orch-body">
+        <div class="event-row"><div class="trigger">Daily 7am</div><div><span class="handler">Predictive Maintenance</span> — next 30-day vehicle outreach list</div></div>
+        <div class="event-row"><div class="trigger">Daily 8am</div><div><span class="handler">Revenue Intelligence</span> — rebate gap alert if &lt;$500 to threshold</div></div>
+        <div class="event-row"><div class="trigger">Mon 9am</div><div><span class="handler">Shop Analytics</span> — weekly performance summary to owner</div></div>
+        <div class="event-row"><div class="trigger">Monthly 1st</div><div><span class="handler">Churn Detection</span> — customers 45+ days overdue for outreach</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Implementation phases -->
+  <div class="section-hdr" style="margin-bottom:12px"><h2 style="font-size:16px">Implementation Phases</h2></div>
+  <div class="phases">
+    <div class="phase-chip">
+      <div class="ph-num">PHASE 1</div>
+      <div class="ph-agents">Service Advisor + Diagnostic 3C</div>
+    </div>
+    <div class="phase-chip">
+      <div class="ph-num">PHASE 2</div>
+      <div class="ph-agents">Parts Intelligence + Customer Communication</div>
+    </div>
+    <div class="phase-chip">
+      <div class="ph-num">PHASE 3</div>
+      <div class="ph-agents">Tech Assignment + Quality Control</div>
+    </div>
+    <div class="phase-chip">
+      <div class="ph-num">PHASE 4</div>
+      <div class="ph-agents">Predictive Maintenance + Revenue Intelligence</div>
+    </div>
+    <div class="phase-chip">
+      <div class="ph-num">PHASE 5</div>
+      <div class="ph-agents">Shop Analytics + Warranty/TSB</div>
+    </div>
+    <div class="phase-chip">
+      <div class="ph-num">PHASE 6</div>
+      <div class="ph-agents">Multi-agent orchestration + proactive scheduled runs</div>
+    </div>
+  </div>
+
+  <div class="footnote">PREDII CONFIDENTIAL &nbsp;·&nbsp; Part III: LLM-Powered Agents</div>
+</div>
+</div><!-- /main -->
+
+<script>
+// ── Tab switching ──
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  const tabs = { overview: 0, norm: 1, kg: 2, agents: 3 };
+  document.querySelectorAll('.tab-btn')[tabs[name]].classList.add('active');
+  // close any open details
+  document.querySelectorAll('.nd-detail').forEach(d => d.classList.remove('visible'));
+  document.querySelectorAll('.nd-card').forEach(c => c.classList.remove('selected'));
+  const ad = document.getElementById('agent-detail');
+  if (ad) { ad.classList.remove('visible'); }
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
+}
+
+// ── Pipeline step highlight ──
+function activateStep(el, idx) {
+  document.querySelectorAll('.ps').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── Normalization domain select ──
+const domainMap = {
+  parts: 'parts', complaint: 'complaint', dtc: 'dtc',
+  labor: 'labor', vin: 'vin', tech: 'tech'
+};
+
+function selectDomain(key) {
+  // Hide all details
+  document.querySelectorAll('.nd-detail').forEach(d => d.classList.remove('visible'));
+  document.querySelectorAll('.nd-card').forEach(c => c.classList.remove('selected'));
+
+  const card = document.getElementById('nd-' + key);
+  const detail = document.getElementById('nd-detail-' + key);
+
+  if (!card || !detail) return;
+
+  card.classList.add('selected');
+  detail.classList.add('visible');
+  // scroll into view smoothly
+  setTimeout(() => detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+}
+
+// ── Layer select ──
+function selectLayer(n) {
+  document.querySelectorAll('.layer-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('layer-' + n).classList.add('selected');
+}
+
+// ── Agent data ──
+const agentData = {
+  1: {
+    title: '💼 Service Advisor Agent',
+    tag: 'Primary AI assistant for service advisors',
+    trigger: 'Any advisor interaction with an active RO',
+    capabilities: [
+      'Draft complaint, cause, correction fields from natural language',
+      'Explain repair line items to customers in plain English',
+      'Generate customer-facing repair authorization messages',
+      'Answer advisor questions about the RO using live graph context',
+      'Flag risks: open TSBs, tech mismatch, rebate nudge',
+    ],
+    sample: `Advisor: "Customer says car vibrates at highway speed"
+
+Agent: "Based on 34 similar complaints on 2021 Honda Civic:
+  1. Tire balance (62%) — check all 4 tires first
+  2. Wheel bearing front (18%) — increases with speed
+  3. CV axle imbalance (11%)
+
+Open TSB 21-089: driveshaft vibration on 2020-2022 Civics.
+Want me to add a balance + bearing check line to the DVI?"`
+  },
+  2: {
+    title: '🔬 Diagnostic 3C Composer',
+    tag: 'AI-assisted Complaint → Cause → Correction narrative generation',
+    trigger: 'Technician submits DVI findings or VIN + raw complaint',
+    capabilities: [
+      'Accept symptom description and produce professional 3C draft',
+      'Pull ranked causes from historical graph matches on same YMME',
+      'Suggest correction language matching shop\'s learned style',
+      'Attach relevant TSBs and labor codes to the correction',
+      'Return confidence score per output field',
+    ],
+    sample: `Input: "makes grinding noise when I brake slow"
+      + Tech note: "front pads metal on metal, rotors scored"
+
+Output:
+  Complaint: Customer states vehicle produces a grinding
+    noise when braking at low speeds.
+  Cause: Front disc brake pad sets worn to metal-to-metal.
+    Rotors show scoring. Minimum thickness not met.
+  Correction: Replaced front pads (both sides) with ATE
+    OE pads. Resurfaced rotors within spec. Road tested —
+    grinding resolved. Brake pedal firm.
+  Confidence: 0.96`
+  },
+  3: {
+    title: '🔩 Parts Intelligence Agent',
+    tag: 'Optimize part selection for margin, fitment, rebates, and spiff',
+    trigger: 'DVI complete — parts list pre-fill + advisor part selection flow',
+    capabilities: [
+      'Compare same PTN across all connected suppliers in real time',
+      'Recommend brand/supplier based on rebate gap and spiff programs',
+      'Flag fitment issues before ordering',
+      'Explain margin impact of each supplier option',
+      'Alert when a part is on a pattern-failure watch list',
+    ],
+    sample: `PTN: Disc Brake Pad Set — 2021 Honda Civic EX
+
+Worldpac — ATE OE    $48.50 → $89.99  46% margin
+★ RECOMMENDED: $5 tech spiff + $3.20 toward Q1 rebate
+
+O'Reilly — Raybestos  $39.20 → $74.99  48% margin
+No active spiff or rebate program.
+
+⚠ PATTERN ALERT: Raybestos PTN-5678 on 2019-2021
+  Civic has 5.1% comeback rate (last 90 days).
+  Consider ATE or OEM.`
+  },
+  4: {
+    title: '📱 Customer Communication Agent',
+    tag: 'Drafts all customer-facing communications using RO context',
+    trigger: 'RO stage change, estimate ready, post-service close, scheduled reminder',
+    capabilities: [
+      'Status update SMS when RO stage changes',
+      'Estimate authorization message — itemized, plain English',
+      'Vehicle health summary after DVI completion',
+      'Post-service follow-up + review request generation',
+      'Decline follow-up: 30-day reminder on declined DVI items',
+    ],
+    sample: `Hi Sarah! Your 2021 Honda Civic is ready for approval.
+
+We found:
+✓ Front brakes: worn to metal — IMMEDIATE ($312)
+• Air filter: dirty — recommend ($38)
+• Rear brakes: 30% life — monitor
+
+Total if all approved: $350
+Reply YES to approve all, or call (650) 555-0100.
+— Peninsula Precision Auto`
+  },
+  5: {
+    title: '👨‍🔧 Technician Assignment Agent',
+    tag: 'Recommend optimal technician per repair job via expertise graph',
+    trigger: 'New RepairJob created — advisor opens assignment panel',
+    capabilities: [
+      'Match repair job to technicians by vehicle origin expertise',
+      'Factor in labor category expertise (Electrical, Brakes, Engine…)',
+      'Account for current bay load and availability',
+      'Return ranked list of top-3 candidates with scores',
+      'Explain recommendation rationale to advisor',
+    ],
+    sample: `Recommended for: 2019 BMW 5-Series — Electrical (3.5 hr)
+
+1. James Park   German: 8.9/10  Electrical: 7.8/10
+   [Bay 3, 0.5hr remaining] ← BEST MATCH
+
+2. Marco Rivera  German: 6.2/10  Electrical: 8.1/10
+   [Bay 1, available now]
+
+3. Diana Chen   German: 7.1/10  Electrical: 6.4/10
+   [Bay 5, frees up in 2hr]`
+  },
+  6: {
+    title: '📅 Predictive Maintenance Agent',
+    tag: 'Proactive service recommendations for every vehicle in the customer base',
+    trigger: 'Daily 7am scheduled scan + RO creation event',
+    capabilities: [
+      'Combine OEM maintenance schedule + last service + avg monthly mileage',
+      'Surface declined DVI items as timed follow-ups',
+      'Alert on open TSBs and recalls not yet notified',
+      'Calculate total opportunity value per vehicle',
+      'Set recommended outreach date and draft contact message',
+    ],
+    sample: `Customer: Sarah Chen — 2021 Honda Civic
+
+Priority 1: 60,000-mile service due  → $535
+Priority 2: Rear pads 30% — likely due next visit → $220
+Priority 3: Honda TSB 21-064 fuel pump recall
+            (customer not yet notified) → $0
+
+Total Opportunity: $755
+Suggested outreach: 2024-08-15`
+  },
+  7: {
+    title: '📊 Shop Analytics Agent',
+    tag: 'Answer natural language questions about shop performance from the graph',
+    trigger: 'Owner or manager asks a question in natural language',
+    capabilities: [
+      'Revenue trends and technician performance analysis',
+      'Rebate pipeline status and gap-to-threshold calculation',
+      'Customer retention and churn analysis',
+      'YMME mix and parts margin analysis',
+      'TSB capture rate and quality metrics',
+    ],
+    sample: `Owner: "Which technician leads this month?"
+
+Agent: "James Park at 1.24× flat-rate efficiency,
+$8,420 labor revenue on 43 hours. Particularly
+strong on German vehicles (1.31×).
+
+Marco Rivera close at 1.18×, but slower on the
+two BMW jobs this week — worth monitoring."
+
+Owner: "How close to the Worldpac Q1 rebate?"
+
+Agent: "$180 from the $5,000 threshold. At current
+pace (~$820/week), you'll cross it in 5 days.
+Tip: 3 pending ROs this week use brake parts —
+switching to Worldpac gets you there today."`
+  },
+  8: {
+    title: '🛡 Quality Control Agent',
+    tag: 'Predict comeback risk before RO close. Can hold an RO pending review.',
+    trigger: 'Advisor initiates RO close — agent runs automatically',
+    capabilities: [
+      'Score comeback risk across 6 weighted factors',
+      'Detect parts on pattern-failure watch list',
+      'Check technician efficiency below threshold for category',
+      'Verify DTC codes are fully addressed in 3C narrative',
+      'Block close (HOLD_FOR_REVIEW) if risk score exceeds threshold',
+    ],
+    sample: `HIGH RISK EXAMPLE:
+  comebackRiskScore: 0.68 — HOLD_FOR_REVIEW
+
+Flags:
+⚠ PTN-oxygen-sensor: 6.2% comeback rate —
+  verify brand is OEM or Denso, not aftermarket
+⚠ Correction mentions no test drive —
+  require confirmation before close
+⚠ DTC P0136 documented but correction does not
+  mention clearing codes after repair`
+  },
+  9: {
+    title: '📋 Warranty & TSB Agent',
+    tag: 'Surface TSBs, track OEM reimbursement eligibility, document claims',
+    trigger: 'RO intake (VIN scan) + RO close (warranty claim review)',
+    capabilities: [
+      'Match vehicle VIN to open TSBs and recalls at intake',
+      'Track OEM warranty reimbursement eligibility per repair job',
+      'Generate TSB claim documentation for OEM submission',
+      'Alert when warranty claim deadline is approaching',
+      'Ensure every eligible TSB is captured on the RO',
+    ],
+    sample: `At intake for VIN 1HGBH41JXMN109186:
+
+2 open TSBs found:
+• TSB 21-089: Driveshaft vibration (2020-2022 Civic)
+  → Added to DVI checklist
+• TSB 21-064: Fuel pump recall — eligible for
+  OEM-funded replacement
+  → Warranty claim template generated
+  → Deadline: 2025-06-30 (409 days remaining)`
+  },
+  10: {
+    title: '💰 Revenue Intelligence Agent',
+    tag: 'Surfaces revenue optimization opportunities in real time',
+    trigger: 'RO closed + daily scheduled scan + rebate threshold events',
+    capabilities: [
+      'Track declined DVI items with total opportunity value',
+      'Alert on rebate gaps and specific ROs that close the gap',
+      'Surface OMS upsell opportunities for vehicles in shop today',
+      'Flag technician ELR below shop target with drill-down',
+      'Alert on unclaimed tech spiff programs before expiry',
+    ],
+    sample: `Revenue Alerts — Today:
+
+• 22 open declined items = $8,400 opportunity
+  (6 are 60+ days old — prioritize outreach)
+• Switch 3 pending ROs to Worldpac →
+  +$180 toward Q1 rebate (close today)
+• 4 vehicles in shop overdue for 30k/60k service
+  — mention at write-up
+• ATE spiff expires in 4 days.
+  6 eligible brake jobs this week = $30 unclaimed`
+  },
+};
+
+function selectAgent(n) {
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('ac-' + n).classList.add('selected');
+
+  const data = agentData[n];
+  const detail = document.getElementById('agent-detail');
+  const adL = document.getElementById('ad-left');
+  const adR = document.getElementById('ad-right');
+
+  adL.innerHTML = `
+    <h4>◎ ${data.title}</h4>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">${data.tag}</p>
+    <h4 style="margin-bottom:8px">⚡ Trigger</h4>
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;padding:8px 12px;background:var(--bg);border-radius:8px">${data.trigger}</p>
+    <h4 style="margin-bottom:8px">✅ Capabilities</h4>
+    <ul class="capability-list">${data.capabilities.map(c => `<li>${c}</li>`).join('')}</ul>
+  `;
+
+  adR.innerHTML = `
+    <h4 style="margin-bottom:10px">📋 Sample Output</h4>
+    <div class="sample-box">${data.sample}</div>
+  `;
+
+  detail.classList.add('visible');
+  setTimeout(() => detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+}
+</script>
+</body>
+</html>

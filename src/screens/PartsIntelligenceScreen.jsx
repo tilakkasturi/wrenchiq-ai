@@ -6,6 +6,7 @@ import {
   ArrowDown, ArrowUp, Award,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import AIInsightsStrip from "../components/AIInsightsStrip";
 
 // ─── Parts Catalog Data ───────────────────────────────────────
 const PARTS_ORDERS = [
@@ -395,6 +396,13 @@ export default function PartsIntelligenceScreen() {
   });
 
   return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <AIInsightsStrip insights={[
+        { icon: "🚚", text: "BMW X3 brake rotors — 1 day late from Worldpac, James Park's job blocked", action: "Track Order", value: "Parts late", color: "#EF4444" },
+        { icon: "💰", text: "WrenchIQ pick: Akebono cat converter via Worldpac saves $44 vs O'Reilly, same-day ship", action: "Order Now", value: "Save $44", color: "#22C55E" },
+        { icon: "📦", text: "3 inventory items below minimum — cabin filter, brake pads, wiper blades (0 in stock)", action: "Auto-Reorder", value: "3 low", color: "#F59E0B" },
+        { icon: "📈", text: "Parts margin 48.2% — below 53% target. Switch 2 jobs to Worldpac to recover $420", action: "Optimize", value: "-$420 margin", color: "#7C3AED" },
+      ]} />
     <div style={{ padding: "24px 28px" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
@@ -541,6 +549,7 @@ export default function PartsIntelligenceScreen() {
           </table>
         </div>
       )}
+    </div>
     </div>
   );
 }

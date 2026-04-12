@@ -25,12 +25,13 @@
 | Module 2 — Command Center | DashboardScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Module 3 — Multi-Location Hub | MultiLocationScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Module 4 — Trust Engine / Health Report | TrustEngineScreen.jsx, HealthReportScreen.jsx | ✅ | ✅ | ✅ | ❌ |
-| Module 5 — 3C Story Writer | NewROWizard.jsx (Intelligent RO) | ✅ | ✅ | ✅ | ❌ |
+| Module 5 — 3C Story Writer (AM + OEM) | AM3CStoryWriterScreen.jsx (AM), ROStoryWriterScreen.jsx (OEM) | ✅ | ✅ | ✅ | ✅ |
 | Module 6 — AI Repair Advisor | WrenchIQAgent.jsx, AICopilotScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Module 7 — Technician Mobile | TechMobileScreen.jsx, DVIScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Module 8 — Smart Scheduling | SmartSchedulingScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Module 9 — Parts Intelligence | PartsIntelligenceScreen.jsx | ✅ | ✅ | ✅ | ❌ |
-| Integration Ecosystem (all 18 APIs) | IntegrationsScreen.jsx | ✅ | ❌ | ❌ | ❌ |
+| Module 10 — Checkout & Payment | CheckoutModal.jsx (AM) | ✅ | ✅ | ✅ | ❌ |
+| Integration Ecosystem (all APIs) | IntegrationsScreen.jsx | ✅ | ❌ | ❌ | ❌ |
 | Customer Portal | CustomerPortalScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Analytics | AnalyticsScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Settings | SettingsScreen.jsx | ✅ | ✅ | ✅ | ❌ |
@@ -91,10 +92,11 @@ The Predii AI engine and core data services are the shared foundation beneath bo
 ┌─────────────────────────────┐   ┌─────────────────────────────┐
 │       WrenchIQ-OEM          │   │       WrenchIQ-AM            │
 │                             │   │                              │
-│  3C Story Writer            │   │  Full SMS (all modules)      │
-│  DMS Push (CDK, R&R, etc.)  │   │  Social Inbox                │
-│  OEM Warranty Portals        │   │  Multi-Location Hub          │
-│  Recall / Campaign Mgmt      │   │  Trust Engine                │
+│  3C Story Writer            │   │  3C Story Writer             │
+│  DMS Push (CDK, R&R, etc.)  │   │  Full SMS (all modules)      │
+│  OEM Warranty Portals        │   │  Social Inbox                │
+│  Recall / Campaign Mgmt      │   │  Multi-Location Hub          │
+│  PrediiPowered™ branding    │   │  Trust Engine                │
 └──────────────┬──────────────┘   └──────────────┬───────────────┘
                │                                  │
                └──────────────┬───────────────────┘
@@ -117,14 +119,25 @@ The Predii AI engine and core data services are the shared foundation beneath bo
 
 ### 3C Story Writer — Current Status
 
-- **WrenchIQ-OEM:** 3C Story Writer is the primary product. Autonomous agentic flow, VIN-driven OEM spec, shorthand input expansion, DMS push, OEM warranty portal submission.
-- **WrenchIQ-AM:** 3C Story Writer is on the roadmap (Phase 5). Narrative style shifts to customer-facing clarity and independent shop workflows. Same module, different `edition` parameter.
+- **WrenchIQ-OEM:** 3C Story Writer is the primary product. Autonomous agentic flow, VIN-driven OEM spec, shorthand input expansion, DMS push, OEM warranty portal submission. Accessible as a standalone UI at `/oem.html`.
+- **WrenchIQ-AM:** 3C Story Writer delivered March 2026. Customer-pay focused narrative builder. Complaint / Cause / Correction generation from active RO queue, live NHTSA recall check, narrative quality score, service lines with labor/parts totals. Available three ways: standalone at `/am-3c.html`, in the admin shell nav, and in the Service Advisor persona nav.
+
+### PrediiPowered™ White-Label Branding (OEM)
+
+WrenchIQ-OEM supports white-label deployment under the **PrediiPowered™** mark. A toggle in OEM Admin Settings controls which wordmark is shown across all OEM persona shells (top bar + footer). Default is WrenchIQ.ai branding; switching to PrediiPowered™ replaces the WrenchIQ wordmark with the Predii 3-curve logo + "PrediiPowered™" throughout. This enables:
+
+- OEM brand partners who want Predii's intelligence without the WrenchIQ consumer brand
+- White-label reseller agreements where a dealer group or OEM wants their own brand forward
+- Staged rollouts where WrenchIQ branding is introduced gradually
+
+The toggle state is managed at the app shell level (`WrenchIQOEMApp.jsx`) and propagates to `PersonaShell` and all child screens via props.
 
 ### Module Registry
 
 | Module | WrenchIQ-OEM | WrenchIQ-AM | Notes |
 |--------|:------------:|:-----------:|-------|
-| 3C Story Writer | ✅ Current | ⏳ Phase 5 | Same module — `edition` controls OEM vs. AM narrative style |
+| 3C Story Writer | ✅ Current | ✅ Current | Same module — `edition` controls OEM (warranty/DMS) vs. AM (customer-pay) narrative style. Both have standalone UIs. OEM at `/oem.html`; AM at `/am-3c.html`. |
+| Checkout & Payment (Square + Xero) | ❌ | ✅ Current | AM only — Square pay link, in-shop terminal, Xero GL auto-post. AE-890. |
 | VIN / Vehicle Intelligence | ✅ | ✅ | Shared foundational service |
 | DMS Push (CDK, R&R, Dealertrack) | ✅ | ❌ | OEM only — AM shops don't use enterprise DMS |
 | OEM Warranty Portal Submission | ✅ | ❌ | OEM only |
@@ -144,7 +157,7 @@ All API endpoints expose identical signatures, authentication schemes, and respo
 
 | API Layer | WrenchIQ-AM | WrenchIQ-OEM | Notes |
 |-----------|:-----------:|:------------:|-------|
-| 3C Story Writer (`/v1/ro/generate-narrative`) | ⏳ Roadmap | ✅ | `edition` param controls narrative style and compliance rules |
+| 3C Story Writer (`/v1/ro/generate-narrative`) | ✅ Current | ✅ | `edition` param controls narrative style and compliance rules |
 | Vehicle / VIN lookup | ✅ | ✅ | Shared NHTSA + ALLDATA integration |
 | TSB / Recall match | ✅ | ✅ | Shared — OEM edition returns OEM-specific bulletin data |
 | DTC Enrichment | ✅ | ✅ | Shared knowledge graph — OEM overlay applied when `edition=OEM` |
@@ -212,7 +225,9 @@ All API endpoints expose identical signatures, authentication schemes, and respo
 | Feature | WrenchIQ-AM | WrenchIQ-OEM | Tekmetric | Shop-Ware | Mitchell1 | Dealership DMS |
 |---------|------------|--------------|-----------|-----------|-----------|----------------|
 | AI-native (not bolt-on) | ✅ Core | ✅ Core | ❌ None | ❌ None | ⚠️ Add-on | ⚠️ Add-on |
-| RO Story Writer | ⏳ Roadmap | ✅ Current | ❌ | ❌ | ❌ | ⚠️ Manual |
+| RO Story Writer (3C Narrative) | ✅ Current | ✅ Current | ❌ | ❌ | ❌ | ⚠️ Manual |
+| Square checkout + customer pay link | ✅ Current | ❌ | ⚠️ Basic | ⚠️ Basic | ❌ | ✅ |
+| Xero GL auto-post | ✅ Current | ❌ | ⚠️ Add-on | ❌ | ⚠️ Add-on | ✅ |
 | Social media lead capture | ✅ Built-in | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Customer trust score | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Multi-location intelligence | ✅ Native | ✅ Native | ⚠️ Basic | ❌ | ⚠️ Basic | ✅ |
@@ -540,20 +555,29 @@ Once the technician approves the narrative:
 
 ---
 
-**Current: OEM Dealerships**
+**Current: WrenchIQ-OEM (Dealerships)**
 - Autonomous 3C narrative agent: voice input + DTC stream + parts scan → complete draft in < 5 seconds
 - OEM compliance engine: Toyota, Ford, GM, Honda, Stellantis warranty format requirements
 - Direct push to DMS: CDK Global, Reynolds & Reynolds, Dealertrack, Tekion
 - Warranty approval predictor: Predii Score flags rejection risk before submission
 - Labor op code auto-mapping: agent matches narrative to correct OEM op codes without advisor input
 - Advisor write-up time reduced from ~8 minutes to under 60 seconds per RO
+- Standalone UI at `/oem.html` — no full SMS modules required
 
-**Roadmap: Aftermarket Independent Shops**
-- Narrative style optimized for customer-facing clarity and insurance documentation
-- Integration with independent SMS platforms (Tekmetric, Shop-Ware, Mitchell1, AutoLeap)
+**Current: WrenchIQ-AM (Aftermarket Independent Shops)** — *Delivered March 2026*
+- Customer-pay focused 3C narrative builder embedded in the Service Advisor workflow
+- Complaint / Cause / Correction generation from active RO queue data (VIN, services, DTCs)
+- Live NHTSA recall check per VIN — surface open campaigns at time of write-up
+- Narrative quality score (Factuality, Completeness, Compliance, Customer Clarity)
+- Service line totals (labor + parts) auto-populated from RO data
+- Available three ways: standalone at `/am-3c.html`, in Admin shell nav, and in Service Advisor persona nav
+- Spec: [WrenchIQ-AM 3C Story Writer](../docs/wrenchiq-oem-3c-demo-data.md)
+
+**Roadmap: AM 3C Story Writer — Phase 2**
+- Integration with independent SMS platforms (Tekmetric, Shop-Ware, Mitchell1, AutoLeap) for direct RO push
 - Labor guide integration: Mitchell ProDemand + ALLDATA labor times embedded in narrative
 - Insurer-compliant format for collision and extended warranty claims
-- Customer trust version: plain-language "what we found and why it matters" story auto-generated from the same tech input
+- Customer trust version: plain-language "what we found and why it matters" auto-generated from same tech input
 
 ---
 
@@ -612,6 +636,67 @@ Real-time parts procurement AI:
 
 ---
 
+### Module 10: Checkout & Payment Processing (WrenchIQ-AM)
+**"Vehicle ready. Pay in one tap — from anywhere."**
+
+When a repair order reaches "Ready" status, the advisor initiates checkout directly from the Kanban board or Advisor home screen. The customer receives a secure pay link by SMS/email, opens it on their phone, and pays with Apple Pay, Google Pay, or card — no app install required. Every payment auto-posts to Xero as a general ledger entry.
+
+**Spec:** [WrenchIQ — Checkout & Payment Processing Specification](../docs/wrenchiq-checkout-payment-specification.md)
+
+#### Advisor Checkout Flow
+
+1. RO reaches "Ready" status on Kanban → orange **Finalize & Checkout** button appears on card (RepairOrderScreen and AdvisorHomeScreen "Ready for Pickup" column)
+2. Checkout modal opens with full invoice: line items (labor, parts), discount field, shop supplies, 9.25% tax, total due
+3. Advisor selects payment method:
+   - **Send Pay Link** — pre-filled customer phone/email, one click sends secure SMS link
+   - **Charge Card** — Square Terminal at counter or tap-to-pay on advisor's phone (Square Reader SDK)
+   - **Cash** — amount tendered input, change calculated automatically
+
+#### Customer Pay Page (`/pay/:token`)
+
+- Accessible via signed, time-limited URL (72-hour expiry, single-use on capture)
+- No login, no app install required — works in any mobile browser
+- Shows: shop logo, vehicle (year/make/model + VIN last 6), collapsible service summary, totals, **[Pay $XXX.XX]** button
+- Apple Pay and Google Pay auto-detected on supported devices
+- On payment: full-screen confirmation, receipt sent via SMS + email
+- Advisor notified in-app; RO status updates to **Closed / Paid**
+
+#### Payment Processor: Square
+
+| Method | How |
+|--------|-----|
+| Card (swipe/chip/tap) | Square Terminal (counter, wired or Bluetooth) |
+| Tap-to-pay | Square Reader SDK on advisor's iOS/Android |
+| Apple Pay / Google Pay | Square Web Payments SDK — auto-detected on customer pay page |
+| Card on file | Square Customers API — returning customers |
+| Cash | Recorded locally; no Square call |
+
+Square APIs: Payments API, Web Payments SDK, Terminal API, Reader SDK, Orders API, Customers API, Refunds API, Webhooks.
+
+#### General Ledger: Xero
+
+Every payment auto-posts to Xero. Invoice lifecycle mirrors RO status:
+
+| RO Status | Xero Invoice Status |
+|-----------|---------------------|
+| RO opened | Draft invoice created |
+| Estimate approved | SUBMITTED |
+| Work complete / checkout opened | AUTHORISED |
+| Payment captured | PAID |
+| Refund issued | Credit note created |
+| RO voided | Invoice voided |
+
+Chart-of-accounts mapping: Labor → 4000, Parts → 4010, Sublet → 4020, Shop Supplies → 4030, Sales Tax → 2200. All codes configurable per shop in Settings → Accounting.
+
+#### Demo State (March 2026)
+
+- Checkout modal fully interactive: invoice table, discount, pay tabs, customer pay page preview
+- Square payment flow simulated (mock): tap "Pay Now" on phone mockup → 1.8s animation → PAID confirmation with Square + Xero badges
+- Xero posting simulated: "Posted — INV-XXXX" badge shown on confirmation
+- Paid badge appears on Kanban card; checkout button replaced by green PAID status
+
+---
+
 ## INTEGRATION ECOSYSTEM
 
 ### Customer Communication
@@ -632,16 +717,18 @@ Real-time parts procurement AI:
 ### Payments
 | Partner | Purpose | Tier |
 |---------|---------|------|
-| Stripe | Card processing, digital estimates | Core |
-| PayRange | Contactless payment in-bay | Core |
+| Square | Card processing, customer pay link, in-bay terminal, tap-to-pay | Core |
+| Square Web Payments SDK | Browser-based card/Apple Pay/Google Pay on customer pay page | Core |
+| Square Terminal API | In-shop counter terminal push payment | Core |
+| Square Reader SDK | Tap-to-pay on advisor's iOS/Android device | Core |
 | DigniFi | Customer financing | Core |
 | Sunbit | BNPL for repairs | Premium |
 
 ### Accounting & Finance
 | Partner | Purpose | Tier |
 |---------|---------|------|
+| Xero | General ledger — invoice lifecycle sync, payment posting, credit notes, chart-of-accounts mapping | Core |
 | QuickBooks Online | Bookkeeping, AP/AR | Core |
-| Xero | Alternative accounting | Core |
 | Gusto | Payroll | Core |
 
 ### Parts & Inventory
@@ -746,7 +833,17 @@ Real-time parts procurement AI:
     ↓
 [Sarah tracks progress in real-time on her phone]
     ↓
-[Work complete] Sarah gets video of completed work + invoice → pays on phone
+[Work complete] RO moves to "Ready" → Advisor clicks [Finalize & Checkout]
+    ↓
+[Checkout modal] Invoice line items confirmed → Advisor clicks [Send Pay Link]
+    ↓
+[Sarah receives SMS] "Your Mercedes C300 is ready. Total: $521.00 — Pay here: [link]"
+    ↓
+[Sarah opens link on iPhone] Sees shop logo, vehicle, service summary, [Pay $521.00] button
+    ↓
+[Sarah taps Pay] → Apple Pay → Payment captured by Square → Xero GL posted
+    ↓
+[Advisor sees in-app toast] "Sarah Chen paid $521.00 — RO-2024-XXXX closed"
     ↓
 [3 days later] WrenchIQ sends: "How's the ride feeling, Sarah? Rate your visit."
     ↓
@@ -807,6 +904,7 @@ Real-time parts procurement AI:
 - **$199/month**
 - Up to 5 users (advisors + techs)
 - Core modules: Command Center, RO Management, DVI, Customer Portal
+- Checkout & Payment: Square pay link + cash (included; Square processing fees apply separately)
 - Social inbox: Instagram + Facebook only
 - 500 customer text messages/month
 - Basic analytics
@@ -816,7 +914,9 @@ Real-time parts procurement AI:
 - Unlimited users
 - All modules including Social Inbox (all channels)
 - WrenchIQ Agent (AI advisor)
+- 3C Story Writer (AM)
 - Parts intelligence (3 vendors)
+- Xero + QuickBooks GL sync
 - 2,000 text messages/month
 - Advanced analytics
 
@@ -852,6 +952,8 @@ Real-time parts procurement AI:
 ---
 
 ## TECHNICAL ARCHITECTURE
+
+> **Interactive Architecture Diagram:** [WrenchIQ-AM System Architecture](../architecture-am.html) — visual 6-layer diagram covering Personas → App Shell → Screen Modules → Integration Services → Third-Party APIs → Predii Core.
 
 ---
 
@@ -990,11 +1092,12 @@ Third-Party Systems          WrenchIQ Integration Layer         Predii APIs
 Twilio (SMS)            ──►  Communications Service        │
 Meta Graph API          ──►  Social Inbox Service           │
 TikTok Business API     ──►  Social Inbox Service           │
-Stripe                  ──►  Payments Service               │
-QuickBooks              ──►  Accounting Sync Service        ├──► Contextual Engine
-NHTSA API               ──►  Vehicle Data Service           │    RO Story Writer
-ALLDATA                 ──►  Vehicle Data Service           │    TSB Match API
-Worldpac / O'Reilly     ──►  Parts Catalog Service          │    Health Prediction
+Square (Payments)       ──►  Checkout & Payments Service    │
+Xero                    ──►  Accounting Sync Service        ├──► Contextual Engine
+QuickBooks              ──►  Accounting Sync Service        │    RO Story Writer
+NHTSA API               ──►  Vehicle Data Service           │    TSB Match API
+ALLDATA                 ──►  Vehicle Data Service           │    Health Prediction
+Worldpac / O'Reilly     ──►  Parts Catalog Service          │
 CDK / R&R / Dealertrack ──►  DMS Push Service (OEM only)   │
 Google Business API     ──►  Reviews + Scheduling Service  │
 ```
@@ -1009,7 +1112,7 @@ Google Business API     ──►  Reviews + Scheduling Service  │
 ### Security & Compliance
 
 - SOC 2 Type II certified (both WrenchIQ and Predii independently)
-- PCI-DSS compliant (payment processing — Stripe handles card data; WrenchIQ never stores raw card numbers)
+- PCI-DSS compliant (payment processing — Square SDK tokenizes card data in-browser; WrenchIQ never handles or stores raw card numbers)
 - CCPA compliant (California customer data — right to deletion flows implemented)
 - End-to-end encryption for customer PII in transit (TLS 1.3) and at rest (AES-256)
 - Role-based access control (RBAC) down to field level — technicians cannot see financial data; customers see only their own records
@@ -1020,20 +1123,25 @@ Google Business API     ──►  Reviews + Scheduling Service  │
 
 ## LAUNCH STRATEGY
 
-### Phase 1 (Q1 2026): Foundation
+### Phase 1 (Q1 2026): Foundation — *Delivered*
 - Core SMS — Aftermarket single location (RO management, DVI, scheduling)
 - RO Story Writer — OEM Dealerships standalone (CDK, Reynolds & Reynolds, Dealertrack integration; no SMS modules)
+- AM 3C Story Writer — customer-pay narrative builder for independent shops (standalone + advisor persona)
 - Social Inbox (Instagram + Facebook)
 - WrenchIQ Agent v1
 - Digital Inspection with video
-- Stripe payment integration
+- **Checkout & Payment Processing** — Square pay link + in-shop terminal + Xero GL sync (AE-890)
+- Persona gateway — all 8 AM + OEM personas routed (Advisor, Tech, Owner, Customer, VP Ops, Fixed Ops Director, OEM Advisor, OEM Tech)
+- PrediiPowered™ white-label branding toggle (OEM)
 
 ### Phase 2 (Q2 2026): Trust Engine
 - Customer-facing app (white-label)
 - Trust Score launch
 - Parts Intelligence (5 vendors)
 - TikTok integration
-- QuickBooks/Xero sync
+- Square live API integration (move from demo to live)
+- Xero live OAuth + real GL posting (move from demo to live)
+- QuickBooks sync
 
 ### Phase 3 (Q3 2026): Multi-Location
 - Enterprise dashboard

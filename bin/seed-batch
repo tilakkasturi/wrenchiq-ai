@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# bin/seed-batch — Seed a batch of 25 customers into wrenchiq.RepairOrder
+#
+# Usage:
+#   bin/seed-batch              # batch 1 (customers 1-25)
+#   bin/seed-batch 2            # batch 2 (customers 26-50)
+#   bin/seed-batch 3            # batch 3 (customers 51-75)
+#   bin/seed-batch 4            # batch 4 (customers 76-100)
+#   bin/seed-batch --reset      # drop collection, re-seed batch 1
+#   bin/seed-batch 2 --reset    # drop collection, seed batch 2
+
+set -euo pipefail
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+cd "$(dirname "$0")/.."
+
+BATCH="${1:-1}"
+EXTRA="${2:-}"
+
+# Allow --reset as first arg too
+if [[ "$BATCH" == "--reset" ]]; then
+  EXTRA="--reset"
+  BATCH="1"
+fi
+
+echo "Seeding batch $BATCH..."
+node scripts/seedRepairOrders.js --batch "$BATCH" $EXTRA

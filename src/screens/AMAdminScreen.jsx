@@ -1,22 +1,444 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Database, Zap, Users, FileText, Settings2,
   Server, GitMerge, ArrowDown, ArrowRight,
   CheckCircle, AlertCircle, Key, Shield, Activity,
-  Cpu, Globe, Lock,
+  Cpu, Globe, Lock, Sparkles, Send, ChevronRight,
+  TrendingUp, Wrench, Package, MapPin, RotateCcw,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import { useEditionName, useBranding } from "../context/BrandingContext";
 import { SHOP, technicians, advisors } from "../data/demoData";
 import IntegrationsScreen from "./IntegrationsScreen";
 
 // ── Tabs ──────────────────────────────────────────────────────
 const TABS = [
+  { id: "insights",     label: "AI Insights",       icon: Sparkles },
   { id: "architecture", label: "Architecture",      icon: GitMerge },
   { id: "api",          label: "API & Integrations", icon: Zap },
   { id: "team",         label: "Team",              icon: Users },
   { id: "audit",        label: "Audit Log",         icon: FileText },
   { id: "system",       label: "System",            icon: Settings2 },
 ];
+
+// ── Advisor question library ───────────────────────────────────
+const INSIGHT_CATEGORIES = [
+  {
+    id: "patterns",
+    label: "Repair Patterns",
+    icon: TrendingUp,
+    color: COLORS.primary,
+    questions: [
+      "What are the most common repairs across all vehicles?",
+      "Which repair jobs have the strongest association rules — what's always done together?",
+      "What is the average mileage when vehicles come in for service?",
+      "Which vehicle clusters have the highest repair volume?",
+    ],
+  },
+  {
+    id: "upsell",
+    label: "Upsell & Bundling",
+    icon: Package,
+    color: COLORS.accent,
+    questions: [
+      "Show me oil change associations — what else gets done at the same visit?",
+      "What parts have the highest affinity — frequently bought together?",
+      "What should I recommend alongside a brake job?",
+      "What are the best bundling opportunities for tire services?",
+    ],
+  },
+  {
+    id: "makes",
+    label: "By Vehicle",
+    icon: Wrench,
+    color: "#8B5CF6",
+    questions: [
+      "What are the top repairs for Toyota vehicles?",
+      "What are the top repairs for Honda vehicles?",
+      "What are the top repairs for Ford vehicles?",
+      "What are common issues with Jeep vehicles in our data?",
+    ],
+  },
+  {
+    id: "shop",
+    label: "Shop Performance",
+    icon: MapPin,
+    color: "#0EA5E9",
+    questions: [
+      "Which shop location has the most repair orders?",
+      "What are the most expensive parts used across all ROs?",
+      "How does repair volume compare across our locations?",
+      "Which locations have the highest average mileage at check-in?",
+    ],
+  },
+];
+
+const API_BASE = import.meta.env.VITE_API_BASE || "";
+
+// ── Answer formatter — renders LLM markdown for advisors ──────
+function FormattedAnswer({ text }) {
+  if (!text) return null;
+  const lines = text.split("\n");
+  const elements = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // H1/H2 headings
+    if (line.startsWith("# ")) {
+      elements.push(
+        <div key={i} style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary, marginTop: elements.length ? 16 : 0, marginBottom: 6 }}>
+          {line.slice(2)}
+        </div>
+      );
+    } else if (line.startsWith("## ") || line.startsWith("### ")) {
+      const headText = line.replace(/^#{2,3}\s+/, "");
+      const isWhy = headText.toLowerCase().includes("why");
+      const isAction = headText.toLowerCase().includes("advisor") || headText.toLowerCase().includes("action");
+      elements.push(
+        <div key={i} style={{
+          display: "flex", alignItems: "center", gap: 7,
+          fontSize: 11, fontWeight: 700,
+          color: isWhy ? "#7C3AED" : isAction ? COLORS.accent : COLORS.textMuted,
+          textTransform: "uppercase", letterSpacing: "0.05em",
+          marginTop: 18, marginBottom: 6,
+          paddingTop: elements.length ? 14 : 0,
+          borderTop: elements.length ? `1px solid ${COLORS.borderLight}` : "none",
+        }}>
+          {isWhy && <span style={{ fontSize: 13 }}>🔍</span>}
+          {isAction && <span style={{ fontSize: 13 }}>✅</span>}
+          {headText}
+        </div>
+      );
+    }
+    // Numbered list
+    else if (/^\d+\.\s/.test(line)) {
+      const num = line.match(/^(\d+)\./)[1];
+      const content = line.replace(/^\d+\.\s+\*?\*?/, "").replace(/\*\*$/, "");
+      elements.push(
+        <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 8 }}>
+          <div style={{ width: 20, height: 20, borderRadius: 6, background: COLORS.primary, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#fff" }}>{num}</span>
+          </div>
+          <div style={{ fontSize: 13, color: COLORS.textPrimary, lineHeight: 1.6, flex: 1 }}>
+            <InlineFormatted text={content} />
+          </div>
+        </div>
+      );
+    }
+    // Bullet list — detect if we're inside a "Why" section for evidence styling
+    else if (line.startsWith("- ") || line.startsWith("* ")) {
+      const content = line.slice(2);
+      // Look back to see if the last heading was "Why"
+      const lastHeadingEl = [...elements].reverse().find(el => el?.props?.style?.textTransform === "uppercase");
+      const inWhy = lastHeadingEl?.props?.children?.some?.(c => typeof c === "string" && c.toLowerCase().includes("why"));
+      const inAction = lastHeadingEl?.props?.children?.some?.(c => typeof c === "string" && (c.toLowerCase().includes("advisor") || c.toLowerCase().includes("action")));
+      elements.push(
+        <div key={i} style={{
+          display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 6,
+          padding: inWhy ? "5px 10px" : inAction ? "5px 10px" : "0",
+          background: inWhy ? "#7C3AED08" : inAction ? `${COLORS.accent}08` : "transparent",
+          borderRadius: inWhy || inAction ? 6 : 0,
+          borderLeft: inWhy ? "2px solid #7C3AED40" : inAction ? `2px solid ${COLORS.accent}40` : "none",
+        }}>
+          <div style={{ width: 5, height: 5, borderRadius: 3, background: inWhy ? "#7C3AED" : inAction ? COLORS.accent : COLORS.primary, flexShrink: 0, marginTop: 7 }} />
+          <div style={{ fontSize: 12, color: inWhy ? "#5B21B6" : COLORS.textSecondary, lineHeight: 1.6, flex: 1 }}>
+            <InlineFormatted text={content} />
+          </div>
+        </div>
+      );
+    }
+    // Follow-up question hint (ends with ?)
+    else if (line.trim().startsWith(">") || (line.trim().endsWith("?") && line.length < 120 && i === lines.length - 1)) {
+      const content = line.replace(/^>\s*/, "");
+      elements.push(
+        <div key={i} style={{ marginTop: 12, padding: "8px 12px", background: `${COLORS.primary}08`, border: `1px solid ${COLORS.primary}20`, borderRadius: 8, fontSize: 12, color: COLORS.primary, fontStyle: "italic" }}>
+          {content}
+        </div>
+      );
+    }
+    // Horizontal rule
+    else if (line.trim() === "---") {
+      elements.push(<div key={i} style={{ height: 1, background: COLORS.borderLight, margin: "12px 0" }} />);
+    }
+    // Empty line — spacer
+    else if (line.trim() === "") {
+      if (elements.length > 0) {
+        elements.push(<div key={i} style={{ height: 4 }} />);
+      }
+    }
+    // Normal paragraph
+    else {
+      elements.push(
+        <div key={i} style={{ fontSize: 13, color: COLORS.textPrimary, lineHeight: 1.7, marginBottom: 4 }}>
+          <InlineFormatted text={line} />
+        </div>
+      );
+    }
+    i++;
+  }
+
+  return <div>{elements}</div>;
+}
+
+// Inline formatting: **bold**, percentages/numbers highlighted
+function InlineFormatted({ text }) {
+  // Split by **bold** patterns and highlight numbers
+  const parts = [];
+  let remaining = text;
+  let key = 0;
+
+  // Process **bold** spans
+  const boldRegex = /\*\*([^*]+)\*\*/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = boldRegex.exec(remaining)) !== null) {
+    // Text before bold
+    if (match.index > lastIndex) {
+      parts.push(<NumHighlight key={key++} text={remaining.slice(lastIndex, match.index)} />);
+    }
+    // Bold content
+    parts.push(
+      <strong key={key++} style={{ color: COLORS.textPrimary, fontWeight: 700 }}>
+        <NumHighlight text={match[1]} />
+      </strong>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < remaining.length) {
+    parts.push(<NumHighlight key={key++} text={remaining.slice(lastIndex)} />);
+  }
+
+  return <>{parts}</>;
+}
+
+// Highlight standalone numbers / percentages with a soft chip
+function NumHighlight({ text }) {
+  const parts = text.split(/(\b\d+(?:\.\d+)?%|\b\d{2,}(?:,\d{3})*\b)/g);
+  return (
+    <>
+      {parts.map((p, i) => {
+        if (/^(\d+(?:\.\d+)?%|\d{2,}(?:,\d{3})*)$/.test(p)) {
+          return (
+            <span key={i} style={{ display: "inline-block", background: `${COLORS.accent}15`, color: COLORS.accent, borderRadius: 4, padding: "0 4px", fontWeight: 700, fontSize: "0.95em" }}>
+              {p}
+            </span>
+          );
+        }
+        return p;
+      })}
+    </>
+  );
+}
+
+// ── AI Insights Tab ───────────────────────────────────────────
+function AIInsightsTab() {
+  const [activeCategory, setActiveCategory] = useState("patterns");
+  const [messages, setMessages]     = useState([]);
+  const [activeQuestion, setActiveQuestion] = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [customInput, setCustomInput] = useState("");
+  const answerRef = useRef(null);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      answerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [messages]);
+
+  const ask = async (question) => {
+    if (loading) return;
+    setActiveQuestion(question);
+    setLoading(true);
+    setMessages([]);
+    setCustomInput("");
+    try {
+      const res = await fetch(`${API_BASE}/api/knowledge-graph/ask`, {
+        method:  "POST",
+        headers: { "content-type": "application/json" },
+        body:    JSON.stringify({ question, history: [] }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `API ${res.status}`);
+      setMessages([{ question, answer: data.answer, data_used: data.data_used || [] }]);
+    } catch (e) {
+      setMessages([{ question, answer: `Error: ${e.message}`, data_used: [] }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cat = INSIGHT_CATEGORIES.find(c => c.id === activeCategory);
+
+  return (
+    <div style={{ display: "flex", gap: 24, maxWidth: 1080, alignItems: "flex-start" }}>
+
+      {/* ── Left: question browser ─────────────────────────────── */}
+      <div style={{ width: 280, flexShrink: 0 }}>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 3 }}>AI Insights</div>
+          <div style={{ fontSize: 12, color: COLORS.textSecondary }}>Questions answered from your live repair order data.</div>
+        </div>
+
+        {/* Category tabs */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 18 }}>
+          {INSIGHT_CATEGORIES.map(c => {
+            const active = activeCategory === c.id;
+            return (
+              <button key={c.id} onClick={() => setActiveCategory(c.id)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 9, width: "100%",
+                  padding: "8px 12px", borderRadius: 8, border: "none", cursor: "pointer",
+                  background: active ? `${c.color}12` : "transparent",
+                  color: active ? c.color : COLORS.textSecondary,
+                  fontSize: 12, fontWeight: active ? 700 : 500, textAlign: "left",
+                  transition: "background 0.12s",
+                }}
+              >
+                <c.icon size={13} />
+                {c.label}
+                {active && <ChevronRight size={12} style={{ marginLeft: "auto" }} />}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Questions for active category */}
+        <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: "0.06em", marginBottom: 8 }}>
+          {cat?.label.toUpperCase()}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {cat?.questions.map((q, i) => {
+            const isActive = activeQuestion === q && messages.length > 0;
+            return (
+              <button key={i} onClick={() => ask(q)}
+                style={{
+                  textAlign: "left", padding: "9px 12px", borderRadius: 8,
+                  border: `1px solid ${isActive ? cat.color : COLORS.border}`,
+                  background: isActive ? `${cat.color}08` : "#fff",
+                  fontSize: 12, color: isActive ? cat.color : COLORS.textSecondary,
+                  cursor: "pointer", lineHeight: 1.5, fontWeight: isActive ? 600 : 400,
+                  transition: "all 0.12s",
+                }}
+              >
+                {q}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom question input */}
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${COLORS.borderLight}` }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: "0.06em", marginBottom: 8 }}>ASK YOUR OWN</div>
+          <div style={{ position: "relative" }}>
+            <textarea
+              value={customInput}
+              onChange={e => setCustomInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (customInput.trim()) ask(customInput.trim()); } }}
+              placeholder="Ask anything about your data…"
+              rows={3}
+              style={{
+                width: "100%", resize: "none", fontSize: 12, padding: "8px 10px",
+                borderRadius: 8, border: `1px solid ${COLORS.border}`, background: "#fff",
+                color: COLORS.textPrimary, fontFamily: "inherit", lineHeight: 1.5,
+                outline: "none", boxSizing: "border-box",
+              }}
+            />
+            <button
+              onClick={() => { if (customInput.trim()) ask(customInput.trim()); }}
+              disabled={!customInput.trim() || loading}
+              style={{
+                position: "absolute", bottom: 7, right: 7, width: 26, height: 26,
+                borderRadius: 6, border: "none", background: customInput.trim() ? COLORS.primary : COLORS.border,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: customInput.trim() ? "pointer" : "default",
+              }}
+            >
+              <Send size={11} color="#fff" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Right: answer panel ────────────────────────────────── */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+
+        {/* Empty state */}
+        {!loading && messages.length === 0 && (
+          <div style={{ background: "#fff", border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 40, textAlign: "center" }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: `${COLORS.primary}10`, border: `1px solid ${COLORS.primary}25`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Sparkles size={22} color={COLORS.primary} />
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 6 }}>Select a question to get started</div>
+            <div style={{ fontSize: 13, color: COLORS.textSecondary, maxWidth: 360, margin: "0 auto", lineHeight: 1.6 }}>
+              Insights are generated from your actual repair orders and cluster patterns — not generic AI responses.
+            </div>
+            <div style={{ marginTop: 20, display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+              {INSIGHT_CATEGORIES.map(c => (
+                <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, background: `${c.color}10`, border: `1px solid ${c.color}25`, fontSize: 11, color: c.color }}>
+                  <c.icon size={10} />
+                  {c.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div style={{ background: "#fff", border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 32 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14 }}>QUESTION</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.textPrimary, marginBottom: 24, lineHeight: 1.5 }}>{activeQuestion}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, color: COLORS.textMuted, fontSize: 13 }}>
+              <div style={{ width: 16, height: 16, border: `2px solid ${COLORS.border}`, borderTopColor: COLORS.primary, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              Querying knowledge graph and generating insight…
+            </div>
+          </div>
+        )}
+
+        {/* Answer */}
+        {!loading && messages.length > 0 && messages.map((msg, i) => (
+          <div key={i} ref={answerRef} style={{ background: "#fff", border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
+
+            {/* Question header */}
+            <div style={{ padding: "16px 22px", background: `${COLORS.primary}06`, borderBottom: `1px solid ${COLORS.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <Sparkles size={12} color={COLORS.primary} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.primary, textTransform: "uppercase", letterSpacing: "0.06em" }}>AI Insight</span>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.textPrimary, lineHeight: 1.5 }}>{msg.question}</div>
+            </div>
+
+            {/* Answer body */}
+            <div style={{ padding: "22px 22px 16px" }}>
+              <FormattedAnswer text={msg.answer} />
+            </div>
+
+            {/* Footer: data sources + re-ask */}
+            <div style={{ padding: "12px 22px", borderTop: `1px solid ${COLORS.borderLight}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <Database size={11} color={COLORS.textMuted} />
+              <span style={{ fontSize: 10, color: COLORS.textMuted }}>Sources:</span>
+              {msg.data_used.map((src, si) => (
+                <span key={si} style={{ fontSize: 10, color: COLORS.textMuted, background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 4, padding: "2px 7px" }}>
+                  {src}
+                </span>
+              ))}
+              <button
+                onClick={() => ask(msg.question)}
+                style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, border: `1px solid ${COLORS.border}`, background: "transparent", fontSize: 11, color: COLORS.textSecondary, cursor: "pointer" }}
+              >
+                <RotateCcw size={10} />
+                Refresh
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Demo audit data ───────────────────────────────────────────
 const AUDIT_ENTRIES = [
@@ -311,6 +733,8 @@ function AuditTab() {
 
 // ── System Tab ────────────────────────────────────────────────
 function SystemTab() {
+  const { brand, setBrand } = useBranding();
+  const isPredii = brand === "PrediiPowered";
   return (
     <div style={{ maxWidth: 700 }}>
       <div style={{ marginBottom: 20 }}>
@@ -319,6 +743,44 @@ function SystemTab() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* Brand */}
+        <Card>
+          <SectionLabel>Branding</SectionLabel>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary, marginBottom: 2 }}>
+                PrediiPowered mode
+              </div>
+              <div style={{ fontSize: 12, color: COLORS.textSecondary }}>
+                {isPredii
+                  ? "Showing Predii branding — logo, wordmark, and footer reflect the Predii identity."
+                  : "Showing WrenchIQ branding. Enable to switch to PrediiPowered identity."}
+              </div>
+            </div>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", flexShrink: 0, marginLeft: 24 }}>
+              <div
+                onClick={() => setBrand(isPredii ? "WrenchIQ" : "PrediiPowered")}
+                style={{
+                  width: 40, height: 22, borderRadius: 11,
+                  background: isPredii ? COLORS.primary : COLORS.border,
+                  position: "relative", cursor: "pointer",
+                  transition: "background 0.2s",
+                }}
+              >
+                <div style={{
+                  position: "absolute", top: 3, left: isPredii ? 21 : 3,
+                  width: 16, height: 16, borderRadius: 8, background: "#fff",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                  transition: "left 0.2s",
+                }} />
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: isPredii ? COLORS.primary : COLORS.textMuted }}>
+                {isPredii ? "On" : "Off"}
+              </span>
+            </label>
+          </div>
+        </Card>
+
         {/* Edition */}
         <Card>
           <SectionLabel>Product Edition</SectionLabel>
@@ -326,14 +788,14 @@ function SystemTab() {
             <div style={{ flex: 1, border: `2px solid ${COLORS.accent}`, borderRadius: 8, padding: 14, background: `${COLORS.accent}08` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                 <CheckCircle size={14} color={COLORS.accent} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.accent }}>WrenchIQ-AM</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.accent }}>{amName}</span>
               </div>
               <div style={{ fontSize: 11, color: COLORS.textSecondary }}>Aftermarket · Independent shops & corporate groups · Full SMS platform</div>
             </div>
             <div style={{ flex: 1, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 14, opacity: 0.5 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                 <div style={{ width: 14, height: 14, borderRadius: 7, border: `2px solid ${COLORS.border}` }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.textSecondary }}>WrenchIQ-OEM</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.textSecondary }}>{oemName}</span>
               </div>
               <div style={{ fontSize: 11, color: COLORS.textMuted }}>OEM Dealerships · RO Story Writer only · DMS integrations</div>
             </div>
@@ -396,7 +858,9 @@ function SystemTab() {
 
 // ── Main ──────────────────────────────────────────────────────
 export default function AMAdminScreen() {
-  const [tab, setTab] = useState("architecture");
+  const amName  = useEditionName("AM");
+  const oemName = useEditionName("OEM");
+  const [tab, setTab] = useState("insights");
 
   return (
     <div style={{ display: "flex", height: "100%", background: COLORS.bg }}>
@@ -405,7 +869,7 @@ export default function AMAdminScreen() {
       <div style={{ width: 200, background: "#fff", borderRight: `1px solid ${COLORS.border}`, padding: "20px 0", flexShrink: 0 }}>
         <div style={{ padding: "0 16px 16px", borderBottom: `1px solid ${COLORS.borderLight}`, marginBottom: 8 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>Admin</div>
-          <div style={{ fontSize: 11, color: COLORS.textMuted }}>WrenchIQ-AM</div>
+          <div style={{ fontSize: 11, color: COLORS.textMuted }}>{amName}</div>
         </div>
         {TABS.map(t => {
           const active = tab === t.id;
@@ -432,6 +896,7 @@ export default function AMAdminScreen() {
 
       {/* Content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px" }}>
+        {tab === "insights"     && <AIInsightsTab />}
         {tab === "architecture" && <ArchitectureTab />}
         {tab === "api"          && <IntegrationsScreen embedded />}
         {tab === "team"         && <TeamTab />}

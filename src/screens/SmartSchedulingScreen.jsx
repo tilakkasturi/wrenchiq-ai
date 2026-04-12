@@ -5,6 +5,7 @@ import {
   TrendingUp, Target, Repeat, ArrowRight, Bell,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import AIInsightsStrip from "../components/AIInsightsStrip";
 
 // ─── Time slots & bays ────────────────────────────────────────
 const HOURS = ["7 AM","8 AM","9 AM","10 AM","11 AM","12 PM","1 PM","2 PM","3 PM","4 PM","5 PM"];
@@ -305,6 +306,13 @@ export default function SmartSchedulingScreen() {
   const remainingSuggestions = AI_SUGGESTIONS.filter(s => !bookedSuggestions.includes(s.id));
 
   return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <AIInsightsStrip insights={[
+        { icon: "🕐", text: "Bay 5 & 6 empty after 1 PM — $890 in AI-suggested revenue ready to book in 2 taps", action: "Book AI Slots", value: "+$890", color: "#FF6B35" },
+        { icon: "📊", text: "Today's schedule 71% utilization — top days run 88%+. 3 AI suggestions can close the gap", action: "Fill Schedule", value: "+17% util", color: "#22C55E" },
+        { icon: "⚠️", text: "James Park's BMW rotors delayed 1 day (Worldpac Oakland) — 2 PM slot needs reshuffling", action: "Reschedule", value: "Parts delay", color: "#F59E0B" },
+        { icon: "🔄", text: "Angela Martinez hasn't been in 8 months — send service reminder for pre-failure Outback check", action: "Send Reminder", value: "+$165", color: "#7C3AED" },
+      ]} />
     <div style={{ padding: "24px 28px" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
@@ -482,6 +490,7 @@ export default function SmartSchedulingScreen() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   FileText, Send, Bell, Repeat,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import AIInsightsStrip from "../components/AIInsightsStrip";
 
 // ─── Customer Trust Data ──────────────────────────────────────
 const CUSTOMERS_TRUST = [
@@ -413,7 +414,14 @@ export default function TrustEngineScreen() {
     : CUSTOMERS_TRUST.filter(c => c.tier === filter);
 
   return (
-    <div style={{ padding: "24px 28px 0", display: "flex", flexDirection: "column", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <AIInsightsStrip insights={[
+        { icon: "⚡", text: "James Park estimate pending 2 hrs — HIGH LTV ($12,450). Send TSB reference text NOW", action: "Text James", value: "$1,847 at risk", color: "#EF4444" },
+        { icon: "⭐", text: "David Kim hasn't left a review in 9 visits — 4★ avg, ideal time to ask", action: "Send Review Request", value: "5★ potential", color: "#F59E0B" },
+        { icon: "📉", text: "Maria Santos trust score dropped 12 pts — 2 declined items. Call before she goes to a dealer", action: "Call Maria", value: "At-Risk", color: "#EF4444" },
+        { icon: "❤️", text: "Sarah Chen referred 3 customers = $6,840 in additional revenue — send thank-you gift card", action: "Send Gift", value: "Champion", color: "#22C55E" },
+      ]} />
+    <div style={{ padding: "24px 28px 0", display: "flex", flexDirection: "column", flex: 1 }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
@@ -466,6 +474,7 @@ export default function TrustEngineScreen() {
           {selectedCustomer && <CustomerDetail customer={selectedCustomer} />}
         </div>
       </div>
+    </div>
     </div>
   );
 }

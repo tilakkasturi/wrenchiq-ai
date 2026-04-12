@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { COLORS } from "../theme/colors";
+import { useRecommendations } from "../context/RecommendationsContext";
 import {
-  repairOrders,
+  repairOrders as demoRepairOrders,
   getCustomer,
   getVehicle,
   getTech,
   SHOP,
 } from "../data/demoData";
+import { fetchActiveRepairOrders } from "../services/repairOrderService";
 import {
   Plus,
   Zap,
@@ -24,10 +26,14 @@ import {
   X,
   Sparkles,
   Camera,
+  DollarSign,
 } from "lucide-react";
 import { getTSBsForVehicle } from "../data/tsbData";
 import DVIScreen from "./DVIScreen";
 import NewROWizard from "../components/NewROWizard";
+import CheckoutModal from "../components/CheckoutModal";
+import AIInsightsStrip from "../components/AIInsightsStrip";
+import ROAgentPanel from "../components/ROAgentPanel";
 
 // ── Column definitions ──────────────────────────────────────
 const COLUMNS = [
@@ -96,10 +102,11 @@ function getOemBadgeLabel(ro) {
 }
 
 // ── RO Card ─────────────────────────────────────────────────
-function ROCard({ ro, column, selected, onSelect, onOpenDVI }) {
-  const customer = getCustomer(ro.customerId);
-  const vehicle = getVehicle(ro.vehicleId);
-  const tech = getTech(ro.techId);
+function ROCard({ ro, column, selected, onSelect, onOpenDVI, onCheckout, paidRos }) {
+  // Use inline data from MongoDB if present, fall back to demo data lookups
+  const customer = ro._customer || getCustomer(ro.customerId);
+  const vehicle  = ro._vehicle  || getVehicle(ro.vehicleId);
+  const tech     = getTech(ro.techId);
 
   const vinLast6 = vehicle ? vehicle.vin.slice(-6) : "------";
   const oemBadge = getOemBadgeLabel(ro);
@@ -109,6 +116,12 @@ function ROCard({ ro, column, selected, onSelect, onOpenDVI }) {
   const showProgress = ro.status === "in_progress";
 
   const [hovered, setHovered] = useState(false);
+
+  // Recommendations badge
+  const recCtx = useRecommendations();
+  const roKey = ro.roNumber || ro.id;
+  const recItems = recCtx ? recCtx.getForRO(roKey) : [];
+  const recCount = recItems.length;
 
   return (
     <div
@@ -138,6 +151,7 @@ function ROCard({ ro, column, selected, onSelect, onOpenDVI }) {
           alignItems: "center",
           justifyContent: "space-between",
           marginBottom: 6,
+          position: "relative",
         }}
       >
         <span
@@ -152,6 +166,34 @@ function ROCard({ ro, column, selected, onSelect, onOpenDVI }) {
           {ro.id}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {/* AI Recommendations badge */}
+          {recCount > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                window.dispatchEvent(new CustomEvent("wrenchiq:focus-recommendation", { detail: { roNumber: roKey } }));
+              }}
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 9,
+                background: "#FF6B35",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 9,
+                fontWeight: 800,
+                color: "#fff",
+                padding: 0,
+                flexShrink: 0,
+              }}
+              title={`${recCount} AI insight${recCount > 1 ? "s" : ""}`}
+            >
+              {recCount}
+            </button>
+          )}
           {oemBadge && (
             <span
               style={{
@@ -404,12 +446,48 @@ function ROCard({ ro, column, selected, onSelect, onOpenDVI }) {
         <Camera size={11} />
         Inspection Report
       </button>
+
+      {/* Paid badge */}
+      {paidRos && paidRos[ro.id] && (
+        <div style={{
+          marginTop: 8, padding: "5px 8px",
+          background: "#DCFCE7", border: "1px solid #86EFAC", borderRadius: 5,
+          display: "flex", alignItems: "center", gap: 5,
+        }}>
+          <CheckCircle size={11} color="#16A34A" />
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#15803D" }}>
+            PAID ${paidRos[ro.id].amount} &mdash; {paidRos[ro.id].method}
+          </span>
+        </div>
+      )}
+
+      {/* Finalize & Checkout button — only on "ready" ROs that aren't paid yet */}
+      {column.id === "ready" && !(paidRos && paidRos[ro.id]) && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onCheckout(ro.id); }}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+            marginTop: 8, width: "100%",
+            padding: "7px 8px",
+            border: "none",
+            borderRadius: 6,
+            background: `linear-gradient(135deg, ${COLORS.accent}, #E85D26)`,
+            color: "#FFFFFF",
+            fontSize: 12, fontWeight: 700,
+            cursor: "pointer",
+            boxShadow: "0 3px 10px rgba(255,107,53,0.3)",
+          }}
+        >
+          <DollarSign size={12} />
+          Finalize &amp; Checkout
+        </button>
+      )}
     </div>
   );
 }
 
 // ── Kanban Column ────────────────────────────────────────────
-function KanbanColumn({ column, ros, selectedRoId, onSelectRo, onOpenDVI }) {
+function KanbanColumn({ column, ros, selectedRoId, onSelectRo, onOpenDVI, onCheckout, paidRos }) {
   const columnTotal = ros.reduce((sum, ro) => sum + (ro.totalEstimate || 0), 0);
 
   return (
@@ -508,6 +586,8 @@ function KanbanColumn({ column, ros, selectedRoId, onSelectRo, onOpenDVI }) {
               selected={selectedRoId === ro.id}
               onSelect={onSelectRo}
               onOpenDVI={onOpenDVI}
+              onCheckout={onCheckout}
+              paidRos={paidRos}
             />
           ))
         )}
@@ -786,6 +866,25 @@ export default function RepairOrderScreen() {
   const [selectedRoId, setSelectedRoId] = useState(null);
   const [dviRoId, setDviRoId] = useState(null);
   const [showNewRO, setShowNewRO] = useState(false);
+  const [roPrefill, setRoPrefill] = useState(null);
+  const [checkoutRoId, setCheckoutRoId] = useState(null);
+  // paidRos: { [roId]: { amount, method } }
+  const [paidRos, setPaidRos] = useState({});
+  // liveROs: loaded from MongoDB API when available; null = use demo data
+  const [liveROs, setLiveROs] = useState(null);
+  const [dbConnected, setDbConnected] = useState(false);
+
+  useEffect(() => {
+    fetchActiveRepairOrders().then(ros => {
+      if (ros && ros.length > 0) {
+        setLiveROs(ros);
+        setDbConnected(true);
+      }
+    });
+  }, []);
+
+  // Use live MongoDB data when available, fall back to static demo data
+  const repairOrders = liveROs || demoRepairOrders;
 
   const kanbanStatuses = [
     "checked_in",
@@ -808,30 +907,30 @@ export default function RepairOrderScreen() {
     if (activeFilter === "OEM Services") {
       filtered = filtered.filter((ro) => ro.isOemService);
     } else if (activeFilter === "Today") {
-      // demo today = 2024-11-15
+      const today = new Date().toISOString().slice(0, 10);
       filtered = filtered.filter(
         (ro) =>
-          (ro.dateIn && ro.dateIn.startsWith("2024-11-15")) ||
-          (ro.scheduledDate && ro.scheduledDate.startsWith("2024-11-15"))
+          (ro.dateIn && ro.dateIn.startsWith(today)) ||
+          (ro.scheduledDate && ro.scheduledDate.startsWith(today))
       );
     }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter((ro) => {
-        const customer = getCustomer(ro.customerId);
-        const vehicle = getVehicle(ro.vehicleId);
+        const customer = ro._customer || getCustomer(ro.customerId);
+        const vehicle  = ro._vehicle  || getVehicle(ro.vehicleId);
         const custName = customer
           ? `${customer.firstName} ${customer.lastName}`.toLowerCase()
-          : "";
+          : (ro.customerName || "").toLowerCase();
         const vehStr = vehicle
           ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`.toLowerCase()
-          : "";
+          : `${ro.year || ""} ${ro.make || ""} ${ro.model || ""}`.toLowerCase();
         return (
           ro.id.toLowerCase().includes(q) ||
           custName.includes(q) ||
           vehStr.includes(q) ||
-          ro.serviceType.toLowerCase().includes(q)
+          (ro.serviceType || "").toLowerCase().includes(q)
         );
       });
     }
@@ -855,6 +954,13 @@ export default function RepairOrderScreen() {
         overflow: "hidden",
       }}
     >
+      <AIInsightsStrip insights={[
+        { icon: "⚠️", text: "David's P0420 — TSB-19-052 applies, mention Honda goodwill claim", action: "Add TSB note", value: "Save $450", color: "#F59E0B" },
+        { icon: "💬", text: "Monica hasn't approved cabin filter ($81) — follow up before she leaves", action: "Text Monica", value: "+$81", color: "#FF6B35" },
+        { icon: "🔩", text: "James Park's BMW — brake fluid flush due at 64K, add to estimate", action: "Add service", value: "+$185", color: "#7C3AED" },
+        { icon: "💡", text: "Robert's F-150: add wiper blades to oil service — easy add-on at check-in", action: "Add to RO", value: "+$45", color: "#2563EB" },
+      ]} />
+
       {/* ── Header ───────────────────────────────────────── */}
       <div
         style={{
@@ -911,6 +1017,25 @@ export default function RepairOrderScreen() {
               >
                 {kanbanCount} active
               </span>
+              {dbConnected && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "#16A34A",
+                    background: "#F0FDF4",
+                    border: "1px solid #BBF7D0",
+                    borderRadius: 12,
+                    padding: "2px 10px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16A34A", display: "inline-block" }} />
+                  MongoDB Live
+                </span>
+              )}
             </div>
             <p
               style={{
@@ -1044,6 +1169,14 @@ export default function RepairOrderScreen() {
           padding: "20px 24px 32px",
         }}
       >
+        {/* ROAgent Inbound Leads */}
+        <ROAgentPanel
+          onDraftRO={({ lead, draft }) => {
+            setRoPrefill({ lead, draft });
+            setShowNewRO(true);
+          }}
+        />
+
         {/* Kanban board */}
         <div
           style={{
@@ -1065,6 +1198,8 @@ export default function RepairOrderScreen() {
                 selectedRoId={selectedRoId}
                 onSelectRo={(id) => setSelectedRoId(prev => prev === id ? null : id)}
                 onOpenDVI={(id) => setDviRoId(id)}
+                onCheckout={(id) => setCheckoutRoId(id)}
+                paidRos={paidRos}
               />
             );
           })}
@@ -1111,6 +1246,24 @@ export default function RepairOrderScreen() {
                     <X size={15} />
                   </button>
                 </div>
+
+                {/* AI Insights for this RO */}
+                {ro && ro.aiInsights && ro.aiInsights.length > 0 && (
+                  <div style={{ padding: "10px 16px", borderBottom: "1px solid #F3F4F6" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                      <Brain size={13} color="#7C3AED" />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#7C3AED" }}>AI Advisor Insights</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {ro.aiInsights.map((insight, i) => (
+                        <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "#FAF5FF", border: "1px solid #E9D5FF", borderRadius: 7, padding: "8px 10px" }}>
+                          <Sparkles size={11} color="#7C3AED" style={{ marginTop: 2, flexShrink: 0 }} />
+                          <span style={{ fontSize: 12, color: "#4C1D95", lineHeight: 1.5 }}>{insight}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* TSB rows or empty state */}
                 <div style={{ padding: "10px 16px 14px" }}>
@@ -1224,7 +1377,32 @@ export default function RepairOrderScreen() {
       })()}
 
       {/* New RO Wizard */}
-      {showNewRO && <NewROWizard onClose={() => setShowNewRO(false)} />}
+      {showNewRO && (
+        <NewROWizard
+          onClose={() => { setShowNewRO(false); setRoPrefill(null); }}
+          prefill={roPrefill}
+        />
+      )}
+
+      {/* Checkout Modal */}
+      {checkoutRoId && (() => {
+        const ro = repairOrders.find(r => r.id === checkoutRoId);
+        if (!ro) return null;
+        const customer = getCustomer(ro.customerId);
+        const vehicle = getVehicle(ro.vehicleId);
+        return (
+          <CheckoutModal
+            ro={ro}
+            customer={customer}
+            vehicle={vehicle}
+            onClose={() => setCheckoutRoId(null)}
+            onPaid={(roId, amount, method) => {
+              setPaidRos(prev => ({ ...prev, [roId]: { amount, method } }));
+              setCheckoutRoId(null);
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }

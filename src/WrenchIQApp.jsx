@@ -1,12 +1,16 @@
 import { useState } from "react";
+import { useAppVersion } from "./hooks/useAppVersion";
 import {
   Wrench, Home, ClipboardList, Smartphone, BarChart3, Settings,
   Search, Bell, Camera, Sparkles, MessageSquare,
-  Shield, Zap, Building2, FileText, Calendar, Package, Cpu, Menu, Database,
+  Shield, Zap, Building2, FileText, Calendar, Package, Cpu, Menu, Database, Share2,
 } from "lucide-react";
 import SpecificationsPanel from "./components/SpecificationsPanel";
 import { COLORS } from "./theme/colors";
 import { SHOP } from "./data/demoData";
+import BrandWordmark from "./components/BrandWordmark";
+import { RecommendationsProvider } from "./context/RecommendationsContext";
+
 
 // ── Screens ──────────────────────────────────────────────────
 import DashboardScreen from "./screens/DashboardScreen";
@@ -26,8 +30,14 @@ import PartsIntelligenceScreen from "./screens/PartsIntelligenceScreen";
 import TechMobileScreen from "./screens/TechMobileScreen";
 import IntelligentROScreen from "./screens/IntelligentROScreen";
 import AMAdminScreen from "./screens/AMAdminScreen";
+import AM3CStoryWriterScreen from "./screens/AM3CStoryWriterScreen";
+import KnowledgeGraphScreen from "./screens/KnowledgeGraphScreen";
+import AIInsightsScreen from "./screens/AIInsightsScreen";
+import AIAgentScreen from "./screens/AIAgentScreen";
+import AROAgentScreen from "./screens/AROAgentScreen";
 
 // ── Persona screens ───────────────────────────────────────────
+import LoginScreen from "./screens/LoginScreen";
 import PersonaGatewayScreen from "./screens/PersonaGatewayScreen";
 import PersonaShell from "./components/PersonaShell";
 import AdvisorHomeScreen from "./screens/AdvisorHomeScreen";
@@ -60,6 +70,9 @@ const ADMIN_SCREENS = [
   { id: "customer",     label: "Customer Portal",    icon: Smartphone,    component: CustomerPortalScreen,    group: "shop" },
   { id: "analytics",    label: "Analytics",          icon: BarChart3,     component: AnalyticsScreen,         group: "insights" },
   { id: "network",      label: "Network (100 Loc)",  icon: Building2,     component: MultiLocationScreen,     group: "insights" },
+  { id: "aiInsights",   label: "AI Insights",        icon: Sparkles,      component: AIInsightsScreen,        group: "insights" },
+  { id: "knowledge",    label: "Knowledge Graph",    icon: Share2,        component: KnowledgeGraphScreen,    group: "insights" },
+  { id: "am3cWriter",   label: "3C Story Writer",    icon: FileText,      component: AM3CStoryWriterScreen,   group: "shop" },
   { id: "settings",     label: "Settings",           icon: Settings,      component: SettingsScreen,          group: "system" },
   { id: "amAdmin",      label: "Admin",              icon: Database,      component: AMAdminScreen,           group: "admin" },
 ];
@@ -70,6 +83,9 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
   // Advisor persona screens
   if (persona === "advisor") {
     if (screenId === "advisorHome") return <AdvisorHomeScreen {...extraProps} />;
+    if (screenId === "aiAgent")     return <AIAgentScreen />;
+    if (screenId === "aroAgent")    return <AROAgentScreen />;
+    if (screenId === "am3cWriter")  return <AM3CStoryWriterScreen />;
     if (screenId === "orders")     return <RepairOrderScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "parts")      return <PartsIntelligenceScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "scheduling") return <SmartSchedulingScreen onNavigate={extraProps.onNavigate} />;
@@ -141,6 +157,8 @@ const PERSONA_DEFAULT_SCREEN = {
 // ── Main App ─────────────────────────────────────────────────
 
 export default function WrenchIQApp() {
+  const appVersion = useAppVersion();
+  const [authenticated, setAuthenticated] = useState(false);
   const [activePersona, setActivePersona] = useState(null);
   const [activeScreen, setActiveScreen]   = useState("dashboard");
   const [agentVisible, setAgentVisible]   = useState(true);
@@ -150,9 +168,17 @@ export default function WrenchIQApp() {
   // Tech-specific DVI state (screen within screen)
   const [techDVIData, setTechDVIData] = useState(null);
 
+  // Advisor RO selection — lifted so WrenchIQAgent can narrow its insights
+  const [advisorSelectedRO, setAdvisorSelectedRO] = useState(null);
+
   // Intelligent RO pre-selection (from gateway queue)
   const [roInitialCust, setRoInitialCust] = useState(null);
   const [roInitialStep, setRoInitialStep] = useState(1);
+
+  // ── Login gate ───────────────────────────────────────────────
+  if (!authenticated) {
+    return <LoginScreen onLogin={() => setAuthenticated(true)} />;
+  }
 
   // ── Gateway (combined AM + OEM) ───────────────────────────
   if (!activePersona) {
@@ -192,6 +218,7 @@ export default function WrenchIQApp() {
     const extraProps = {
       roInitialCust,
       roInitialStep,
+      onRoSelect: (boardRo) => setAdvisorSelectedRO(boardRo || null),
       onNavigate: (id) => {
         setTechDVIData(null);
         setActiveScreen(id);
@@ -213,25 +240,29 @@ export default function WrenchIQApp() {
     };
 
     return (
-      <>
-        <PersonaShell
-          persona={activePersona}
-          activeScreen={effectiveScreen}
-          onNavigate={(id) => {
-            setTechDVIData(null);
-            setActiveScreen(id);
-          }}
-          onExitPersona={() => {
-            setActivePersona(null);
-            setTechDVIData(null);
-            setActiveScreen("dashboard");
-          }}
-          onOpenSpecs={() => setSpecsOpen(true)}
-        >
-          {resolvePersonaScreen(activePersona, effectiveScreen, extraProps)}
-        </PersonaShell>
-        {specsOpen && <SpecificationsPanel onClose={() => setSpecsOpen(false)} />}
-      </>
+      <RecommendationsProvider shopId="shop-001" edition="am" persona={activePersona}>
+        <>
+          <PersonaShell
+            persona={activePersona}
+            activeScreen={effectiveScreen}
+            selectedRO={advisorSelectedRO}
+            onNavigate={(id) => {
+              setTechDVIData(null);
+              setActiveScreen(id);
+            }}
+            onExitPersona={() => {
+              setActivePersona(null);
+              setTechDVIData(null);
+              setActiveScreen("dashboard");
+              setAdvisorSelectedRO(null);
+            }}
+            onOpenSpecs={() => setSpecsOpen(true)}
+          >
+            {resolvePersonaScreen(activePersona, effectiveScreen, extraProps)}
+          </PersonaShell>
+          {specsOpen && <SpecificationsPanel onClose={() => setSpecsOpen(false)} />}
+        </>
+      </RecommendationsProvider>
     );
   }
 
@@ -240,6 +271,7 @@ export default function WrenchIQApp() {
   let lastGroup = null;
 
   return (
+    <RecommendationsProvider shopId="shop-001" edition="am" persona="admin">
     <div style={{ display: "flex", height: "100vh", background: COLORS.bg, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       {specsOpen && <SpecificationsPanel onClose={() => setSpecsOpen(false)} />}
 
@@ -252,9 +284,7 @@ export default function WrenchIQApp() {
             title="Back to persona gateway"
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
           >
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Wrench size={18} color="#fff" style={{ transform: "rotate(-45deg)" }} />
-            </div>
+            <BrandWordmark size="nav" />
           </button>
         </div>
 
@@ -301,10 +331,7 @@ export default function WrenchIQApp() {
               title="Back to home"
               style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0 }}
             >
-              <div style={{ width: 24, height: 24, borderRadius: 6, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Wrench size={13} color="#fff" style={{ transform: "rotate(-45deg)" }} />
-              </div>
-              <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.5, color: COLORS.textPrimary }}>WrenchIQ<span style={{ color: COLORS.accent }}>.ai</span></span>
+              <BrandWordmark size="bar" />
               <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.textMuted, background: "#F3F4F6", borderRadius: 4, padding: "2px 6px" }}>ADMIN</span>
             </button>
             <div style={{ fontSize: 12, color: COLORS.textMuted }}>
@@ -362,10 +389,7 @@ export default function WrenchIQApp() {
         <div style={{ flexShrink: 0, borderTop: "1px solid #E5E7EB", background: "#fff", padding: "6px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div style={{ width: 18, height: 18, borderRadius: 5, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Wrench size={10} color="#fff" style={{ transform: "rotate(-45deg)" }} />
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: -0.3, color: COLORS.textPrimary }}>WrenchIQ<span style={{ color: COLORS.accent }}>.ai</span></span>
+              <BrandWordmark size="sm" />
               <span style={{ fontSize: 9, fontWeight: 800, background: `${COLORS.accent}18`, color: COLORS.accent, border: `1px solid ${COLORS.accent}35`, borderRadius: 4, padding: "1px 5px" }}>AM</span>
             </div>
             <span style={{ fontSize: 10, color: COLORS.textMuted }}>powered by</span>
@@ -380,6 +404,7 @@ export default function WrenchIQApp() {
             <span>© {new Date().getFullYear()} Predii, Inc.</span>
             <span style={{ color: "#E5E7EB" }}>|</span>
             <span style={{ fontWeight: 600, color: "#6B7280", letterSpacing: 0.5 }}>PREDII CONFIDENTIAL</span>
+            {appVersion && <span style={{ color: "#D1D5DB", marginLeft: 8 }}>{appVersion}</span>}
           </div>
         </div>
       </div>
@@ -392,5 +417,6 @@ export default function WrenchIQApp() {
         />
       )}
     </div>
+    </RecommendationsProvider>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useBranding, useEditionName } from "../context/BrandingContext";
 import {
   Settings,
   Check,
@@ -175,7 +176,7 @@ function TabEdition() {
         <div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", marginBottom: 4 }}>WrenchIQ Edition</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>
-            WrenchIQ-OEM
+            {oemName}
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 4 }}>
             Locked · Managed by Predii account provisioning
@@ -1024,8 +1025,10 @@ const STATUS_CONFIG = {
   "live":           { label: "Live",                  bg: "#F0FDF4", color: "#15803D", border: "#BBF7D0" },
 };
 
-function TabAdmin({ showWrenchIQBranding = true, onToggleBranding }) {
+function TabAdmin() {
   const [activeOpMake, setActiveOpMake] = useState(Object.keys(OP_CODES)[0]);
+  const { brand, setBrand } = useBranding();
+  const showWrenchIQBranding = brand === "WrenchIQ";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -1067,7 +1070,7 @@ function TabAdmin({ showWrenchIQBranding = true, onToggleBranding }) {
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 0 }}>
             <button
-              onClick={() => onToggleBranding && onToggleBranding(!showWrenchIQBranding)}
+              onClick={() => setBrand(showWrenchIQBranding ? "PrediiPowered" : "WrenchIQ")}
               style={{
                 width: 48, height: 26, borderRadius: 13, border: "none", cursor: "pointer",
                 background: showWrenchIQBranding ? "#FF6B35" : "#D1D5DB",
@@ -1606,7 +1609,8 @@ function TabAdmin({ showWrenchIQBranding = true, onToggleBranding }) {
 }
 
 // ── Main Screen ───────────────────────────────────────────────
-export default function OEMSettingsScreen({ showWrenchIQBranding = true, onToggleBranding }) {
+export default function OEMSettingsScreen() {
+  const oemName = useEditionName("OEM");
   const [activeTab, setActiveTab] = useState("edition");
 
   const tabContent = {
@@ -1617,7 +1621,7 @@ export default function OEMSettingsScreen({ showWrenchIQBranding = true, onToggl
     team:       <TabTeam />,
     notify:     <TabNotifications />,
     audit:      <TabAuditLog />,
-    admin:      <TabAdmin showWrenchIQBranding={showWrenchIQBranding} onToggleBranding={onToggleBranding} />,
+    admin:      <TabAdmin />,
   };
 
   return (
@@ -1689,7 +1693,7 @@ export default function OEMSettingsScreen({ showWrenchIQBranding = true, onToggl
 
         <div style={{ flex: 1 }} />
         <div style={{ padding: "0 20px", fontSize: 11, color: COLORS.textMuted, lineHeight: 1.5 }}>
-          WrenchIQ-OEM
+          {oemName}
           <br />
           {OEM_DEALER.name}
           <br />
@@ -1705,7 +1709,7 @@ export default function OEMSettingsScreen({ showWrenchIQBranding = true, onToggl
             {TABS.find((t) => t.id === activeTab)?.label}
           </h2>
           <div style={{ fontSize: 13, color: COLORS.textSecondary }}>
-            {OEM_DEALER.name} · WrenchIQ-OEM
+            {OEM_DEALER.name} · {oemName}
           </div>
         </div>
 

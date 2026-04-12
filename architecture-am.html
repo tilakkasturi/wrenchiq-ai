@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WrenchIQ-AM — Architecture Diagram</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #F0F4F5;
+      color: #1a1a1a;
+      padding: 32px 24px 64px;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+    .logo-mark {
+      width: 44px; height: 44px;
+      background: #FF6B35;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark svg { width: 26px; height: 26px; }
+    .page-header h1 {
+      font-size: 22px; font-weight: 700; color: #0D3B45;
+      letter-spacing: -0.3px;
+    }
+    .page-header p { font-size: 13px; color: #6b7280; margin-top: 2px; }
+    .badge {
+      margin-left: auto;
+      background: #0D3B45; color: white;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+      padding: 4px 10px; border-radius: 20px;
+    }
+
+    /* ── Layout ── */
+    .diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── Layer wrapper ── */
+    .layer {
+      background: white;
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+    }
+    .layer-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .layer-label::after {
+      content: ''; flex: 1; height: 1px; background: currentColor; opacity: 0.15;
+    }
+
+    /* ── Connector arrows between layers ── */
+    .connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 0;
+      gap: 0;
+    }
+    .connector .line {
+      width: 2px;
+      height: 22px;
+      background: #CBD5E1;
+    }
+    .connector .arrow-head {
+      width: 0; height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 8px solid #CBD5E1;
+    }
+    .connector .arrow-up {
+      width: 0; height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-bottom: 8px solid #CBD5E1;
+    }
+
+    /* ── LAYER 1: Personas ── */
+    .personas-layer { background: #0D3B45; }
+    .personas-layer .layer-label { color: #7DD3E0; }
+    .personas-grid {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .persona-card {
+      flex: 1; min-width: 140px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .persona-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .persona-card .name { font-size: 13px; font-weight: 600; color: white; }
+    .persona-card .role { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+    /* ── LAYER 2: App Shell ── */
+    .shell-layer { background: #E8F4F6; border: 2px solid #0D3B45; }
+    .shell-layer .layer-label { color: #0D3B45; }
+    .shell-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: #0D3B45; border-radius: 10px;
+      padding: 10px 16px;
+    }
+    .shell-bar .shell-logo {
+      font-size: 13px; font-weight: 800; color: white; letter-spacing: -0.3px;
+    }
+    .shell-bar .shell-logo span { color: #FF6B35; }
+    .shell-divider { width: 1px; height: 16px; background: rgba(255,255,255,0.2); margin: 0 4px; }
+    .shell-tags { display: flex; gap: 6px; }
+    .shell-tag {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.4px;
+      padding: 3px 8px; border-radius: 5px;
+      background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
+    }
+    .shell-tag.live { background: #FF6B35; color: white; }
+
+    /* ── LAYER 3: Screen Groups ── */
+    .screens-layer .layer-label { color: #374151; }
+    .screen-groups { display: flex; gap: 14px; flex-wrap: wrap; }
+    .screen-group {
+      flex: 1; min-width: 200px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .screen-group-header {
+      padding: 8px 12px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .screen-group-body { padding: 10px 10px; display: flex; flex-direction: column; gap: 6px; }
+    .screen-pill {
+      background: white; border-radius: 7px;
+      padding: 7px 10px;
+      font-size: 12px; font-weight: 500; color: #374151;
+      display: flex; align-items: center; gap: 7px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .screen-pill .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .screen-pill .live-badge {
+      margin-left: auto;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+      color: #059669; background: #D1FAE5; padding: 1px 5px; border-radius: 4px;
+    }
+
+    /* group colors */
+    .group-ops    { background: #EFF6FF; }
+    .group-ops    .screen-group-header { background: #DBEAFE; color: #1D4ED8; }
+    .group-ops    .dot { background: #3B82F6; }
+
+    .group-cx     { background: #FFF7ED; }
+    .group-cx     .screen-group-header { background: #FED7AA; color: #C2410C; }
+    .group-cx     .dot { background: #F97316; }
+
+    .group-biz    { background: #F0FDF4; }
+    .group-biz    .screen-group-header { background: #BBF7D0; color: #15803D; }
+    .group-biz    .dot { background: #22C55E; }
+
+    .group-ai     { background: #FAF5FF; }
+    .group-ai     .screen-group-header { background: #E9D5FF; color: #7C3AED; }
+    .group-ai     .dot { background: #A855F7; }
+
+    /* ── LAYER 4: Integration Services ── */
+    .services-layer .layer-label { color: #374151; }
+    .services-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+    .service-card {
+      flex: 1; min-width: 140px;
+      border-radius: 12px; padding: 14px 14px 12px;
+      background: #F9FAFB;
+      border: 1px solid #E5E7EB;
+    }
+    .service-card .svc-header {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .service-card .svc-icon {
+      width: 24px; height: 24px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; font-size: 13px;
+    }
+    .service-card .api-tag {
+      display: inline-block; font-size: 10px;
+      background: #E5E7EB; color: #6B7280;
+      border-radius: 4px; padding: 2px 6px; margin: 2px 2px 0 0;
+    }
+    .service-card .api-tag.primary { background: #DBEAFE; color: #1D4ED8; }
+
+    /* ── LAYER 5: Third-Party APIs ── */
+    .apis-layer { background: #FFFBEB; border: 1px solid #FDE68A; }
+    .apis-layer .layer-label { color: #92400E; }
+    .apis-grid { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .api-badge {
+      display: flex; align-items: center; gap: 7px;
+      background: white; border: 1px solid #E5E7EB;
+      border-radius: 8px; padding: 8px 12px;
+    }
+    .api-badge .api-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+    .api-badge .api-name { font-size: 12px; font-weight: 600; color: #374151; }
+    .api-badge .api-cat  { font-size: 10px; color: #9CA3AF; margin-top: 1px; }
+    .api-badge.live { border-color: #6EE7B7; background: #F0FDF4; }
+    .api-badge.live .api-name { color: #065F46; }
+
+    /* ── LAYER 6: Predii Core ── */
+    .predii-layer {
+      background: linear-gradient(135deg, #0D3B45 0%, #0F4D5C 100%);
+      border: none;
+    }
+    .predii-layer .layer-label { color: #7DD3E0; }
+    .predii-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+    .predii-card {
+      flex: 1; min-width: 150px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 14px 16px;
+    }
+    .predii-card .pc-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,107,53,0.25); border: 1px solid rgba(255,107,53,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; margin-bottom: 8px;
+    }
+    .predii-card .pc-name { font-size: 13px; font-weight: 700; color: white; }
+    .predii-card .pc-desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; line-height: 1.4; }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex; gap: 20px; flex-wrap: wrap;
+      margin-top: 28px; padding: 16px 20px;
+      background: white; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      max-width: 1100px; margin-left: auto; margin-right: auto;
+      margin-top: 24px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: #6B7280;
+    }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* connector dual-arrow */
+    .dual-connector {
+      display: flex; flex-direction: column; align-items: center; padding: 2px 0;
+    }
+    .dual-connector .dc-label {
+      font-size: 10px; color: #9CA3AF; letter-spacing: 0.3px;
+      background: #F0F4F5; padding: 2px 8px; border-radius: 10px;
+      margin: 2px 0;
+    }
+    .dual-connector .dc-arrows {
+      display: flex; align-items: center; gap: 4px; color: #CBD5E1;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 26 26" fill="none">
+        <path d="M13 3 L13 8 M19 7 L15 11 M21 13 L16 13 M19 19 L15 15 M13 21 L13 16 M7 19 L11 15 M5 13 L10 13 M7 7 L11 11" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="13" cy="13" r="3.5" fill="white"/>
+      </svg>
+    </div>
+    <div>
+      <h1>WrenchIQ-AM — System Architecture</h1>
+      <p>Aftermarket Edition · Independent & Multi-Location Shops</p>
+    </div>
+    <div class="badge">March 2026</div>
+  </div>
+
+  <div class="diagram">
+
+    <!-- ══════════════════════════════════════════════════
+         LAYER 1 — PERSONAS
+    ══════════════════════════════════════════════════ -->
+    <div class="layer personas-layer">
+      <div class="layer-label">01 &nbsp; User Personas</div>
+      <div class="personas-grid">
+
+        <div class="persona-card">
+          <div class="persona-icon" style="background:rgba(255,107,53,0.2)">🧑‍💼</div>
+          <div>
+            <div class="name">Service Advisor</div>
+            <div class="role">RO queue · Checkout · 3C Writer</div>
+          </div>
+        </div>
+
+        <div class="persona-card">
+          <div class="persona-icon" style="background:rgba(125,211,224,0.15)">🔧</div>
+          <div>
+            <div class="name">Technician</div>
+            <div class="role">DVI · Job board · Mobile</div>
+          </div>
+        </div>
+
+        <div class="persona-card">
+          <div class="persona-icon" style="background:rgba(255,107,53,0.2)">👤</div>
+          <div>
+            <div class="name">Car Owner</div>
+            <div class="role">Approvals · Pay link · Portal</div>
+          </div>
+        </div>
+
+        <div class="persona-card">
+          <div class="persona-icon" style="background:rgba(125,211,224,0.15)">📊</div>
+          <div>
+            <div class="name">Shop Owner</div>
+            <div class="role">Dashboard · Analytics · AI</div>
+          </div>
+        </div>
+
+        <div class="persona-card">
+          <div class="persona-icon" style="background:rgba(255,107,53,0.2)">🏢</div>
+          <div>
+            <div class="name">VP Operations</div>
+            <div class="role">Multi-location · Network KPIs</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="connector">
+      <div class="arrow-up"></div>
+      <div class="line"></div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         LAYER 2 — APP SHELL
+    ══════════════════════════════════════════════════ -->
+    <div class="layer shell-layer">
+      <div class="layer-label">02 &nbsp; WrenchIQ-AM Application Shell</div>
+      <div class="shell-bar">
+        <div class="shell-logo">WrenchIQ<span>.ai</span></div>
+        <div class="shell-divider"></div>
+        <div class="shell-tags">
+          <span class="shell-tag">React + Vite SPA</span>
+          <span class="shell-tag">Persona Gateway</span>
+          <span class="shell-tag">Role-Based Routing</span>
+          <span class="shell-tag live">8 Personas Active</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">
+      <div class="arrow-up"></div>
+      <div class="line"></div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         LAYER 3 — SCREENS
+    ══════════════════════════════════════════════════ -->
+    <div class="layer screens-layer">
+      <div class="layer-label">03 &nbsp; Screen Modules</div>
+      <div class="screen-groups">
+
+        <div class="screen-group group-ops">
+          <div class="screen-group-header">
+            <span>🛠</span> Shop Operations
+          </div>
+          <div class="screen-group-body">
+            <div class="screen-pill"><span class="dot"></span>Repair Order Board</div>
+            <div class="screen-pill"><span class="dot"></span>Smart Scheduling</div>
+            <div class="screen-pill"><span class="dot"></span>DVI — Digital Inspection</div>
+            <div class="screen-pill"><span class="dot"></span>New RO Wizard</div>
+            <div class="screen-pill"><span class="dot"></span>Parts Intelligence</div>
+          </div>
+        </div>
+
+        <div class="screen-group group-cx">
+          <div class="screen-group-header">
+            <span>💬</span> Customer Experience
+          </div>
+          <div class="screen-group-body">
+            <div class="screen-pill"><span class="dot"></span>Social Inbox</div>
+            <div class="screen-pill"><span class="dot"></span>Health Report</div>
+            <div class="screen-pill"><span class="dot"></span>Customer Portal</div>
+            <div class="screen-pill"><span class="dot"></span>Trust Engine</div>
+            <div class="screen-pill"><span class="dot"></span>Checkout &amp; Pay</div>
+          </div>
+        </div>
+
+        <div class="screen-group group-biz">
+          <div class="screen-group-header">
+            <span>📈</span> Business Intelligence
+          </div>
+          <div class="screen-group-body">
+            <div class="screen-pill"><span class="dot"></span>Command Center</div>
+            <div class="screen-pill"><span class="dot"></span>Analytics</div>
+            <div class="screen-pill"><span class="dot"></span>Multi-Location Hub</div>
+            <div class="screen-pill"><span class="dot"></span>Integrations</div>
+            <div class="screen-pill"><span class="dot"></span>Settings</div>
+          </div>
+        </div>
+
+        <div class="screen-group group-ai">
+          <div class="screen-group-header">
+            <span>🤖</span> AI &amp; Narrative
+          </div>
+          <div class="screen-group-body">
+            <div class="screen-pill"><span class="dot"></span>AI Copilot</div>
+            <div class="screen-pill"><span class="dot"></span>WrenchIQ Agent</div>
+            <div class="screen-pill">
+              <span class="dot"></span>3C Story Writer
+              <span class="live-badge">LIVE</span>
+            </div>
+            <div class="screen-pill"><span class="dot"></span>Tech Mobile</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="connector">
+      <div class="arrow-up"></div>
+      <div class="line"></div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         LAYER 4 — INTEGRATION SERVICES
+    ══════════════════════════════════════════════════ -->
+    <div class="layer services-layer">
+      <div class="layer-label">04 &nbsp; WrenchIQ Integration Services</div>
+      <div class="services-grid">
+
+        <div class="service-card">
+          <div class="svc-header">
+            <div class="svc-icon" style="background:#DBEAFE">📱</div>
+            Communications
+          </div>
+          <span class="api-tag primary">Twilio SMS</span>
+          <span class="api-tag primary">Google Business</span>
+          <span class="api-tag">Podium</span>
+          <span class="api-tag">Birdeye</span>
+        </div>
+
+        <div class="service-card">
+          <div class="svc-header">
+            <div class="svc-icon" style="background:#FCE7F3">📲</div>
+            Social Inbox
+          </div>
+          <span class="api-tag primary">Meta Graph API</span>
+          <span class="api-tag primary">TikTok Business</span>
+          <span class="api-tag">Instagram DM</span>
+          <span class="api-tag">Facebook Msg</span>
+        </div>
+
+        <div class="service-card">
+          <div class="svc-header">
+            <div class="svc-icon" style="background:#D1FAE5">💳</div>
+            Checkout &amp; GL
+          </div>
+          <span class="api-tag primary">Square SDK</span>
+          <span class="api-tag primary">Xero OAuth</span>
+          <span class="api-tag">Terminal API</span>
+          <span class="api-tag">Reader SDK</span>
+        </div>
+
+        <div class="service-card">
+          <div class="svc-header">
+            <div class="svc-icon" style="background:#FEF9C3">🚗</div>
+            Vehicle Data
+          </div>
+          <span class="api-tag primary" style="background:#D1FAE5;color:#065F46">NHTSA (Live)</span>
+          <span class="api-tag primary">ALLDATA</span>
+          <span class="api-tag">VIN Decode</span>
+          <span class="api-tag">ProDemand</span>
+        </div>
+
+        <div class="service-card">
+          <div class="svc-header">
+            <div class="svc-icon" style="background:#EDE9FE">📦</div>
+            Parts Catalog
+          </div>
+          <span class="api-tag primary">Worldpac</span>
+          <span class="api-tag primary">O'Reilly API</span>
+          <span class="api-tag">NAPA ProLink</span>
+          <span class="api-tag">PartsTech</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="connector">
+      <div class="arrow-up"></div>
+      <div class="line"></div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         LAYER 5 — THIRD-PARTY APIs
+    ══════════════════════════════════════════════════ -->
+    <div class="layer apis-layer">
+      <div class="layer-label">05 &nbsp; Third-Party APIs &amp; Services</div>
+      <div class="apis-grid">
+
+        <div class="api-badge live">
+          <div class="api-icon" style="background:#D1FAE5">📡</div>
+          <div>
+            <div class="api-name">NHTSA API</div>
+            <div class="api-cat">Vehicle Data · LIVE</div>
+          </div>
+        </div>
+
+        <div class="api-badge">
+          <div class="api-icon" style="background:#FEE2E2">■</div>
+          <div>
+            <div class="api-name">Square</div>
+            <div class="api-cat">Payments · Demo</div>
+          </div>
+        </div>
+
+        <div class="api-badge">
+          <div class="api-icon" style="background:#DBEAFE">✦</div>
+          <div>
+            <div class="api-name">Xero</div>
+            <div class="api-cat">General Ledger · Demo</div>
+          </div>
+        </div>
+
+        <div class="api-badge">
+          <div class="api-icon" style="background:#FCE7F3">f</div>
+          <div>
+            <div class="api-name">Meta Graph</div>
+            <div class="api-cat">Social · Demo</div>
+          </div>
+        </div>
+
+        <div class="api-badge">
+          <div class="api-icon" style="background:#FEF9C3">♪</div>
+          <div>
+            <div class="api-name">TikTok Business</div>
+            <div class="api-cat">Social · Demo</div>
+          </div>
+        </div>
+
+        <div class="api-badge">
+          <div class="api-icon" style="background:#E0E7FF">✉</div>
+          <div>
+            <div class="api-name">Twilio</div>
+            <div class="api-cat">SMS/MMS · Demo</div>
+          </div>
+        </div>
+
+        <div class="api-badge">
+          <div class="api-icon" style="background:#D1FAE5">◈</div>
+          <div>
+            <div class="api-name">Claude API</div>
+            <div class="api-cat">Anthropic · Demo</div>
+          </div>
+        </div>
+
+        <div class="api-badge">
+          <div class="api-icon" style="background:#FEF3C7">W</div>
+          <div>
+            <div class="api-name">Worldpac</div>
+            <div class="api-cat">Parts · Demo</div>
+          </div>
+        </div>
+
+        <div class="api-badge">
+          <div class="api-icon" style="background:#FCE7F3">O</div>
+          <div>
+            <div class="api-name">O'Reilly</div>
+            <div class="api-cat">Parts · Demo</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="connector">
+      <div class="arrow-up"></div>
+      <div class="line"></div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         LAYER 6 — PREDII CORE
+    ══════════════════════════════════════════════════ -->
+    <div class="layer predii-layer">
+      <div class="layer-label">06 &nbsp; Predii Core — Intelligence Engine</div>
+      <div class="predii-grid">
+
+        <div class="predii-card">
+          <div class="pc-icon">🧠</div>
+          <div class="pc-name">Contextual Engine</div>
+          <div class="pc-desc">Vehicle + complaint → structured RO pre-fill from millions of historical repairs</div>
+        </div>
+
+        <div class="predii-card">
+          <div class="pc-icon">📝</div>
+          <div class="pc-name">RO Story Writer API</div>
+          <div class="pc-desc">Generates 3C narrative (Concern / Cause / Correction) in AM or OEM format</div>
+        </div>
+
+        <div class="predii-card">
+          <div class="pc-icon">🔍</div>
+          <div class="pc-name">TSB / DTC Match</div>
+          <div class="pc-desc">VIN + DTC → ranked TSB list, OEM diagnostic paths, freeze-frame interpretation</div>
+        </div>
+
+        <div class="predii-card">
+          <div class="pc-icon">🚙</div>
+          <div class="pc-name">VIN Intelligence</div>
+          <div class="pc-desc">Full OEM spec, component identifiers, labor op codes, parts — resolved per VIN</div>
+        </div>
+
+        <div class="predii-card">
+          <div class="pc-icon">🔮</div>
+          <div class="pc-name">Health Prediction</div>
+          <div class="pc-desc">Mileage + service history → upcoming failure likelihood + maintenance schedule</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /.diagram -->
+
+  <!-- ── Legend ── -->
+  <div class="legend" style="max-width:1100px;margin:24px auto 0;">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#22C55E;"></div>
+      LIVE = Real API in production
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#3B82F6;"></div>
+      Demo = Interactive mock, API call simulated
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#A855F7;"></div>
+      WrenchIQ owns: shop workflows, customer UX, integrations
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#FF6B35;"></div>
+      Predii owns: repair intelligence, AI models, knowledge graph
+    </div>
+    <div style="margin-left:auto;font-size:11px;color:#9CA3AF;">
+      WrenchIQ.ai — Predii Confidential
+    </div>
+  </div>
+
+</body>
+</html>
