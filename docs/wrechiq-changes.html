@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WrenchIQ — Next Iteration Build Guide</title>
+<style>
+  :root {
+    --navy: #1a1f2e;
+    --dark-bg: #0f1219;
+    --dark-card: #1c2133;
+    --dark-border: #2a3048;
+    --gold: #f5a623;
+    --red: #e74c3c;
+    --green: #27ae60;
+    --green-light: #2ecc71;
+    --blue: #3498db;
+    --orange: #f39c12;
+    --purple: #8e44ad;
+    --light-gray: #f4f5f7;
+    --mid-gray: #8892a0;
+    --text: #2c3e50;
+    --border: #dde1e6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text); background: #fff; line-height: 1.65;
+    max-width: 1100px; margin: 0 auto; padding: 40px 32px;
+  }
+
+  /* Header */
+  .doc-header { border-bottom: 4px solid var(--gold); padding-bottom: 24px; margin-bottom: 40px; }
+  .doc-header h1 { font-size: 28px; font-weight: 700; color: var(--navy); }
+  .doc-header .subtitle { font-size: 16px; color: var(--mid-gray); margin-top: 2px; }
+  .doc-header .meta { font-size: 13px; color: var(--mid-gray); margin-top: 12px; }
+
+  /* Typography */
+  h2 { font-size: 22px; font-weight: 700; color: var(--navy); margin: 52px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid var(--gold); }
+  h3 { font-size: 17px; font-weight: 700; color: var(--navy); margin: 28px 0 10px 0; }
+  h4 { font-size: 15px; font-weight: 600; color: var(--text); margin: 20px 0 8px 0; }
+  p { margin-bottom: 12px; font-size: 15px; }
+
+  .principle-box { background: var(--navy); color: #fff; border-left: 5px solid var(--gold); padding: 20px 24px; border-radius: 6px; margin: 20px 0; font-size: 15px; }
+  .principle-box strong { color: var(--gold); }
+
+  /* Callout boxes */
+  .box { padding: 16px 20px; border-radius: 4px; margin: 16px 0; font-size: 14px; }
+  .box-label { font-weight: 700; font-size: 11px; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+  .build-box { background: #eaf2fd; border-left: 4px solid var(--blue); }
+  .build-box .box-label { color: var(--blue); }
+  .keep-box { background: #eafaf1; border-left: 4px solid var(--green); }
+  .keep-box .box-label { color: var(--green); }
+  .change-box { background: #fef5e7; border-left: 4px solid var(--orange); }
+  .change-box .box-label { color: var(--orange); }
+
+  /* Prompts */
+  .prompt { background: #1e1e2e; color: #a6e3a1; padding: 16px 20px; border-radius: 6px; margin: 12px 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+  .prompt-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--mid-gray); margin: 16px 0 4px 0; }
+
+  /* Screenshots */
+  .screenshot-container { margin: 16px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .screenshot-container img { width: 100%; display: block; }
+  .screenshot-caption { padding: 8px 14px; font-size: 12px; color: var(--mid-gray); background: #f8f9fa; border-top: 1px solid var(--border); }
+
+  /* Job cards */
+  .job-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin: 20px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .job-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .job-num { background: var(--navy); color: var(--gold); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+  .job-title { font-weight: 700; font-size: 16px; color: var(--navy); }
+  .persona-tag { font-size: 11px; font-weight: 600; letter-spacing: .5px; color: #fff; padding: 2px 8px; border-radius: 3px; margin-left: auto; }
+  .persona-sw { background: #e67e22; }
+  .persona-owner { background: #2980b9; }
+  .job-section { padding: 10px 14px; margin-top: 10px; font-size: 13px; border-radius: 0 4px 4px 0; }
+  .why-predii { background: #f8f5ff; border-left: 3px solid var(--purple); }
+  .value-est { background: #f0fdf4; border-left: 3px solid var(--green); }
+  .objective-link { background: #eaf2fd; border-left: 3px solid var(--blue); }
+  .job-section-label { font-weight: 700; font-size: 11px; letter-spacing: .5px; margin-bottom: 4px; display: block; }
+  .why-predii .job-section-label { color: var(--purple); }
+  .value-est .job-section-label { color: var(--green); }
+  .objective-link .job-section-label { color: var(--blue); }
+
+  /* Arc steps */
+  .arc-step { display: flex; gap: 16px; margin: 16px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+  .arc-num { background: var(--gold); color: var(--navy); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0; }
+
+  /* TOC */
+  .toc { background: var(--light-gray); padding: 20px 24px; border-radius: 8px; margin: 20px 0; }
+  .toc-title { font-weight: 700; font-size: 14px; color: var(--navy); margin-bottom: 8px; }
+  .toc a { color: var(--text); text-decoration: none; font-size: 14px; display: block; padding: 3px 0; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* ================================================================ */
+  /* MOCKUP UI COMPONENTS                                              */
+  /* ================================================================ */
+
+  /* Shared mockup frame */
+  .mockup-frame {
+    border-radius: 10px; overflow: hidden; margin: 20px 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* WrenchIQ dark header bar */
+  .wiq-header {
+    background: var(--dark-bg); color: #fff; padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+    border-bottom: 1px solid var(--dark-border);
+  }
+  .wiq-logo { color: var(--gold); font-weight: 800; font-size: 15px; }
+  .wiq-logo span { color: #fff; font-weight: 400; }
+  .wiq-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; }
+  .wiq-badge-admin { background: var(--blue); color: #fff; }
+  .wiq-badge-owner { background: #e67e22; color: #fff; }
+  .wiq-badge-sw { background: #e67e22; color: #fff; }
+  .wiq-nav { margin-left: auto; color: var(--mid-gray); font-size: 12px; }
+
+  /* Dark content area */
+  .wiq-body { background: var(--navy); padding: 20px; color: #c8cdd5; font-size: 13px; }
+  .wiq-body-light { background: #f5f6f8; padding: 20px; color: var(--text); font-size: 13px; }
+
+  /* KPI cards */
+  .kpi-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .kpi-card {
+    background: var(--dark-card); border: 1px solid var(--dark-border);
+    border-radius: 8px; padding: 14px 16px; flex: 1; min-width: 140px;
+  }
+  .kpi-card-light {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; flex: 1; min-width: 140px;
+  }
+  .kpi-label { font-size: 11px; color: var(--mid-gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .kpi-value { font-size: 22px; font-weight: 700; color: #fff; }
+  .kpi-value-dark { font-size: 22px; font-weight: 700; color: var(--text); }
+  .kpi-target { font-size: 11px; color: var(--mid-gray); margin-top: 2px; }
+  .kpi-status { font-size: 11px; font-weight: 600; margin-top: 4px; }
+  .status-on { color: var(--green-light); }
+  .status-off { color: var(--red); }
+  .status-close { color: var(--orange); }
+
+  /* Objective cards */
+  .obj-card {
+    background: var(--dark-card); border: 1px solid var(--dark-border);
+    border-radius: 8px; padding: 16px; margin-bottom: 10px;
+  }
+  .obj-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .obj-job-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; background: var(--blue); color: #fff; }
+  .obj-active { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; background: rgba(39,174,96,0.2); color: var(--green-light); margin-left: auto; }
+  .obj-text { color: #e2e6ed; font-size: 13px; line-height: 1.5; }
+  .obj-meta { color: var(--mid-gray); font-size: 11px; margin-top: 6px; }
+
+  /* Location health dots */
+  .health-grid { display: flex; flex-wrap: wrap; gap: 4px; margin: 12px 0; }
+  .health-dot { width: 14px; height: 14px; border-radius: 3px; }
+  .dot-green { background: var(--green-light); }
+  .dot-blue { background: var(--blue); }
+  .dot-yellow { background: var(--orange); }
+  .dot-red { background: var(--red); }
+
+  /* Split screen layout */
+  .split-view { display: flex; min-height: 480px; }
+  .sms-side { flex: 7; background: #f7f8fa; border-right: 3px solid var(--gold); }
+  .agent-side { flex: 3; background: var(--dark-bg); min-width: 280px; }
+
+  /* SMS mockup */
+  .sms-header { background: #4a6fa5; color: #fff; padding: 10px 16px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .sms-header .sms-logo { font-weight: 700; font-size: 14px; }
+  .sms-body { padding: 16px; }
+  .sms-metrics { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .sms-metric { background: #fff; border: 1px solid #dde1e6; border-radius: 6px; padding: 10px 14px; flex: 1; min-width: 100px; }
+  .sms-metric-label { font-size: 10px; color: #888; text-transform: uppercase; }
+  .sms-metric-value { font-size: 18px; font-weight: 700; color: #333; }
+
+  /* RO list items */
+  .ro-item { background: #fff; border: 1px solid #dde1e6; border-radius: 6px; padding: 10px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .ro-item.active { border-color: var(--gold); background: #fffbf0; box-shadow: 0 0 0 2px rgba(245,166,35,0.2); }
+  .ro-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+  .ro-info { flex: 1; }
+  .ro-name { font-weight: 600; font-size: 13px; color: #333; }
+  .ro-detail { font-size: 11px; color: #888; }
+  .ro-status { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; }
+  .ro-status-queue { background: #e3f2fd; color: #1976d2; }
+  .ro-status-diag { background: #fff3e0; color: #e65100; }
+  .ro-status-approval { background: #fce4ec; color: #c62828; }
+  .ro-status-ready { background: #e8f5e9; color: #2e7d32; }
+
+  /* Agent panel */
+  .agent-header { background: var(--dark-bg); padding: 10px 14px; border-bottom: 1px solid var(--dark-border); display: flex; align-items: center; gap: 8px; }
+  .agent-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-light); }
+  .agent-title { color: var(--gold); font-weight: 700; font-size: 13px; }
+  .agent-subtitle { color: var(--mid-gray); font-size: 11px; }
+  .agent-body { padding: 14px; }
+
+  /* Agent recommendation cards */
+  .agent-rec {
+    background: var(--dark-card); border: 1px solid var(--dark-border);
+    border-radius: 8px; padding: 12px; margin-bottom: 10px;
+  }
+  .agent-rec-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .agent-rec-icon { font-size: 14px; }
+  .agent-rec-title { font-size: 12px; font-weight: 600; color: #e2e6ed; }
+  .agent-rec-job { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 2px; background: rgba(52,152,219,0.3); color: var(--blue); margin-left: auto; }
+  .agent-rec-body { font-size: 12px; color: #a0a8b8; line-height: 1.5; }
+  .agent-rec-value { font-size: 11px; font-weight: 600; color: var(--green-light); margin-top: 6px; }
+  .agent-rec-obj { font-size: 10px; color: var(--mid-gray); margin-top: 4px; font-style: italic; }
+  .agent-btn { display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; margin-top: 6px; border: none; cursor: pointer; }
+  .agent-btn-green { background: var(--green); color: #fff; }
+  .agent-btn-blue { background: var(--blue); color: #fff; }
+  .agent-btn-orange { background: var(--orange); color: #fff; }
+
+  /* 3C rewrite block */
+  .rewrite-block {
+    background: rgba(39,174,96,0.1); border: 1px solid rgba(39,174,96,0.3);
+    border-radius: 6px; padding: 10px; margin-top: 8px; font-size: 11px; color: #c8cdd5; line-height: 1.5;
+  }
+  .rewrite-label { font-size: 10px; font-weight: 700; color: var(--green-light); margin-bottom: 4px; }
+
+  /* Insight cards for operational intelligence */
+  .insight-card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 10px;
+  }
+  .insight-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .insight-dot-red { background: var(--red); }
+  .insight-dot-yellow { background: var(--orange); }
+  .insight-dot-green { background: var(--green); }
+  .insight-action { font-size: 12px; color: var(--blue); font-weight: 600; margin-top: 6px; cursor: pointer; }
+
+  /* Impact section */
+  .impact-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .impact-card {
+    background: var(--dark-card); border: 1px solid var(--dark-border);
+    border-radius: 8px; padding: 16px; flex: 1; min-width: 200px;
+  }
+  .impact-job { font-size: 11px; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+  .impact-stat { font-size: 13px; color: #c8cdd5; line-height: 1.6; }
+  .impact-highlight { color: var(--green-light); font-weight: 600; }
+
+  /* Demo step label */
+  .demo-step { margin: 28px 0; }
+  .demo-step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .demo-step-badge { font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 3px 10px; border-radius: 4px; color: #fff; }
+  .badge-current { background: var(--orange); }
+  .badge-mockup { background: var(--blue); }
+  .badge-new { background: var(--green); }
+
+  /* Flow arrow between SMS and Agent */
+  .flow-arrow {
+    display: flex; align-items: center; justify-content: center;
+    padding: 12px 0; font-size: 13px; color: var(--mid-gray); gap: 10px;
+  }
+  .flow-arrow .arrow { color: var(--gold); font-size: 20px; font-weight: 700; }
+  .flow-arrow .flow-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* SMS input field mockup */
+  .sms-input-area {
+    background: #fff; border: 1px solid #dde1e6; border-radius: 6px;
+    padding: 12px 14px; margin-top: 10px; font-size: 12px; color: #333; line-height: 1.5;
+  }
+  .sms-input-label { font-size: 10px; font-weight: 700; color: #888; text-transform: uppercase; margin-bottom: 4px; }
+  .sms-field-placeholder { color: #bbb; font-style: italic; }
+  .sms-field-filled { color: #333; background: #fffde7; padding: 2px 4px; border-radius: 2px; }
+
+  /* Protractor logo styling */
+  .protractor-logo {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-weight: 800; font-size: 15px; color: #fff; letter-spacing: -0.3px;
+  }
+  .protractor-logo .proto-icon {
+    width: 22px; height: 22px; background: #fff; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; color: #4a6fa5;
+  }
+  .protractor-logo .proto-sub {
+    font-weight: 400; font-size: 11px; opacity: 0.7; margin-left: 2px;
+  }
+
+  /* Action result in SMS */
+  .sms-action-result {
+    background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 6px;
+    padding: 10px 14px; margin-top: 10px; font-size: 12px; color: #2e7d32;
+  }
+  .sms-action-result strong { color: #1b5e20; }
+
+  @media (max-width: 768px) {
+    .split-view { flex-direction: column; }
+    .sms-side { border-right: none; border-bottom: 3px solid var(--gold); }
+    .kpi-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- HEADER                                                        -->
+<!-- ============================================================ -->
+<div class="doc-header">
+  <h1>WrenchIQ — Next Iteration Build Guide</h1>
+  <div class="subtitle">From Tim Eisenmann to Tilak Kasturi</div>
+  <div class="meta">April 10, 2026 &nbsp;|&nbsp; PREDII CONFIDENTIAL &nbsp;|&nbsp; Based on v1.6 demo review</div>
+</div>
+
+<div class="toc">
+  <div class="toc-title">Contents</div>
+  <a href="#story">1. The Story We're Telling</a>
+  <a href="#overlay">2. The Overlay Principle</a>
+  <a href="#why-these">3. Why These Jobs</a>
+  <a href="#jobs">4. The 4 Jobs to Get Done</a>
+  <a href="#visual-arc">5. Visual Story Arc — What We're Building (7 Screens)</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. THE STORY                                                   -->
+<!-- ============================================================ -->
+<h2 id="story">1. The Story We're Telling</h2>
+
+<div class="principle-box">
+  <strong>WrenchIQ helps shops get their most important jobs done better — powered by Predii's automotive intelligence.</strong> GWG sets the targets. Shop owners see how to hit them. Service writers get decision-by-decision guidance at the counter. Every action still happens in the SMS. WrenchIQ proves the impact.
+</div>
+
+<p>The demo tells this story in three acts:</p>
+
+<div class="arc-step">
+  <div class="arc-num">1</div>
+  <div>
+    <h4 style="margin-top:0">Targets — GWG Sets the Objectives</h4>
+    <p style="margin-bottom:0">Taylor Mitchell at GWG configures WrenchIQ with specific operational objectives tied to the 4 jobs. Not abstract KPI thresholds but real business directives: "Increase oil change ARO by $75 and prioritize Brand X oil." "All brake ROs must have complete 3C narratives with TSB references." She can see red/yellow/green which locations are following them.</p>
+  </div>
+</div>
+
+<div class="arc-step">
+  <div class="arc-num">2</div>
+  <div>
+    <h4 style="margin-top:0">Guidance — The Agent Works Alongside the SMS</h4>
+    <p style="margin-bottom:0">Protractor is the primary workspace. WrenchIQ's agent panel sits alongside. As the service writer works, the agent provides intelligence at each decision — diagnosis support, 3C quality scoring, data-backed upsell. Then the shop owner sees operational intelligence: how their shop tracks against GWG's objectives, with Predii-powered root-cause analysis.</p>
+  </div>
+</div>
+
+<div class="arc-step">
+  <div class="arc-num">3</div>
+  <div>
+    <h4 style="margin-top:0">Proof — Impact Dashboard</h4>
+    <p style="margin-bottom:0">What the agent recommended, what was acted on, and the measurable P&L result. This is how GWG justifies per-rooftop spend and how Predii proves the intelligence layer's value.</p>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- 2. THE OVERLAY PRINCIPLE                                       -->
+<!-- ============================================================ -->
+<h2 id="overlay">2. The Overlay Principle</h2>
+
+<div class="principle-box">
+  <strong>WrenchIQ is NOT a shop management system.</strong> It is an AI intelligence overlay that sits alongside the shop's existing SMS (Protractor, Vehlo, Mitchell1, etc.). It consumes data from the SMS and third-party sources, runs it through Predii's intelligence engine, and surfaces recommendations. <strong>All actions are performed in the SMS, not in WrenchIQ.</strong>
+</div>
+
+<p><strong>WrenchIQ owns:</strong> the agent panel (contextual recommendations), operational intelligence (shop owner), GWG objectives + location tracking (corporate), and impact dashboard (proof).</p>
+
+<p><strong>The SMS owns:</strong> RO queue, estimate builder, scheduling, parts ordering, customer portal, DVI, billing — all workflow execution.</p>
+
+
+<!-- ============================================================ -->
+<!-- 3. WHY THESE JOBS                                              -->
+<!-- ============================================================ -->
+<h2 id="why-these">3. Why These Jobs</h2>
+
+<p>There are dozens of things an AI agent could do in a shop. We picked these 4 because each one passes three filters:</p>
+
+<p><strong>Filter 1: Requires Predii's Automotive Intelligence.</strong> A generic AI agent with SMS data access couldn't do it. The job depends on Predii's knowledge graph — the ontology mapping symptoms to DTCs to root causes to repairs to parts, trained on millions of repair orders. If someone could replicate it with GPT + an SMS API connector, it doesn't make the cut.</p>
+
+<p><strong>Filter 2: Connects Directly to P&amp;L.</strong> The value must be measurable in dollars — incremental revenue, cost avoidance, margin improvement, or risk reduction.</p>
+
+<p><strong>Filter 3: Works as an Overlay.</strong> The job can be done through recommendations that the service writer or shop owner acts on in the SMS. No WrenchIQ-owned workflow required.</p>
+
+<p>Other jobs could be added later — and pricing could scale by job/capability. These 4 are the starting set because they're the clearest intersection of Predii's moat, measurable value, and overlay-friendly delivery.</p>
+
+
+<!-- ============================================================ -->
+<!-- 4. THE 4 JOBS TO GET DONE                                      -->
+<!-- ============================================================ -->
+<h2 id="jobs">4. The 4 Jobs to Get Done</h2>
+
+<p>Benchmarks: $1.2M annual revenue, 6 bays, ~2,400 ROs/year, $500 avg RO, 50% gross margin.</p>
+
+<div class="job-card">
+  <div class="job-header">
+    <div class="job-num">1</div>
+    <div class="job-title">Intelligent Intake &amp; Diagnosis</div>
+    <span class="persona-tag persona-sw">SERVICE WRITER</span>
+  </div>
+  <p>Customer says "weird sound driving 80mph." WrenchIQ's agent panel shows probable DTC, relevant TSB, estimated labor/parts — before the car goes on the lift. The service writer uses this to write a better RO and ask the right diagnostic questions in Protractor.</p>
+  <div class="job-section why-predii">
+    <span class="job-section-label">WHY PREDII</span>
+    Predii's ontology maps natural language complaints → DTCs → root causes for specific VIN/make/model/mileage from millions of historical ROs. A generic LLM can summarize, but it can't diagnose.
+  </div>
+  <div class="job-section value-est">
+    <span class="job-section-label">VALUE PER SHOP / MONTH</span>
+    <strong>$2,000–$4,000.</strong> Fewer comebacks ($500–800 each), faster diagnosis = more throughput per bay.
+  </div>
+  <div class="job-section objective-link">
+    <span class="job-section-label">GWG OBJECTIVE</span>
+    "First-visit diagnosis accuracy &gt; 90%. Flag locations with comeback rate above 5%."
+  </div>
+</div>
+
+<div class="job-card">
+  <div class="job-header">
+    <div class="job-num">2</div>
+    <div class="job-title">RO Quality &amp; Compliance (3C Narrative)</div>
+    <span class="persona-tag persona-sw">SERVICE WRITER</span>
+  </div>
+  <p>Tech writes "catalytic converter broken / fix catalytic converter" in Protractor. WrenchIQ flags it as incomplete, generates a proper 3C narrative with TSB references, and scores it. The service writer copies the improved narrative into the SMS.</p>
+  <div class="job-section why-predii">
+    <span class="job-section-label">WHY PREDII</span>
+    Predii's RO Story Writer understands automotive repair terminology, complaint/cause/correction relationships, and what constitutes a defensible narrative. Trained on millions of ROs.
+  </div>
+  <div class="job-section value-est">
+    <span class="job-section-label">VALUE PER SHOP / MONTH</span>
+    <strong>$1,000–$3,000.</strong> Fewer warranty rejections ($400–1,200 each), reduced liability exposure.
+  </div>
+  <div class="job-section objective-link">
+    <span class="job-section-label">GWG OBJECTIVE</span>
+    "All brake and diagnostic ROs must score 80%+ on 3C completeness with TSB references."
+  </div>
+</div>
+
+<div class="job-card">
+  <div class="job-header">
+    <div class="job-num">3</div>
+    <div class="job-title">Smart Upsell at the Counter</div>
+    <span class="persona-tag persona-sw">SERVICE WRITER</span>
+  </div>
+  <p>2018 Subaru Outback at 92K miles comes in for an oil change. Agent panel says: "Head gasket inspection at 95K — 71% of similar Outbacks had this done within 5K miles. Cabin filter last replaced 34K ago." Data-backed, vehicle-specific recommendations the service writer can present with confidence.</p>
+  <div class="job-section why-predii">
+    <span class="job-section-label">WHY PREDII</span>
+    Predii knows repair patterns by make/model/year/mileage from the shop's RO history and GWG's network data. Vehicle-specific, not generic maintenance schedules.
+  </div>
+  <div class="job-section value-est">
+    <span class="job-section-label">VALUE PER SHOP / MONTH</span>
+    <strong>$3,000–$8,000.</strong> +$30–50 ARO on 25% of eligible ROs = $3K–5K incremental revenue.
+  </div>
+  <div class="job-section objective-link">
+    <span class="job-section-label">GWG OBJECTIVE</span>
+    "Increase oil change ARO by $75. Prioritize Brand X oil. Target 30% upsell acceptance."
+  </div>
+</div>
+
+<div class="job-card">
+  <div class="job-header">
+    <div class="job-num">4</div>
+    <div class="job-title">Operational Intelligence</div>
+    <span class="persona-tag persona-owner">SHOP OWNER</span>
+  </div>
+  <p>Shop owner sees how their shop tracks against GWG's objectives. Not just metrics — Predii explains <em>why</em> in automotive terms: "Approval rate on brake jobs dropped 12%. Root cause: 3C narratives averaging 54% completeness — customers don't trust the diagnosis. Top GWG locations average 82%+."</p>
+  <div class="job-section why-predii">
+    <span class="job-section-label">WHY PREDII</span>
+    Predii traces P&L outcomes to root causes through the repair data — connecting margin problems to specific repair categories, narrative quality, tech patterns. A BI dashboard shows the number; Predii tells you <em>why</em>.
+  </div>
+  <div class="job-section value-est">
+    <span class="job-section-label">VALUE PER SHOP / MONTH</span>
+    <strong>$2,000–$5,000.</strong> Drives adoption of Jobs 1–3. One fixed margin leak or approval drag per month compounds across the business.
+  </div>
+  <div class="job-section objective-link">
+    <span class="job-section-label">GWG OBJECTIVE</span>
+    "Weekly performance brief for every shop owner. Flag locations with approval rate below 75% — provide root-cause analysis."
+  </div>
+</div>
+
+<p><strong>Combined value per shop: $8,000–$20,000/month.</strong> At 100+ locations, even the conservative end makes per-rooftop pricing of a few hundred dollars/month a straightforward ROI conversation.</p>
+
+
+<!-- ============================================================ -->
+<!-- 5. VISUAL STORY ARC                                            -->
+<!-- ============================================================ -->
+<h2 id="visual-arc">5. Visual Story Arc — What We're Building</h2>
+
+<p>7 screens. Each one serves the story. Screens 3–5 each focus on a single job so the viewer sees exactly how WrenchIQ intelligence flows from SMS data → agent recommendation → back into SMS action.</p>
+
+<!-- =============== SCREEN 1: LANDING =============== -->
+<h3 style="color: var(--gold);">Screen 1 — Landing</h3>
+
+<div class="demo-step">
+  <div class="demo-step-header">
+    <span class="demo-step-badge badge-current">CURRENT</span>
+    <h4 style="margin:0">Update existing landing page</h4>
+  </div>
+  <div class="screenshot-container">
+    <img src="Screenshot 2026-04-10 at 2.37.11 PM.png" alt="Landing page">
+    <div class="screenshot-caption">Current v1.6: Remove Technician, update tagline, add SMS connection badge</div>
+  </div>
+  <div class="prompt-label">PROMPT FOR TILAK</div>
+  <div class="prompt">Update landing page:
+1. Remove Technician card (or gray out with "Coming Soon")
+2. Change subtitle to: "AI intelligence that works alongside your shop management system. Powered by Predii's automotive knowledge graph."
+3. Add "Connected to: Protractor (Vehlo)" badge
+4. Keep Service Advisor and Shop Owner persona cards</div>
+</div>
+
+
+<!-- =============== SCREEN 2: GWG CORPORATE =============== -->
+<h3 style="color: var(--gold);">Screen 2 — GWG Corporate: Objectives + Location Tracking</h3>
+
+<div class="demo-step">
+  <div class="demo-step-header">
+    <span class="demo-step-badge badge-new">NEW BUILD</span>
+    <h4 style="margin:0">This replaces both the old "Network Command" and the separate objectives config</h4>
+  </div>
+  <p>One screen where Taylor Mitchell sets objectives AND sees which locations are following them. This is Act 1 of the demo.</p>
+
+  <!-- MOCKUP: GWG Corporate View -->
+  <div class="mockup-frame">
+    <div class="wiq-header">
+      <div class="wiq-logo">WrenchIQ<span>.ai</span></div>
+      <span class="wiq-badge wiq-badge-admin">ADMIN</span>
+      <span style="color: var(--mid-gray); font-size: 12px;">Network (100 Locations)</span>
+      <div class="wiq-nav">Great Water 360 Auto Care &nbsp;|&nbsp; Taylor Mitchell</div>
+    </div>
+    <div class="wiq-body">
+      <div style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px;">Network Objectives</div>
+      <div style="font-size: 12px; color: var(--mid-gray); margin-bottom: 16px;">Set the targets the agent optimizes against. Each maps to a job the agent helps your shops do better.</div>
+
+      <!-- Objective Cards -->
+      <div class="obj-card">
+        <div class="obj-header">
+          <span class="obj-job-tag">JOB 1</span>
+          <span style="color: #fff; font-weight: 600; font-size: 13px;">Intake &amp; Diagnosis</span>
+          <span class="obj-active">Active</span>
+        </div>
+        <div class="obj-text">First-visit diagnosis accuracy &gt; 90%. Flag locations with comeback rate above 5%.</div>
+        <div class="obj-meta">Scope: All 100 locations &nbsp;|&nbsp; Current avg: 88% &nbsp;|&nbsp; 7 locations flagged</div>
+      </div>
+
+      <div class="obj-card">
+        <div class="obj-header">
+          <span class="obj-job-tag">JOB 2</span>
+          <span style="color: #fff; font-weight: 600; font-size: 13px;">RO Quality &amp; Compliance</span>
+          <span class="obj-active">Active</span>
+        </div>
+        <div class="obj-text">All brake and diagnostic ROs must score 80%+ on 3C completeness with TSB references. Weekly compliance report by location.</div>
+        <div class="obj-meta">Scope: All 100 locations &nbsp;|&nbsp; Current avg: 67% <span style="color: var(--red);">▼ Off-track</span> &nbsp;|&nbsp; 38 locations below target</div>
+      </div>
+
+      <div class="obj-card">
+        <div class="obj-header">
+          <span class="obj-job-tag">JOB 3</span>
+          <span style="color: #fff; font-weight: 600; font-size: 13px;">Smart Upsell</span>
+          <span class="obj-active">Active</span>
+        </div>
+        <div class="obj-text">Increase oil change ARO by $75. Prioritize Brand X oil and cabin filter add-on. Target: 30% upsell acceptance on routine maintenance.</div>
+        <div class="obj-meta">Scope: West (28) + Southwest (19) first &nbsp;|&nbsp; Current lift: +$42 <span style="color: var(--orange);">▲ Progress</span> &nbsp;|&nbsp; 12 locations above target</div>
+      </div>
+
+      <div class="obj-card">
+        <div class="obj-header">
+          <span class="obj-job-tag">JOB 4</span>
+          <span style="color: #fff; font-weight: 600; font-size: 13px;">Operational Intelligence</span>
+          <span class="obj-active">Active</span>
+        </div>
+        <div class="obj-text">Weekly performance brief for every shop owner. Flag locations with approval rate below 75% — provide root-cause analysis and recommended action.</div>
+        <div class="obj-meta">Scope: All 100 locations &nbsp;|&nbsp; 91 owners reviewed this week &nbsp;|&nbsp; 6 locations flagged</div>
+      </div>
+
+      <!-- Location Health -->
+      <div style="font-size: 14px; font-weight: 700; color: #fff; margin: 20px 0 8px 0;">Location Health — Who's Following the Objectives</div>
+      <div style="display: flex; gap: 16px; font-size: 11px; color: var(--mid-gray); margin-bottom: 8px;">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--green-light);margin-right:4px;"></span>On-track (42)</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--blue);margin-right:4px;"></span>Good (31)</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--orange);margin-right:4px;"></span>Needs attention (15)</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--red);margin-right:4px;"></span>Off-track (12)</span>
+      </div>
+      <div class="health-grid">
+        <div class="health-dot dot-green"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div>
+        <div class="health-dot dot-green"></div><div class="health-dot dot-red"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div>
+        <div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-red"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-green"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-red"></div>
+        <div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-green"></div><div class="health-dot dot-red"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div>
+        <div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-green"></div><div class="health-dot dot-red"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-green"></div>
+        <div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-red"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-green"></div>
+        <div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-red"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-red"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div>
+        <div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-green"></div><div class="health-dot dot-red"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-green"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-red"></div>
+        <div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-red"></div><div class="health-dot dot-green"></div>
+        <div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-yellow"></div><div class="health-dot dot-green"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div><div class="health-dot dot-red"></div><div class="health-dot dot-blue"></div><div class="health-dot dot-green"></div>
+      </div>
+      <div style="font-size: 11px; color: var(--mid-gray); margin-top: 8px;">Updated: Thursday, April 9 &nbsp;|&nbsp; Last configured by: Taylor Mitchell</div>
+    </div>
+  </div>
+
+  <div class="prompt-label">PROMPT FOR TILAK</div>
+  <div class="prompt">Build a single "GWG Corporate" screen that combines objectives configuration with location tracking. This replaces both the old Network Command and any separate objectives screen.
+
+Layout as shown in the mockup above:
+- Header: Admin role, network badge, Taylor Mitchell
+- Objectives section: 4 cards (one per job), each editable with objective text, scope, and current status
+- Location Health grid: color-coded dots showing which locations are on-track/off-track against the combined objectives
+- Click a dot to drill into that location's detail
+
+This is Act 1 of the demo — where GWG configures what the agent optimizes for.</div>
+</div>
+
+
+<!-- =============== SCREEN 3: JOB 1 — INTAKE & DIAGNOSIS =============== -->
+<h3 style="color: var(--gold);">Screen 3 — Job 1: Intake &amp; Diagnosis</h3>
+
+<div class="demo-step">
+  <div class="demo-step-header">
+    <span class="demo-step-badge badge-new">NEW BUILD</span>
+    <h4 style="margin:0">Service writer opens RO in Protractor → Agent provides diagnosis intelligence → Writer enters findings in SMS</h4>
+  </div>
+  <p>Act 2 begins. Each of the next 3 screens focuses on a single job, showing the full loop: what the service writer sees in their SMS, what the agent recommends, and how that recommendation flows back into SMS action.</p>
+
+  <div class="mockup-frame">
+    <div class="split-view">
+      <!-- SMS SIDE -->
+      <div class="sms-side">
+        <div class="sms-header">
+          <div class="protractor-logo"><span class="proto-icon">P</span> Protractor <span class="proto-sub">by Vehlo</span></div>
+          <span style="margin-left: auto; font-size: 11px; opacity: 0.7;">RO #4821 &nbsp;|&nbsp; James Kowalski</span>
+        </div>
+        <div class="sms-body">
+          <div style="font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; margin-bottom: 8px;">Repair Order — Intake</div>
+
+          <div class="ro-item active">
+            <div class="ro-avatar" style="background: #e74c3c;">MR</div>
+            <div class="ro-info">
+              <div class="ro-name">Monica Rodriguez</div>
+              <div class="ro-detail">2021 Toyota Camry SE · 58,200 mi · VIN: 4T1B11HK5MU...</div>
+            </div>
+            <span class="ro-status ro-status-diag">Diagnosing</span>
+          </div>
+
+          <div class="sms-input-area">
+            <div class="sms-input-label">Customer Concern</div>
+            "Weird sound at 80mph, engine light came on last week"
+          </div>
+
+          <div class="sms-input-area" style="margin-top: 8px;">
+            <div class="sms-input-label">Diagnostic Findings</div>
+            <span class="sms-field-placeholder">Enter diagnosis results here...</span>
+          </div>
+
+          <div class="sms-input-area" style="margin-top: 8px;">
+            <div class="sms-input-label">Recommended Repair</div>
+            <span class="sms-field-placeholder">Enter recommended services...</span>
+          </div>
+
+          <div class="flow-arrow">
+            <span class="flow-label">Service writer sees blank fields</span>
+            <span class="arrow">→</span>
+            <span class="flow-label">Agent fills in the intelligence</span>
+          </div>
+
+          <!-- AFTER: Fields filled from agent guidance -->
+          <div class="sms-action-result">
+            <strong>✓ Entered from WrenchIQ guidance:</strong><br>
+            <strong>Findings:</strong> DTC P0420 — Catalyst System Efficiency Below Threshold (Bank 1). Per TSB-2021-0144, upstream O2 sensor failure likely root cause at this mileage.<br>
+            <strong>Repair:</strong> Replace upstream O2 sensor. Monitor catalyst post-repair. Est: 1.5 hr labor, $380–$680 parts.
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENT SIDE -->
+      <div class="agent-side">
+        <div class="agent-header">
+          <div class="agent-dot"></div>
+          <div class="agent-title">WrenchIQ AI</div>
+          <div style="margin-left: auto; color: var(--mid-gray); font-size: 10px;">Focused: Monica R.</div>
+        </div>
+        <div class="agent-body">
+          <div style="color: var(--mid-gray); font-size: 10px; margin-bottom: 10px;">2021 Toyota Camry SE · 58,200 mi</div>
+
+          <div class="agent-rec" style="border-left: 3px solid var(--green);">
+            <div class="agent-rec-header">
+              <span class="agent-rec-icon">🔧</span>
+              <span class="agent-rec-title">Diagnosis Intelligence</span>
+              <span class="agent-rec-job">Job 1</span>
+            </div>
+            <div class="agent-rec-body">
+              <strong style="color: var(--green-light);">Probable: P0420</strong><br>
+              Catalyst System Efficiency Below Threshold (Bank 1)<br><br>
+              <strong style="color: var(--blue);">TSB-2021-0144</strong> applies to 2021 Camry at this mileage. Check upstream O2 sensor first — avoid unnecessary cat replacement.<br><br>
+              <span style="color: var(--mid-gray);">Est: 1.5 hr labor · $380–$680 parts</span>
+            </div>
+            <div class="agent-rec-obj">GWG Objective: Diagnosis accuracy &gt; 90%</div>
+            <div style="color: var(--mid-gray); font-size: 10px; margin-top: 6px;">Confidence: 84% · Based on 1,247 similar ROs across GWG</div>
+          </div>
+
+          <div style="font-size: 11px; color: var(--mid-gray); margin: 12px 0 6px 0; font-weight: 600;">WHY THIS MATTERS</div>
+          <div style="font-size: 11px; color: #a0a8b8; line-height: 1.5; padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 4px;">
+            Without TSB match: tech replaces catalytic converter ($1,200+). With Predii intelligence: O2 sensor fix at $380. <strong style="color: var(--green-light);">$820 saved</strong>, correct repair first time.
+          </div>
+
+          <div style="margin-top: 12px; text-align: center;">
+            <span class="agent-btn agent-btn-orange" style="font-size: 12px; padding: 6px 16px;">← Enter in Protractor</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prompt-label">PROMPT FOR TILAK</div>
+  <div class="prompt">Build Screen 3 — Job 1: Intake &amp; Diagnosis as a split-screen view:
+
+LEFT (70%): Protractor SMS showing a single RO for Monica Rodriguez (2021 Camry). Show:
+- Customer concern text field (filled)
+- Diagnostic Findings field (empty → then filled after agent guidance)
+- Recommended Repair field (empty → then filled)
+- Use a green "entered from WrenchIQ guidance" result box to show what gets typed into SMS
+
+RIGHT (30%): WrenchIQ agent panel (dark theme) showing ONLY Job 1 intelligence:
+- DTC P0420 probable diagnosis
+- TSB-2021-0144 match
+- Labor/parts estimate
+- "Why this matters" — cost savings from correct first-time diagnosis
+- GWG Objective link
+
+KEY: Show the FLOW — blank SMS fields at top, agent intelligence on right, filled SMS fields at bottom. The story is: "Agent told me what to look for → I entered it in Protractor."
+
+Style the Protractor header with a "P" icon + "Protractor by Vehlo" branding so it looks like the real SMS.</div>
+</div>
+
+
+<!-- =============== SCREEN 4: JOB 2 — 3C NARRATIVE =============== -->
+<h3 style="color: var(--gold);">Screen 4 — Job 2: 3C Narrative Quality</h3>
+
+<div class="demo-step">
+  <div class="demo-step-header">
+    <span class="demo-step-badge badge-new">NEW BUILD</span>
+    <h4 style="margin:0">Service writer drafts 3C in SMS → Agent scores and rewrites → Writer pastes corrected narrative into SMS</h4>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="split-view">
+      <!-- SMS SIDE -->
+      <div class="sms-side">
+        <div class="sms-header">
+          <div class="protractor-logo"><span class="proto-icon">P</span> Protractor <span class="proto-sub">by Vehlo</span></div>
+          <span style="margin-left: auto; font-size: 11px; opacity: 0.7;">RO #4821 &nbsp;|&nbsp; 3C Narrative</span>
+        </div>
+        <div class="sms-body">
+          <div style="font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; margin-bottom: 8px;">RO Narrative — Complaint / Cause / Correction</div>
+
+          <div class="sms-input-area">
+            <div class="sms-input-label">Current Writer Entry</div>
+            <div style="color: #c0392b; font-style: italic;">
+              <strong>Complaint:</strong> car makes noise<br>
+              <strong>Cause:</strong> engine light on<br>
+              <strong>Correction:</strong> replaced part
+            </div>
+            <div style="font-size: 10px; color: #c0392b; margin-top: 6px; font-weight: 600;">⚠ Score: 34/100 — incomplete for warranty, audit, or GWG compliance</div>
+          </div>
+
+          <div class="flow-arrow">
+            <span class="flow-label">Agent rewrites the 3C</span>
+            <span class="arrow">→</span>
+            <span class="flow-label">Writer pastes into SMS</span>
+          </div>
+
+          <!-- AFTER: Corrected 3C pasted back -->
+          <div class="sms-action-result">
+            <strong>✓ Pasted from WrenchIQ 3C rewrite:</strong><br><br>
+            <strong>COMPLAINT:</strong> Customer reports unusual noise at highway speed (~80 mph). Diagnostic scan returned DTC P0420 — Catalyst System Efficiency Below Threshold (Bank 1).<br><br>
+            <strong>CAUSE:</strong> Per TSB-2021-0144 applicable to 2021 Toyota Camry at 58K mi, root cause determined to be upstream O2 sensor degradation causing false catalyst efficiency reading.<br><br>
+            <strong>CORRECTION:</strong> Replaced upstream oxygen sensor (P/N: 89467-06170). Cleared DTC. Test drive confirmed no recurrence. Catalyst monitoring normal post-repair.<br><br>
+            <span style="color: #1b5e20; font-weight: 600;">New score: 91/100</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENT SIDE -->
+      <div class="agent-side">
+        <div class="agent-header">
+          <div class="agent-dot"></div>
+          <div class="agent-title">WrenchIQ AI</div>
+          <div style="margin-left: auto; color: var(--mid-gray); font-size: 10px;">3C Analysis</div>
+        </div>
+        <div class="agent-body">
+          <div class="agent-rec" style="border-left: 3px solid var(--red);">
+            <div class="agent-rec-header">
+              <span class="agent-rec-icon">📋</span>
+              <span class="agent-rec-title">3C Quality Alert</span>
+              <span class="agent-rec-job">Job 2</span>
+            </div>
+            <div class="agent-rec-body">
+              Current narrative score: <strong style="color: var(--red);">34/100</strong><br>
+              Missing: diagnostic justification, TSB reference, part numbers, mileage context, test verification
+            </div>
+          </div>
+
+          <div class="rewrite-block" style="margin: 10px 0;">
+            <div class="rewrite-label">▼ Suggested 3C Rewrite</div>
+            <strong>COMPLAINT:</strong> Customer reports unusual noise at highway speed. Diagnostic scan returned P0420...<br><br>
+            <strong>CAUSE:</strong> Per TSB-2021-0144, upstream O2 sensor degradation at 58K mi...<br><br>
+            <strong>CORRECTION:</strong> Replaced upstream oxygen sensor (P/N: 89467-06170). Cleared DTC. Test drive confirmed...
+          </div>
+
+          <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
+            <span class="agent-btn agent-btn-green" style="font-size: 12px; padding: 6px 16px;">Copy to Clipboard</span>
+            <span style="font-size: 10px; color: var(--mid-gray);">Then paste into Protractor</span>
+          </div>
+
+          <div style="font-size: 11px; color: var(--mid-gray); margin: 12px 0 6px 0; font-weight: 600;">WHY THIS MATTERS</div>
+          <div style="font-size: 11px; color: #a0a8b8; line-height: 1.5; padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 4px;">
+            Original 3C fails warranty audit. Rewritten version: compliant, defensible, billable. At 200 ROs/mo, lifting average score from 60→85 prevents an estimated <strong style="color: var(--green-light);">$1,800/mo</strong> in rejected claims.
+          </div>
+
+          <div class="agent-rec-obj" style="margin-top: 10px;">GWG Objective: 3C compliance score ≥ 80% on all diagnostic ROs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prompt-label">PROMPT FOR TILAK</div>
+  <div class="prompt">Build Screen 4 — Job 2: 3C Narrative Quality as a split-screen view:
+
+LEFT (70%): Protractor SMS showing the 3C narrative section of an RO:
+- TOP: Current poor-quality entry in red italic ("car makes noise / engine light on / replaced part") with score 34/100
+- FLOW ARROW: "Agent rewrites → Writer pastes into SMS"
+- BOTTOM: Green result box showing the corrected 3C that was pasted from the agent, score now 91/100
+
+RIGHT (30%): WrenchIQ agent panel showing ONLY Job 2 intelligence:
+- Quality Alert card with current score and what's missing
+- Full 3C rewrite in the green rewrite block
+- "Copy to Clipboard" button (writer then pastes into Protractor)
+- Why this matters: warranty/audit impact estimate
+- GWG Objective link
+
+KEY: The action is COPY-PASTE. Agent writes, human pastes into SMS. WrenchIQ never touches the SMS directly.</div>
+</div>
+
+
+<!-- =============== SCREEN 5: JOB 3 — SMART UPSELL =============== -->
+<h3 style="color: var(--gold);">Screen 5 — Job 3: Smart Upsell</h3>
+
+<div class="demo-step">
+  <div class="demo-step-header">
+    <span class="demo-step-badge badge-new">NEW BUILD</span>
+    <h4 style="margin:0">Routine RO in SMS → Agent identifies data-driven upsell + talk track → Writer adds services to RO in SMS</h4>
+  </div>
+
+  <div class="mockup-frame">
+    <div class="split-view">
+      <!-- SMS SIDE -->
+      <div class="sms-side">
+        <div class="sms-header">
+          <div class="protractor-logo"><span class="proto-icon">P</span> Protractor <span class="proto-sub">by Vehlo</span></div>
+          <span style="margin-left: auto; font-size: 11px; opacity: 0.7;">RO #4819 &nbsp;|&nbsp; Robert Taylor</span>
+        </div>
+        <div class="sms-body">
+          <div style="font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; margin-bottom: 8px;">Repair Order — Services</div>
+
+          <div class="ro-item active">
+            <div class="ro-avatar" style="background: #e67e22;">RT</div>
+            <div class="ro-info">
+              <div class="ro-name">Robert Taylor</div>
+              <div class="ro-detail">2022 Ford F-150 XLT · 44,800 mi</div>
+            </div>
+            <span class="ro-status ro-status-queue">In Queue</span>
+          </div>
+
+          <div class="sms-input-area">
+            <div class="sms-input-label">Requested Services</div>
+            <strong>1.</strong> Oil change — Synthetic blend 5W-30 &nbsp;&nbsp; <span style="color: #888;">$79.99</span><br>
+            <strong>2.</strong> Tire rotation &nbsp;&nbsp; <span style="color: #888;">$29.99</span>
+            <div style="font-size: 11px; color: #888; margin-top: 6px; border-top: 1px solid #eee; padding-top: 6px;">RO Total: <strong style="color: #333;">$109.98</strong></div>
+          </div>
+
+          <div class="flow-arrow">
+            <span class="flow-label">Agent identifies upsell opportunity</span>
+            <span class="arrow">→</span>
+            <span class="flow-label">Writer adds services to RO</span>
+          </div>
+
+          <!-- AFTER: Services added from agent guidance -->
+          <div class="sms-action-result">
+            <strong>✓ Added to RO from WrenchIQ recommendation:</strong><br>
+            <strong>3.</strong> Cabin air filter replacement — $49.99<br>
+            <strong>4.</strong> Transmission fluid exchange (45K service interval) — $189.99<br><br>
+            <span style="font-weight: 600;">New RO Total: $349.97 &nbsp;|&nbsp; +$239.99 upsell</span>
+          </div>
+
+          <div style="background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 6px; padding: 10px 14px; margin-top: 10px; font-size: 12px; color: #e65100;">
+            <strong>Talk track used:</strong> "Mr. Taylor, your F-150 is coming up on 45,000 miles — that's when Ford recommends a transmission fluid exchange. 82% of F-150 owners at this mileage get this done. We can knock it out while we've got it up. Also noticed your cabin filter — would make a big difference with allergy season."
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENT SIDE -->
+      <div class="agent-side">
+        <div class="agent-header">
+          <div class="agent-dot"></div>
+          <div class="agent-title">WrenchIQ AI</div>
+          <div style="margin-left: auto; color: var(--mid-gray); font-size: 10px;">Upsell Intel</div>
+        </div>
+        <div class="agent-body">
+          <div style="color: var(--mid-gray); font-size: 10px; margin-bottom: 10px;">2022 Ford F-150 XLT · 44,800 mi</div>
+
+          <div class="agent-rec" style="border-left: 3px solid var(--blue);">
+            <div class="agent-rec-header">
+              <span class="agent-rec-icon">💡</span>
+              <span class="agent-rec-title">Smart Upsell</span>
+              <span class="agent-rec-job">Job 3</span>
+            </div>
+            <div class="agent-rec-body">
+              F-150 at 44.8K mi — approaching 45K service interval.<br><br>
+              <strong style="color: #fff;">Recommended add-ons:</strong><br>
+              • Transmission fluid exchange — $189.99<br>
+              <span style="font-size: 10px; color: var(--mid-gray);">82% of F-150s in your data get this at 45K</span><br><br>
+              • Cabin air filter — $49.99<br>
+              <span style="font-size: 10px; color: var(--mid-gray);">Last replaced: never (per RO history)</span>
+            </div>
+            <div class="agent-rec-value">+$239.99 upsell potential</div>
+          </div>
+
+          <div style="font-size: 11px; color: var(--mid-gray); margin: 12px 0 6px 0; font-weight: 600;">CUSTOMER TALK TRACK</div>
+          <div style="font-size: 11px; color: #a0a8b8; line-height: 1.5; padding: 10px; background: rgba(52,152,219,0.1); border: 1px solid rgba(52,152,219,0.2); border-radius: 6px;">
+            "Mr. Taylor, your F-150 is coming up on 45,000 miles — that's when Ford recommends a transmission fluid exchange. 82% of F-150 owners at this mileage get this done. We can knock it out while we've got it up. Also noticed your cabin filter hasn't been changed yet."
+          </div>
+          <div style="margin-top: 8px;">
+            <span class="agent-btn agent-btn-blue" style="font-size: 12px; padding: 6px 16px;">Copy Talk Track</span>
+          </div>
+
+          <div style="font-size: 11px; color: var(--mid-gray); margin: 12px 0 6px 0; font-weight: 600;">WHY THIS MATTERS</div>
+          <div style="font-size: 11px; color: #a0a8b8; line-height: 1.5; padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 4px;">
+            GWG target: +$75/RO on routine services. This single upsell: +$240. Data-backed recommendation with OEM intervals = higher approval rate. Not a generic add-on — specific to this vehicle's history and mileage.
+          </div>
+
+          <div class="agent-rec-obj" style="margin-top: 10px;">GWG Objective: +$75 avg upsell on routine maintenance ROs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prompt-label">PROMPT FOR TILAK</div>
+  <div class="prompt">Build Screen 5 — Job 3: Smart Upsell as a split-screen view:
+
+LEFT (70%): Protractor SMS showing a routine RO (Robert Taylor, F-150, oil change + rotation):
+- TOP: Current RO with 2 line items totaling $109.98
+- FLOW ARROW: "Agent identifies upsell → Writer adds to RO"
+- MIDDLE: Green result box showing 2 services added, new total $349.97
+- BOTTOM: Orange talk-track box showing the exact words the service writer used with the customer
+
+RIGHT (30%): WrenchIQ agent panel showing ONLY Job 3 intelligence:
+- Smart Upsell card with recommended add-ons, prices, and data backing (82% of F-150s, never-replaced filter)
+- Customer Talk Track in a blue-tinted block — conversational, data-driven, not salesy
+- "Copy Talk Track" button
+- Why this matters: GWG +$75 ARO target, this upsell delivers $240
+- GWG Objective link
+
+KEY: The talk track is the killer feature. Agent doesn't just say "upsell cabin filter" — it gives the writer exactly what to say to the customer with data to back it up. Writer adds services to RO manually in Protractor.</div>
+</div>
+
+
+<!-- =============== SCREEN 6: SHOP OWNER =============== -->
+<h3 style="color: var(--gold);">Screen 6 — Shop Owner: Operational Intelligence</h3>
+
+<div class="demo-step">
+  <div class="demo-step-header">
+    <span class="demo-step-badge badge-new">NEW BUILD</span>
+    <h4 style="margin:0">How the shop owner sees their performance against GWG objectives</h4>
+  </div>
+  <p>Still Act 2 — but from the shop owner's perspective. Not a generic dashboard. Every metric ties to a GWG objective, and Predii explains the root cause behind any gap.</p>
+
+  <!-- MOCKUP: Operational Intelligence -->
+  <div class="mockup-frame">
+    <div class="wiq-header">
+      <div class="wiq-logo">WrenchIQ<span>.ai</span></div>
+      <span class="wiq-badge wiq-badge-owner">Shop Owner</span>
+      <span style="color: var(--mid-gray); font-size: 12px;">Operational Intelligence</span>
+      <div class="wiq-nav">Peninsula Precision Auto &nbsp;|&nbsp; Tilak Kasturi</div>
+    </div>
+    <div class="wiq-body-light">
+      <div style="font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 4px;">Your GWG Objectives — How You're Tracking</div>
+      <div style="font-size: 12px; color: var(--mid-gray); margin-bottom: 16px;">Friday, April 10, 2026 &nbsp;|&nbsp; Data synced from Protractor + Xero</div>
+
+      <!-- KPI cards tied to objectives -->
+      <div class="kpi-row">
+        <div class="kpi-card-light">
+          <div class="kpi-label">Job 1: Diagnosis Accuracy</div>
+          <div class="kpi-value-dark">88%</div>
+          <div class="kpi-target">Target: 90%</div>
+          <div class="kpi-status status-close">▲ Close — 2pts to go</div>
+        </div>
+        <div class="kpi-card-light" style="border-left: 3px solid var(--red);">
+          <div class="kpi-label">Job 2: 3C Compliance</div>
+          <div class="kpi-value-dark" style="color: var(--red);">67%</div>
+          <div class="kpi-target">Target: 80%</div>
+          <div class="kpi-status status-off">▼ Off-track — see analysis below</div>
+        </div>
+        <div class="kpi-card-light">
+          <div class="kpi-label">Job 3: ARO Upsell Lift</div>
+          <div class="kpi-value-dark">+$42</div>
+          <div class="kpi-target">Target: +$75</div>
+          <div class="kpi-status status-close">▲ Progress — 56% to target</div>
+        </div>
+        <div class="kpi-card-light" style="border-left: 3px solid var(--green);">
+          <div class="kpi-label">Job 4: Approval Rate</div>
+          <div class="kpi-value-dark" style="color: var(--green);">87%</div>
+          <div class="kpi-target">Target: 75%</div>
+          <div class="kpi-status status-on">✓ On-track</div>
+        </div>
+      </div>
+
+      <!-- AI Analysis -->
+      <div style="font-size: 16px; font-weight: 700; color: var(--navy); margin: 20px 0 4px 0;">⚡ What's Going On</div>
+      <div style="font-size: 12px; color: var(--mid-gray); margin-bottom: 12px;">Powered by Predii · analyzing 2,400 ROs + Xero financials</div>
+
+      <div class="insight-card" style="border-left: 3px solid var(--red);">
+        <span class="insight-dot insight-dot-red"></span>
+        <strong>3C compliance is your biggest gap.</strong> Brake RO narratives averaging 54% completeness — below GWG's 80% target. Root cause: Tech Marcus and Tech DeShawn entering single-line causes without DVI references. Top GWG locations average 82%+.
+        <div class="insight-action">→ Enable auto-3C scoring for brake category</div>
+      </div>
+
+      <div class="insight-card" style="border-left: 3px solid var(--orange);">
+        <span class="insight-dot insight-dot-yellow"></span>
+        <strong>BMW brake jobs dragging parts margin.</strong> Running 38% vs. your 53% target. OEM rotors at low markup on non-safety items. Your data shows equivalent aftermarket at 51% margin with same warranty claim rate.
+        <div class="insight-action">→ Review parts selection on next BMW brake RO</div>
+      </div>
+
+      <div class="insight-card" style="border-left: 3px solid var(--green);">
+        <span class="insight-dot insight-dot-green"></span>
+        <strong>James Kowalski is your MVP.</strong> 96% efficiency, $545/job avg, 4.8★ rating. His 3C narratives score 91%. Replicate his approach with other techs — his brake RO templates could lift the team.
+        <div class="insight-action">→ Share James's templates with Marcus and DeShawn</div>
+      </div>
+
+      <div style="font-size: 16px; font-weight: 700; color: var(--navy); margin: 20px 0 8px 0;">🎯 Do These Today</div>
+      <div class="insight-card">
+        <strong>1.</strong> Review 3C auto-scoring for brake ROs — closes your biggest objective gap<br>
+        <strong>2.</strong> Coach Marcus on narrative quality using James's examples<br>
+        <strong>3.</strong> Check Xero: 3 invoices overdue totaling $3,215 — Sarah Chen's $1,890 is 14 days past due
+      </div>
+    </div>
+  </div>
+
+  <div class="prompt-label">PROMPT FOR TILAK</div>
+  <div class="prompt">Build the Shop Owner "Operational Intelligence" screen as shown:
+
+TOP: 4 KPI cards — one per job — showing current value, GWG target, and on-track/off-track status. Red left-border on cards that are off-track.
+
+MIDDLE: "What's Going On" — AI analysis section. Each insight has:
+- Red/yellow/green dot for severity
+- Root-cause explanation in automotive terms (not just "number went down")
+- How top GWG locations compare
+- Specific action to take (blue link)
+
+BOTTOM: "Do These Today" — 3 prioritized actions ranked by objective gap impact.
+
+No standalone P&L reporting (that's Xero/SMS territory). Financial data only appears in context of "here's why this metric is off."</div>
+</div>
+
+
+<!-- =============== SCREEN 7: IMPACT DASHBOARD =============== -->
+<h3 style="color: var(--gold);">Screen 7 — Impact Dashboard</h3>
+
+<div class="demo-step">
+  <div class="demo-step-header">
+    <span class="demo-step-badge badge-new">NEW BUILD</span>
+    <h4 style="margin:0">Act 3 — The proof that WrenchIQ works</h4>
+  </div>
+  <p>What the agent recommended, what was acted on, and the measurable P&L result. This is how GWG justifies per-rooftop pricing.</p>
+
+  <!-- MOCKUP: Impact Dashboard -->
+  <div class="mockup-frame">
+    <div class="wiq-header">
+      <div class="wiq-logo">WrenchIQ<span>.ai</span></div>
+      <span class="wiq-badge wiq-badge-owner">Shop Owner</span>
+      <span style="color: var(--mid-gray); font-size: 12px;">Agent Impact</span>
+      <div class="wiq-nav">Peninsula Precision Auto &nbsp;|&nbsp; Last 30 days</div>
+    </div>
+    <div class="wiq-body">
+      <div style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 16px;">Agent Impact — Last 30 Days</div>
+
+      <!-- Summary cards -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Recommendations</div>
+          <div class="kpi-value">347</div>
+          <div class="kpi-target">across all 4 jobs</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Acted On</div>
+          <div class="kpi-value" style="color: var(--green-light);">78%</div>
+          <div class="kpi-target">adoption rate</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Revenue Impact</div>
+          <div class="kpi-value" style="color: var(--green-light);">+$14,200</div>
+          <div class="kpi-target">incremental this month</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">3C Compliance</div>
+          <div class="kpi-value" style="color: var(--green-light);">+27 pts</div>
+          <div class="kpi-target">64% → 91% score</div>
+        </div>
+      </div>
+
+      <!-- Breakdown by job -->
+      <div style="font-size: 14px; font-weight: 700; color: #fff; margin: 20px 0 12px 0;">Impact by Job</div>
+
+      <div class="impact-row">
+        <div class="impact-card">
+          <div class="impact-job">JOB 1: INTAKE &amp; DIAGNOSIS</div>
+          <div class="impact-stat">
+            89 recommendations<br>
+            <span class="impact-highlight">91% accuracy</span> vs final diagnosis<br>
+            Comeback rate: <span class="impact-highlight">3.2%</span> (was 5.8%)<br>
+            Est. cost saved: <span class="impact-highlight">$2,600</span>
+          </div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-job">JOB 2: 3C COMPLIANCE</div>
+          <div class="impact-stat">
+            142 ROs flagged · 128 rewritten<br>
+            Compliance: <span class="impact-highlight">89%</span> (was 64%)<br>
+            Warranty rejections: <span class="impact-highlight">0</span> (was 3/mo avg)<br>
+            Est. savings: <span class="impact-highlight">$1,800</span>
+          </div>
+        </div>
+      </div>
+      <div class="impact-row">
+        <div class="impact-card">
+          <div class="impact-job">JOB 3: SMART UPSELL</div>
+          <div class="impact-stat">
+            116 recommendations · 28% accepted<br>
+            Incremental revenue: <span class="impact-highlight">+$8,400</span><br>
+            ARO lift: <span class="impact-highlight">+$42</span> (target: +$75)<br>
+            Top upsell: cabin filter + brake inspection
+          </div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-job">JOB 4: OPERATIONAL INTELLIGENCE</div>
+          <div class="impact-stat">
+            12 root-cause insights surfaced<br>
+            8 acted on by shop owner<br>
+            Biggest win: 3C coaching for Tech Marcus<br>
+            His score: <span class="impact-highlight">54 → 78</span> in 3 weeks
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; padding: 20px 0 8px 0; color: var(--mid-gray); font-size: 12px;">
+        📈 90-day trend chart would render here — key metrics over time with WrenchIQ deployment date marked
+      </div>
+    </div>
+  </div>
+
+  <div class="prompt-label">PROMPT FOR TILAK</div>
+  <div class="prompt">Build the Impact Dashboard as shown:
+
+TOP: 4 summary cards — Recommendations, Acted On %, Revenue Impact, biggest improvement metric
+
+MIDDLE: "Impact by Job" — 4 cards, one per job, each showing:
+- Recommendations count + acted-on rate
+- Before/after metric change
+- Dollar value (revenue, cost savings, or risk reduction)
+- Biggest specific win
+
+BOTTOM: 90-day trend chart with WrenchIQ deployment date marked. For Admin/Network view, add a location comparison table showing which shops are getting the most value per job.
+
+This is the "Is WrenchIQ worth paying for?" screen. The answer should be obvious.</div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CLOSING                                                        -->
+<!-- ============================================================ -->
+<hr>
+
+<div class="principle-box" style="margin-top:40px">
+  <strong>7 screens. One story. Each job gets its own stage.</strong><br><br>
+  <strong>Screen 1</strong> — Landing: choose your role, see the SMS connection<br>
+  <strong>Screen 2</strong> — GWG Corporate: set objectives, see who's following them<br>
+  <strong>Screen 3</strong> — Job 1: Intake &amp; Diagnosis — SMS shows blank RO → Agent provides diagnosis intelligence → Writer enters findings in Protractor<br>
+  <strong>Screen 4</strong> — Job 2: 3C Narrative — Writer drafts poor 3C in SMS → Agent scores &amp; rewrites → Writer pastes corrected narrative<br>
+  <strong>Screen 5</strong> — Job 3: Smart Upsell — Routine RO in SMS → Agent identifies data-driven upsell + talk track → Writer adds services<br>
+  <strong>Screen 6</strong> — Shop Owner: operational intelligence tied to GWG's objectives, with root-cause analysis<br>
+  <strong>Screen 7</strong> — Impact: what the agent recommended, what happened, measurable P&amp;L result
+</div>
+
+<div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--mid-gray);">
+  PREDII CONFIDENTIAL &nbsp;|&nbsp; Prepared by Tim Eisenmann, Arbutus Ventures LLC &nbsp;|&nbsp; April 10, 2026
+</div>
+
+</body>
+</html>
