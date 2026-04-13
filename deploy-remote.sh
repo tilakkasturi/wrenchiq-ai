@@ -6,7 +6,15 @@
 set -e
 
 DEPLOY_DIR="/opt/predii/wrenchiq"
-TARBALL="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wrenchiq-deploy.tar.gz"
+# Accept explicit tarball path as first arg, else look for latest symlink or versioned file
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -n "$1" ]; then
+  TARBALL="$1"
+elif [ -f "$_SCRIPT_DIR/wrenchiq-deploy-latest.tar.gz" ]; then
+  TARBALL="$_SCRIPT_DIR/wrenchiq-deploy-latest.tar.gz"
+else
+  TARBALL="$(ls "$_SCRIPT_DIR"/wrenchiq-deploy-*.tar.gz 2>/dev/null | sort | tail -1)"
+fi
 
 VERSION=$(tar -tzf "$TARBALL" --include="*/version.json" 2>/dev/null | head -1 | xargs -I{} tar -xzOf "$TARBALL" {} 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('version','unknown'))" 2>/dev/null || echo "unknown")
 
@@ -73,9 +81,9 @@ if kill -0 "$SERVER_PID" 2>/dev/null; then
   PORT=$(grep "API_PORT" .env.local 2>/dev/null | cut -d= -f2 | tr -d ' ' || echo "3001")
   echo ""
   echo "  ✓ Server running (PID $SERVER_PID)"
+  echo "  ✓ App : http://localhost:${PORT:-3001}"
   echo "  ✓ API : http://localhost:${PORT:-3001}/api/health"
   echo "  ✓ Logs: tail -f /tmp/wrenchiq-server.log"
-  echo "  ✓ UI  : serve $DEPLOY_DIR/dist/ with nginx or any static server"
   echo ""
 else
   echo "ERROR: Server failed to start. Check /tmp/wrenchiq-server.log"

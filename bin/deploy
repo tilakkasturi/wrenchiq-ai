@@ -1,17 +1,108 @@
 #!/usr/bin/env bash
-# bin/deploy — Build and deploy WrenchIQ.ai to wrenchiq-demo (172.16.40.19)
+# bin/deploy — Build, package, and deploy WrenchIQ to the demo server
 #
 # Usage:
-#   bin/deploy
+#   bin/deploy               # full build → package → deploy
+#   bin/deploy --no-build    # skip Vite build (use existing dist/)
+#   bin/deploy --no-package  # skip build+package, redeploy latest tarball
+#
+# Target: wrenchiq-demo (172.16.40.19) → /opt/predii/wrenchiq
+# Requires SSH alias "wrenchiq-demo" in ~/.ssh/config
 
 set -euo pipefail
 export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
 cd "$(dirname "$0")/.."
 
-echo "==> Building..."
-npm run build
+DEPLOY_HOST="wrenchiq-demo"
+DEPLOY_DIR="/opt/predii/wrenchiq"
+RELEASES_DIR="releases"
 
-echo "==> Deploying to wrenchiq-demo (172.16.40.19)..."
-tar -czf - dist/ | ssh wrenchiq-demo "cd /opt/predii/wrenchiq && tar -xzf - --strip-components=0"
+NO_BUILD=0
+NO_PACKAGE=0
+for arg in "$@"; do
+  [ "$arg" = "--no-build"   ] && NO_BUILD=1
+  [ "$arg" = "--no-package" ] && NO_PACKAGE=1 && NO_BUILD=1
+done
 
-echo "==> Done. wrenchiq-demo:/opt/predii/wrenchiq/dist"
+# ── Step 1: Package ───────────────────────────────────────────
+if [ "$NO_PACKAGE" -eq 0 ]; then
+  if [ "$NO_BUILD" -eq 1 ]; then
+    bin/package --no-build
+  else
+    bin/package
+  fi
+fi
+
+# ── Find latest tarball ───────────────────────────────────────
+LATEST_LINK="${RELEASES_DIR}/wrenchiq-deploy-latest.tar.gz"
+if [ -L "$LATEST_LINK" ]; then
+  TARGET=$(readlink "$LATEST_LINK")
+  TARBALL="${RELEASES_DIR}/${TARGET}"
+else
+  TARBALL=$(ls "${RELEASES_DIR}"/wrenchiq-deploy-*.tar.gz 2>/dev/null | sort | tail -1)
+fi
+
+if [ -z "${TARBALL:-}" ] || [ ! -f "$TARBALL" ]; then
+  echo "ERROR: No tarball found in ${RELEASES_DIR}/. Run bin/package first."
+  exit 1
+fi
+
+TARBALL_NAME=$(basename "$TARBALL")
+echo ""
+echo "==> Deploying ${TARBALL_NAME} → ${DEPLOY_HOST}:${DEPLOY_DIR}"
+
+# ── Step 2: Upload ────────────────────────────────────────────
+echo "==> Uploading..."
+scp -q "$TARBALL" "${DEPLOY_HOST}:~/wrenchiq-upload.tar.gz"
+
+# ── Step 3: Extract + restart on remote ──────────────────────
+echo "==> Installing on remote..."
+ssh "$DEPLOY_HOST" DEPLOY_DIR="$DEPLOY_DIR" bash << 'REMOTE'
+  set -e
+
+  sudo mkdir -p "$DEPLOY_DIR"
+  sudo chown "$USER:$USER" "$DEPLOY_DIR"
+
+  echo "  Extracting..."
+  tar -xzf ~/wrenchiq-upload.tar.gz -C "$DEPLOY_DIR" --strip-components=0
+  rm -f ~/wrenchiq-upload.tar.gz
+
+  if [ ! -f "$DEPLOY_DIR/.env.local" ]; then
+    cp "$DEPLOY_DIR/.env.example" "$DEPLOY_DIR/.env.local"
+    echo "  ⚠  .env.local created — edit $DEPLOY_DIR/.env.local before next start"
+  fi
+
+  echo "  Installing Node dependencies..."
+  cd "$DEPLOY_DIR"
+  npm install --omit=dev --silent
+
+  if pgrep -f "node.*server/index" > /dev/null 2>&1; then
+    echo "  Stopping existing server..."
+    pkill -f "node.*server/index" || true
+    sleep 1
+  fi
+
+  set -o allexport
+  source "$DEPLOY_DIR/.env.local"
+  set +o allexport
+  nohup node "$DEPLOY_DIR/server/index.js" > /tmp/wrenchiq-server.log 2>&1 &
+  SERVER_PID=$!
+  sleep 2
+
+  if kill -0 "$SERVER_PID" 2>/dev/null; then
+    PORT=$(grep "^API_PORT" "$DEPLOY_DIR/.env.local" 2>/dev/null | cut -d= -f2 | tr -d ' ')
+    PORT=${PORT:-3001}
+    IP=$(hostname -I | awk '{print $1}')
+    echo ""
+    echo "  ✓ Deployed successfully"
+    echo "  ✓ App : http://${IP}:${PORT}"
+    echo "  ✓ API : http://${IP}:${PORT}/api/health"
+    echo "  ✓ Logs: tail -f /tmp/wrenchiq-server.log"
+  else
+    echo "  ERROR: Server failed to start"
+    cat /tmp/wrenchiq-server.log
+    exit 1
+  fi
+REMOTE
+
+echo ""
