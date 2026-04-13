@@ -62,6 +62,7 @@ echo "==> Packaging..."
 tar -czf "${RELEASES_DIR}/${FILENAME}" \
   dist/ \
   server/ \
+  server.py \
   package.json \
   package-lock.json \
   .env.example \
