@@ -11,6 +11,7 @@ import { SHOP, customers, vehicles } from "../data/demoData";
 import { WARRANTY_CLAIMS } from "../data/oemDemoData";
 import BrandWordmark from "../components/BrandWordmark";
 import { useEditionName } from "../context/BrandingContext";
+import { useDemo } from "../context/DemoContext";
 
 // ── AM data ─────────────────────────────────────────────────
 const QUEUE = [
@@ -41,6 +42,15 @@ const AM_PERSONAS = [
     insights: [
       { icon: "🏁", text: "Need $1,660 to hit target", value: "78% there", color: "#F59E0B" },
       { icon: "🔴", text: "Bay 3 idle 45 min", value: "Recover $280", color: "#EF4444" },
+    ],
+  },
+  {
+    id: "gwgCorporate", label: "GWG Corporate", tagline: "Network Objectives & Location Health",
+    detail: "Set performance targets · Monitor 100 locations · Track compliance by job type",
+    accent: "#1a1f2e", badge: "Admin",
+    insights: [
+      { icon: "🏢", text: "100 rooftops reporting", value: "89% approval", color: "#22C55E" },
+      { icon: "⚠️", text: "3C compliance at 64%", value: "Off-Track", color: "#EF4444" },
     ],
   },
 ];
@@ -250,6 +260,7 @@ function renderInline(text) {
 export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onOpenOEM }) {
   const amName  = useEditionName("AM");
   const oemName = useEditionName("OEM");
+  const { smsName } = useDemo();
   const [activeTab, setActiveTab]        = useState("AM");     // "AM" | "OEM" | "API"
   const [hoveredPersona, setHoveredPersona] = useState(null);
   const [selectedCust, setSelectedCust]  = useState(null);
@@ -319,8 +330,19 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       <div style={{ marginBottom: 6 }}>
         <BrandWordmark size="xl" />
       </div>
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>
-        Predii, Inc. · "The Dealership's Intelligence. The Neighborhood's Trust."
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 8, textAlign: "center", maxWidth: 540 }}>
+        AI intelligence that works alongside your shop management system. Powered by Predii's automotive knowledge graph.
+      </div>
+      <div style={{ marginBottom: 20 }}>
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: 5,
+          background: COLORS.primary, border: "1px solid rgba(255,255,255,0.18)",
+          borderRadius: 20, padding: "4px 12px",
+          fontSize: 10, fontWeight: 700, color: "#fff", letterSpacing: 0.3,
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: 3, background: "#22C55E", display: "inline-block" }} />
+          Connected to: {smsName}
+        </span>
       </div>
 
       {/* ══════════════════════════════════════════════════════
@@ -643,36 +665,46 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
           </div>
 
           {/* AM persona cards */}
-          <div style={{ display: "flex", gap: 12, width: "100%", maxWidth: 880, marginBottom: 0 }}>
+          <div style={{ display: "flex", gap: 12, width: "100%", maxWidth: 880, marginBottom: 0, flexWrap: "wrap" }}>
             {AM_PERSONAS.map((p) => {
               const isHov = hoveredPersona === p.id;
               const isActive = isHov || p.isDefault;
+              const isGWG = p.id === "gwgCorporate";
               return (
                 <button key={p.id}
                   onClick={() => onSelectPersona(p.id)}
                   onMouseEnter={() => setHoveredPersona(p.id)}
                   onMouseLeave={() => setHoveredPersona(null)}
                   style={{
-                    flex: 1, background: isHov ? "#fff" : p.isDefault ? "rgba(37,99,235,0.08)" : "rgba(255,255,255,0.04)",
-                    border: isActive ? `1.5px solid ${p.accent}` : "1.5px solid rgba(255,255,255,0.1)",
+                    flex: 1, minWidth: 180,
+                    background: isGWG
+                      ? (isHov ? "#1a1f2e" : "rgba(26,31,46,0.6)")
+                      : (isHov ? "#fff" : p.isDefault ? "rgba(37,99,235,0.08)" : "rgba(255,255,255,0.04)"),
+                    border: isGWG
+                      ? `1.5px solid ${isHov ? "#4a5568" : "rgba(255,255,255,0.15)"}`
+                      : (isActive ? `1.5px solid ${p.accent}` : "1.5px solid rgba(255,255,255,0.1)"),
                     borderRadius: 14, padding: "14px 16px",
                     cursor: "pointer", textAlign: "left", transition: "all 0.15s",
                     transform: isHov ? "translateY(-2px)" : "none",
                   }}>
                   {/* Header row */}
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: isHov ? "#111827" : "#fff" }}>{p.label}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: isHov ? p.accent : (p.isDefault ? p.accent : "rgba(255,255,255,0.4)"), background: isHov ? `${p.accent}18` : (p.isDefault ? `${p.accent}20` : "rgba(255,255,255,0.07)"), borderRadius: 5, padding: "2px 7px" }}>{p.badge}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: isGWG ? "#fff" : (isHov ? "#111827" : "#fff") }}>{p.label}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700,
+                      color: isGWG ? "#F6C90E" : (isHov ? p.accent : (p.isDefault ? p.accent : "rgba(255,255,255,0.4)")),
+                      background: isGWG ? "rgba(246,201,14,0.15)" : (isHov ? `${p.accent}18` : (p.isDefault ? `${p.accent}20` : "rgba(255,255,255,0.07)")),
+                      border: isGWG ? "1px solid rgba(246,201,14,0.35)" : "none",
+                      borderRadius: 5, padding: "2px 7px" }}>{p.badge}</span>
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: isHov ? p.accent : (p.isDefault ? p.accent : "rgba(255,255,255,0.45)"), marginBottom: 4 }}>{p.tagline}</div>
-                  <div style={{ fontSize: 10, color: isHov ? "#6B7280" : "rgba(255,255,255,0.28)", lineHeight: 1.4, marginBottom: 10 }}>{p.detail}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: isGWG ? "#93C5FD" : (isHov ? p.accent : (p.isDefault ? p.accent : "rgba(255,255,255,0.45)")), marginBottom: 4 }}>{p.tagline}</div>
+                  <div style={{ fontSize: 10, color: isGWG ? "rgba(255,255,255,0.45)" : (isHov ? "#6B7280" : "rgba(255,255,255,0.28)"), lineHeight: 1.4, marginBottom: 10 }}>{p.detail}</div>
 
                   {/* AI Insights preview */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
                     {p.insights.map((ins, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, background: isHov ? "#F9FAFB" : "rgba(255,255,255,0.05)", borderRadius: 5, padding: "4px 7px" }}>
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, background: isGWG ? "rgba(255,255,255,0.07)" : (isHov ? "#F9FAFB" : "rgba(255,255,255,0.05)"), borderRadius: 5, padding: "4px 7px" }}>
                         <span style={{ fontSize: 10 }}>{ins.icon}</span>
-                        <span style={{ fontSize: 10, color: isHov ? "#374151" : "rgba(255,255,255,0.55)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ins.text}</span>
+                        <span style={{ fontSize: 10, color: isGWG ? "rgba(255,255,255,0.6)" : (isHov ? "#374151" : "rgba(255,255,255,0.55)"), flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ins.text}</span>
                         <span style={{ fontSize: 9, fontWeight: 700, color: ins.color, flexShrink: 0 }}>{ins.value}</span>
                       </div>
                     ))}
@@ -680,11 +712,15 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
 
                   {/* AI badge + arrow */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: isHov ? p.accent : "rgba(255,255,255,0.3)", background: isHov ? `${p.accent}12` : "rgba(255,255,255,0.05)", border: `1px solid ${isHov ? `${p.accent}30` : "rgba(255,255,255,0.08)"}`, borderRadius: 4, padding: "2px 6px", display: "flex", alignItems: "center", gap: 3 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700,
+                      color: isGWG ? "#93C5FD" : (isHov ? p.accent : "rgba(255,255,255,0.3)"),
+                      background: isGWG ? "rgba(147,197,253,0.1)" : (isHov ? `${p.accent}12` : "rgba(255,255,255,0.05)"),
+                      border: `1px solid ${isGWG ? "rgba(147,197,253,0.2)" : (isHov ? `${p.accent}30` : "rgba(255,255,255,0.08)")}`,
+                      borderRadius: 4, padding: "2px 6px", display: "flex", alignItems: "center", gap: 3 }}>
                       <Sparkles size={8} />
-                      AI Insights
+                      {isGWG ? "Network View" : "AI Insights"}
                     </span>
-                    <ChevronRight size={13} color={isActive ? p.accent : "rgba(255,255,255,0.2)"} />
+                    <ChevronRight size={13} color={isGWG ? "rgba(255,255,255,0.4)" : (isActive ? p.accent : "rgba(255,255,255,0.2)")} />
                   </div>
                 </button>
               );

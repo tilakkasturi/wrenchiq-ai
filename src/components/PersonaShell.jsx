@@ -5,25 +5,31 @@ import {
   Wrench, ClipboardList, ClipboardCheck, Package, Shield, Calendar,
   BarChart3, Settings, Building2, Sparkles, Bell, Search,
   LogOut, Hammer, CheckSquare, BarChart, Users, Truck,
-  Home, Smartphone, Menu, FileText, Brain, Activity,
+  Home, Smartphone, Menu, FileText, Brain, Activity, SlidersHorizontal,
+  Stethoscope, TrendingUp, ShoppingCart, LineChart, Zap,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { SHOP } from "../data/demoData";
 import WrenchIQAgent from "./WrenchIQAgent";
 import BrandWordmark from "./BrandWordmark";
 import { useBranding } from "../context/BrandingContext";
+import { useDemo } from "../context/DemoContext";
+import DemoConfigPanel from "./DemoConfigPanel";
 
 // ── Per-persona nav configs ──────────────────────────────────
 
 const PERSONA_NAV = {
   advisor: [
-    { id: "advisorHome",  label: "RO Queue & Board",  icon: ClipboardList },
-    { id: "aroAgent",     label: "ARO Agent",          icon: Activity },
-    { id: "am3cWriter",   label: "3C Story Writer",   icon: FileText },
-    { id: "parts",        label: "Parts Intelligence", icon: Package },
-    { id: "scheduling",   label: "Scheduling",         icon: Calendar },
-    { id: "trust",        label: "Trust Engine",       icon: Shield },
-    { id: "aiAgent",      label: "AI Agent",           icon: Brain },
+    { id: "advisorHome",  label: "RO Queue & Board",   icon: ClipboardList },
+    { id: "job1Intake",   label: "Intake & Diagnosis",  icon: Stethoscope },
+    { id: "job2ThreeC",   label: "3C Compliance",       icon: FileText },
+    { id: "job3Upsell",   label: "Smart Upsell",        icon: ShoppingCart },
+    { id: "aroAgent",     label: "ARO Agent",           icon: Activity },
+    { id: "am3cWriter",   label: "3C Story Writer",     icon: CheckSquare },
+    { id: "parts",        label: "Parts Intelligence",  icon: Package },
+    { id: "scheduling",   label: "Scheduling",          icon: Calendar },
+    { id: "trust",        label: "Trust Engine",        icon: Shield },
+    { id: "aiAgent",      label: "AI Agent",            icon: Brain },
   ],
   advisorLite: [],
   tech: [
@@ -31,11 +37,13 @@ const PERSONA_NAV = {
     { id: "health",   label: "Reports",    icon: ClipboardCheck },
   ],
   owner: [
-    { id: "ownerHome",  label: "Today",      icon: Home },
-    { id: "analytics",  label: "Reports",    icon: BarChart3 },
-    { id: "network",    label: "Locations",  icon: Building2 },
-    { id: "trust",      label: "Customers",  icon: Shield },
-    { id: "settings",   label: "Settings",   icon: Settings },
+    { id: "ownerHome",   label: "Today",                   icon: Home },
+    { id: "opIntel",     label: "Operational Intelligence", icon: Zap },
+    { id: "impactDash",  label: "Impact Dashboard",         icon: TrendingUp },
+    { id: "analytics",   label: "Reports",                  icon: BarChart3 },
+    { id: "network",     label: "Locations",                icon: Building2 },
+    { id: "trust",       label: "Customers",                icon: Shield },
+    { id: "settings",    label: "Settings",                 icon: Settings },
   ],
   customer: [],
   // OEM personas
@@ -102,14 +110,20 @@ export default function PersonaShell({
   children,
   showAgent = true,
 }) {
-  const [agentVisible, setAgentVisible] = useState(persona !== "tech");
+  const [agentVisible, setAgentVisible] = useState(persona !== "tech" && persona !== "advisor");
+  const [demoOpen, setDemoOpen] = useState(false);
   const { brand } = useBranding();
+  const { shopName, ownerName, ownerInitials } = useDemo();
   const appVersion = useAppVersion();
   const appBuilt = useAppBuilt();
   const navItems = PERSONA_NAV[persona] || [];
   const personaColor = PERSONA_COLORS[persona] || COLORS.primary;
   const personaLabel = PERSONA_LABELS[persona] || persona;
-  const user = PERSONA_USER[persona] || { name: "User", initials: "U" };
+  const baseUser = PERSONA_USER[persona] || { name: "User", initials: "U" };
+  // For owner/advisor personas use the demo-configurable name
+  const user = (persona === "owner")
+    ? { name: ownerName, initials: ownerInitials }
+    : baseUser;
 
   // Customer persona: no shell chrome at all
   if (persona === "customer") {
@@ -294,6 +308,16 @@ export default function PersonaShell({
               </button>
             )}
 
+            {/* Demo config */}
+            <button
+              onClick={() => setDemoOpen(v => !v)}
+              title="Demo Setup"
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, border: `1px solid ${demoOpen ? COLORS.accent : "#E5E7EB"}`, cursor: "pointer", background: demoOpen ? `${COLORS.accent}12` : "#F9FAFB", color: demoOpen ? COLORS.accent : COLORS.textSecondary, fontSize: 12, fontWeight: 600 }}
+            >
+              <SlidersHorizontal size={13} />
+              Demo
+            </button>
+
             {/* Specs */}
             {onOpenSpecs && (
               <button
@@ -325,7 +349,7 @@ export default function PersonaShell({
               <div>
                 <div style={{ fontSize: 12, fontWeight: 600 }}>{user.name}</div>
                 <div style={{ fontSize: 10, color: COLORS.textMuted }}>
-                  {["fixedOps", "oemAdvisor", "oemTech"].includes(persona) ? "Palo Alto Toyota" : SHOP.name}
+                  {["fixedOps", "oemAdvisor", "oemTech"].includes(persona) ? "Palo Alto Toyota" : shopName}
                 </div>
               </div>
             </div>
@@ -371,6 +395,9 @@ export default function PersonaShell({
       )}
 
       </div>{/* end main area + AI panel */}
+
+      {/* Demo config panel */}
+      {demoOpen && <DemoConfigPanel onClose={() => setDemoOpen(false)} />}
     </div>
   );
 }

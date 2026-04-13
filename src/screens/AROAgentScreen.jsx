@@ -17,6 +17,7 @@ import {
   Users, Car, Loader,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import { useDemo } from "../context/DemoContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
 const SHOP_ID  = "shop-001";
@@ -351,6 +352,7 @@ function CustomerPatternsPanel({ data }) {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function AROAgentScreen() {
+  const { shopName } = useDemo();
   const [status,        setStatus]        = useState(null);
   const [analysis,      setAnalysis]      = useState(null);
   const [analytics,     setAnalytics]     = useState(null);  // enriched data from agent run
@@ -493,7 +495,7 @@ export default function AROAgentScreen() {
               ARO Agent
             </div>
             <div style={{ fontSize: 12, color: COLORS.textMuted }}>
-              Observer Layer  ·  Read-only  ·  Peninsula Precision Auto  ·  100K ROs
+              Observer Layer  ·  Read-only  ·  {shopName}  ·  100K ROs
             </div>
           </div>
         </div>
@@ -571,7 +573,7 @@ export default function AROAgentScreen() {
             padding: "16px 20px",
           }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 12 }}>
-              Shop Goals — Peninsula Precision Auto
+              Shop Goals — {shopName}
             </div>
             <GoalEditor goals={goals} onSave={handleSaveGoals} saving={savingGoals} />
           </div>

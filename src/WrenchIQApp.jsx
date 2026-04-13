@@ -54,6 +54,12 @@ import OEMDealerGroupScreen from "./screens/OEMDealerGroupScreen";
 import OEMTechScreen from "./screens/OEMTechScreen";
 import OEMPartsScreen from "./screens/OEMPartsScreen";
 import OEMSettingsScreen from "./screens/OEMSettingsScreen";
+import GWGCorporateScreen            from "./screens/GWGCorporateScreen";
+import Job1IntakeScreen              from "./screens/Job1IntakeScreen";
+import Job2ThreeCScreen              from "./screens/Job2ThreeCScreen";
+import Job3UpsellScreen              from "./screens/Job3UpsellScreen";
+import OperationalIntelligenceScreen from "./screens/OperationalIntelligenceScreen";
+import ImpactDashboardScreen         from "./screens/ImpactDashboardScreen";
 
 // ── Admin screen registry ────────────────────────────────────
 
@@ -90,6 +96,9 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
     if (screenId === "parts")      return <PartsIntelligenceScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "scheduling") return <SmartSchedulingScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "trust")      return <TrustEngineScreen onNavigate={extraProps.onNavigate} />;
+    if (screenId === "job1Intake") return <Job1IntakeScreen />;
+    if (screenId === "job2ThreeC") return <Job2ThreeCScreen />;
+    if (screenId === "job3Upsell") return <Job3UpsellScreen />;
   }
 
   // Tech persona screens
@@ -105,7 +114,9 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
     if (screenId === "analytics")  return <AnalyticsScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "network")    return <MultiLocationScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "trust")      return <TrustEngineScreen onNavigate={extraProps.onNavigate} />;
-    if (screenId === "settings")   return <SettingsScreen onNavigate={extraProps.onNavigate} />;
+    if (screenId === "settings")      return <SettingsScreen onNavigate={extraProps.onNavigate} />;
+    if (screenId === "opIntel")       return <OperationalIntelligenceScreen />;
+    if (screenId === "impactDash")    return <ImpactDashboardScreen />;
   }
 
   // Advisor Lite persona (Intelligent RO only)
@@ -138,20 +149,26 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
     if (screenId === "oemTechHome") return <OEMTechScreen />;
   }
 
+  // GWG Corporate
+  if (persona === "gwgCorporate") {
+    return <GWGCorporateScreen />;
+  }
+
   return <DashboardScreen onNavigate={extraProps.onNavigate} />;
 }
 
 // ── Default screen per persona ───────────────────────────────
 
 const PERSONA_DEFAULT_SCREEN = {
-  advisor:     "advisorHome",
-  advisorLite: "intelligentRO",
-  tech:        "techHome",
-  owner:       "ownerHome",
-  customer:    "customerPortal",
-  fixedOps:    "fixedOpsHome",
-  oemAdvisor:  "roWriter",
-  oemTech:     "oemTechHome",
+  advisor:      "advisorHome",
+  advisorLite:  "intelligentRO",
+  tech:         "techHome",
+  owner:        "ownerHome",
+  customer:     "customerPortal",
+  fixedOps:     "fixedOpsHome",
+  oemAdvisor:   "roWriter",
+  oemTech:      "oemTechHome",
+  gwgCorporate: "gwgCorporate",
 };
 
 // ── Main App ─────────────────────────────────────────────────
@@ -238,6 +255,18 @@ export default function WrenchIQApp() {
       },
       roData: techDVIData,
     };
+
+    // GWG Corporate has its own full-screen layout — render directly without PersonaShell
+    if (activePersona === "gwgCorporate") {
+      return (
+        <div style={{ height: "100vh", overflow: "hidden" }}>
+          <GWGCorporateScreen onExitPersona={() => {
+            setActivePersona(null);
+            setActiveScreen("dashboard");
+          }} />
+        </div>
+      );
+    }
 
     return (
       <RecommendationsProvider shopId="shop-001" edition="am" persona={activePersona}>

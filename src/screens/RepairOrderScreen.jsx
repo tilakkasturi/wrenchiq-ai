@@ -1,5 +1,14 @@
+/**
+ * RepairOrderScreen — WrenchIQ Overlay layout
+ *
+ * Split-screen:
+ *   Left 65%  — SMS mock: compact RO queue list with status columns
+ *   Right 35% — WrenchIQ Agent dark panel: queue intelligence + flags + revenue
+ */
+
 import { useState, useEffect } from "react";
 import { COLORS } from "../theme/colors";
+import { useDemo } from "../context/DemoContext";
 import { useRecommendations } from "../context/RecommendationsContext";
 import {
   repairOrders as demoRepairOrders,
@@ -11,1398 +20,771 @@ import {
 import { fetchActiveRepairOrders } from "../services/repairOrderService";
 import {
   Plus,
-  Zap,
-  Brain,
   Clock,
   CheckCircle,
   Search,
-  Filter,
-  ChevronRight,
   Wrench,
   Car,
-  User,
-  Calendar,
   AlertTriangle,
-  X,
   Sparkles,
   Camera,
   DollarSign,
+  ChevronRight,
+  TrendingUp,
+  Zap,
+  Brain,
+  Target,
+  ArrowRight,
+  RotateCcw,
 } from "lucide-react";
-import { getTSBsForVehicle } from "../data/tsbData";
 import DVIScreen from "./DVIScreen";
 import NewROWizard from "../components/NewROWizard";
 import CheckoutModal from "../components/CheckoutModal";
-import AIInsightsStrip from "../components/AIInsightsStrip";
 import ROAgentPanel from "../components/ROAgentPanel";
 
-// ── Column definitions ──────────────────────────────────────
-const COLUMNS = [
-  {
-    id: "checked_in",
-    label: "Checked In",
-    color: "#3B82F6",
-    bgColor: "#EFF6FF",
-    borderColor: "#BFDBFE",
-  },
-  {
-    id: "inspecting",
-    label: "Inspecting",
-    color: "#F97316",
-    bgColor: "#FFF7ED",
-    borderColor: "#FED7AA",
-  },
-  {
-    id: "estimate_sent",
-    label: "Estimate Sent",
-    color: "#D97706",
-    bgColor: "#FFFBEB",
-    borderColor: "#FDE68A",
-  },
-  {
-    id: "approved",
-    label: "Approved",
-    color: "#0D9488",
-    bgColor: "#F0FDFA",
-    borderColor: "#99F6E4",
-  },
-  {
-    id: "in_progress",
-    label: "In Progress",
-    color: "#7C3AED",
-    bgColor: "#F5F3FF",
-    borderColor: "#DDD6FE",
-  },
-  {
-    id: "ready",
-    label: "Ready",
-    color: "#16A34A",
-    bgColor: "#F0FDF4",
-    borderColor: "#BBF7D0",
-  },
+// ── Status config ─────────────────────────────────────────────────────────────
+
+const STATUS_CONFIG = {
+  checked_in:    { label: "Checked In",    color: "#3B82F6", bg: "#EFF6FF" },
+  inspecting:    { label: "Inspecting",    color: "#F97316", bg: "#FFF7ED" },
+  estimate_sent: { label: "Estimate Sent", color: "#D97706", bg: "#FFFBEB" },
+  approved:      { label: "Approved",      color: "#0D9488", bg: "#F0FDFA" },
+  in_progress:   { label: "In Progress",   color: "#7C3AED", bg: "#F5F3FF" },
+  ready:         { label: "Ready",         color: "#16A34A", bg: "#F0FDF4" },
+  scheduled:     { label: "Scheduled",     color: "#6B7280", bg: "#F9FAFB" },
+};
+
+const KANBAN_STATUSES = [
+  "checked_in", "inspecting", "estimate_sent",
+  "approved", "in_progress", "ready",
 ];
 
-// ── Helpers ─────────────────────────────────────────────────
-function getWaitingHours(waitingSince) {
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getWaitHours(waitingSince) {
   if (!waitingSince) return 0;
-  const sent = new Date(waitingSince);
-  const now = new Date("2024-11-15T12:00:00"); // demo "now"
-  const diff = (now - sent) / (1000 * 60 * 60);
+  const diff = (new Date("2024-11-15T12:00:00") - new Date(waitingSince)) / 3600000;
   return Math.round(diff * 10) / 10;
 }
 
-function getOemBadgeLabel(ro) {
-  if (!ro.isOemService) return null;
-  if (ro.oemMilestone) {
-    if (ro.oemMilestone.includes("60,000")) return "OEM 60K";
-    if (ro.oemMilestone.includes("90,000")) return "OEM 90K";
-    if (ro.oemMilestone.includes("80,000")) return "OEM 80K";
-    return "OEM";
-  }
-  return "OEM";
+function fmtMoney(n) {
+  return n != null ? `$${Number(n).toLocaleString()}` : "—";
 }
 
-// ── RO Card ─────────────────────────────────────────────────
-function ROCard({ ro, column, selected, onSelect, onOpenDVI, onCheckout, paidRos }) {
-  // Use inline data from MongoDB if present, fall back to demo data lookups
+// ── Status dot ────────────────────────────────────────────────────────────────
+
+function StatusDot({ status }) {
+  const cfg = STATUS_CONFIG[status] || { color: "#9CA3AF" };
+  return (
+    <span style={{
+      display: "inline-block",
+      width: 8, height: 8,
+      borderRadius: "50%",
+      background: cfg.color,
+      flexShrink: 0,
+    }} />
+  );
+}
+
+function StatusBadge({ status }) {
+  const cfg = STATUS_CONFIG[status] || { label: status, color: "#6B7280", bg: "#F3F4F6" };
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 700, letterSpacing: "0.04em",
+      color: cfg.color, background: cfg.bg,
+      borderRadius: 5, padding: "2px 7px",
+      whiteSpace: "nowrap",
+    }}>
+      {cfg.label}
+    </span>
+  );
+}
+
+// ── Left panel: single RO row ─────────────────────────────────────────────────
+
+function RORow({ ro, selected, onSelect, onDVI, onCheckout, paidRos }) {
   const customer = ro._customer || getCustomer(ro.customerId);
   const vehicle  = ro._vehicle  || getVehicle(ro.vehicleId);
   const tech     = getTech(ro.techId);
+  const [hov, setHov] = useState(false);
+  const isPaid = paidRos?.[ro.id];
+  const isReady = ro.status === "ready";
+  const waitHrs = ro.status === "estimate_sent" ? getWaitHours(ro.waitingSince) : 0;
 
-  const vinLast6 = vehicle ? vehicle.vin.slice(-6) : "------";
-  const oemBadge = getOemBadgeLabel(ro);
-  const waitingHrs =
-    ro.status === "estimate_sent" ? getWaitingHours(ro.waitingSince) : null;
-  const aiCount = ro.aiInsights ? ro.aiInsights.length : 0;
-  const showProgress = ro.status === "in_progress";
-
-  const [hovered, setHovered] = useState(false);
-
-  // Recommendations badge
-  const recCtx = useRecommendations();
-  const roKey = ro.roNumber || ro.id;
-  const recItems = recCtx ? recCtx.getForRO(roKey) : [];
-  const recCount = recItems.length;
+  const custName = customer
+    ? `${customer.firstName} ${customer.lastName}`
+    : ro.customerName || "Unknown";
+  const vehStr = vehicle
+    ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+    : `${ro.year || ""} ${ro.make || ""} ${ro.model || ""}`.trim() || "—";
 
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       onClick={() => onSelect(ro.id)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
       style={{
-        background: selected ? `${column.bgColor}` : COLORS.bgCard,
-        border: `1.5px solid ${selected ? column.color : hovered ? column.color + "80" : COLORS.border}`,
-        borderLeft: `3px solid ${column.color}`,
-        borderRadius: 8,
-        padding: "12px 12px 10px",
-        marginBottom: 10,
+        display: "grid",
+        gridTemplateColumns: "26px 130px 1fr 120px 80px 90px 100px",
+        alignItems: "center",
+        gap: 8,
+        padding: "10px 16px",
+        borderBottom: `1px solid ${COLORS.borderLight}`,
+        background: selected
+          ? `${STATUS_CONFIG[ro.status]?.bg || "#F9FAFB"}`
+          : hov ? COLORS.borderLight : "transparent",
         cursor: "pointer",
-        transition: "border-color 0.15s, box-shadow 0.15s",
-        boxShadow: selected
-          ? `0 0 0 2px ${column.color}30, 0 4px 12px rgba(0,0,0,0.08)`
-          : hovered
-          ? "0 4px 12px rgba(0,0,0,0.10)"
-          : "0 1px 3px rgba(0,0,0,0.06)",
+        transition: "background 0.1s",
+        borderLeft: selected ? `3px solid ${STATUS_CONFIG[ro.status]?.color || COLORS.primary}` : "3px solid transparent",
       }}
     >
-      {/* Top row: RO number + badges */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 6,
-          position: "relative",
-        }}
-      >
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 600,
-            color: COLORS.textMuted,
-            letterSpacing: "0.04em",
-            fontFamily: "monospace",
-          }}
-        >
+      {/* Status dot */}
+      <StatusDot status={ro.status} />
+
+      {/* RO number + badges */}
+      <div>
+        <div style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: COLORS.textSecondary }}>
           {ro.id}
-        </span>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {/* AI Recommendations badge */}
-          {recCount > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                window.dispatchEvent(new CustomEvent("wrenchiq:focus-recommendation", { detail: { roNumber: roKey } }));
-              }}
-              style={{
-                width: 18,
-                height: 18,
-                borderRadius: 9,
-                background: "#FF6B35",
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 9,
-                fontWeight: 800,
-                color: "#fff",
-                padding: 0,
-                flexShrink: 0,
-              }}
-              title={`${recCount} AI insight${recCount > 1 ? "s" : ""}`}
-            >
-              {recCount}
-            </button>
-          )}
-          {oemBadge && (
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: "#1D4ED8",
-                background: "#DBEAFE",
-                border: "1px solid #93C5FD",
-                borderRadius: 4,
-                padding: "1px 6px",
-                letterSpacing: "0.03em",
-              }}
-            >
-              {oemBadge}
-            </span>
-          )}
-          {aiCount > 0 && (
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 3,
-                fontSize: 10,
-                fontWeight: 600,
-                color: "#7C3AED",
-                background: "#EDE9FE",
-                border: "1px solid #C4B5FD",
-                borderRadius: 4,
-                padding: "1px 6px",
-              }}
-            >
-              <Brain size={10} />
-              {aiCount}
-            </span>
-          )}
         </div>
-      </div>
-
-      {/* Customer name */}
-      <div
-        style={{
-          fontWeight: 700,
-          fontSize: 14,
-          color: COLORS.textPrimary,
-          marginBottom: 2,
-          lineHeight: 1.3,
-        }}
-      >
-        {customer ? `${customer.firstName} ${customer.lastName}` : "Unknown"}
-      </div>
-
-      {/* Vehicle */}
-      {vehicle && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 5,
-            marginBottom: 2,
-          }}
-        >
-          <Car size={11} color={COLORS.textMuted} />
-          <span
-            style={{
-              fontSize: 12,
-              color: COLORS.textSecondary,
-              lineHeight: 1.3,
-            }}
-          >
-            {vehicle.year} {vehicle.make} {vehicle.model}
-          </span>
-        </div>
-      )}
-
-      {/* VIN last 6 */}
-      {vehicle && (
-        <div style={{ marginBottom: 6 }}>
-          <span
-            style={{
-              fontSize: 10,
-              fontFamily: "monospace",
-              color: COLORS.textMuted,
-              background: COLORS.borderLight,
-              borderRadius: 3,
-              padding: "1px 5px",
-              letterSpacing: "0.08em",
-            }}
-          >
-            &bull;&bull;&bull;{vinLast6}
-          </span>
-        </div>
-      )}
-
-      {/* Service type */}
-      <div
-        style={{
-          fontSize: 11,
-          color: COLORS.textSecondary,
-          marginBottom: 8,
-          lineHeight: 1.4,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          display: "flex",
-          alignItems: "center",
-          gap: 4,
-        }}
-      >
-        <Wrench size={10} color={COLORS.textMuted} style={{ flexShrink: 0 }} />
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {ro.serviceType}
-        </span>
-      </div>
-
-      {/* Progress bar (in_progress only) */}
-      {showProgress && (
-        <div style={{ marginBottom: 8 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 3,
-            }}
-          >
-            <span style={{ fontSize: 10, color: COLORS.textMuted }}>
-              Progress
-            </span>
-            <span
-              style={{ fontSize: 10, fontWeight: 600, color: column.color }}
-            >
-              {ro.progress}%
-            </span>
-          </div>
-          <div
-            style={{
-              height: 5,
-              background: COLORS.borderLight,
-              borderRadius: 3,
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${ro.progress}%`,
-                background: `linear-gradient(90deg, ${column.color}, ${column.color}CC)`,
-                borderRadius: 3,
-                transition: "width 0.3s ease",
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Waiting timer (estimate_sent) */}
-      {waitingHrs !== null && waitingHrs > 0 && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            marginBottom: 8,
-            background: "#FFFBEB",
-            border: "1px solid #FDE68A",
-            borderRadius: 5,
-            padding: "3px 7px",
-          }}
-        >
-          <Clock size={11} color="#D97706" />
-          <span
-            style={{
-              fontSize: 11,
-              color: "#92400E",
-              fontWeight: 600,
-            }}
-          >
-            Waiting {waitingHrs} hrs
-          </span>
-        </div>
-      )}
-
-      {/* Footer: tech + estimate */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingTop: 8,
-          borderTop: `1px solid ${COLORS.borderLight}`,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <div
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: "50%",
-              background: tech ? column.bgColor : COLORS.borderLight,
-              border: `1px solid ${tech ? column.borderColor : COLORS.border}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 9,
-              fontWeight: 700,
-              color: tech ? column.color : COLORS.textMuted,
-            }}
-          >
-            {tech ? (
-              tech.initials
-            ) : (
-              <User size={10} color={COLORS.textMuted} />
-            )}
-          </div>
-          <span
-            style={{
-              fontSize: 11,
-              color: tech ? COLORS.textSecondary : COLORS.textMuted,
-              fontStyle: tech ? "normal" : "italic",
-            }}
-          >
-            {tech ? tech.name.split(" ")[0] : "Unassigned"}
-          </span>
-        </div>
-        <span
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: COLORS.textPrimary,
-          }}
-        >
-          ${ro.totalEstimate != null ? ro.totalEstimate.toLocaleString() : "—"}
-        </span>
-      </div>
-
-      {/* DVI Button */}
-      <button
-        onClick={(e) => { e.stopPropagation(); onOpenDVI(ro.id); }}
-        style={{
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
-          marginTop: 8, width: "100%",
-          padding: "5px 8px",
-          border: "1px solid #BAE6FD",
-          borderRadius: 5,
-          background: "#F0F9FF",
-          color: "#0369A1",
-          fontSize: 11, fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        <Camera size={11} />
-        Inspection Report
-      </button>
-
-      {/* Paid badge */}
-      {paidRos && paidRos[ro.id] && (
-        <div style={{
-          marginTop: 8, padding: "5px 8px",
-          background: "#DCFCE7", border: "1px solid #86EFAC", borderRadius: 5,
-          display: "flex", alignItems: "center", gap: 5,
-        }}>
-          <CheckCircle size={11} color="#16A34A" />
-          <span style={{ fontSize: 11, fontWeight: 700, color: "#15803D" }}>
-            PAID ${paidRos[ro.id].amount} &mdash; {paidRos[ro.id].method}
-          </span>
-        </div>
-      )}
-
-      {/* Finalize & Checkout button — only on "ready" ROs that aren't paid yet */}
-      {column.id === "ready" && !(paidRos && paidRos[ro.id]) && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onCheckout(ro.id); }}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-            marginTop: 8, width: "100%",
-            padding: "7px 8px",
-            border: "none",
-            borderRadius: 6,
-            background: `linear-gradient(135deg, ${COLORS.accent}, #E85D26)`,
-            color: "#FFFFFF",
-            fontSize: 12, fontWeight: 700,
-            cursor: "pointer",
-            boxShadow: "0 3px 10px rgba(255,107,53,0.3)",
-          }}
-        >
-          <DollarSign size={12} />
-          Finalize &amp; Checkout
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ── Kanban Column ────────────────────────────────────────────
-function KanbanColumn({ column, ros, selectedRoId, onSelectRo, onOpenDVI, onCheckout, paidRos }) {
-  const columnTotal = ros.reduce((sum, ro) => sum + (ro.totalEstimate || 0), 0);
-
-  return (
-    <div
-      style={{
-        flex: "1 1 0",
-        minWidth: 210,
-        maxWidth: 280,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Column header */}
-      <div
-        style={{
-          background: column.bgColor,
-          border: `1px solid ${column.borderColor}`,
-          borderRadius: "8px 8px 0 0",
-          padding: "10px 12px 8px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 2,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: column.color,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}
-          >
-            {column.label}
-          </span>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: COLORS.bgCard,
-              background: column.color,
-              borderRadius: 10,
-              padding: "1px 8px",
-              minWidth: 22,
-              textAlign: "center",
-            }}
-          >
-            {ros.length}
-          </span>
-        </div>
-        {ros.length > 0 && (
-          <div style={{ fontSize: 10, color: column.color, fontWeight: 500 }}>
-            ${columnTotal.toLocaleString()} est.
+        {waitHrs > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 3, marginTop: 2 }}>
+            <Clock size={9} color="#D97706" />
+            <span style={{ fontSize: 10, color: "#D97706", fontWeight: 600 }}>{waitHrs}h</span>
           </div>
         )}
       </div>
 
-      {/* Cards area */}
-      <div
-        style={{
-          flex: 1,
-          background: column.bgColor + "55",
-          border: `1px solid ${column.borderColor}`,
-          borderTop: "none",
-          borderRadius: "0 0 8px 8px",
-          padding: "10px 8px 8px",
-          minHeight: 200,
-        }}
-      >
-        {ros.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "30px 12px",
-              color: COLORS.textMuted,
-            }}
-          >
-            <CheckCircle
-              size={22}
-              style={{ marginBottom: 6, opacity: 0.4 }}
-              color={column.color}
-            />
-            <div style={{ fontSize: 11, fontStyle: "italic" }}>No ROs</div>
-          </div>
-        ) : (
-          ros.map((ro) => (
-            <ROCard
-              key={ro.id}
-              ro={ro}
-              column={column}
-              selected={selectedRoId === ro.id}
-              onSelect={onSelectRo}
-              onOpenDVI={onOpenDVI}
-              onCheckout={onCheckout}
-              paidRos={paidRos}
-            />
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Scheduled Section ────────────────────────────────────────
-function ScheduledSection({ scheduledROs }) {
-  return (
-    <div style={{ marginTop: 32 }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 12,
-        }}
-      >
-        <Calendar size={16} color={COLORS.textSecondary} />
-        <span
-          style={{
-            fontSize: 14,
-            fontWeight: 700,
-            color: COLORS.textPrimary,
-          }}
-        >
-          Scheduled
-        </span>
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 600,
-            color: COLORS.textMuted,
-            background: COLORS.borderLight,
-            borderRadius: 10,
-            padding: "1px 8px",
-          }}
-        >
-          {scheduledROs.length}
-        </span>
-      </div>
-
-      <div
-        style={{
-          background: COLORS.bgCard,
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 10,
-          overflow: "hidden",
-        }}
-      >
-        {/* Table header */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "160px 1fr 1fr 1fr 130px 90px 32px",
-            background: COLORS.borderLight,
-            borderBottom: `1px solid ${COLORS.border}`,
-            padding: "8px 16px",
-            gap: 8,
-          }}
-        >
-          {["RO #", "Customer", "Vehicle", "Service", "Date", "Est.", ""].map(
-            (h, i) => (
-              <span
-                key={i}
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: COLORS.textMuted,
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {h}
-              </span>
-            )
-          )}
+      {/* Customer + vehicle */}
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary, lineHeight: 1.3 }}>
+          {custName}
         </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
+          <Car size={10} color={COLORS.textMuted} />
+          <span style={{ fontSize: 11, color: COLORS.textSecondary }}>{vehStr}</span>
+        </div>
+      </div>
 
-        {/* Table rows */}
-        {scheduledROs.map((ro, idx) => {
-          const customer = getCustomer(ro.customerId);
-          const vehicle = getVehicle(ro.vehicleId);
-          const tech = getTech(ro.techId);
-          const isLast = idx === scheduledROs.length - 1;
+      {/* Service */}
+      <div style={{
+        fontSize: 11, color: COLORS.textSecondary,
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+      }}>
+        {ro.serviceType || "—"}
+      </div>
 
-          const scheduledDateObj = ro.scheduledDate
-            ? new Date(ro.scheduledDate)
-            : null;
-          const scheduledStr = scheduledDateObj
-            ? scheduledDateObj.toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-              })
-            : "—";
-
-          return (
-            <div
-              key={ro.id}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "160px 1fr 1fr 1fr 130px 90px 32px",
-                gap: 8,
-                padding: "10px 16px",
-                borderBottom: isLast
-                  ? "none"
-                  : `1px solid ${COLORS.borderLight}`,
-                alignItems: "center",
-                cursor: "pointer",
-                transition: "background 0.1s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = COLORS.borderLight)
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "transparent")
-              }
-            >
-              {/* RO number */}
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontFamily: "monospace",
-                    color: COLORS.textSecondary,
-                    fontWeight: 600,
-                  }}
-                >
-                  {ro.id}
-                </span>
-                {ro.isOemService && (
-                  <span
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color: "#1D4ED8",
-                      background: "#DBEAFE",
-                      borderRadius: 3,
-                      padding: "1px 5px",
-                    }}
-                  >
-                    OEM
-                  </span>
-                )}
-              </div>
-
-              {/* Customer */}
-              <div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: COLORS.textPrimary,
-                  }}
-                >
-                  {customer
-                    ? `${customer.firstName} ${customer.lastName}`
-                    : "—"}
-                </div>
-                {tech && (
-                  <div style={{ fontSize: 11, color: COLORS.textMuted }}>
-                    Tech: {tech.name.split(" ")[0]}
-                  </div>
-                )}
-              </div>
-
-              {/* Vehicle */}
-              <div>
-                {vehicle ? (
-                  <>
-                    <div
-                      style={{ fontSize: 12, color: COLORS.textSecondary }}
-                    >
-                      {vehicle.year} {vehicle.make} {vehicle.model}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 10,
-                        fontFamily: "monospace",
-                        color: COLORS.textMuted,
-                      }}
-                    >
-                      &bull;&bull;&bull;{vehicle.vin.slice(-6)}
-                    </div>
-                  </>
-                ) : (
-                  <span style={{ color: COLORS.textMuted }}>—</span>
-                )}
-              </div>
-
-              {/* Service */}
-              <div
-                style={{
-                  fontSize: 12,
-                  color: COLORS.textSecondary,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {ro.serviceType}
-              </div>
-
-              {/* Date */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  fontSize: 12,
-                  color: COLORS.textSecondary,
-                }}
-              >
-                <Calendar size={11} color={COLORS.textMuted} />
-                {scheduledStr}
-              </div>
-
-              {/* Estimate */}
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: COLORS.textPrimary,
-                }}
-              >
-                $
-                {ro.totalEstimate != null
-                  ? ro.totalEstimate.toLocaleString()
-                  : "—"}
-              </div>
-
-              {/* Chevron */}
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <ChevronRight size={15} color={COLORS.textMuted} />
-              </div>
+      {/* Tech */}
+      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        {tech ? (
+          <>
+            <div style={{
+              width: 22, height: 22, borderRadius: "50%",
+              background: STATUS_CONFIG[ro.status]?.bg || "#F3F4F6",
+              border: `1px solid ${STATUS_CONFIG[ro.status]?.color || COLORS.border}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 9, fontWeight: 700,
+              color: STATUS_CONFIG[ro.status]?.color || COLORS.textSecondary,
+              flexShrink: 0,
+            }}>
+              {tech.initials}
             </div>
-          );
-        })}
+            <span style={{ fontSize: 11, color: COLORS.textSecondary }}>{tech.name.split(" ")[0]}</span>
+          </>
+        ) : (
+          <span style={{ fontSize: 11, color: COLORS.textMuted, fontStyle: "italic" }}>—</span>
+        )}
+      </div>
+
+      {/* Estimate */}
+      <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, textAlign: "right" }}>
+        {isPaid
+          ? <span style={{ fontSize: 11, color: "#16A34A", fontWeight: 700 }}>PAID</span>
+          : fmtMoney(ro.totalEstimate)}
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+        <button
+          onClick={e => { e.stopPropagation(); onDVI(ro.id); }}
+          style={{
+            padding: "4px 8px", fontSize: 10, fontWeight: 600,
+            border: "1px solid #BAE6FD", borderRadius: 5,
+            background: "#F0F9FF", color: "#0369A1", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 3,
+          }}
+        >
+          <Camera size={10} />
+          DVI
+        </button>
+        {isReady && !isPaid && (
+          <button
+            onClick={e => { e.stopPropagation(); onCheckout(ro.id); }}
+            style={{
+              padding: "4px 8px", fontSize: 10, fontWeight: 700,
+              border: "none", borderRadius: 5,
+              background: `linear-gradient(135deg, ${COLORS.accent}, #E85D26)`,
+              color: "#fff", cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 3,
+            }}
+          >
+            <DollarSign size={10} />
+            Pay
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-// ── Filter Pill ──────────────────────────────────────────────
-function FilterPill({ label, active, onClick }) {
+// ── Right panel: Flag card ────────────────────────────────────────────────────
+
+function FlagCard({ icon: Icon, iconColor, borderColor, title, sub, action }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: "5px 14px",
-        borderRadius: 20,
-        border: active
-          ? `1.5px solid ${COLORS.primary}`
-          : `1px solid ${COLORS.border}`,
-        background: active ? COLORS.primary : COLORS.bgCard,
-        color: active ? "#FFFFFF" : COLORS.textSecondary,
-        fontSize: 12,
-        fontWeight: 600,
-        cursor: "pointer",
-        transition: "all 0.15s",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {label}
-    </button>
+    <div style={{
+      display: "flex", gap: 10, alignItems: "flex-start",
+      padding: "10px 12px",
+      background: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderLeft: `3px solid ${borderColor}`,
+      borderRadius: 8,
+      marginBottom: 8,
+    }}>
+      <div style={{
+        width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+        background: "rgba(255,255,255,0.07)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <Icon size={13} color={iconColor} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "#F1F5F9", lineHeight: 1.4 }}>
+          {title}
+        </div>
+        {sub && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{sub}</div>}
+      </div>
+      {action && (
+        <div style={{
+          fontSize: 10, fontWeight: 700, color: COLORS.accent,
+          background: "rgba(255,107,53,0.12)", border: "1px solid rgba(255,107,53,0.25)",
+          borderRadius: 4, padding: "3px 7px", whiteSpace: "nowrap", flexShrink: 0,
+          alignSelf: "center",
+        }}>
+          {action}
+        </div>
+      )}
+    </div>
   );
 }
 
-// ── Main Screen ─────────────────────────────────────────────
+// ── Main screen ───────────────────────────────────────────────────────────────
+
 export default function RepairOrderScreen() {
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRoId, setSelectedRoId] = useState(null);
-  const [dviRoId, setDviRoId] = useState(null);
-  const [showNewRO, setShowNewRO] = useState(false);
-  const [roPrefill, setRoPrefill] = useState(null);
-  const [checkoutRoId, setCheckoutRoId] = useState(null);
-  // paidRos: { [roId]: { amount, method } }
-  const [paidRos, setPaidRos] = useState({});
-  // liveROs: loaded from MongoDB API when available; null = use demo data
-  const [liveROs, setLiveROs] = useState(null);
-  const [dbConnected, setDbConnected] = useState(false);
+  const { smsName, shopName } = useDemo();
+  const [searchQuery, setSearchQuery]     = useState("");
+  const [selectedRoId, setSelectedRoId]  = useState(null);
+  const [dviRoId, setDviRoId]            = useState(null);
+  const [showNewRO, setShowNewRO]        = useState(false);
+  const [checkoutRoId, setCheckoutRoId]  = useState(null);
+  const [paidRos, setPaidRos]            = useState({});
+  const [activeTab, setActiveTab]        = useState("queue");
+  const [liveROs, setLiveROs]            = useState(null);
+  const [dbConnected, setDbConnected]    = useState(false);
 
   useEffect(() => {
     fetchActiveRepairOrders().then(ros => {
-      if (ros && ros.length > 0) {
-        setLiveROs(ros);
-        setDbConnected(true);
-      }
+      if (ros?.length > 0) { setLiveROs(ros); setDbConnected(true); }
     });
   }, []);
 
-  // Use live MongoDB data when available, fall back to static demo data
-  const repairOrders = liveROs || demoRepairOrders;
+  const repairOrders  = liveROs || demoRepairOrders;
+  const kanbanROs     = repairOrders.filter(ro => KANBAN_STATUSES.includes(ro.status));
+  const scheduledROs  = repairOrders.filter(ro => ro.status === "scheduled");
 
-  const kanbanStatuses = [
-    "checked_in",
-    "inspecting",
-    "estimate_sent",
-    "approved",
-    "in_progress",
-    "ready",
-  ];
-
-  const kanbanROs = repairOrders.filter((ro) =>
-    kanbanStatuses.includes(ro.status)
-  );
-  const scheduledROs = repairOrders.filter((ro) => ro.status === "scheduled");
-
-  // Apply filter + search
+  // Search filter
   const filterROs = (ros) => {
-    let filtered = ros;
-
-    if (activeFilter === "OEM Services") {
-      filtered = filtered.filter((ro) => ro.isOemService);
-    } else if (activeFilter === "Today") {
-      const today = new Date().toISOString().slice(0, 10);
-      filtered = filtered.filter(
-        (ro) =>
-          (ro.dateIn && ro.dateIn.startsWith(today)) ||
-          (ro.scheduledDate && ro.scheduledDate.startsWith(today))
-      );
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter((ro) => {
-        const customer = ro._customer || getCustomer(ro.customerId);
-        const vehicle  = ro._vehicle  || getVehicle(ro.vehicleId);
-        const custName = customer
-          ? `${customer.firstName} ${customer.lastName}`.toLowerCase()
-          : (ro.customerName || "").toLowerCase();
-        const vehStr = vehicle
-          ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`.toLowerCase()
-          : `${ro.year || ""} ${ro.make || ""} ${ro.model || ""}`.toLowerCase();
-        return (
-          ro.id.toLowerCase().includes(q) ||
-          custName.includes(q) ||
-          vehStr.includes(q) ||
-          (ro.serviceType || "").toLowerCase().includes(q)
-        );
-      });
-    }
-
-    return filtered;
+    if (!searchQuery.trim()) return ros;
+    const q = searchQuery.toLowerCase();
+    return ros.filter(ro => {
+      const cust = ro._customer || getCustomer(ro.customerId);
+      const veh  = ro._vehicle  || getVehicle(ro.vehicleId);
+      const cn   = cust ? `${cust.firstName} ${cust.lastName}`.toLowerCase() : (ro.customerName || "").toLowerCase();
+      const vs   = veh  ? `${veh.year} ${veh.make} ${veh.model}`.toLowerCase() : "";
+      return ro.id.toLowerCase().includes(q) || cn.includes(q) || vs.includes(q) || (ro.serviceType || "").toLowerCase().includes(q);
+    });
   };
 
-  const filteredKanbanROs = filterROs(kanbanROs);
-  const filteredScheduled = filterROs(scheduledROs);
-  const totalCount = repairOrders.length;
-  const kanbanCount = kanbanROs.length;
+  const displayROs = filterROs(activeTab === "queue" ? kanbanROs : scheduledROs);
+
+  // ── Right panel derived stats ────────────────────────────────────────────────
+
+  const estimateSentROs   = kanbanROs.filter(ro => ro.status === "estimate_sent");
+  const revenueAtRisk     = estimateSentROs.reduce((s, ro) => s + (ro.totalEstimate || 0), 0);
+  const longWaitROs       = estimateSentROs.filter(ro => getWaitHours(ro.waitingSince) > 1);
+  const readyROs          = kanbanROs.filter(ro => ro.status === "ready" && !paidRos[ro.id]);
+  const unassignedROs     = kanbanROs.filter(ro => !ro.techId && ro.status !== "ready");
+  const inProgressROs     = kanbanROs.filter(ro => ro.status === "in_progress");
+
+  const queueScore = Math.min(100, Math.max(0,
+    100 - longWaitROs.length * 15 - unassignedROs.length * 10 + readyROs.length * 5
+  ));
+  const scoreColor = queueScore >= 75 ? "#22C55E" : queueScore >= 50 ? "#F59E0B" : "#EF4444";
+
+  const totalActiveRevenue = kanbanROs.reduce((s, ro) => s + (ro.totalEstimate || 0), 0);
+
+  // ── Flags ─────────────────────────────────────────────────────────────────────
+
+  const flags = [];
+  longWaitROs.forEach(ro => {
+    const cust = ro._customer || getCustomer(ro.customerId);
+    const hrs  = getWaitHours(ro.waitingSince);
+    const name = cust ? `${cust.firstName} ${cust.lastName}` : ro.id;
+    flags.push({
+      icon: Clock, iconColor: "#F59E0B", borderColor: "#F59E0B",
+      title: `${name} waiting ${hrs}h for approval`,
+      sub: `${fmtMoney(ro.totalEstimate)} estimate — follow up now`,
+      action: "Text Now",
+    });
+  });
+  readyROs.slice(0, 2).forEach(ro => {
+    const cust = ro._customer || getCustomer(ro.customerId);
+    const name = cust ? `${cust.firstName} ${cust.lastName}` : ro.id;
+    flags.push({
+      icon: CheckCircle, iconColor: "#22C55E", borderColor: "#22C55E",
+      title: `${name}'s vehicle is ready`,
+      sub: `${fmtMoney(ro.totalEstimate)} — ready for checkout`,
+      action: "Checkout",
+    });
+  });
+  unassignedROs.slice(0, 2).forEach(ro => {
+    const cust = ro._customer || getCustomer(ro.customerId);
+    const name = cust ? `${cust.firstName} ${cust.lastName}` : ro.id;
+    flags.push({
+      icon: AlertTriangle, iconColor: "#F87171", borderColor: "#EF4444",
+      title: `${name} — no tech assigned`,
+      sub: ro.serviceType || "Service unassigned",
+      action: "Assign",
+    });
+  });
+
+  // ── AI suggestions ─────────────────────────────────────────────────────────
+
+  const suggestions = [
+    { text: "David's P0420 — TSB-19-052 applies, mention Honda goodwill", value: "Save $450" },
+    { text: "Monica's cabin filter ($81) has been pending — text her", value: "+$81" },
+    { text: "James' BMW due for brake fluid flush at 64K, add to estimate", value: "+$185" },
+  ];
+
+  // ── DVI overlay ───────────────────────────────────────────────────────────────
+
+  if (dviRoId) {
+    return (
+      <div style={{ position: "relative", height: "100%" }}>
+        <DVIScreen />
+        <button
+          onClick={() => setDviRoId(null)}
+          style={{
+            position: "absolute", top: 16, right: 16, zIndex: 100,
+            background: COLORS.primary, color: "#fff",
+            border: "none", borderRadius: 8,
+            padding: "8px 16px", fontSize: 13, fontWeight: 700,
+            cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+          }}
+        >
+          <RotateCcw size={13} /> Back to Queue
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        minHeight: 0,
-        background: COLORS.bg,
-        overflow: "hidden",
-      }}
-    >
-      <AIInsightsStrip insights={[
-        { icon: "⚠️", text: "David's P0420 — TSB-19-052 applies, mention Honda goodwill claim", action: "Add TSB note", value: "Save $450", color: "#F59E0B" },
-        { icon: "💬", text: "Monica hasn't approved cabin filter ($81) — follow up before she leaves", action: "Text Monica", value: "+$81", color: "#FF6B35" },
-        { icon: "🔩", text: "James Park's BMW — brake fluid flush due at 64K, add to estimate", action: "Add service", value: "+$185", color: "#7C3AED" },
-        { icon: "💡", text: "Robert's F-150: add wiper blades to oil service — easy add-on at check-in", action: "Add to RO", value: "+$45", color: "#2563EB" },
-      ]} />
-
-      {/* ── Header ───────────────────────────────────────── */}
-      <div
-        style={{
-          padding: "20px 24px 0",
-          background: COLORS.bgCard,
-          borderBottom: `1px solid ${COLORS.border}`,
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            marginBottom: 14,
-          }}
-        >
-          <div>
-            <div
-              style={{ display: "flex", alignItems: "center", gap: 10 }}
-            >
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: 22,
-                  fontWeight: 800,
-                  color: COLORS.textPrimary,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                Repair Orders
-              </h1>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: COLORS.primary,
-                  background: "#E0F0F3",
-                  borderRadius: 12,
-                  padding: "2px 10px",
-                }}
-              >
-                {totalCount} total
-              </span>
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: COLORS.textMuted,
-                  background: COLORS.borderLight,
-                  borderRadius: 12,
-                  padding: "2px 10px",
-                }}
-              >
-                {kanbanCount} active
-              </span>
-              {dbConnected && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: "#16A34A",
-                    background: "#F0FDF4",
-                    border: "1px solid #BBF7D0",
-                    borderRadius: 12,
-                    padding: "2px 10px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                >
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16A34A", display: "inline-block" }} />
-                  MongoDB Live
-                </span>
-              )}
-            </div>
-            <p
-              style={{
-                margin: "3px 0 0",
-                fontSize: 12,
-                color: COLORS.textMuted,
-              }}
-            >
-              {SHOP.name} &mdash; Today
-            </p>
-          </div>
-
-          <button
-            onClick={() => setShowNewRO(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-              padding: "10px 20px",
-              background: `linear-gradient(135deg, ${COLORS.accent}, #E85D26)`,
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: 10,
-              fontWeight: 800,
-              fontSize: 14,
-              cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(255,107,53,0.35)",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.opacity = "0.9")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.opacity = "1")
-            }
-          >
-            <Zap size={15} />
-            Intelligent RO
-          </button>
-        </div>
-
-        {/* Filter bar */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            paddingBottom: 14,
-            flexWrap: "wrap",
-          }}
-        >
-          {/* Search */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <Search
-              size={13}
-              style={{
-                position: "absolute",
-                left: 10,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: COLORS.textMuted,
-                pointerEvents: "none",
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Search ROs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                paddingLeft: 30,
-                paddingRight: 12,
-                paddingTop: 6,
-                paddingBottom: 6,
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 20,
-                fontSize: 12,
-                color: COLORS.textPrimary,
-                background: COLORS.bg,
-                width: 180,
-                outline: "none",
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              width: 1,
-              height: 22,
-              background: COLORS.border,
-            }}
-          />
-
-          {["All", "Today", "OEM Services"].map((f) => (
-            <FilterPill
-              key={f}
-              label={f}
-              active={activeFilter === f}
-              onClick={() => setActiveFilter(f)}
-            />
-          ))}
-
-          <div style={{ marginLeft: "auto" }}>
-            <button
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "5px 12px",
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 6,
-                background: COLORS.bgCard,
-                color: COLORS.textSecondary,
-                fontSize: 12,
-                fontWeight: 500,
-                cursor: "pointer",
-              }}
-            >
-              <Filter size={12} />
-              More Filters
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Scrollable body ───────────────────────────────── */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          overflowX: "auto",
-          padding: "20px 24px 32px",
-        }}
-      >
-        {/* ROAgent Inbound Leads */}
-        <ROAgentPanel
-          onDraftRO={({ lead, draft }) => {
-            setRoPrefill({ lead, draft });
-            setShowNewRO(true);
-          }}
-        />
-
-        {/* Kanban board */}
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "flex-start",
-            minWidth: "fit-content",
-          }}
-        >
-          {COLUMNS.map((column) => {
-            const columnROs = filteredKanbanROs.filter(
-              (ro) => ro.status === column.id
-            );
-            return (
-              <KanbanColumn
-                key={column.id}
-                column={column}
-                ros={columnROs}
-                selectedRoId={selectedRoId}
-                onSelectRo={(id) => setSelectedRoId(prev => prev === id ? null : id)}
-                onOpenDVI={(id) => setDviRoId(id)}
-                onCheckout={(id) => setCheckoutRoId(id)}
-                paidRos={paidRos}
-              />
-            );
-          })}
-        </div>
-
-        {/* TSB Panel — shown when an RO is selected */}
-        {selectedRoId && (() => {
-          const ro = repairOrders.find(r => r.id === selectedRoId);
-          const vehicle = ro ? getVehicle(ro.vehicleId) : null;
-          const customer = ro ? getCustomer(ro.customerId) : null;
-          const tsbs = vehicle ? getTSBsForVehicle(vehicle.make, vehicle.model, vehicle.year) : [];
-          const severityConfig = {
-            high:     { bg: "#FEF2F2", border: "#FECACA", text: "#DC2626", label: "HIGH" },
-            moderate: { bg: "#FFFBEB", border: "#FDE68A", text: "#D97706", label: "MOD" },
-            low:      { bg: "#F0FDF4", border: "#BBF7D0", text: "#16A34A", label: "LOW" },
-          };
-          return (
-            <div style={{ padding: "20px 24px 0" }}>
-              <div style={{ background: "#fff", borderRadius: 12, border: "1.5px solid #E5E7EB", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
-                {/* Panel header */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid #F3F4F6" }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 7, background: "#F0F9FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <AlertTriangle size={14} color="#2563EB" />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontWeight: 700, fontSize: 13, color: COLORS.textPrimary }}>
-                      Technical Service Bulletins
-                    </span>
-                    {vehicle && (
-                      <span style={{ fontSize: 12, color: COLORS.textSecondary, marginLeft: 8 }}>
-                        {vehicle.year} {vehicle.make} {vehicle.model} · {customer?.firstName} {customer?.lastName}
-                      </span>
-                    )}
-                  </div>
-                  {tsbs.length > 0 && (
-                    <span style={{ fontSize: 11, fontWeight: 700, background: "#EFF6FF", color: "#2563EB", borderRadius: 6, padding: "3px 9px" }}>
-                      {tsbs.length} bulletin{tsbs.length > 1 ? "s" : ""} found
-                    </span>
-                  )}
-                  <button
-                    onClick={() => setSelectedRoId(null)}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, padding: 4, borderRadius: 5, display: "flex" }}
-                  >
-                    <X size={15} />
-                  </button>
-                </div>
-
-                {/* AI Insights for this RO */}
-                {ro && ro.aiInsights && ro.aiInsights.length > 0 && (
-                  <div style={{ padding: "10px 16px", borderBottom: "1px solid #F3F4F6" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                      <Brain size={13} color="#7C3AED" />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "#7C3AED" }}>AI Advisor Insights</span>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {ro.aiInsights.map((insight, i) => (
-                        <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", background: "#FAF5FF", border: "1px solid #E9D5FF", borderRadius: 7, padding: "8px 10px" }}>
-                          <Sparkles size={11} color="#7C3AED" style={{ marginTop: 2, flexShrink: 0 }} />
-                          <span style={{ fontSize: 12, color: "#4C1D95", lineHeight: 1.5 }}>{insight}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* TSB rows or empty state */}
-                <div style={{ padding: "10px 16px 14px" }}>
-                  {tsbs.length === 0 ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 0", color: COLORS.textMuted }}>
-                      <CheckCircle size={16} color={COLORS.success} />
-                      <span style={{ fontSize: 13 }}>No known TSBs for this vehicle.</span>
-                    </div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {tsbs.map((t, i) => {
-                        const sc = severityConfig[t.severity] || severityConfig.low;
-                        return (
-                          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, background: sc.bg, borderRadius: 9, border: `1px solid ${sc.border}`, padding: "10px 12px" }}>
-                            <span style={{ fontSize: 9, fontWeight: 800, color: sc.text, background: "#fff", border: `1px solid ${sc.border}`, borderRadius: 4, padding: "2px 6px", whiteSpace: "nowrap", marginTop: 2, flexShrink: 0 }}>
-                              {sc.label}
-                            </span>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                                <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary }}>{t.title}</span>
-                                <span style={{ fontSize: 10, color: COLORS.textMuted, fontFamily: "monospace", background: "#fff", borderRadius: 3, padding: "1px 5px", border: "1px solid #E5E7EB" }}>#{t.bulletinNumber}</span>
-                              </div>
-                              <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5, marginBottom: 6 }}>{t.description.slice(0, 140)}…</div>
-                              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                                <span style={{ fontSize: 10, color: COLORS.textMuted }}><strong>Component:</strong> {t.component} — {t.system}</span>
-                                <span style={{ fontSize: 10, color: COLORS.textMuted }}><strong>Labor:</strong> {t.laborHours}h</span>
-                                {t.partsEstimate > 0 && (
-                                  <span style={{ fontSize: 10, color: COLORS.textMuted }}><strong>Parts est.:</strong> ${t.partsEstimate}</span>
-                                )}
-                                {t.extendedWarranty && (
-                                  <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.success, background: "#F0FDF4", borderRadius: 4, padding: "1px 6px" }}>
-                                    Extended Warranty: {t.extendedWarranty.years}yr/{t.extendedWarranty.miles.toLocaleString()}mi
-                                  </span>
-                                )}
-                              </div>
-                              {t.note && (
-                                <div style={{ marginTop: 5, fontSize: 10, color: "#92400E", background: "#FFFBEB", borderRadius: 5, padding: "4px 8px", border: "1px solid #FDE68A" }}>
-                                  <Sparkles size={9} style={{ marginRight: 4 }} /> {t.note}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Scheduled section */}
-        {filteredScheduled.length > 0 && (
-          <ScheduledSection scheduledROs={filteredScheduled} />
-        )}
-      </div>
-
-      {/* ── DVI Modal Overlay ─────────────────────────────── */}
-      {dviRoId && (() => {
-        const ro = repairOrders.find(r => r.id === dviRoId);
-        const vehicle = ro ? getVehicle(ro.vehicleId) : null;
-        const customer = ro ? getCustomer(ro.customerId) : null;
-        return (
-          <div style={{
-            position: "fixed", inset: 0, zIndex: 1000,
-            background: "rgba(0,0,0,0.55)",
-            display: "flex", flexDirection: "column",
-          }}>
-            <div style={{ background: COLORS.bg, flex: 1, overflow: "auto", position: "relative" }}>
-              {/* Close bar */}
-              <div style={{
-                position: "sticky", top: 0, zIndex: 10,
-                background: "#fff",
-                borderBottom: "1px solid #E5E7EB",
-                padding: "12px 24px",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Camera size={16} color={COLORS.primary} />
-                  <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary }}>
-                    Digital Vehicle Inspection
-                  </span>
-                  {vehicle && (
-                    <span style={{ fontSize: 12, color: COLORS.textMuted }}>
-                      — {vehicle.year} {vehicle.make} {vehicle.model}
-                      {customer ? ` · ${customer.firstName} ${customer.lastName}` : ""}
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={() => setDviRoId(null)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    padding: "7px 14px",
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 7,
-                    background: "#fff",
-                    cursor: "pointer",
-                    fontSize: 13, fontWeight: 600,
-                    color: COLORS.textSecondary,
-                  }}
-                >
-                  <X size={15} /> Close
-                </button>
-              </div>
-              <DVIScreen />
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* New RO Wizard */}
+    <>
+      {/* Modals */}
       {showNewRO && (
         <NewROWizard
-          onClose={() => { setShowNewRO(false); setRoPrefill(null); }}
-          prefill={roPrefill}
+          onClose={() => setShowNewRO(false)}
+          onCreated={() => setShowNewRO(false)}
+        />
+      )}
+      {checkoutRoId && (
+        <CheckoutModal
+          roId={checkoutRoId}
+          repairOrders={repairOrders}
+          onClose={() => setCheckoutRoId(null)}
+          onPaid={(roId, result) => {
+            setPaidRos(p => ({ ...p, [roId]: result }));
+            setCheckoutRoId(null);
+          }}
         />
       )}
 
-      {/* Checkout Modal */}
-      {checkoutRoId && (() => {
-        const ro = repairOrders.find(r => r.id === checkoutRoId);
-        if (!ro) return null;
-        const customer = getCustomer(ro.customerId);
-        const vehicle = getVehicle(ro.vehicleId);
-        return (
-          <CheckoutModal
-            ro={ro}
-            customer={customer}
-            vehicle={vehicle}
-            onClose={() => setCheckoutRoId(null)}
-            onPaid={(roId, amount, method) => {
-              setPaidRos(prev => ({ ...prev, [roId]: { amount, method } }));
-              setCheckoutRoId(null);
-            }}
-          />
-        );
-      })()}
-    </div>
+      {/* Split layout */}
+      <div style={{
+        display: "flex", height: "100%", minHeight: 0,
+        background: COLORS.bg,
+        fontFamily: "'Inter', system-ui, sans-serif",
+        overflow: "hidden",
+      }}>
+
+        {/* ── LEFT: SMS panel (65%) ──────────────────────────────────────────── */}
+        <div style={{
+          width: "65%", display: "flex", flexDirection: "column",
+          borderRight: `1px solid ${COLORS.border}`, overflow: "hidden",
+        }}>
+
+          {/* SMS chrome header */}
+          <div style={{
+            background: "#F3F4F6",
+            borderBottom: `1px solid ${COLORS.border}`,
+            padding: "0 16px",
+            display: "flex", alignItems: "center", height: 44, gap: 8,
+            flexShrink: 0,
+          }}>
+            <div style={{ display: "flex", gap: 5 }}>
+              {["#EF4444", "#F59E0B", "#22C55E"].map(c => (
+                <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />
+              ))}
+            </div>
+            <div style={{
+              flex: 1, textAlign: "center",
+              fontSize: 12, fontWeight: 600, color: COLORS.textSecondary,
+              letterSpacing: "0.02em",
+            }}>
+              {smsName} — Repair Order Queue
+            </div>
+            {dbConnected && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 4,
+                fontSize: 10, fontWeight: 600, color: "#16A34A",
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16A34A", display: "inline-block" }} />
+                Live
+              </div>
+            )}
+          </div>
+
+          {/* Toolbar */}
+          <div style={{
+            padding: "10px 16px",
+            display: "flex", alignItems: "center", gap: 10,
+            borderBottom: `1px solid ${COLORS.border}`,
+            background: COLORS.bgCard, flexShrink: 0,
+          }}>
+            {/* Tabs */}
+            <div style={{ display: "flex", gap: 2 }}>
+              {[
+                { id: "queue", label: `Queue (${kanbanROs.length})` },
+                { id: "scheduled", label: `Scheduled (${scheduledROs.length})` },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                    padding: "5px 12px", fontSize: 12, fontWeight: 600,
+                    borderRadius: 6, border: "none", cursor: "pointer",
+                    background: activeTab === tab.id ? COLORS.primary : "transparent",
+                    color: activeTab === tab.id ? "#fff" : COLORS.textSecondary,
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search */}
+            <div style={{
+              flex: 1, display: "flex", alignItems: "center",
+              gap: 7, background: "#F9FAFB",
+              border: `1px solid ${COLORS.border}`, borderRadius: 7,
+              padding: "6px 10px",
+            }}>
+              <Search size={13} color={COLORS.textMuted} />
+              <input
+                placeholder="Search customer, vehicle, RO…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                style={{
+                  border: "none", background: "transparent",
+                  fontSize: 12, color: COLORS.textPrimary,
+                  outline: "none", flex: 1,
+                }}
+              />
+            </div>
+
+            {/* New RO */}
+            <button
+              onClick={() => setShowNewRO(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 14px",
+                background: `linear-gradient(135deg, ${COLORS.accent}, #E85D26)`,
+                color: "#fff", border: "none", borderRadius: 7,
+                fontSize: 12, fontWeight: 700, cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              <Plus size={13} />
+              New RO
+            </button>
+          </div>
+
+          {/* Table header */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "26px 130px 1fr 120px 80px 90px 100px",
+            gap: 8, padding: "7px 16px",
+            background: "#F9FAFB",
+            borderBottom: `1px solid ${COLORS.border}`,
+            flexShrink: 0,
+          }}>
+            {["", "RO #", "Customer / Vehicle", "Service", "Tech", "Est.", ""].map((h, i) => (
+              <span key={i} style={{
+                fontSize: 10, fontWeight: 700, color: COLORS.textMuted,
+                textTransform: "uppercase", letterSpacing: "0.06em",
+                textAlign: i === 5 ? "right" : "left",
+              }}>
+                {h}
+              </span>
+            ))}
+          </div>
+
+          {/* RO rows */}
+          <div style={{ flex: 1, overflowY: "auto", background: COLORS.bgCard }}>
+            {displayROs.length === 0 ? (
+              <div style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", height: 180,
+                color: COLORS.textMuted, gap: 8,
+              }}>
+                <Wrench size={28} color={COLORS.border} />
+                <span style={{ fontSize: 13 }}>No repair orders found</span>
+              </div>
+            ) : (
+              displayROs.map(ro => (
+                <RORow
+                  key={ro.id}
+                  ro={ro}
+                  selected={selectedRoId === ro.id}
+                  onSelect={setSelectedRoId}
+                  onDVI={setDviRoId}
+                  onCheckout={setCheckoutRoId}
+                  paidRos={paidRos}
+                />
+              ))
+            )}
+          </div>
+
+          {/* Status summary footer */}
+          <div style={{
+            borderTop: `1px solid ${COLORS.border}`,
+            background: "#F9FAFB",
+            padding: "8px 16px",
+            display: "flex", alignItems: "center", gap: 16,
+            flexShrink: 0,
+          }}>
+            {KANBAN_STATUSES.map(s => {
+              const count = kanbanROs.filter(ro => ro.status === s).length;
+              const cfg   = STATUS_CONFIG[s];
+              if (count === 0) return null;
+              return (
+                <div key={s} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <StatusDot status={s} />
+                  <span style={{ fontSize: 11, color: COLORS.textSecondary, fontWeight: 500 }}>
+                    {cfg.label}: <strong style={{ color: cfg.color }}>{count}</strong>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── RIGHT: WrenchIQ Agent panel (35%) ─────────────────────────────── */}
+        <div style={{
+          width: "35%", display: "flex", flexDirection: "column",
+          background: COLORS.bgDark, overflow: "hidden",
+        }}>
+
+          {/* Panel header */}
+          <div style={{
+            padding: "16px 20px 14px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            flexShrink: 0,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+              <div style={{
+                width: 26, height: 26, background: COLORS.accent,
+                borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Sparkles size={13} color="#fff" />
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                WrenchIQ
+              </span>
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", paddingLeft: 34 }}>
+              Queue Intelligence — {shopName}
+            </div>
+          </div>
+
+          {/* Scrollable content */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
+
+            {/* Queue Health score */}
+            <div style={{
+              background: "rgba(255,255,255,0.05)",
+              borderRadius: 10,
+              borderLeft: `3px solid ${scoreColor}`,
+              padding: "14px 16px",
+              marginBottom: 14,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 800, color: "#60A5FA",
+                  background: "rgba(96,165,250,0.12)", borderRadius: 4,
+                  padding: "2px 7px", letterSpacing: "0.06em",
+                }}>
+                  QUEUE
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#F1F5F9" }}>
+                  Health Score
+                </span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
+                <span style={{
+                  fontSize: 44, fontWeight: 800, lineHeight: 1,
+                  color: scoreColor, letterSpacing: "-0.02em",
+                }}>
+                  {queueScore}
+                </span>
+                <span style={{ fontSize: 20, color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>/100</span>
+              </div>
+
+              <div style={{
+                height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden", marginBottom: 12,
+              }}>
+                <div style={{
+                  height: "100%", width: `${queueScore}%`,
+                  background: `linear-gradient(90deg, ${scoreColor}AA, ${scoreColor})`,
+                  borderRadius: 3, transition: "width 0.6s ease",
+                }} />
+              </div>
+
+              {/* Mini KPIs */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                {[
+                  { label: "Active ROs", value: kanbanROs.length, color: "#60A5FA" },
+                  { label: "In Progress", value: inProgressROs.length, color: "#A78BFA" },
+                  { label: "Ready", value: readyROs.length, color: "#4ADE80" },
+                ].map(k => (
+                  <div key={k.label} style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 7, padding: "8px 10px", textAlign: "center",
+                  }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: k.color }}>{k.value}</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>{k.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Revenue snapshot */}
+            <div style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 10, padding: "12px 14px", marginBottom: 14,
+            }}>
+              <div style={{
+                fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8,
+              }}>
+                Revenue Snapshot
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginBottom: 3 }}>Active Pipeline</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#F1F5F9" }}>{fmtMoney(totalActiveRevenue)}</div>
+                </div>
+                {revenueAtRisk > 0 && (
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
+                      <AlertTriangle size={10} color="#F59E0B" />
+                      <span style={{ fontSize: 10, color: "#FCD34D" }}>Pending Approval</span>
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: "#FCD34D" }}>{fmtMoney(revenueAtRisk)}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Flags */}
+            {flags.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                  textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8,
+                }}>
+                  Needs Attention ({flags.length})
+                </div>
+                {flags.map((f, i) => <FlagCard key={i} {...f} />)}
+              </div>
+            )}
+
+            {/* AI Suggestions */}
+            <div>
+              <div style={{
+                fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8,
+                display: "flex", alignItems: "center", gap: 6,
+              }}>
+                <Brain size={12} color="rgba(255,255,255,0.35)" />
+                AI Suggestions
+              </div>
+              {suggestions.map((s, i) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "flex-start", gap: 10,
+                  padding: "9px 0",
+                  borderBottom: i < suggestions.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                }}>
+                  <Zap size={12} color={COLORS.accent} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.45 }}>
+                      {s.text}
+                    </div>
+                  </div>
+                  <div style={{
+                    fontSize: 10, fontWeight: 700, color: "#4ADE80",
+                    background: "rgba(34,197,94,0.12)",
+                    border: "1px solid rgba(34,197,94,0.25)",
+                    borderRadius: 4, padding: "2px 7px",
+                    whiteSpace: "nowrap", flexShrink: 0, alignSelf: "center",
+                  }}>
+                    {s.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom: ROAgentPanel trigger */}
+          <div style={{
+            padding: "12px 18px 16px",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            flexShrink: 0,
+          }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              marginBottom: 6,
+              fontSize: 10, color: "rgba(255,255,255,0.3)",
+              textTransform: "uppercase", letterSpacing: "0.07em",
+            }}>
+              <Target size={11} color="rgba(255,255,255,0.3)" />
+              WrenchIQ reads {smsName} — never writes to it
+            </div>
+            <ROAgentPanel />
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
