@@ -19,7 +19,7 @@ import {
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 const SHOP_ID  = "shop-001";
 const GOLD_HEX = "#C6A86C";
 
