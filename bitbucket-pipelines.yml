@@ -1,0 +1,85 @@
+#  The workflow allows running tests, code checkstyle and security scans on feature branches (as well as master).
+
+image: atlassian/default-image:2
+
+# Workflow Configuration
+definitions:
+  services:
+    docker:
+      memory: 2024
+
+  steps:
+    - step: &BUILD
+        name: build
+
+        script:
+          - chmod 755 build/*.sh
+          - ./build/package.sh next-gen
+        artifacts:
+          - bin/next-gen.tar.gz
+
+    - step: &BINARY
+        fail-fast: true
+        name: binary
+        image: atlassian/default-image:2
+        script:
+          - chmod 755 build/*.sh
+          - ./build/binary.sh next-gen
+        artifacts:
+          - bin/next-gen/**
+
+    - step: &DEPLOY_DEV
+        name: Deploy [DEV]
+        image:
+          name: prediibitbucket.azurecr.io/predii-azcopy:latest
+          username: $ACR_USERNAME
+          password: $ACR_PASSWORD
+        # trigger: manual
+        deployment: Test
+        script:
+          - chmod 755 build/*.sh
+          - ./build/deploy.sh DEV next-gen
+
+    - step: &DEPLOY_UAT
+        name: Deploy [UAT]
+        image:
+          name: prediibitbucket.azurecr.io/predii-azcopy:latest
+          username: $ACR_USERNAME
+          password: $ACR_PASSWORD
+        trigger: manual
+        deployment: Staging
+        script:
+          - chmod 755 build/*.sh
+          - ./build/deploy.sh UAT next-gen
+
+    - step: &DEPLOY_PROD
+        name: Deploy [PROD]
+        image:
+          name: prediibitbucket.azurecr.io/predii-azcopy:latest
+          username: $ACR_USERNAME
+          password: $ACR_PASSWORD
+        trigger: manual
+        deployment: Production
+        script:
+          - chmod 755 build/*.sh
+          - ./build/deploy.sh PROD next-gen
+
+pipelines:
+  branches:
+    master:
+      - step: *BUILD
+
+    "release/*":
+      - step: *BUILD
+
+  pull-requests:
+    "**":
+      - step: *BUILD
+
+  tags:
+    "*":
+      - step: *BUILD
+      - step: *BINARY
+      - step: *DEPLOY_DEV
+      - step: *DEPLOY_UAT
+      - step: *DEPLOY_PROD
