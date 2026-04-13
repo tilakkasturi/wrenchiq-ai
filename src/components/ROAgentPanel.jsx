@@ -66,7 +66,7 @@ const URGENCY_STYLE = {
   low:    { bg: "#F0FDF4", color: "#16A34A", label: "Schedule" },
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 export default function ROAgentPanel({ onDraftRO }) {
   const [expanded, setExpanded]   = useState(true);
