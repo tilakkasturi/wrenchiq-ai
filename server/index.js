@@ -11,6 +11,10 @@ import express from 'express';
 import cors    from 'cors';
 import { MongoClient } from 'mongodb';
 import { readFileSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import repairOrderRoutes      from './routes/repairOrders.js';
 import knowledgeGraphRoutes   from './routes/knowledgeGraph.js';
 import recommendationsRouter  from './routes/recommendations.js';
@@ -107,6 +111,18 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', db: DB_NAME, ts: new Date().toISOString() });
 });
 
+// ── Static frontend (production) ──────────────────────────────────────────────
+// Serves dist/ when it exists (i.e. after `npm run build`).
+// In dev, Vite runs separately on :5173 — this block is a no-op.
+const distDir = join(__dirname, '../dist');
+if (existsSync(distDir)) {
+  app.use(express.static(distDir));
+  // SPA fallback: non-API routes return index.html
+  app.get('*', (req, res) => {
+    res.sendFile(join(distDir, 'index.html'));
+  });
+}
+
 // ── Start (eager MongoDB connect) ────────────────────────────────────────────
 async function startServer() {
   try {
@@ -117,9 +133,12 @@ async function startServer() {
 
     app.listen(PORT, () => {
       const masked = MONGODB_URI.replace(/:\/\/.*@/, '://<credentials>@');
-      console.log(`\nWrenchIQ API  → http://localhost:${PORT}`);
+      const hasDist = existsSync(distDir);
+      console.log(`\nWrenchIQ      → http://localhost:${PORT}${hasDist ? '' : '  (API only — no dist/ found)'}`);
       console.log(`MongoDB       → ${masked}`);
-      console.log(`Database      → ${DB_NAME}\n`);
+      console.log(`Database      → ${DB_NAME}`);
+      if (hasDist) console.log(`Frontend      → http://localhost:${PORT}  (serving dist/)`);
+      console.log('');
     });
   } catch (err) {
     console.error('Failed to connect to MongoDB:', err.message);

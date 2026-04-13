@@ -66,10 +66,11 @@ tar -czf "${RELEASES_DIR}/${FILENAME}" \
   package-lock.json \
   .env.example \
   start.sh \
+  deploy-remote.sh \
   version.json \
   2>&1 | grep -v LIBARCHIVE || true
 
-# Also write a copy of deploy-remote.sh into releases/ alongside the tarball
+# Also copy deploy-remote.sh alongside the tarball for scp convenience
 cp deploy-remote.sh "${RELEASES_DIR}/deploy-remote.sh" 2>/dev/null || true
 
 SIZE=$(du -sh "${RELEASES_DIR}/${FILENAME}" | cut -f1)
