@@ -24,6 +24,32 @@ const SMS_OPTIONS = [
   "Other",
 ];
 
+// Demo landing configs — set via PersonaGatewayScreen when a persona card is clicked
+export const DEMO_SHOPS = {
+  cornerstone: {
+    id: "cornerstone",
+    shopName: "Cornerstone Auto Group",
+    ownerName: "Dave Kowalski",
+    ownerInitials: "DK",
+    smsName: "Protractor",
+    corporateName: "GWG Auto Group",
+    primaryCustomer: "Elena Vasquez",
+    smsProvider: "protractor",
+    advisorName: "James Kowalski",
+  },
+  ridgeline: {
+    id: "ridgeline",
+    shopName: "Ridgeline Auto Service",
+    ownerName: "Carmen Reyes",
+    ownerInitials: "CR",
+    smsName: "Mitchell1",
+    corporateName: null,
+    primaryCustomer: "Dan Whitfield",
+    smsProvider: "mitchell1",
+    advisorName: "Sofia Reyes",
+  },
+};
+
 const DEFAULTS = {
   smsName:         "Protractor",
   corporateName:   "GWG Auto Group",
@@ -31,6 +57,9 @@ const DEFAULTS = {
   ownerName:       SHOP.owner,
   ownerInitials:   SHOP.ownerInitials,
   primaryCustomer: "Robert Taylor",
+  activeShopId:    "cornerstone",  // default to Cornerstone (Taylor demo)
+  smsProvider:     "protractor",
+  advisorName:     "James Kowalski",
 };
 
 function load() {
@@ -47,6 +76,12 @@ function save(cfg) {
 }
 
 const DemoContext = createContext(null);
+
+// smsProvider → header color mapping (G task: SMS skin swap)
+export const SMS_PROVIDER_COLORS = {
+  protractor: "#5A6A7A",
+  mitchell1:  "#1B2A3B",
+};
 
 export function DemoProvider({ children }) {
   const [config, setConfig] = useState(load);
@@ -69,8 +104,11 @@ export function DemoProvider({ children }) {
     setConfig({ ...DEFAULTS });
   }, []);
 
+  // Derived: smsHeaderColor from smsProvider
+  const smsHeaderColor = SMS_PROVIDER_COLORS[config.smsProvider] || SMS_PROVIDER_COLORS.protractor;
+
   return (
-    <DemoContext.Provider value={{ ...config, setDemo, reset, SMS_OPTIONS }}>
+    <DemoContext.Provider value={{ ...config, setDemo, reset, SMS_OPTIONS, smsHeaderColor }}>
       {children}
     </DemoContext.Provider>
   );

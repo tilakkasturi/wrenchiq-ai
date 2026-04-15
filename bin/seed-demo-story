@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# WrenchIQ — seed demo story ROs for April 18 sales demos
+# Usage: bin/seed-demo-story [--shop cornerstone|ridgeline] [--reset]
+PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+cd "$(dirname "$0")/.."
+node --env-file=.env.local scripts/seedDemoStory.js "$@"

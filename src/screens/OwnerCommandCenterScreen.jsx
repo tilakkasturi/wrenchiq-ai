@@ -235,20 +235,20 @@ function TodayTab() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-      <AIInsightsStrip label="Recommendations" insights={[
-        { icon: "🏁", text: "Need $1,660 more to hit today's target — 3 pending approvals can close the gap", action: "View ROs", value: "$1,660 gap", color: "#F59E0B" },
-        { icon: "🔴", text: "Bay 3 idle 45 min — reassign Tom's Tucson to recover labor", action: "Reschedule", value: "Recover $280", color: "#EF4444" },
-        { icon: "📊", text: "Mike Reeves efficiency 85% this week — assign lighter jobs this afternoon", action: "Reassign", value: "+1.2 hrs", color: "#7C3AED" },
-        { icon: "💰", text: "Worldpac Net-30 ($743) due Thu · O'Reilly ($1,104) due Fri", action: "Pay Now", value: "$1,847 due", color: "#EF4444" },
+      <AIInsightsStrip label="WrenchIQ Operational Briefing" insights={[
+        { icon: "⚡", text: "Bay 3 idle 45 min — tech available. Reassign Tom's Tucson to recover lost capacity", action: "Reassign", value: "1.5hr recovered", color: "#F59E0B" },
+        { icon: "📋", text: "3 estimates pending approval — 2 over 1 hour. Follow-up may help convert", action: "View ROs", value: "2 aging", color: "#EF4444" },
+        { icon: "📊", text: "Marcus efficiency 85% this week — pattern forming. Assign lighter jobs this afternoon", action: "Reassign", value: "Pattern forming", color: "#7C3AED" },
+        { icon: "3C", text: "Marcus Webb: 3 complaints under 40/100 this week. Location 3 compliance needs attention", action: "Coach", value: "34/100 avg", color: "#EF4444" },
       ]} />
 
-      {/* Revenue Hero */}
+      {/* Shop Health Hero — operational framing, not accounting P&L */}
       <Card>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
           {/* Left */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 4 }}>
-              Today's Revenue
+              Today's Shop Throughput
             </div>
             <div
               style={{
@@ -259,19 +259,17 @@ function TodayTab() {
                 marginBottom: 4,
               }}
             >
-              $5,840
+              12 ROs
             </div>
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 14 }}>
-              Goal: $7,500
+              Daily capacity: 16 ROs · 3 vehicles still in progress
             </div>
             <ProgressBar pct={78} color={COLORS.accent} height={10} />
             <div style={{ fontSize: 12, color: COLORS.textSecondary, marginTop: 8 }}>
-              Need{" "}
-              <span style={{ fontWeight: 700, color: COLORS.accent }}>$1,660 more</span> · 3 vehicles
-              still in shop
+              <span style={{ fontWeight: 700, color: COLORS.accent }}>4 ROs remaining</span> · Bay utilization on track · 2 awaiting approval
             </div>
           </div>
-          {/* Right: circular-ish percentage display */}
+          {/* Right: utilization ring */}
           <div
             style={{
               width: 100,
@@ -300,7 +298,7 @@ function TodayTab() {
               <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.accent, lineHeight: 1 }}>
                 78%
               </div>
-              <div style={{ fontSize: 10, color: COLORS.textMuted }}>of goal</div>
+              <div style={{ fontSize: 10, color: COLORS.textMuted }}>capacity</div>
             </div>
           </div>
         </div>
@@ -310,26 +308,26 @@ function TodayTab() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {[
           {
-            label: "Avg Ticket",
-            value: "$487",
-            delta: "+12% vs yesterday",
+            label: "Avg Repair Time",
+            value: "2.4hr",
+            delta: "-0.3hr vs last week",
             up: true,
           },
           {
-            label: "Approval Rate",
+            label: "Customer Approval Rate",
             value: "87%",
-            delta: "+3%",
+            delta: "+3% this week",
             up: true,
           },
           {
             label: "Bay Utilization",
             value: "76%",
-            delta: "-5%",
+            delta: "-5% vs target",
             up: false,
           },
           {
-            label: "CSI Score",
-            value: "4.8★",
+            label: "First-Visit Fix Rate",
+            value: "94%",
             delta: "30d avg",
             up: true,
             neutral: true,

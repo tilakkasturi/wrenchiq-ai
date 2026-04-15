@@ -11,7 +11,7 @@ import { SHOP, customers, vehicles } from "../data/demoData";
 import { WARRANTY_CLAIMS } from "../data/oemDemoData";
 import BrandWordmark from "../components/BrandWordmark";
 import { useEditionName } from "../context/BrandingContext";
-import { useDemo } from "../context/DemoContext";
+import { useDemo, DEMO_SHOPS } from "../context/DemoContext";
 
 // ── AM data ─────────────────────────────────────────────────
 const QUEUE = [
@@ -260,7 +260,7 @@ function renderInline(text) {
 export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onOpenOEM }) {
   const amName  = useEditionName("AM");
   const oemName = useEditionName("OEM");
-  const { smsName } = useDemo();
+  const { smsName, activeShopId, setDemo } = useDemo();
   const [activeTab, setActiveTab]        = useState("AM");     // "AM" | "OEM" | "API"
   const [hoveredPersona, setHoveredPersona] = useState(null);
   const [selectedCust, setSelectedCust]  = useState(null);
@@ -333,7 +333,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 8, textAlign: "center", maxWidth: 540 }}>
         AI intelligence that works alongside your shop management system. Powered by Predii's automotive knowledge graph.
       </div>
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 5,
           background: COLORS.primary, border: "1px solid rgba(255,255,255,0.18)",
@@ -343,6 +343,40 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
           <span style={{ width: 6, height: 6, borderRadius: 3, background: "#22C55E", display: "inline-block" }} />
           Connected to: {smsName}
         </span>
+
+        {/* ── Demo shop selector (April 18 demos) ─────────────────────────── */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: "0.05em" }}>
+            DEMO:
+          </span>
+          {Object.values(DEMO_SHOPS).map(shop => {
+            const isActive = activeShopId === shop.id;
+            return (
+              <button
+                key={shop.id}
+                onClick={() => setDemo({
+                  activeShopId: shop.id,
+                  shopName: shop.shopName,
+                  ownerName: shop.ownerName,
+                  ownerInitials: shop.ownerInitials,
+                  smsName: shop.smsName,
+                  corporateName: shop.corporateName,
+                  primaryCustomer: shop.primaryCustomer,
+                  smsProvider: shop.smsProvider,
+                  advisorName: shop.advisorName,
+                })}
+                style={{
+                  padding: "4px 12px", borderRadius: 20, border: "none", cursor: "pointer",
+                  background: isActive ? COLORS.accent : "rgba(255,255,255,0.08)",
+                  color: isActive ? "#fff" : "rgba(255,255,255,0.5)",
+                  fontSize: 10, fontWeight: 700, transition: "all 0.15s",
+                }}
+              >
+                {shop.shopName} ({shop.smsName})
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════
