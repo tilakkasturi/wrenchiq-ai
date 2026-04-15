@@ -270,37 +270,34 @@ const REVENUE_OPPS = [
 // ── Sub-components ─────────────────────────────────────────
 
 function SuggestionCard({ item }) {
-  const bgMap = {
-    revenue: "#F0FDF4",
-    upsell: "#FFF7ED",
-    alert: "#FEF2F2",
-    ok: "#F0FDF4",
-  };
   const borderMap = {
     revenue: COLORS.success,
-    upsell: COLORS.accent,
+    upsell: COLORS.warning,
     alert: COLORS.danger,
     ok: COLORS.success,
   };
 
   return (
     <div style={{
-      background: bgMap[item.type] || "#F9FAFB",
+      background: COLORS.navyMid,
       borderRadius: 10,
       padding: "10px 11px",
-      borderLeft: `3px solid ${borderMap[item.type] || "#E5E7EB"}`,
+      borderLeft: `3px solid ${borderMap[item.type] || COLORS.navyBorder}`,
       marginBottom: 6,
+      border: `1px solid ${COLORS.navyBorder}`,
+      borderLeftWidth: 3,
+      borderLeftColor: borderMap[item.type] || COLORS.navyBorder,
     }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11.5, color: COLORS.textPrimary, lineHeight: 1.4, marginBottom: item.action ? 6 : 0 }}>
+          <div style={{ fontSize: 11.5, color: COLORS.intelText, lineHeight: 1.4, marginBottom: item.action ? 6 : 0 }}>
             <span style={{ marginRight: 4 }}>{item.icon}</span>
             {item.text}
           </div>
           {item.action && (
             <button style={{
-              fontSize: 10, fontWeight: 700, color: item.color || COLORS.primary,
-              background: "none", border: `1px solid ${item.color || COLORS.primary}`,
+              fontSize: 10, fontWeight: 700, color: item.color || COLORS.intelMuted,
+              background: "none", border: `1px solid ${item.color || COLORS.navyBorder}`,
               borderRadius: 5, padding: "3px 8px", cursor: "pointer",
             }}>
               {item.action}
@@ -308,9 +305,9 @@ function SuggestionCard({ item }) {
           )}
         </div>
         <div style={{
-          fontSize: 10, fontWeight: 800, color: item.color || COLORS.textMuted,
-          background: "#fff", borderRadius: 5, padding: "2px 6px", whiteSpace: "nowrap",
-          border: `1px solid ${item.color || "#E5E7EB"}20`,
+          fontSize: 10, fontWeight: 800, color: item.color || COLORS.intelMuted,
+          background: "rgba(255,255,255,0.07)", borderRadius: 5, padding: "2px 6px", whiteSpace: "nowrap",
+          border: `1px solid ${COLORS.navyBorder}`,
           flexShrink: 0,
         }}>
           {item.value}
@@ -360,12 +357,12 @@ function OppRow({ opp }) {
   const cfg = statusConfig[opp.status] || statusConfig.pending;
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid #F9FAFB" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: `1px solid ${COLORS.navyBorder}` }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textPrimary }}>{opp.customer} · <span style={{ fontWeight: 400, color: COLORS.textSecondary }}>{opp.action}</span></div>
-        <span style={{ fontSize: 9.5, color: cfg.color, background: cfg.bg, borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>{cfg.label}</span>
+        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.intelText }}>{opp.customer} · <span style={{ fontWeight: 400, color: COLORS.intelMuted }}>{opp.action}</span></div>
+        <span style={{ fontSize: 9.5, color: cfg.color, background: "rgba(255,255,255,0.08)", borderRadius: 4, padding: "1px 5px", fontWeight: 600 }}>{cfg.label}</span>
       </div>
-      <div style={{ fontSize: 12, fontWeight: 800, color: opp.status === "save" ? COLORS.success : COLORS.accent, flexShrink: 0 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: opp.status === "save" ? COLORS.success : COLORS.gold, flexShrink: 0 }}>
         {opp.status === "save" ? `Save $${opp.value}` : `+$${opp.value}`}
       </div>
     </div>
@@ -555,26 +552,27 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
       width: 300,
       flexShrink: 0,
       height: "100%",
-      background: "#fff",
-      borderLeft: "1px solid #E5E7EB",
+      background: COLORS.navyDark,
+      borderLeft: `1px solid ${COLORS.navyBorder}`,
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
     }}>
       {/* ── Header ── */}
       <div style={{
-        background: "linear-gradient(135deg, #1B3461 0%, #0D2A4A 100%)",
+        background: COLORS.navyDark,
+        borderBottom: `1px solid ${COLORS.navyBorder}`,
         padding: "14px 14px 12px",
         flexShrink: 0,
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,107,53,0.2)", border: "1px solid rgba(255,107,53,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Sparkles size={14} color={COLORS.accent} />
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: `rgba(201,162,39,0.2)`, border: `1px solid rgba(201,162,39,0.4)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={14} color={COLORS.gold} />
             </div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: 0.2 }}>WrenchIQ <span style={{ color: "#FF6B35" }}>AI</span></div>
-              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", marginTop: 0.5 }}>Revenue Intelligence</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: 0.2 }}>WrenchIQ <span style={{ color: COLORS.gold }}>AI</span></div>
+              <div style={{ fontSize: 9, color: COLORS.intelMuted, marginTop: 0.5 }}>Intelligence Ready</div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -618,8 +616,8 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                 borderRadius: 6,
                 border: "none",
                 cursor: "pointer",
-                background: activeTab === tab.id ? COLORS.accent : "rgba(255,255,255,0.1)",
-                color: activeTab === tab.id ? "#fff" : "rgba(255,255,255,0.5)",
+                background: activeTab === tab.id ? COLORS.gold : "rgba(255,255,255,0.1)",
+                color: activeTab === tab.id ? "#1A1A1A" : "rgba(255,255,255,0.5)",
                 transition: "all 0.15s",
                 letterSpacing: 0.2,
               }}
@@ -631,7 +629,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
       </div>
 
       {/* ── Scrollable body ── */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px", background: COLORS.navyDark }}>
 
         {/* ── Chat tab ── */}
         {activeTab === "aiSuggest" && (
@@ -640,33 +638,33 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
               /* No conversation yet — show screen-context suggestions as starter prompts */
               <>
                 {ctx.customerFocus && (
-                  <div style={{ background: "#F0F9FF", borderRadius: 10, padding: "10px 11px", marginBottom: 10, border: "1.5px solid #BAE6FD" }}>
+                  <div style={{ background: COLORS.navyMid, borderRadius: 10, padding: "10px 11px", marginBottom: 10, border: `1.5px solid ${COLORS.navyBorder}` }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 14, background: COLORS.primary, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 800 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 14, background: COLORS.navyBorder, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 800 }}>
                         {ctx.customerFocus.name.split(" ").map(n => n[0]).join("")}
                       </div>
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary }}>{ctx.customerFocus.name}</div>
-                        <div style={{ fontSize: 10, color: COLORS.textSecondary }}>{ctx.customerFocus.vehicle}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.intelText }}>{ctx.customerFocus.name}</div>
+                        <div style={{ fontSize: 10, color: COLORS.intelMuted }}>{ctx.customerFocus.vehicle}</div>
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
                       <div style={{ width: 6, height: 6, borderRadius: 3, background: ctx.customerFocus.statusColor }} />
                       <span style={{ fontSize: 10, color: ctx.customerFocus.statusColor, fontWeight: 600 }}>{ctx.customerFocus.status}</span>
                     </div>
-                    <div style={{ fontSize: 9.5, color: COLORS.textMuted, fontFamily: "monospace" }}>{ctx.customerFocus.roId}</div>
+                    <div style={{ fontSize: 9.5, color: COLORS.intelMuted, fontFamily: "monospace" }}>{ctx.customerFocus.roId}</div>
                   </div>
                 )}
-                <div style={{ fontSize: 9, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Suggested prompts</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: COLORS.intelMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Suggested prompts</div>
                 {ctx.suggestions.map((item, i) => (
                   <button
                     key={i}
                     onClick={() => { setTypedInput(item.text); }}
                     style={{
                       display: "block", width: "100%", textAlign: "left",
-                      background: "#F9FAFB", border: "1px solid #E5E7EB",
+                      background: COLORS.navyMid, border: `1px solid ${COLORS.navyBorder}`,
                       borderRadius: 8, padding: "8px 10px", marginBottom: 6,
-                      cursor: "pointer", fontSize: 11, color: COLORS.textPrimary,
+                      cursor: "pointer", fontSize: 11, color: COLORS.intelText,
                       lineHeight: 1.4,
                     }}
                   >
@@ -685,13 +683,14 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                   }}>
                     <div style={{
                       maxWidth: "88%",
-                      background: msg.role === "user" ? COLORS.primary : "#F3F4F6",
-                      color: msg.role === "user" ? "#fff" : COLORS.textPrimary,
+                      background: msg.role === "user" ? COLORS.gold : COLORS.navyMid,
+                      color: msg.role === "user" ? "#1A1A1A" : COLORS.intelText,
                       borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
                       padding: "8px 11px",
                       fontSize: 11.5,
                       lineHeight: 1.55,
                       whiteSpace: "pre-wrap",
+                      border: msg.role === "user" ? "none" : `1px solid ${COLORS.navyBorder}`,
                     }}>
                       {msg.text || (msg.role === "agent" && isStreaming
                         ? <span style={{ opacity: 0.5 }}>Thinking…</span>
@@ -711,7 +710,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
           <>
             {recCtx?.loading
               ? (
-                <div style={{ textAlign: "center", padding: "32px 12px", color: COLORS.textMuted, fontSize: 12 }}>
+                <div style={{ textAlign: "center", padding: "32px 12px", color: COLORS.intelMuted, fontSize: 12 }}>
                   Loading recommendations…
                 </div>
               )
@@ -725,7 +724,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                       <RecommendationCard key={rec.id} recommendation={rec} persona={persona} />
                     ))
                 : (
-                  <div style={{ textAlign: "center", padding: "32px 12px", color: COLORS.textMuted, fontSize: 12 }}>
+                  <div style={{ textAlign: "center", padding: "32px 12px", color: COLORS.intelMuted, fontSize: 12 }}>
                     No recommendations yet.
                   </div>
                 )
@@ -737,10 +736,10 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
         {activeTab === "revenue" && (
           <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Revenue Pipeline</span>
-              <span style={{ fontSize: 11, fontWeight: 800, color: COLORS.accent }}>${totalOppValue.toLocaleString()}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.intelMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Revenue Pipeline</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: COLORS.gold }}>${totalOppValue.toLocaleString()}</span>
             </div>
-            <div style={{ background: "#FAFAFA", borderRadius: 10, padding: "4px 10px 2px", border: "1px solid #F3F4F6" }}>
+            <div style={{ background: COLORS.navyMid, borderRadius: 10, padding: "4px 10px 2px", border: `1px solid ${COLORS.navyBorder}` }}>
               {REVENUE_OPPS.map((opp) => <OppRow key={opp.id} opp={opp} />)}
             </div>
           </>
@@ -751,7 +750,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
               <div style={{ width: 6, height: 6, borderRadius: 3, background: "#22C55E" }} />
-              <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Live Feed</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.intelMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Live Feed</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {FEED_ITEMS.map((item) => <FeedItem key={item.id} item={item} />)}
@@ -762,23 +761,23 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
       </div>
 
       {/* ── Ask Agent input ── */}
-      <div style={{ borderTop: "1px solid #E5E7EB", padding: "10px 12px", flexShrink: 0, background: "#FAFAFA" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", borderRadius: 10, border: `1px solid ${isStreaming ? COLORS.accent : "#E5E7EB"}`, padding: "7px 10px", transition: "border-color 0.15s" }}>
-          <Sparkles size={12} color={isStreaming ? COLORS.accent : COLORS.textMuted} style={{ flexShrink: 0 }} />
+      <div style={{ borderTop: `1px solid ${COLORS.navyBorder}`, padding: "10px 12px", flexShrink: 0, background: COLORS.navyDark }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, background: COLORS.navyMid, borderRadius: 10, border: `1px solid ${isStreaming ? COLORS.gold : COLORS.navyBorder}`, padding: "7px 10px", transition: "border-color 0.15s" }}>
+          <Sparkles size={12} color={isStreaming ? COLORS.gold : COLORS.intelMuted} style={{ flexShrink: 0 }} />
           <input
             value={typedInput}
             onChange={(e) => setTypedInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder={isStreaming ? "Agent is responding…" : "Ask WrenchIQ AI anything…"}
             disabled={isStreaming}
-            style={{ flex: 1, border: "none", outline: "none", fontSize: 11, background: "transparent", color: COLORS.textPrimary }}
+            style={{ flex: 1, border: "none", outline: "none", fontSize: 11, background: "transparent", color: COLORS.intelText }}
           />
           <button
             onClick={handleSend}
             disabled={isStreaming || !typedInput.trim()}
-            style={{ background: typedInput.trim() && !isStreaming ? COLORS.accent : "#E5E7EB", border: "none", borderRadius: 6, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: typedInput.trim() && !isStreaming ? "pointer" : "default", flexShrink: 0, transition: "background 0.15s" }}
+            style={{ background: typedInput.trim() && !isStreaming ? COLORS.gold : "rgba(255,255,255,0.1)", border: "none", borderRadius: 6, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", cursor: typedInput.trim() && !isStreaming ? "pointer" : "default", flexShrink: 0, transition: "background 0.15s" }}
           >
-            <Send size={11} color="#fff" />
+            <Send size={11} color={typedInput.trim() && !isStreaming ? "#1A1A1A" : "rgba(255,255,255,0.4)"} />
           </button>
         </div>
       </div>

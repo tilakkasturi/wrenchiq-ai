@@ -170,7 +170,7 @@ export default function Job3UpsellScreen() {
         {/* SMS Header bar */}
         <div
           style={{
-            background: COLORS.primary,
+            background: smsName?.toLowerCase().includes("mitchell") ? COLORS.smsHeaderMitchell1 : COLORS.smsHeaderProtractor,
             color: "#fff",
             padding: "14px 20px",
             display: "flex",
@@ -179,20 +179,8 @@ export default function Job3UpsellScreen() {
             flexShrink: 0,
           }}
         >
-          <div
-            style={{
-              background: COLORS.accent,
-              borderRadius: 6,
-              padding: "4px 8px",
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-            }}
-          >
-            {smsName}
-          </div>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>
-            RO #{roNumber} &nbsp;&middot;&nbsp; {primaryCustomer} &nbsp;&middot;&nbsp; {vehicleStr}
+          <span style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+            {smsName} &nbsp;&middot;&nbsp; RO #{roNumber} &nbsp;&middot;&nbsp; {primaryCustomer} &nbsp;&middot;&nbsp; {vehicleStr}
           </span>
           {showResult && (
             <button
@@ -456,8 +444,8 @@ export default function Job3UpsellScreen() {
           {/* Talk track box */}
           <div
             style={{
-              background: "#FFF7ED",
-              border: `1px solid #FED7AA`,
+              background: COLORS.smsBg,
+              border: `1px solid ${COLORS.smsBorder}`,
               borderRadius: 10,
               padding: "16px 18px",
             }}
@@ -466,7 +454,7 @@ export default function Job3UpsellScreen() {
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div
                   style={{
-                    background: COLORS.accent,
+                    background: COLORS.smsButtonMuted,
                     color: "#fff",
                     fontSize: 10,
                     fontWeight: 700,
@@ -478,7 +466,7 @@ export default function Job3UpsellScreen() {
                 >
                   Talk Track
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#92400E" }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.textSecondary }}>
                   Customer Talk Track
                 </span>
               </div>
@@ -488,13 +476,13 @@ export default function Job3UpsellScreen() {
                   display: "flex",
                   alignItems: "center",
                   gap: 5,
-                  background: copiedLeft ? "#FED7AA" : "transparent",
-                  border: `1px solid #FED7AA`,
+                  background: copiedLeft ? COLORS.borderLight : "transparent",
+                  border: `1px solid ${COLORS.smsBorder}`,
                   borderRadius: 6,
                   padding: "4px 10px",
                   fontSize: 11,
                   fontWeight: 600,
-                  color: "#C2410C",
+                  color: COLORS.smsButtonMuted,
                   cursor: "pointer",
                   transition: "background 0.2s",
                 }}
@@ -506,10 +494,24 @@ export default function Job3UpsellScreen() {
                 )}
               </button>
             </div>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65, color: "#92400E" }}>
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65, color: COLORS.textSecondary }}>
               {talkTrack}
             </p>
           </div>
+        </div>
+
+        {/* SMS footer */}
+        <div
+          style={{
+            padding: "8px 24px",
+            borderTop: `1px solid ${COLORS.smsBorder}`,
+            background: COLORS.smsBg,
+            flexShrink: 0,
+          }}
+        >
+          <span style={{ fontSize: 10, color: COLORS.smsLabel }}>
+            {smsName} — Peninsula Precision Auto &nbsp;&middot;&nbsp; WrenchIQ reads {smsName} — never writes to it
+          </span>
         </div>
       </div>
 
@@ -517,7 +519,7 @@ export default function Job3UpsellScreen() {
       <div
         style={{
           flex: "0 0 35%",
-          background: COLORS.bgDark,
+          background: COLORS.navyDark,
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
@@ -527,16 +529,16 @@ export default function Job3UpsellScreen() {
         <div
           style={{
             padding: "16px 20px",
-            borderBottom: "1px solid rgba(255,255,255,0.1)",
+            borderBottom: `1px solid ${COLORS.navyBorder}`,
             flexShrink: 0,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Wrench size={16} color={COLORS.accent} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>
+            <Wrench size={16} color={COLORS.gold} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.intelText }}>
               WrenchIQ
             </span>
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginLeft: 2 }}>
+            <span style={{ fontSize: 12, color: COLORS.intelMuted, marginLeft: 2 }}>
               · Job 3: Smart Upsell
             </span>
           </div>
@@ -546,9 +548,9 @@ export default function Job3UpsellScreen() {
           {/* Smart Upsell card */}
           <div
             style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderLeft: "3px solid #3B82F6",
+              background: COLORS.navyMid,
+              border: `1px solid ${COLORS.navyBorder}`,
+              borderLeft: `3px solid ${COLORS.gold}`,
               borderRadius: 10,
               padding: "14px 16px",
             }}
@@ -556,8 +558,8 @@ export default function Job3UpsellScreen() {
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
               <div
                 style={{
-                  background: "#3B82F6",
-                  color: "#fff",
+                  background: COLORS.gold,
+                  color: "#1A1A1A",
                   fontSize: 10,
                   fontWeight: 700,
                   letterSpacing: "0.06em",
@@ -588,12 +590,12 @@ export default function Job3UpsellScreen() {
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                    <Wind size={14} color={COLORS.accent} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>
+                    <Wind size={14} color={COLORS.gold} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.intelText }}>
                       Cabin Air Filter
                     </span>
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.accent }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.gold }}>
                     $49.99
                   </span>
                 </div>
@@ -630,12 +632,12 @@ export default function Job3UpsellScreen() {
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                    <Droplets size={14} color={COLORS.accent} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>
+                    <Droplets size={14} color={COLORS.gold} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.intelText }}>
                       Transmission Fluid Exchange
                     </span>
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.accent }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.gold }}>
                     $189.99
                   </span>
                 </div>
@@ -666,8 +668,8 @@ export default function Job3UpsellScreen() {
           {/* Customer Talk Track */}
           <div
             style={{
-              background: "rgba(59,130,246,0.1)",
-              border: "1px solid rgba(59,130,246,0.25)",
+              background: COLORS.navyMid,
+              border: `1px solid ${COLORS.navyBorder}`,
               borderRadius: 10,
               padding: "14px 15px",
             }}
@@ -721,15 +723,15 @@ export default function Job3UpsellScreen() {
           {/* Why this matters */}
           <div
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.09)",
+              background: COLORS.navyMid,
+              border: `1px solid ${COLORS.navyBorder}`,
               borderRadius: 10,
               padding: "13px 15px",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
-              <DollarSign size={13} color={COLORS.accent} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.accent, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <DollarSign size={13} color={COLORS.gold} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.gold, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 Why this matters
               </span>
             </div>
@@ -744,14 +746,14 @@ export default function Job3UpsellScreen() {
               display: "flex",
               alignItems: "center",
               gap: 6,
-              background: "rgba(255,107,53,0.12)",
-              border: "1px solid rgba(255,107,53,0.25)",
+              background: `rgba(201,162,39,0.12)`,
+              border: `1px solid rgba(201,162,39,0.25)`,
               borderRadius: 7,
               padding: "8px 12px",
             }}
           >
-            <ChevronRight size={12} color={COLORS.accent} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#FCA98A" }}>
+            <ChevronRight size={12} color={COLORS.gold} />
+            <span style={{ fontSize: 11, fontWeight: 600, color: COLORS.goldHover }}>
               GWG Job 3: Oil change ARO +$75 &nbsp;&middot;&nbsp; 30% acceptance target
             </span>
           </div>
@@ -763,10 +765,10 @@ export default function Job3UpsellScreen() {
             style={{
               width: "100%",
               padding: "13px 0",
-              background: showResult ? "#22C55E" : addedFlash ? "#22C55E" : COLORS.accent,
+              background: showResult ? COLORS.success : addedFlash ? COLORS.success : COLORS.gold,
               border: "none",
               borderRadius: 9,
-              color: "#fff",
+              color: showResult || addedFlash ? "#fff" : "#1A1A1A",
               fontSize: 14,
               fontWeight: 700,
               cursor: showResult ? "default" : "pointer",

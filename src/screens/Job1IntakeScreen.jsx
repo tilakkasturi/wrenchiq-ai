@@ -254,8 +254,8 @@ export default function Job1IntakeScreen() {
         {/* SMS chrome header */}
         <div
           style={{
-            background: "#F3F4F6",
-            borderBottom: `1px solid ${COLORS.border}`,
+            background: smsName?.toLowerCase().includes("mitchell") ? COLORS.smsHeaderMitchell1 : COLORS.smsHeaderProtractor,
+            borderBottom: `1px solid ${COLORS.smsBorder}`,
             padding: "0 20px",
             display: "flex",
             alignItems: "center",
@@ -264,21 +264,13 @@ export default function Job1IntakeScreen() {
             flexShrink: 0,
           }}
         >
-          <div style={{ display: "flex", gap: 5 }}>
-            {["#EF4444", "#F59E0B", "#22C55E"].map((c) => (
-              <div
-                key={c}
-                style={{ width: 10, height: 10, borderRadius: "50%", background: c }}
-              />
-            ))}
-          </div>
           <div
             style={{
               flex: 1,
               textAlign: "center",
               fontSize: 12,
               fontWeight: 600,
-              color: COLORS.textSecondary,
+              color: "rgba(255,255,255,0.85)",
               letterSpacing: "0.02em",
             }}
           >
@@ -439,6 +431,20 @@ export default function Job1IntakeScreen() {
             </div>
           )}
         </div>
+
+        {/* SMS footer */}
+        <div
+          style={{
+            padding: "8px 24px",
+            borderTop: `1px solid ${COLORS.smsBorder}`,
+            background: COLORS.smsBg,
+            flexShrink: 0,
+          }}
+        >
+          <span style={{ fontSize: 10, color: COLORS.smsLabel }}>
+            {smsName} — Peninsula Precision Auto &nbsp;&middot;&nbsp; WrenchIQ reads {smsName} — never writes to it
+          </span>
+        </div>
       </div>
 
       {/* ── RIGHT: WrenchIQ Agent panel (35%) ── */}
@@ -447,7 +453,7 @@ export default function Job1IntakeScreen() {
           width: "35%",
           display: "flex",
           flexDirection: "column",
-          background: COLORS.bgDark,
+          background: COLORS.navyDark,
           overflow: "hidden",
         }}
       >
@@ -455,7 +461,7 @@ export default function Job1IntakeScreen() {
         <div
           style={{
             padding: "16px 20px 14px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            borderBottom: `1px solid ${COLORS.navyBorder}`,
             flexShrink: 0,
           }}
         >
@@ -464,27 +470,28 @@ export default function Job1IntakeScreen() {
               style={{
                 width: 24,
                 height: 24,
-                background: COLORS.accent,
+                background: `rgba(201,162,39,0.2)`,
+                border: `1px solid rgba(201,162,39,0.4)`,
                 borderRadius: 5,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Cpu size={13} color="#FFFFFF" />
+              <Cpu size={13} color={COLORS.gold} />
             </div>
             <span
               style={{
                 fontSize: 15,
                 fontWeight: 800,
-                color: "#FFFFFF",
+                color: COLORS.intelText,
                 letterSpacing: "-0.01em",
               }}
             >
               WrenchIQ
             </span>
           </div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", paddingLeft: 32 }}>
+          <div style={{ fontSize: 11, color: COLORS.intelMuted, paddingLeft: 32 }}>
             Job 1: Intake &amp; Diagnosis
           </div>
         </div>
@@ -494,9 +501,10 @@ export default function Job1IntakeScreen() {
           {/* Main intelligence card */}
           <div
             style={{
-              background: "rgba(255,255,255,0.05)",
+              background: COLORS.navyMid,
+              border: `1px solid ${COLORS.navyBorder}`,
               borderRadius: 10,
-              borderLeft: "3px solid #22C55E",
+              borderLeft: `3px solid ${COLORS.success}`,
               padding: "14px 14px 6px",
               marginBottom: 14,
             }}
@@ -525,7 +533,7 @@ export default function Job1IntakeScreen() {
             <div
               style={{
                 fontSize: 11,
-                color: "rgba(255,255,255,0.45)",
+                color: COLORS.intelMuted,
                 marginBottom: 12,
                 paddingLeft: 2,
               }}
@@ -565,8 +573,8 @@ export default function Job1IntakeScreen() {
           {/* Why this matters box */}
           <div
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: COLORS.navyMid,
+              border: `1px solid ${COLORS.navyBorder}`,
               borderRadius: 8,
               padding: "12px 13px",
               marginBottom: 14,
@@ -576,7 +584,7 @@ export default function Job1IntakeScreen() {
               style={{
                 fontSize: 10,
                 fontWeight: 700,
-                color: "rgba(255,255,255,0.35)",
+                color: COLORS.intelMuted,
                 textTransform: "uppercase",
                 letterSpacing: "0.07em",
                 marginBottom: 7,
@@ -587,14 +595,14 @@ export default function Job1IntakeScreen() {
             <p
               style={{
                 fontSize: 12,
-                color: "rgba(255,255,255,0.6)",
+                color: "rgba(241,245,249,0.6)",
                 lineHeight: 1.6,
                 margin: 0,
               }}
             >
               Correct first-time diagnosis saves $820 and prevents a comeback.
               Predii matched this pattern in{" "}
-              <strong style={{ color: "rgba(255,255,255,0.85)" }}>
+              <strong style={{ color: COLORS.intelText }}>
                 847 similar 2021 Camry ROs
               </strong>
               .
@@ -620,18 +628,18 @@ export default function Job1IntakeScreen() {
           {aiInsights.length > 1 && (
             <div style={{ marginBottom: 14 }}>
               <div style={{
-                fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)",
+                fontSize: 10, fontWeight: 700, color: COLORS.intelMuted,
                 textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8,
                 display: "flex", alignItems: "center", gap: 5,
               }}>
-                <Sparkles size={11} color="rgba(255,255,255,0.3)" />
+                <Sparkles size={11} color={COLORS.intelMuted} />
                 Additional Context
               </div>
               {aiInsights.slice(1).map((insight, i) => (
                 <div key={i} style={{
-                  fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: "1.5",
+                  fontSize: 11, color: "rgba(241,245,249,0.55)", lineHeight: "1.5",
                   padding: "6px 0",
-                  borderBottom: i < aiInsights.length - 2 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                  borderBottom: i < aiInsights.length - 2 ? `1px solid ${COLORS.navyBorder}` : "none",
                 }}>
                   {insight}
                 </div>
@@ -653,8 +661,8 @@ export default function Job1IntakeScreen() {
             style={{
               width: "100%",
               padding: "12px 0",
-              background: copyLabel ? "#22C55E" : COLORS.accent,
-              color: "#FFFFFF",
+              background: copyLabel ? COLORS.success : COLORS.gold,
+              color: copyLabel ? "#FFFFFF" : "#1A1A1A",
               border: "none",
               borderRadius: 8,
               fontSize: 13,
