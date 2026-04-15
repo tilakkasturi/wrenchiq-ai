@@ -27,33 +27,31 @@ const AM_PERSONAS = [
   {
     id: "advisor",  label: "Service Advisor", tagline: "Manage Relationships & Bay",
     detail: "RO queue & board · Bay utilization · Customer Trust Engine · Parts Intelligence",
-    accent: "#2563EB", badge: "DEFAULT",
-    isDefault: true,
-    insights: [
-      { icon: "⏳", text: "David's estimate pending 2h", value: "+$2,190", color: "#F59E0B" },
-      { icon: "🔴", text: "Bay 3 idle 40 min", value: "Action needed", color: "#EF4444" },
-      { icon: "💡", text: "3 approvals awaiting", value: "$920 total", color: "#22C55E" },
-    ],
+    iconBg: "#FFF3E8", isDefault: true,
   },
   {
     id: "owner", label: "Shop Owner", tagline: "Command Center",
     detail: "Revenue vs target · Bay grid · Supplier rebates · Team performance · AI alerts",
-    accent: COLORS.accent, badge: "2 AI alerts",
-    insights: [
-      { icon: "🏁", text: "Need $1,660 to hit target", value: "78% there", color: "#F59E0B" },
-      { icon: "🔴", text: "Bay 3 idle 45 min", value: "Recover $280", color: "#EF4444" },
-    ],
+    iconBg: "#E8F5E9",
   },
   {
     id: "gwgCorporate", label: "GWG Corporate", tagline: "Network Objectives & Location Health",
     detail: "Set performance targets · Monitor 100 locations · Track compliance by job type",
-    accent: "#1a1f2e", badge: "Admin",
-    insights: [
-      { icon: "🏢", text: "100 rooftops reporting", value: "89% approval", color: "#22C55E" },
-      { icon: "⚠️", text: "3C compliance at 64%", value: "Off-Track", color: "#EF4444" },
-    ],
+    iconBg: "#E8EAF0",
   },
 ];
+
+const LIVE_SIGNALS = {
+  cornerstone: {
+    advisor:      "3 approvals pending · $920 waiting",
+    owner:        "2 AI alerts · Bay 3 idle 45 min",
+    gwgCorporate: "3C compliance Off-Track — 36 locations",
+  },
+  ridgeline: {
+    advisor: "2 upsells staged · $803 opportunity",
+    owner:   "Luis — 3 comebacks this month",
+  },
+};
 
 const OEM_PERSONAS = [
   { id: "fixedOps",   label: "Fixed Ops Director", tagline: "Warranty Performance Hub",       detail: "Approval rate · Per-advisor compliance · Dollars at risk · Rejection analytics · Multi-dealer rollup", accent: "#0D3B45", badge: `${WARRANTY_CLAIMS.thisMonth.approvalRate}% approval` },
@@ -320,7 +318,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(160deg, #0D3B45 0%, #0D2A40 55%, #111827 100%)",
+      background: "#F2F4F7",
       display: "flex", flexDirection: "column", alignItems: "center",
       padding: "32px 24px 60px",
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -330,23 +328,23 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       <div style={{ marginBottom: 6 }}>
         <BrandWordmark size="xl" />
       </div>
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 8, textAlign: "center", maxWidth: 540 }}>
-        AI intelligence that works alongside your shop management system. Powered by Predii's automotive knowledge graph.
+      <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 10, textAlign: "center", maxWidth: 540 }}>
+        AI intelligence that works alongside your shop management system.
       </div>
       <div style={{ marginBottom: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
         <span style={{
-          display: "inline-flex", alignItems: "center", gap: 5,
-          background: COLORS.primary, border: "1px solid rgba(255,255,255,0.18)",
-          borderRadius: 20, padding: "4px 12px",
-          fontSize: 10, fontWeight: 700, color: "#fff", letterSpacing: 0.3,
+          display: "inline-flex", alignItems: "center", gap: 6,
+          background: "#fff", border: "1.5px solid #22C55E",
+          borderRadius: 20, padding: "6px 16px",
+          fontSize: 12, fontWeight: 700, color: "#16A34A",
         }}>
-          <span style={{ width: 6, height: 6, borderRadius: 3, background: "#22C55E", display: "inline-block" }} />
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", display: "inline-block", flexShrink: 0 }} />
           Connected to: {smsName}
         </span>
 
         {/* ── Demo shop selector (April 18 demos) ─────────────────────────── */}
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: "0.05em" }}>
+          <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600, letterSpacing: "0.05em" }}>
             DEMO:
           </span>
           {Object.values(DEMO_SHOPS).map(shop => {
@@ -366,9 +364,11 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
                   advisorName: shop.advisorName,
                 })}
                 style={{
-                  padding: "4px 12px", borderRadius: 20, border: "none", cursor: "pointer",
-                  background: isActive ? COLORS.accent : "rgba(255,255,255,0.08)",
-                  color: isActive ? "#fff" : "rgba(255,255,255,0.5)",
+                  padding: "4px 12px", borderRadius: 20,
+                  border: isActive ? `1.5px solid ${COLORS.accent}` : "1.5px solid #E5E7EB",
+                  cursor: "pointer",
+                  background: isActive ? COLORS.accent : "#fff",
+                  color: isActive ? "#fff" : "#6B7280",
                   fontSize: 10, fontWeight: 700, transition: "all 0.15s",
                 }}
               >
@@ -380,49 +380,50 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       </div>
 
       {/* ══════════════════════════════════════════════════════
-          TOP TABS: AM · OEM · API
+          TOP TABS: AM · OEM (API tab hidden in demo mode)
       ══════════════════════════════════════════════════════ */}
-      <div style={{
-        display: "flex", gap: 0,
-        background: "rgba(0,0,0,0.3)",
-        borderRadius: 14, padding: 4,
-        marginBottom: 28,
-        border: "1px solid rgba(255,255,255,0.1)",
-      }}>
-        {[
-          { key: "AM",  label: amName,  sub: "Independent & Multi-Location Shops",    badge: "AM",  color: COLORS.accent, badgeBg: "rgba(255,107,53,0.15)", badgeBorder: "rgba(255,107,53,0.3)",  activeBg: "rgba(255,107,53,0.15)" },
-          { key: "OEM", label: oemName, sub: "Franchise Dealerships (Toyota, Ford…)",  badge: "OEM", color: "#4DB6AC",     badgeBg: "rgba(77,182,172,0.15)",  badgeBorder: "rgba(77,182,172,0.3)", activeBg: "rgba(13,59,69,0.9)" },
-          { key: "API", label: "API",           sub: "Postman · Request · Response · UI diff", badge: "REST",color: "#C084FC",     badgeBg: "rgba(192,132,252,0.15)", badgeBorder: "rgba(192,132,252,0.3)",activeBg: "rgba(88,28,135,0.4)" },
-        ].map((e) => {
-          const active = activeTab === e.key;
-          return (
-            <button
-              key={e.key}
-              onClick={() => setActiveTab(e.key)}
-              style={{
-                padding: "10px 28px", borderRadius: 10, border: "none", cursor: "pointer",
-                background: active ? e.activeBg : "transparent",
-                transition: "all 0.18s",
-                display: "flex", alignItems: "center", gap: 10,
-              }}
-            >
-              <div style={{ textAlign: "left" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: active ? "#fff" : "rgba(255,255,255,0.4)", letterSpacing: -0.3 }}>{e.label}</span>
-                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.5, color: active ? e.color : "rgba(255,255,255,0.25)", background: active ? e.badgeBg : "transparent", border: `1px solid ${active ? e.badgeBorder : "transparent"}`, borderRadius: 4, padding: "1px 6px" }}>{e.badge}</span>
+      {activeTab === "OEM" && (
+        <div style={{
+          display: "flex", gap: 0,
+          background: "rgba(0,0,0,0.06)",
+          borderRadius: 14, padding: 4,
+          marginBottom: 28,
+          border: "1px solid #E5E7EB",
+        }}>
+          {[
+            { key: "AM",  label: amName,  sub: "Independent & Multi-Location Shops",   badge: "AM",  color: COLORS.accent, badgeBg: "rgba(255,107,53,0.15)", badgeBorder: "rgba(255,107,53,0.3)",  activeBg: "rgba(255,107,53,0.12)" },
+            { key: "OEM", label: oemName, sub: "Franchise Dealerships (Toyota, Ford…)", badge: "OEM", color: "#4DB6AC",     badgeBg: "rgba(77,182,172,0.15)",  badgeBorder: "rgba(77,182,172,0.3)", activeBg: "#0D3B45" },
+          ].map((e) => {
+            const active = activeTab === e.key;
+            return (
+              <button
+                key={e.key}
+                onClick={() => setActiveTab(e.key)}
+                style={{
+                  padding: "10px 28px", borderRadius: 10, border: "none", cursor: "pointer",
+                  background: active ? e.activeBg : "transparent",
+                  transition: "all 0.18s",
+                  display: "flex", alignItems: "center", gap: 10,
+                }}
+              >
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: active ? "#fff" : "#9CA3AF", letterSpacing: -0.3 }}>{e.label}</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: 0.5, color: active ? e.color : "#D1D5DB", background: active ? e.badgeBg : "transparent", border: `1px solid ${active ? e.badgeBorder : "transparent"}`, borderRadius: 4, padding: "1px 6px" }}>{e.badge}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: active ? "rgba(255,255,255,0.55)" : "#9CA3AF", marginTop: 1 }}>{e.sub}</div>
                 </div>
-                <div style={{ fontSize: 10, color: active ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.2)", marginTop: 1 }}>{e.sub}</div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════
           OEM EDITION
       ══════════════════════════════════════════════════════ */}
       {isOEM && (
-        <>
+        <div style={{ width: "100%", background: "linear-gradient(160deg, #0D3B45 0%, #0D2A40 55%, #111827 100%)", borderRadius: 20, padding: "28px 24px", display: "flex", flexDirection: "column", alignItems: "center", maxWidth: 940 }}>
           {/* Dealer context */}
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 20 }}>
             Palo Alto Toyota · Dealer Code 04147 · CDK Global Connected
@@ -596,7 +597,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
               );
             })}
           </div>
-        </>
+        </div>
       )}
 
       {/* ══════════════════════════════════════════════════════
@@ -604,281 +605,68 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       ══════════════════════════════════════════════════════ */}
       {!isOEM && (
         <>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 20 }}>
-            {SHOP.name} · {SHOP.address.split(",").slice(1, 3).join(",").trim()}
-          </div>
+          {/* AM persona cards — clean light design */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 480 }}>
+            {AM_PERSONAS
+              .filter(p => p.id !== "gwgCorporate" || activeShopId === "cornerstone")
+              .map((p) => {
+                const isHov = hoveredPersona === p.id;
+                const isSelected = p.isDefault;
+                const liveSignal = (LIVE_SIGNALS[activeShopId] || {})[p.id] || "";
 
-          {/* Hero: AI Insights Powered Personas */}
-          <div style={{
-            width: "100%", maxWidth: 880,
-            background: "rgba(255,255,255,0.04)",
-            border: "1.5px solid rgba(255,107,53,0.35)",
-            borderRadius: 20, padding: "24px 28px",
-            marginBottom: 20,
-            position: "relative", overflow: "hidden",
-          }}>
-            <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, borderRadius: "50%", background: "rgba(255,107,53,0.08)", pointerEvents: "none" }} />
+                // Icon per persona
+                let PersonaIcon = Wrench;
+                if (p.id === "owner") PersonaIcon = BarChart3;
+                if (p.id === "gwgCorporate") PersonaIcon = Building2;
 
-            {/* Title row */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,107,53,0.18)", border: "1.5px solid rgba(255,107,53,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Sparkles size={22} color={COLORS.accent} />
-                </div>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: -0.4 }}>AI Insights Powered Personas</span>
-                    <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.accent, background: "rgba(255,107,53,0.15)", border: "1px solid rgba(255,107,53,0.35)", borderRadius: 5, padding: "2px 7px", letterSpacing: 0.5 }}>LIVE</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 3 }}>
-                    Every role. Every screen. Real-time intelligence from 100K+ repair orders.
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 8, padding: "6px 12px", flexShrink: 0 }}>
-                <div style={{ width: 7, height: 7, borderRadius: 4, background: "#22C55E", boxShadow: "0 0 0 2px rgba(34,197,94,0.25)" }} />
-                <span style={{ fontSize: 10, color: "#22C55E", fontWeight: 700 }}>Live AI insights active</span>
-              </div>
-            </div>
+                const iconColor = p.id === "advisor" ? "#FF6B35" : p.id === "owner" ? "#16A34A" : "#6B7280";
 
-            {/* Insight preview chips */}
-            <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginBottom: 18 }}>
-              {[
-                { icon: "⏳", text: "David's estimate pending 2h — nudge to close", value: "+$2,190", color: "#F59E0B" },
-                { icon: "🔴", text: "Bay 3 idle 40 min — fill the gap", value: "$280 recover", color: "#EF4444" },
-                { icon: "⚠️", text: "TSB-22-015 on active CR-V — warranty ref", value: "Compliance", color: "#FF6B35" },
-                { icon: "✅", text: "Marcus efficiency 89% — on track", value: "+4% avg", color: "#22C55E" },
-              ].map((chip, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "5px 10px" }}>
-                  <span style={{ fontSize: 11 }}>{chip.icon}</span>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)" }}>{chip.text}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: chip.color, background: `${chip.color}18`, border: `1px solid ${chip.color}30`, borderRadius: 4, padding: "1px 5px" }}>{chip.value}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Role insight breakdown */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 18 }}>
-              {[
-                { label: "Service Advisor", icon: "🎯", desc: "Queue prioritization · estimate nudges · upsell timing · customer approval rates", color: "#2563EB" },
-                { label: "Technician",      icon: "🔧", desc: "TSB auto-match · DTC cross-reference · efficiency tracking · DVI AI assist", color: "#16A34A" },
-                { label: "Shop Owner",      icon: "📊", desc: "Revenue vs target · bay utilization · team performance · supplier rebates", color: COLORS.accent },
-              ].map((c) => (
-                <div key={c.label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "12px 14px", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                    <span style={{ fontSize: 14 }}>{c.icon}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: c.color }}>{c.label}</span>
-                  </div>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>{c.desc}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button
-                onClick={() => onSelectPersona("advisor")}
-                style={{
-                  background: "#2563EB", border: "none", borderRadius: 10,
-                  padding: "11px 24px", cursor: "pointer",
-                  display: "flex", alignItems: "center", gap: 8,
-                  fontSize: 13, fontWeight: 700, color: "#fff",
-                  boxShadow: "0 4px 16px rgba(37,99,235,0.35)", transition: "all 0.15s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "none"}
-              >
-                <ClipboardList size={15} />
-                Enter as Service Advisor
-                <ArrowRight size={14} />
-              </button>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
-                Or select a persona below · AI insights adapt to each role
-              </div>
-            </div>
-          </div>
-
-          {/* AM persona cards */}
-          <div style={{ display: "flex", gap: 12, width: "100%", maxWidth: 880, marginBottom: 0, flexWrap: "wrap" }}>
-            {AM_PERSONAS.map((p) => {
-              const isHov = hoveredPersona === p.id;
-              const isActive = isHov || p.isDefault;
-              const isGWG = p.id === "gwgCorporate";
-              return (
-                <button key={p.id}
-                  onClick={() => onSelectPersona(p.id)}
-                  onMouseEnter={() => setHoveredPersona(p.id)}
-                  onMouseLeave={() => setHoveredPersona(null)}
-                  style={{
-                    flex: 1, minWidth: 180,
-                    background: isGWG
-                      ? (isHov ? "#1a1f2e" : "rgba(26,31,46,0.6)")
-                      : (isHov ? "#fff" : p.isDefault ? "rgba(37,99,235,0.08)" : "rgba(255,255,255,0.04)"),
-                    border: isGWG
-                      ? `1.5px solid ${isHov ? "#4a5568" : "rgba(255,255,255,0.15)"}`
-                      : (isActive ? `1.5px solid ${p.accent}` : "1.5px solid rgba(255,255,255,0.1)"),
-                    borderRadius: 14, padding: "14px 16px",
-                    cursor: "pointer", textAlign: "left", transition: "all 0.15s",
-                    transform: isHov ? "translateY(-2px)" : "none",
-                  }}>
-                  {/* Header row */}
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: isGWG ? "#fff" : (isHov ? "#111827" : "#fff") }}>{p.label}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700,
-                      color: isGWG ? "#F6C90E" : (isHov ? p.accent : (p.isDefault ? p.accent : "rgba(255,255,255,0.4)")),
-                      background: isGWG ? "rgba(246,201,14,0.15)" : (isHov ? `${p.accent}18` : (p.isDefault ? `${p.accent}20` : "rgba(255,255,255,0.07)")),
-                      border: isGWG ? "1px solid rgba(246,201,14,0.35)" : "none",
-                      borderRadius: 5, padding: "2px 7px" }}>{p.badge}</span>
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: isGWG ? "#93C5FD" : (isHov ? p.accent : (p.isDefault ? p.accent : "rgba(255,255,255,0.45)")), marginBottom: 4 }}>{p.tagline}</div>
-                  <div style={{ fontSize: 10, color: isGWG ? "rgba(255,255,255,0.45)" : (isHov ? "#6B7280" : "rgba(255,255,255,0.28)"), lineHeight: 1.4, marginBottom: 10 }}>{p.detail}</div>
-
-                  {/* AI Insights preview */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
-                    {p.insights.map((ins, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, background: isGWG ? "rgba(255,255,255,0.07)" : (isHov ? "#F9FAFB" : "rgba(255,255,255,0.05)"), borderRadius: 5, padding: "4px 7px" }}>
-                        <span style={{ fontSize: 10 }}>{ins.icon}</span>
-                        <span style={{ fontSize: 10, color: isGWG ? "rgba(255,255,255,0.6)" : (isHov ? "#374151" : "rgba(255,255,255,0.55)"), flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ins.text}</span>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: ins.color, flexShrink: 0 }}>{ins.value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* AI badge + arrow */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 9, fontWeight: 700,
-                      color: isGWG ? "#93C5FD" : (isHov ? p.accent : "rgba(255,255,255,0.3)"),
-                      background: isGWG ? "rgba(147,197,253,0.1)" : (isHov ? `${p.accent}12` : "rgba(255,255,255,0.05)"),
-                      border: `1px solid ${isGWG ? "rgba(147,197,253,0.2)" : (isHov ? `${p.accent}30` : "rgba(255,255,255,0.08)")}`,
-                      borderRadius: 4, padding: "2px 6px", display: "flex", alignItems: "center", gap: 3 }}>
-                      <Sparkles size={8} />
-                      {isGWG ? "Network View" : "AI Insights"}
-                    </span>
-                    <ChevronRight size={13} color={isGWG ? "rgba(255,255,255,0.4)" : (isActive ? p.accent : "rgba(255,255,255,0.2)")} />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* ── Knowledge Graph + AI Insights ── */}
-          <div style={{ width: "100%", maxWidth: 880, marginTop: 20, display: "flex", gap: 16 }}>
-
-            {/* KG mini panel */}
-            <div style={{ flex: "0 0 260px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "18px 20px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <BarChart3 size={14} color={COLORS.accent} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>Knowledge Graph</span>
-                {kgStats && (
-                  <span style={{ marginLeft: "auto", fontSize: 9, color: "rgba(255,255,255,0.3)" }}>
-                    {(kgStats.total_ros || 0).toLocaleString()} ROs
-                  </span>
-                )}
-              </div>
-              {topClusters.length === 0 ? (
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center", padding: "24px 0" }}>
-                  Loading clusters…
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {topClusters.map((c, i) => {
-                    const maxROs = topClusters[0]?.ro_count || 1;
-                    const pct = Math.round((c.ro_count / maxROs) * 100);
-                    return (
-                      <div key={i}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
-                            {c.cluster_label || c._id}
-                          </span>
-                          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
-                            {(c.ro_count || 0).toLocaleString()}
-                          </span>
-                        </div>
-                        <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
-                          <div style={{ height: "100%", borderRadius: 2, background: COLORS.accent, width: `${pct}%`, transition: "width 0.6s ease" }} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {kgStats && (
-                <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 5 }}>
-                  {[
-                    ["Clusters", (kgStats.total_clusters || 0).toLocaleString()],
-                    ["Avg RO value", kgStats.avg_ro_value ? `$${Math.round(kgStats.avg_ro_value).toLocaleString()}` : "–"],
-                  ].map(([label, val]) => (
-                    <div key={label} style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{label}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>{val}</span>
+                return (
+                  <button key={p.id}
+                    onClick={() => onSelectPersona(p.id)}
+                    onMouseEnter={() => setHoveredPersona(p.id)}
+                    onMouseLeave={() => setHoveredPersona(null)}
+                    style={{
+                      width: "100%",
+                      background: "#FFFFFF",
+                      border: `1.5px solid ${isSelected && !isHov ? "#C9A227" : isHov ? "#C9A227" : "#E5E7EB"}`,
+                      borderRadius: 14,
+                      padding: "18px 20px",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                      cursor: "pointer", textAlign: "left",
+                      display: "flex", alignItems: "center", gap: 14,
+                      transition: "all 0.15s",
+                      transform: isHov ? "translateY(-1px)" : "none",
+                    }}>
+                    {/* Icon square */}
+                    <div style={{ width: 48, height: 48, borderRadius: 12, background: p.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <PersonaIcon size={22} color={iconColor} />
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            {/* AI Insights chat */}
-            <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 16, padding: "18px 20px", display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <Sparkles size={14} color={COLORS.accent} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>AI Insights</span>
-                <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, color: COLORS.accent, background: "rgba(255,107,53,0.12)", border: "1px solid rgba(255,107,53,0.25)", borderRadius: 4, padding: "2px 7px" }}>LIVE</span>
-              </div>
+                    {/* Text content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#111827", marginBottom: 2 }}>{p.label}</div>
+                      <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 6 }}>{p.detail}</div>
+                      {liveSignal && (
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#C9A227" }}>{liveSignal}</div>
+                      )}
+                    </div>
 
-              {/* Message area */}
-              <div style={{ flex: 1, minHeight: 130, maxHeight: 220, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-                {messages.length === 0 && (
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.22)", padding: "20px 0 6px", textAlign: "center" }}>Ask a question below to get started</div>
-                )}
-                {messages.map((m, i) => (
-                  <div key={i} style={{
-                    padding: "8px 12px", borderRadius: 10, fontSize: 11, lineHeight: 1.55,
-                    background: m.role === "user" ? "rgba(255,107,53,0.12)" : "rgba(255,255,255,0.05)",
-                    border: m.role === "user" ? "1px solid rgba(255,107,53,0.22)" : "1px solid rgba(255,255,255,0.07)",
-                    color: m.role === "user" ? "#fff" : "rgba(255,255,255,0.72)",
-                    alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-                    maxWidth: "90%",
-                  }}>
-                    {m.role === "user" ? m.content : formatAIResponse(m.content)}
-                  </div>
-                ))}
-                {chatLoading && (
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", padding: "2px 8px" }}>Thinking…</div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-
-              {/* Suggested questions — always visible */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
-                {[
-                  "What are the top repair categories?",
-                  "Which makes have the most ROs?",
-                  "Show brake cluster stats",
-                ].map((q) => (
-                  <button key={q} onClick={() => sendMessage(q)}
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 10, color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", gap: 5, transition: "background 0.12s" }}>
-                    <Zap size={9} color={COLORS.accent} />
-                    {q}
+                    {/* Arrow */}
+                    <ChevronRight size={18} color="#C9A227" style={{ flexShrink: 0 }} />
                   </button>
-                ))}
-              </div>
+                );
+              })}
+          </div>
 
-              {/* Input row */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <input
-                  value={inputText}
-                  onChange={e => setInputText(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && sendMessage()}
-                  placeholder="Ask about your repair data…"
-                  style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.11)", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#fff", outline: "none", fontFamily: "inherit" }}
-                />
-                <button onClick={() => sendMessage()} disabled={chatLoading || !inputText.trim()}
-                  style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#fff", opacity: (chatLoading || !inputText.trim()) ? 0.45 : 1, transition: "opacity 0.15s" }}>
-                  <Send size={12} />
-                  Ask
-                </button>
-              </div>
-            </div>
+          {/* Switch to OEM link */}
+          <div style={{ marginTop: 24, textAlign: "center" }}>
+            <button
+              onClick={() => setActiveTab("OEM")}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}
+            >
+              Switch to OEM view →
+            </button>
           </div>
         </>
       )}
@@ -1085,19 +873,19 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 24 }}>
         {onOpenSpecs && (
           <button onClick={onOpenSpecs}
-            style={{ background: "none", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 8, padding: "7px 16px", cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
+            style={{ background: "none", border: "1px solid #E5E7EB", borderRadius: 8, padding: "7px 16px", cursor: "pointer", color: "#9CA3AF", fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
             <Menu size={11} />
             Product Specifications
           </button>
         )}
         <button onClick={() => onSelectPersona("admin")}
-          style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "7px 16px", cursor: "pointer", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
+          style={{ background: "none", border: "1px solid #E5E7EB", borderRadius: 8, padding: "7px 16px", cursor: "pointer", color: "#9CA3AF", fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
           <Shield size={11} />
           Full Admin View
         </button>
       </div>
 
-      <div style={{ position: "fixed", bottom: 16, right: 20, fontSize: 10, color: "rgba(255,255,255,0.15)" }}>
+      <div style={{ position: "fixed", bottom: 16, right: 20, fontSize: 10, color: "#D1D5DB" }}>
         © {new Date().getFullYear()} Predii, Inc. · PREDII CONFIDENTIAL
       </div>
     </div>
