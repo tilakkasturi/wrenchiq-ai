@@ -200,7 +200,7 @@ export default function Job2ThreeCScreen() {
         {/* SMS header bar */}
         <div
           style={{
-            background: COLORS.primary,
+            background: smsName?.toLowerCase().includes("mitchell") ? COLORS.smsHeaderMitchell1 : COLORS.smsHeaderProtractor,
             padding: "12px 20px",
             display: "flex",
             alignItems: "center",
@@ -209,19 +209,6 @@ export default function Job2ThreeCScreen() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                background: COLORS.accent,
-                borderRadius: 6,
-                width: 28,
-                height: 28,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <FileText size={15} color="#fff" />
-            </div>
             <div>
               <div
                 style={{
@@ -239,17 +226,17 @@ export default function Job2ThreeCScreen() {
             </div>
           </div>
 
-          {/* Gray toolbar chips */}
+          {/* Muted toolbar chips */}
           <div style={{ display: "flex", gap: 6 }}>
             {["Save Draft", "Print RO", "Send to Tech"].map((label) => (
               <div
                 key={label}
                 style={{
-                  background: "rgba(255,255,255,0.12)",
-                  border: "1px solid rgba(255,255,255,0.18)",
+                  background: "rgba(255,255,255,0.1)",
+                  border: "1px solid rgba(255,255,255,0.15)",
                   borderRadius: 5,
                   padding: "4px 10px",
-                  color: "rgba(255,255,255,0.75)",
+                  color: "rgba(255,255,255,0.65)",
                   fontSize: 11,
                   cursor: "default",
                 }}
@@ -481,18 +468,32 @@ export default function Job2ThreeCScreen() {
             </span>
             <div
               style={{
-                background: "#F3F4F6",
-                border: `1px solid ${COLORS.border}`,
+                background: COLORS.borderLight,
+                border: `1px solid ${COLORS.smsBorder}`,
                 borderRadius: 5,
                 padding: "3px 9px",
                 fontSize: 11,
                 fontWeight: 600,
-                color: COLORS.textSecondary,
+                color: COLORS.smsLabel,
               }}
             >
               {smsName}
             </div>
           </div>
+        </div>
+
+        {/* SMS footer */}
+        <div
+          style={{
+            padding: "8px 28px",
+            borderTop: `1px solid ${COLORS.smsBorder}`,
+            background: COLORS.smsBg,
+            flexShrink: 0,
+          }}
+        >
+          <span style={{ fontSize: 10, color: COLORS.smsLabel }}>
+            {smsName} — Peninsula Precision Auto &nbsp;&middot;&nbsp; WrenchIQ reads {smsName} — never writes to it
+          </span>
         </div>
       </div>
 
@@ -500,7 +501,7 @@ export default function Job2ThreeCScreen() {
       <div
         style={{
           flex: "0 0 35%",
-          background: COLORS.bgDark,
+          background: COLORS.navyDark,
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
@@ -510,7 +511,7 @@ export default function Job2ThreeCScreen() {
         <div
           style={{
             padding: "14px 20px",
-            borderBottom: "1px solid rgba(255,255,255,0.1)",
+            borderBottom: `1px solid ${COLORS.navyBorder}`,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -520,7 +521,8 @@ export default function Job2ThreeCScreen() {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div
               style={{
-                background: COLORS.accent,
+                background: `rgba(201,162,39,0.2)`,
+                border: `1px solid rgba(201,162,39,0.4)`,
                 borderRadius: 6,
                 width: 26,
                 height: 26,
@@ -529,11 +531,11 @@ export default function Job2ThreeCScreen() {
                 justifyContent: "center",
               }}
             >
-              <Sparkles size={13} color="#fff" />
+              <Sparkles size={13} color={COLORS.gold} />
             </div>
             <span
               style={{
-                color: "#fff",
+                color: COLORS.intelText,
                 fontWeight: 700,
                 fontSize: 13,
                 letterSpacing: "0.01em",
@@ -543,7 +545,7 @@ export default function Job2ThreeCScreen() {
             </span>
             <span
               style={{
-                color: "rgba(255,255,255,0.4)",
+                color: COLORS.intelMuted,
                 fontSize: 12,
                 fontWeight: 400,
               }}
@@ -582,9 +584,9 @@ export default function Job2ThreeCScreen() {
           {/* Quality Alert card */}
           <div
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderLeft: `4px solid ${isAfter ? "#22C55E" : "#EF4444"}`,
+              background: COLORS.navyMid,
+              border: `1px solid ${COLORS.navyBorder}`,
+              borderLeft: `4px solid ${isAfter ? COLORS.success : COLORS.danger}`,
               borderRadius: 8,
               padding: "14px 14px",
             }}
@@ -600,12 +602,12 @@ export default function Job2ThreeCScreen() {
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                 <span
                   style={{
-                    background: COLORS.accent,
+                    background: COLORS.gold,
                     borderRadius: 4,
                     padding: "2px 7px",
                     fontSize: 9,
                     fontWeight: 800,
-                    color: "#fff",
+                    color: "#1A1A1A",
                     letterSpacing: "0.08em",
                   }}
                 >
@@ -689,8 +691,8 @@ export default function Job2ThreeCScreen() {
           {/* Gap analysis */}
           <div
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: COLORS.navyMid,
+              border: `1px solid ${COLORS.navyBorder}`,
               borderRadius: 8,
               padding: "12px 14px",
             }}
@@ -768,12 +770,12 @@ export default function Job2ThreeCScreen() {
                   ? "rgba(34,197,94,0.2)"
                   : applyFlash
                   ? "rgba(34,197,94,0.25)"
-                  : COLORS.accent,
+                  : COLORS.gold,
                 border: isAfter
                   ? "1px solid rgba(34,197,94,0.35)"
                   : "none",
                 borderRadius: 7,
-                color: isAfter ? "#86EFAC" : "#fff",
+                color: isAfter ? "#86EFAC" : "#1A1A1A",
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: isAfter ? "default" : "pointer",
@@ -807,8 +809,8 @@ export default function Job2ThreeCScreen() {
           {/* Why this matters */}
           <div
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: COLORS.navyMid,
+              border: `1px solid ${COLORS.navyBorder}`,
               borderRadius: 8,
               padding: "12px 14px",
             }}
