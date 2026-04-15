@@ -22,8 +22,15 @@ import {
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
+import { fetchStoryRO, updateStoryRO } from "../services/repairOrderService";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
+
+// Map shopId → story RO id for Job 2
+const JOB2_RO_MAP = {
+  cornerstone: "RO-2026-0403",  // Brenda Okafor / F-150 (Marcus Webb 31/100)
+  ridgeline:   "RO-2026-0502",  // Karen Tso / Silverado (Sofia 28/100)
+};
 
 // ─── Fallback narrative content ───────────────────────────────────────────────
 
@@ -96,11 +103,14 @@ function GapRow({ text, passed }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function Job2ThreeCScreen() {
-  const { smsName } = useDemo();
+  const { smsName, activeShopId } = useDemo();
   const [showResult, setShowResult] = useState(false);
   const [copied, setCopied] = useState(false);
   const [roData, setRoData] = useState(null);
+  const [storyRO, setStoryRO] = useState(null);
+  const [applyFlash, setApplyFlash] = useState(false);
 
+  // Legacy fallback
   useEffect(() => {
     fetch(`${API_BASE}/api/demo/ros`)
       .then(r => r.ok ? r.json() : null)
@@ -108,16 +118,32 @@ export default function Job2ThreeCScreen() {
       .catch(() => {});
   }, []);
 
+  // Load story RO (primary)
+  useEffect(() => {
+    const roId = JOB2_RO_MAP[activeShopId] || JOB2_RO_MAP.cornerstone;
+    fetchStoryRO(roId).then(ro => { if (ro) setStoryRO(ro); }).catch(() => {});
+  }, [activeShopId]);
+
   const ro = roData;
-  const customerName = ro?.customer?.name || "Robert Taylor";
-  const vehicleStr   = ro ? `${ro.vehicle.year} ${ro.vehicle.make} ${ro.vehicle.model}` : "2021 Toyota Camry SE";
-  const roNumber     = ro?.roNumber || "2847";
-  const techName     = ro?.tech?.name?.split(" ")[0] || "Mike R.";
-  const mileageStr   = ro ? Number(ro.vehicle.odometer).toLocaleString() : "58,420";
-  const beforeNarrative = ro?.techNotes || BEFORE_NARRATIVE_FALLBACK;
+  const s  = storyRO;
+
+  // Prefer story RO data
+  const customerName    = s?._customer ? `${s._customer.firstName} ${s._customer.lastName}` : ro?.customer?.name || "Robert Taylor";
+  const vehicleStr      = s?._vehicle  ? `${s._vehicle.year} ${s._vehicle.make} ${s._vehicle.model}` : ro ? `${ro.vehicle.year} ${ro.vehicle.make} ${ro.vehicle.model}` : "2021 Toyota Camry SE";
+  const roNumber        = s?.roNumber || ro?.roNumber || "2847";
+  const techName        = s?.techName?.split(" ")[0] || ro?.tech?.name?.split(" ")[0] || "Mike R.";
+  const mileageStr      = s?._vehicle ? Number(s._vehicle.mileage).toLocaleString() : ro ? Number(ro.vehicle.odometer).toLocaleString() : "58,420";
+
+  // 3C before/after from story RO, fallback to static
+  const beforeScore     = s?.threeCScore || 31;
+  const beforeNarrative = s?.threeCConcern || ro?.techNotes || BEFORE_NARRATIVE_FALLBACK;
+  const afterNarrative  = s?.threeCRewriteSuggestion?.concern
+    ? `COMPLAINT: ${s.threeCRewriteSuggestion.concern}\n\nCAUSE: ${s.threeCRewriteSuggestion.diagnosis || "Pending inspection."}\n\nCORRECTION: ${s.threeCRewriteSuggestion.correction || "Pending diagnostic completion."}`
+    : AFTER_NARRATIVE;
+  const afterScore      = s?.threeCRewriteSuggestion?.score || 89;
 
   function handleCopy() {
-    navigator.clipboard.writeText(AFTER_NARRATIVE).catch(() => {});
+    navigator.clipboard.writeText(afterNarrative).catch(() => {});
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
@@ -125,9 +151,26 @@ export default function Job2ThreeCScreen() {
     }, 1500);
   }
 
+  function handleApplyRewrite() {
+    setApplyFlash(true);
+    // Persist to server (update threeCConcern with rewrite)
+    if (s?.roNumber && s?.threeCRewriteSuggestion) {
+      updateStoryRO(s.roNumber, {
+        threeCConcern: s.threeCRewriteSuggestion.concern,
+        threeCDiagnosis: s.threeCRewriteSuggestion.diagnosis,
+        threeCScore: s.threeCRewriteSuggestion.score,
+      }).catch(() => {});
+    }
+    setTimeout(() => {
+      setApplyFlash(false);
+      setShowResult(true);
+    }, 800);
+  }
+
   function handleReset() {
     setShowResult(false);
     setCopied(false);
+    setApplyFlash(false);
   }
 
   const isAfter = showResult;
@@ -352,7 +395,7 @@ export default function Job2ThreeCScreen() {
               >
                 {isAfter ? "3C Narrative" : "Tech Notes / 3C Narrative"}
               </div>
-              <ScoreBadge score={isAfter ? 91 : 34} color={isAfter ? "green" : "red"} />
+              <ScoreBadge score={isAfter ? afterScore : beforeScore} color={isAfter ? "green" : "red"} />
             </div>
 
             {/* Textarea content */}
@@ -370,7 +413,7 @@ export default function Job2ThreeCScreen() {
                 userSelect: "text",
               }}
             >
-              {isAfter ? AFTER_NARRATIVE : beforeNarrative}
+              {isAfter ? afterNarrative : beforeNarrative}
             </div>
           </div>
 
@@ -710,18 +753,20 @@ export default function Job2ThreeCScreen() {
                 fontStyle: "italic",
               }}
             >
-              {AFTER_NARRATIVE_PREVIEW}
+              {s?.threeCRewriteSuggestion?.concern
+                ? s.threeCRewriteSuggestion.concern.slice(0, 120) + "…"
+                : AFTER_NARRATIVE_PREVIEW}
             </p>
 
-            {/* Copy button */}
+            {/* Apply Rewrite button (G-3: "AI suggested · Advisor approved" once applied) */}
             <button
-              onClick={isAfter ? undefined : handleCopy}
+              onClick={isAfter ? undefined : handleApplyRewrite}
               style={{
                 width: "100%",
                 padding: "9px 0",
                 background: isAfter
                   ? "rgba(34,197,94,0.2)"
-                  : copied
+                  : applyFlash
                   ? "rgba(34,197,94,0.25)"
                   : COLORS.accent,
                 border: isAfter
@@ -743,17 +788,17 @@ export default function Job2ThreeCScreen() {
               {isAfter ? (
                 <>
                   <CheckCircle size={13} />
-                  Copied &amp; Applied
+                  AI suggested · Advisor approved
                 </>
-              ) : copied ? (
+              ) : applyFlash ? (
                 <>
                   <CheckCircle size={13} />
-                  Copied!
+                  Applying…
                 </>
               ) : (
                 <>
                   <ClipboardCopy size={13} />
-                  Copy to Clipboard
+                  Apply Rewrite
                 </>
               )}
             </button>

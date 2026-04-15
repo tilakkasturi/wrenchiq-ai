@@ -1,19 +1,24 @@
 /**
  * WrenchIQ — Repair Order Service
- * Fetches live RO data from the API server (wrenchiq_ro collection),
- * returning null on any failure so the screen falls back to demo data.
+ * Fetches live RO data from the API server, returning null on any failure
+ * so screens fall back to demoData.js.
  */
 
 const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 /**
- * Fetch 10 demo-day ROs spread across all 6 Kanban stages.
- * Data comes from wrenchiq_ro; server assigns synthetic Kanban positions.
- * Returns array of ROs already normalized by the server, or null on error.
+ * Fetch demo-day ROs for the active shop.
+ *
+ * shopId = "cornerstone" | "ridgeline" → returns story ROs from RepairOrder collection
+ * shopId = null/undefined              → returns generic 10-RO board from wrenchiq_ro
+ *
+ * Returns array of normalized ROs, or null on error (triggers fallback to demoData.js).
  */
-export async function fetchActiveRepairOrders() {
+export async function fetchActiveRepairOrders(shopId) {
   try {
-    const url = `${API_BASE}/api/repair-orders/demo`;
+    const url = shopId
+      ? `${API_BASE}/api/repair-orders/demo?shopId=${encodeURIComponent(shopId)}`
+      : `${API_BASE}/api/repair-orders/demo`;
     const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
     if (!res.ok) {
       console.warn('[repairOrderService] HTTP error', res.status);
@@ -25,6 +30,38 @@ export async function fetchActiveRepairOrders() {
     console.error('[repairOrderService] fetch failed:', err);
     return null;
   }
+}
+
+/**
+ * Fetch a single story RO by ID (includes full agentic fields).
+ * Used by Job 1/2/3 screens. Returns null on error.
+ */
+export async function fetchStoryRO(roId) {
+  try {
+    const url = `${API_BASE}/api/repair-orders/story-ro/${encodeURIComponent(roId)}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) {
+      console.warn('[repairOrderService] story-ro HTTP error', res.status);
+      return null;
+    }
+    return res.json();
+  } catch (err) {
+    console.error('[repairOrderService] fetchStoryRO failed:', err);
+    return null;
+  }
+}
+
+/**
+ * Partial update a story RO (agenticTextStatus, 3C fields).
+ */
+export async function updateStoryRO(roId, updates) {
+  const res = await fetch(`${API_BASE}/api/repair-orders/story-ro/${encodeURIComponent(roId)}`, {
+    method:  'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(updates),
+  });
+  if (!res.ok) throw new Error(`Failed to update story RO: ${res.statusText}`);
+  return res.json();
 }
 
 /**

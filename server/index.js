@@ -22,6 +22,7 @@ import agentRouter            from './routes/agent.js';
 import roAgentRouter          from './routes/roAgent.js';
 import aroAgentRouter         from './routes/aroAgent.js';
 import demoRORouter           from './routes/demoRO.js';
+import claudeProxyRouter      from './routes/claudeProxy.js';
 import { ensureRecommendationIndexes } from './models/Recommendation.js';
 
 // ── Load .env.local ──────────────────────────────────────────────────────────
@@ -105,6 +106,7 @@ app.use('/api/agent',           agentRouter);
 app.use('/api/ro-agent',        roAgentRouter);
 app.use('/api/aro-agent',       aroAgentRouter);
 app.use('/api/demo',            demoRORouter);
+app.use('/api/claude',          claudeProxyRouter);
 app.use('/api',                 recommendationsRouter);
 
 app.get('/api/health', (_req, res) => {

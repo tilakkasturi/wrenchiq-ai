@@ -12,9 +12,17 @@ import {
   ChevronRight,
   Cpu,
   Target,
+  Sparkles,
 } from "lucide-react";
+import { fetchStoryRO } from "../services/repairOrderService";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
+
+// Map shopId → story RO id for Job 1
+const JOB1_RO_MAP = {
+  cornerstone: "RO-2026-0401",  // Elena Vasquez / Highlander P0420
+  ridgeline:   "RO-2026-0501",  // Dan Whitfield / RAM 1500 P0301 (also Job 3 for Ridgeline)
+};
 
 // ─── Static fallback data ────────────────────────────────────────────────────
 
@@ -182,11 +190,13 @@ function IntelRow({ icon: Icon, iconColor, label, value, sub }) {
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
 export default function Job1IntakeScreen() {
-  const { smsName } = useDemo();
+  const { smsName, activeShopId } = useDemo();
   const [showResult, setShowResult] = useState(false);
   const [copyLabel, setCopyLabel] = useState(null);
   const [roData, setRoData] = useState(null);
+  const [storyRO, setStoryRO] = useState(null);
 
+  // Legacy fallback
   useEffect(() => {
     fetch(`${API_BASE}/api/demo/ros`)
       .then(r => r.ok ? r.json() : null)
@@ -194,11 +204,20 @@ export default function Job1IntakeScreen() {
       .catch(() => {});
   }, []);
 
+  // Load story RO (primary — Agentic Moment 1)
+  useEffect(() => {
+    const roId = JOB1_RO_MAP[activeShopId] || JOB1_RO_MAP.cornerstone;
+    fetchStoryRO(roId).then(ro => { if (ro) setStoryRO(ro); }).catch(() => {});
+  }, [activeShopId]);
+
   const ro = roData;
-  const customerName = ro?.customer?.name || CUSTOMER_FALLBACK.name;
-  const vehicleStr   = ro ? `${ro.vehicle.year} ${ro.vehicle.make} ${ro.vehicle.model}` : CUSTOMER_FALLBACK.vehicle;
-  const mileageStr   = ro ? `${Number(ro.vehicle.odometer).toLocaleString()} mi` : CUSTOMER_FALLBACK.mileage;
-  const concern      = ro?.concern || CONCERN_FALLBACK;
+  const s  = storyRO;
+
+  const customerName = s?._customer ? `${s._customer.firstName} ${s._customer.lastName}` : ro?.customer?.name || CUSTOMER_FALLBACK.name;
+  const vehicleStr   = s?._vehicle  ? `${s._vehicle.year} ${s._vehicle.make} ${s._vehicle.model}` : ro ? `${ro.vehicle.year} ${ro.vehicle.make} ${ro.vehicle.model}` : CUSTOMER_FALLBACK.vehicle;
+  const mileageStr   = s?._vehicle  ? `${Number(s._vehicle.mileage).toLocaleString()} mi` : ro ? `${Number(ro.vehicle.odometer).toLocaleString()} mi` : CUSTOMER_FALLBACK.mileage;
+  const concern      = s?.customerConcern || ro?.concern || CONCERN_FALLBACK;
+  const aiInsights   = s?.aiInsights || [];
 
   function handleCopy() {
     setShowResult(true);
@@ -511,7 +530,7 @@ export default function Job1IntakeScreen() {
                 paddingLeft: 2,
               }}
             >
-              {vehicleStr} · {mileageStr} · P0420 detected
+              {vehicleStr} · {mileageStr} · {s?.dtcs?.join(", ") || "P0420"} detected
             </div>
 
             {/* Intel rows */}
@@ -596,6 +615,29 @@ export default function Job1IntakeScreen() {
               GWG Job 1 Target: &gt;90% first-visit accuracy
             </span>
           </div>
+
+          {/* Live AI insights from story RO (additional detail rows) */}
+          {aiInsights.length > 1 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{
+                fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)",
+                textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8,
+                display: "flex", alignItems: "center", gap: 5,
+              }}>
+                <Sparkles size={11} color="rgba(255,255,255,0.3)" />
+                Additional Context
+              </div>
+              {aiInsights.slice(1).map((insight, i) => (
+                <div key={i} style={{
+                  fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: "1.5",
+                  padding: "6px 0",
+                  borderBottom: i < aiInsights.length - 2 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                }}>
+                  {insight}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Bottom action area */}

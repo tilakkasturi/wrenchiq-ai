@@ -10,11 +10,21 @@ import {
   DollarSign,
   Wind,
   Droplets,
+  Send,
+  Sparkles,
+  Shield,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
+import { fetchStoryRO, updateStoryRO } from "../services/repairOrderService";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
+
+// Map shopId → story RO id for Job 3
+const JOB3_RO_MAP = {
+  cornerstone: "RO-2026-0402",  // Frank Delgado / CR-V upsell
+  ridgeline:   "RO-2026-0501",  // Dan Whitfield / RAM 1500 upsell
+};
 
 function buildTalkTrack(name, vehicleStr, mileage) {
   const make  = vehicleStr.split(" ")[1] || "your vehicle";
@@ -23,10 +33,17 @@ function buildTalkTrack(name, vehicleStr, mileage) {
 }
 
 export default function Job3UpsellScreen() {
-  const { smsName, primaryCustomer } = useDemo();
+  const { smsName, primaryCustomer, activeShopId } = useDemo();
   const [showResult, setShowResult] = useState(false);
   const [roData, setRoData] = useState(null);
+  const [storyRO, setStoryRO] = useState(null);
+  // G-1/G-2: staged text states
+  const [textStatus, setTextStatus] = useState("staged");  // "staged" | "sending" | "sent"
+  const [undoTimer, setUndoTimer] = useState(null);       // G-2: 5-sec undo countdown
+  const [undoCount, setUndoCount] = useState(5);
+  const [showUndo, setShowUndo] = useState(false);
 
+  // Load legacy demo/ros data (fallback)
   useEffect(() => {
     fetch(`${API_BASE}/api/demo/ros`)
       .then(r => r.ok ? r.json() : null)
@@ -34,18 +51,75 @@ export default function Job3UpsellScreen() {
       .catch(() => {});
   }, []);
 
-  const ro = roData;
-  const vehicleStr = ro ? `${ro.vehicle.year} ${ro.vehicle.make} ${ro.vehicle.model}` : "2022 Ford F-150 XLT";
-  const mileage    = ro?.vehicle?.odometer || 44800;
+  // Load story RO from MongoDB (primary — Agentic Moment 2)
+  useEffect(() => {
+    const roId = JOB3_RO_MAP[activeShopId] || JOB3_RO_MAP.cornerstone;
+    fetchStoryRO(roId).then(ro => {
+      if (ro) {
+        setStoryRO(ro);
+        setTextStatus(ro.agenticTextStatus || "staged");
+      }
+    }).catch(() => {});
+  }, [activeShopId]);
+
+  // Prefer story RO data when available
+  const activeRO = storyRO || roData;
+  const ro = roData;  // legacy compat
+
+  const vehicleStr = storyRO
+    ? `${storyRO._vehicle.year} ${storyRO._vehicle.make} ${storyRO._vehicle.model}`
+    : ro ? `${ro.vehicle.year} ${ro.vehicle.make} ${ro.vehicle.model}` : "2022 Ford F-150 XLT";
+  const mileage    = storyRO?._vehicle?.mileage || ro?.vehicle?.odometer || 44800;
   const mileageStr = `${Number(mileage).toLocaleString()} mi`;
-  const roNumber   = ro?.roNumber || "2851";
+  const roNumber   = storyRO?.roNumber || ro?.roNumber || "2851";
+  const customerName = storyRO
+    ? `${storyRO._customer.firstName} ${storyRO._customer.lastName}`
+    : primaryCustomer;
   const baseServices = ro?.jobs?.slice(0, 2).map(j => [j.name, `$${j.totalCost?.toFixed(2) || "79.99"}`])
     || [["Full Synthetic Oil Change 5W-30", "$79.99"], ["Tire Rotation", "$29.99"]];
   const baseTotal  = ro?.jobs?.slice(0, 2).reduce((s, j) => s + (j.totalCost || 0), 0) || 109.98;
-  const talkTrack  = buildTalkTrack(primaryCustomer, vehicleStr, mileage);
+  const talkTrack  = buildTalkTrack(customerName, vehicleStr, mileage);
   const [addedFlash, setAddedFlash] = useState(false);
   const [copiedLeft, setCopiedLeft] = useState(false);
   const [copiedRight, setCopiedRight] = useState(false);
+
+  // Agentic customer text from story RO (G-1: "Draft — review before sending")
+  const agenticText = storyRO?.agenticCustomerText || null;
+
+  // G-2: 5-second undo countdown after approve tap
+  function startUndoTimer() {
+    setShowUndo(true);
+    setUndoCount(5);
+    let count = 5;
+    const t = setInterval(() => {
+      count -= 1;
+      setUndoCount(count);
+      if (count <= 0) {
+        clearInterval(t);
+        setShowUndo(false);
+        setUndoTimer(null);
+        setTextStatus("sent");
+        // Persist to server
+        const roId = storyRO?.roNumber || JOB3_RO_MAP[activeShopId];
+        if (roId) updateStoryRO(roId, { agenticTextStatus: "sent" }).catch(() => {});
+      }
+    }, 1000);
+    setUndoTimer(t);
+  }
+
+  function handleApproveAndSend() {
+    setTextStatus("sending");
+    startUndoTimer();
+  }
+
+  function handleUndo() {
+    if (undoTimer) {
+      clearInterval(undoTimer);
+      setUndoTimer(null);
+    }
+    setShowUndo(false);
+    setTextStatus("staged");
+  }
 
   function handleAddToRO() {
     setAddedFlash(true);
@@ -287,6 +361,95 @@ export default function Job3UpsellScreen() {
           ) : (
             <div style={{ fontSize: 13, color: COLORS.textSecondary, paddingLeft: 2 }}>
               Ready to finalize?
+            </div>
+          )}
+
+          {/* ── AGENTIC MOMENT 2: Staged Customer Text ─────────────────────────
+              G-1: labeled "Draft — review before sending", button says "Approve & Send"
+              G-2: 5-sec undo toast before committing
+              G-3: "AI suggested · Advisor approved" label once sent
+          ── */}
+          {agenticText && (
+            <div
+              style={{
+                background: textStatus === "sent" ? "#F0FDF4" : "#F8F6FF",
+                border: `1px solid ${textStatus === "sent" ? "#86EFAC" : "#C4B5FD"}`,
+                borderRadius: 10,
+                padding: "14px 16px",
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <Sparkles size={13} color={textStatus === "sent" ? "#22C55E" : "#7C3AED"} />
+                  <span style={{ fontSize: 11, fontWeight: 700, color: textStatus === "sent" ? "#15803D" : "#5B21B6", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    {textStatus === "sent" ? "AI suggested · Advisor approved" : "Draft — review before sending"}
+                  </span>
+                </div>
+                {textStatus === "staged" && (
+                  <span style={{ fontSize: 10, color: "#7C3AED", background: "#EDE9FE", borderRadius: 4, padding: "2px 7px", fontWeight: 600 }}>
+                    Staged
+                  </span>
+                )}
+              </div>
+
+              {/* Text bubble */}
+              <div style={{
+                background: textStatus === "sent" ? "#DCFCE7" : "#EDE9FE",
+                border: `1px solid ${textStatus === "sent" ? "#BBF7D0" : "#DDD6FE"}`,
+                borderRadius: 8,
+                padding: "11px 14px",
+                fontSize: 13,
+                lineHeight: "1.55",
+                color: textStatus === "sent" ? "#15803D" : "#3730A3",
+                marginBottom: 12,
+              }}>
+                {agenticText}
+              </div>
+
+              {/* G-2: Undo toast */}
+              {showUndo && (
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  background: "#1E1B4B", borderRadius: 7, padding: "9px 14px", marginBottom: 10,
+                }}>
+                  <span style={{ fontSize: 12, color: "#C4B5FD" }}>
+                    Sending in {undoCount}s — committing when timer expires
+                  </span>
+                  <button
+                    onClick={handleUndo}
+                    style={{
+                      background: "#7C3AED", border: "none", borderRadius: 5,
+                      color: "#fff", fontSize: 11, fontWeight: 700,
+                      padding: "4px 12px", cursor: "pointer",
+                    }}
+                  >
+                    Undo
+                  </button>
+                </div>
+              )}
+
+              {/* Action button */}
+              {textStatus === "staged" && (
+                <button
+                  onClick={handleApproveAndSend}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                    width: "100%", padding: "10px 0",
+                    background: "#7C3AED", border: "none", borderRadius: 7,
+                    color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  <Send size={14} />
+                  Approve &amp; Send
+                </button>
+              )}
+              {textStatus === "sent" && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#15803D", fontWeight: 600 }}>
+                  <CheckCircle size={14} color="#22C55E" />
+                  Sent · AI suggested · Advisor approved
+                </div>
+              )}
             </div>
           )}
 

@@ -5,7 +5,11 @@
  */
 
 const MODEL = "claude-sonnet-4-6";
-const API_URL = "https://api.anthropic.com/v1/messages";
+// Proxy through our backend to avoid browser CORS issues with Anthropic API.
+// Falls back to direct call if VITE_ANTHROPIC_API_KEY is set (browser can call with danger header).
+const API_BASE = import.meta.env.VITE_API_BASE || "";
+const PROXY_URL = `${API_BASE}/api/claude/messages`;
+const DIRECT_URL = "https://api.anthropic.com/v1/messages";
 
 // ── Prompts ───────────────────────────────────────────────────
 
@@ -108,23 +112,36 @@ export async function generateNarrative(mode, context) {
     mode === "verbose" ? SYSTEM_VERBOSE :
                          SYSTEM_REWRITE;
 
+  const body = JSON.stringify({
+    model: MODEL,
+    max_tokens: 1024,
+    system: systemPrompt,
+    messages: [{ role: "user", content: buildUserMessage(context) }],
+  });
+
   let res;
   try {
-    res = await fetch(API_URL, {
+    // Try server proxy first (avoids CORS; server reads key from env)
+    res = await fetch(PROXY_URL, {
       method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-allow-browser": "true",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: "user", content: buildUserMessage(context) }],
-      }),
+      headers: { "content-type": "application/json" },
+      body,
     });
+
+    // If proxy returns 503 (no key on server), fall back to direct browser call
+    if (res.status === 503 && apiKey) {
+      console.warn("[am3cLLM] Server proxy unavailable, trying direct call");
+      res = await fetch(DIRECT_URL, {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-allow-browser": "true",
+          "content-type": "application/json",
+        },
+        body,
+      });
+    }
   } catch (networkErr) {
     console.error("Claude API network error:", networkErr);
     // CORS or network failure — fall back to local

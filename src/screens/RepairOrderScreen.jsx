@@ -279,7 +279,7 @@ function FlagCard({ icon: Icon, iconColor, borderColor, title, sub, action }) {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function RepairOrderScreen() {
-  const { smsName, shopName } = useDemo();
+  const { smsName, shopName, activeShopId, smsHeaderColor } = useDemo();
   const [searchQuery, setSearchQuery]     = useState("");
   const [selectedRoId, setSelectedRoId]  = useState(null);
   const [dviRoId, setDviRoId]            = useState(null);
@@ -291,10 +291,12 @@ export default function RepairOrderScreen() {
   const [dbConnected, setDbConnected]    = useState(false);
 
   useEffect(() => {
-    fetchActiveRepairOrders().then(ros => {
+    // Pass activeShopId — fetches story ROs for demo shops (cornerstone/ridgeline)
+    // or falls back to generic wrenchiq_ro board for other shops
+    fetchActiveRepairOrders(activeShopId).then(ros => {
       if (ros?.length > 0) { setLiveROs(ros); setDbConnected(true); }
     });
-  }, []);
+  }, [activeShopId]);
 
   const repairOrders  = liveROs || demoRepairOrders;
   const kanbanROs     = repairOrders.filter(ro => KANBAN_STATUSES.includes(ro.status));
@@ -366,13 +368,31 @@ export default function RepairOrderScreen() {
     });
   });
 
-  // ── AI suggestions ─────────────────────────────────────────────────────────
+  // ── AI proactive briefing — built from live RO aiInsights (Agentic Moment 1) ──
+  // When story ROs are loaded, show their PROACTIVE insights at the top of the panel.
+  // This fires before the advisor clicks any RO — "WrenchIQ already read them all."
+  const proactiveInsights = [];
+  if (liveROs) {
+    for (const ro of liveROs) {
+      const cust = ro._customer;
+      if (!cust || !ro.aiInsights?.length) continue;
+      const proactive = ro.aiInsights.filter(i => i.startsWith('PROACTIVE'));
+      if (proactive.length === 0) continue;
+      proactiveInsights.push({
+        name: `${cust.firstName} ${cust.lastName}`,
+        text: proactive[0].replace(/^PROACTIVE\s*[—-]\s*/, ''),
+        vehicle: ro._vehicle ? `${ro._vehicle.year} ${ro._vehicle.make} ${ro._vehicle.model}` : '',
+        roId: ro.id,
+      });
+    }
+  }
 
-  const suggestions = [
+  // Static fallback suggestions for non-story-RO demos
+  const suggestions = proactiveInsights.length === 0 ? [
     { text: "David's P0420 — TSB-19-052 applies, mention Honda goodwill", value: "Save $450" },
     { text: "Monica's cabin filter ($81) has been pending — text her", value: "+$81" },
     { text: "James' BMW due for brake fluid flush at 64K, add to estimate", value: "+$185" },
-  ];
+  ] : [];
 
   // ── DVI overlay ───────────────────────────────────────────────────────────────
 
@@ -431,10 +451,10 @@ export default function RepairOrderScreen() {
           borderRight: `1px solid ${COLORS.border}`, overflow: "hidden",
         }}>
 
-          {/* SMS chrome header */}
+          {/* SMS chrome header — skin color driven by smsProvider */}
           <div style={{
-            background: "#F3F4F6",
-            borderBottom: `1px solid ${COLORS.border}`,
+            background: smsHeaderColor || "#F3F4F6",
+            borderBottom: `1px solid ${smsHeaderColor ? "rgba(0,0,0,0.15)" : COLORS.border}`,
             padding: "0 16px",
             display: "flex", alignItems: "center", height: 44, gap: 8,
             flexShrink: 0,
@@ -446,7 +466,8 @@ export default function RepairOrderScreen() {
             </div>
             <div style={{
               flex: 1, textAlign: "center",
-              fontSize: 12, fontWeight: 600, color: COLORS.textSecondary,
+              fontSize: 12, fontWeight: 600,
+              color: smsHeaderColor ? "rgba(255,255,255,0.85)" : COLORS.textSecondary,
               letterSpacing: "0.02em",
             }}>
               {smsName} — Repair Order Queue
@@ -454,9 +475,9 @@ export default function RepairOrderScreen() {
             {dbConnected && (
               <div style={{
                 display: "flex", alignItems: "center", gap: 4,
-                fontSize: 10, fontWeight: 600, color: "#16A34A",
+                fontSize: 10, fontWeight: 600, color: "#4ADE80",
               }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16A34A", display: "inline-block" }} />
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ADE80", display: "inline-block" }} />
                 Live
               </div>
             )}
@@ -730,7 +751,7 @@ export default function RepairOrderScreen() {
               </div>
             )}
 
-            {/* AI Suggestions */}
+            {/* AI Proactive Briefing (Agentic Moment 1) — or static suggestions fallback */}
             <div>
               <div style={{
                 fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
@@ -738,8 +759,34 @@ export default function RepairOrderScreen() {
                 display: "flex", alignItems: "center", gap: 6,
               }}>
                 <Brain size={12} color="rgba(255,255,255,0.35)" />
-                AI Suggestions
+                {proactiveInsights.length > 0 ? "Proactive Briefing" : "AI Suggestions"}
               </div>
+
+              {/* Proactive briefing cards from live story ROs */}
+              {proactiveInsights.map((p, i) => (
+                <div key={p.roId} style={{
+                  background: "rgba(255,107,53,0.07)",
+                  border: "1px solid rgba(255,107,53,0.18)",
+                  borderLeft: `3px solid ${COLORS.accent}`,
+                  borderRadius: 8,
+                  padding: "10px 12px",
+                  marginBottom: 8,
+                }}>
+                  <div style={{
+                    fontSize: 10, fontWeight: 700, color: COLORS.accent,
+                    textTransform: "uppercase", letterSpacing: "0.06em",
+                    marginBottom: 4, display: "flex", alignItems: "center", gap: 5,
+                  }}>
+                    <Sparkles size={11} color={COLORS.accent} />
+                    {p.name} · {p.vehicle}
+                  </div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", lineHeight: 1.45 }}>
+                    {p.text}
+                  </div>
+                </div>
+              ))}
+
+              {/* Static fallback suggestions */}
               {suggestions.map((s, i) => (
                 <div key={i} style={{
                   display: "flex", alignItems: "flex-start", gap: 10,
