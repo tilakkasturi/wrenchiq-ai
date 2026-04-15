@@ -621,7 +621,7 @@ export default function RepairOrderScreen() {
         {/* ── RIGHT: WrenchIQ Agent panel (35%) ─────────────────────────────── */}
         <div style={{
           width: "35%", display: "flex", flexDirection: "column",
-          background: COLORS.bgDark, overflow: "hidden",
+          background: COLORS.navyDark, overflow: "hidden",
         }}>
 
           {/* Panel header */}
@@ -632,7 +632,7 @@ export default function RepairOrderScreen() {
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
               <div style={{
-                width: 26, height: 26, background: COLORS.accent,
+                width: 26, height: 26, background: COLORS.gold,
                 borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 <Sparkles size={13} color="#fff" />

@@ -304,7 +304,7 @@ function KGPanel() {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function AdvisorHomeScreen() {
-  const { smsName, shopName } = useDemo();
+  const { smsName, shopName, smsHeaderColor } = useDemo();
   const [selectedRoNum, setSelectedRoNum] = useState(null);
 
   const selected = BOARD_ROS.find(r => r.roNum === selectedRoNum) || null;
@@ -692,8 +692,8 @@ export default function AdvisorHomeScreen() {
 
         {/* SMS chrome header */}
         <div style={{
-          background: "#F3F4F6",
-          borderBottom: `1px solid ${COLORS.border}`,
+          background: smsHeaderColor || "#F3F4F6",
+          borderBottom: `1px solid ${smsHeaderColor ? "rgba(0,0,0,0.15)" : COLORS.border}`,
           padding: "0 16px",
           display: "flex", alignItems: "center", height: 44, gap: 8,
           flexShrink: 0,
@@ -705,12 +705,15 @@ export default function AdvisorHomeScreen() {
           </div>
           <div style={{
             flex: 1, textAlign: "center",
-            fontSize: 12, fontWeight: 600, color: COLORS.textSecondary, letterSpacing: "0.02em",
+            fontSize: 12, fontWeight: 600,
+            color: smsHeaderColor ? "rgba(255,255,255,0.85)" : COLORS.textSecondary,
+            letterSpacing: "0.02em",
           }}>
             {smsName} — RO Board
           </div>
           <div style={{
-            fontSize: 10, fontWeight: 600, color: COLORS.textMuted,
+            fontSize: 10, fontWeight: 600,
+            color: smsHeaderColor ? "rgba(255,255,255,0.5)" : COLORS.textMuted,
           }}>
             {shopName}
           </div>
@@ -724,10 +727,10 @@ export default function AdvisorHomeScreen() {
           display: "flex", gap: 16, flexShrink: 0,
         }}>
           {[
-            { label: `${BOARD_ROS.length} ROs Today`,          color: COLORS.primary },
+            { label: `${BOARD_ROS.length} ROs Today`,          color: COLORS.textSecondary },
             { label: `${avgOpenTime} min Avg Open Time`,        color: COLORS.textSecondary },
-            { label: `${avgApproval}% Approval Rate`,           color: "#0D9488"        },
-            { label: `${fmtMoney(totalRevenue)} Today's Revenue`, color: COLORS.accent  },
+            { label: `${avgApproval}% Approval Rate`,           color: COLORS.textSecondary },
+            { label: `${fmtMoney(totalRevenue)} Today's Revenue`, color: COLORS.textSecondary },
           ].map((k, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               {i > 0 && <div style={{ width: 1, height: 14, background: COLORS.border }} />}
@@ -807,7 +810,7 @@ export default function AdvisorHomeScreen() {
       {/* ── RIGHT: WrenchIQ Agent panel (35%) ─────────────────────────────── */}
       <div style={{
         width: "35%", display: "flex", flexDirection: "column",
-        background: COLORS.bgDark, overflow: "hidden",
+        background: COLORS.navyDark, overflow: "hidden",
       }}>
 
         {/* Panel header */}
@@ -818,7 +821,7 @@ export default function AdvisorHomeScreen() {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
             <div style={{
-              width: 26, height: 26, background: COLORS.accent,
+              width: 26, height: 26, background: COLORS.gold,
               borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               <Sparkles size={13} color="#fff" />

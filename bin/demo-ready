@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+# bin/demo-ready — Pre-demo environment setup for April 18 demos
+#
+# Usage:
+#   bin/demo-ready               # prep both shops (default)
+#   bin/demo-ready --shop taylor # Cornerstone / Protractor only
+#   bin/demo-ready --shop brad   # Ridgeline / Mitchell1 only
+#   bin/demo-ready --reset       # drop + reseed story ROs before prepping
+#
+# Run this once before each demo session. Takes ~10 seconds.
+
+set -euo pipefail
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+cd "$(dirname "$0")/.."
+
+# ── Args ─────────────────────────────────────────────────────────
+SHOP="both"
+RESET=0
+for arg in "$@"; do
+  [ "$arg" = "--shop" ] && shift && SHOP="$1"
+  [ "$arg" = "--reset" ] && RESET=1
+done
+
+# Normalize shop aliases
+[ "$SHOP" = "taylor" ] && SHOP="cornerstone"
+[ "$SHOP" = "brad"   ] && SHOP="ridgeline"
+
+API_PORT="${API_PORT:-3001}"
+API_BASE="http://localhost:${API_PORT}"
+
+PASS=0
+FAIL=0
+
+pass() { echo "  [OK]  $1"; PASS=$((PASS+1)); }
+fail() { echo "  [!!]  $1"; FAIL=$((FAIL+1)); }
+header() { echo ""; echo "==> $1"; }
+
+# ── Step 1: Server health ─────────────────────────────────────────
+header "Checking server"
+if curl -sf "${API_BASE}/api/health" > /dev/null 2>&1; then
+  pass "Server is up at ${API_BASE}"
+else
+  fail "Server is not responding at ${API_BASE}"
+  echo ""
+  echo "  Start the server first:  bin/server"
+  echo "  Then re-run:             bin/demo-ready"
+  exit 1
+fi
+
+# ── Step 2: Seed story ROs ────────────────────────────────────────
+header "Seeding story ROs"
+SEED_ARGS=""
+[ "$RESET" -eq 1 ] && SEED_ARGS="--reset"
+[ "$SHOP" != "both" ] && SEED_ARGS="$SEED_ARGS --shop $SHOP"
+
+if node --env-file=.env.local scripts/seedDemoStory.js $SEED_ARGS; then
+  pass "Story ROs seeded"
+else
+  fail "Seed script failed — check MongoDB connection"
+  exit 1
+fi
+
+# ── Step 3: Verify endpoints ──────────────────────────────────────
+header "Verifying endpoints"
+
+verify_shop() {
+  local SHOP_ID="$1"
+  local LABEL="$2"
+  local RESPONSE COUNT
+
+  RESPONSE=$(curl -sf "${API_BASE}/api/repair-orders/demo?shopId=${SHOP_ID}" 2>/dev/null || echo "[]")
+  COUNT=$(echo "$RESPONSE" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); try { console.log(JSON.parse(d).length) } catch(e) { console.log(0) }" 2>/dev/null || echo "0")
+
+  if [ "$COUNT" -ge 3 ]; then
+    pass "${LABEL}: ${COUNT} story ROs returned"
+  else
+    fail "${LABEL}: expected 3+ ROs, got ${COUNT}"
+  fi
+
+  # Spot-check first story RO has agentic fields
+  local FIRST_ID
+  FIRST_ID=$(echo "$RESPONSE" | node -e "
+    const d=require('fs').readFileSync('/dev/stdin','utf8');
+    try { const arr=JSON.parse(d); console.log(arr[0]?.roId||arr[0]?._id||'') } catch(e) { console.log('') }
+  " 2>/dev/null || echo "")
+
+  if [ -n "$FIRST_ID" ]; then
+    local RO_DETAIL
+    RO_DETAIL=$(curl -sf "${API_BASE}/api/repair-orders/story-ro/${FIRST_ID}" 2>/dev/null || echo "{}")
+    if echo "$RO_DETAIL" | grep -q "aiInsights"; then
+      pass "${LABEL}: story RO ${FIRST_ID} has aiInsights"
+    else
+      fail "${LABEL}: story RO ${FIRST_ID} missing aiInsights"
+    fi
+  fi
+}
+
+if [ "$SHOP" = "both" ] || [ "$SHOP" = "cornerstone" ]; then
+  verify_shop "cornerstone" "Taylor / Cornerstone"
+fi
+
+if [ "$SHOP" = "both" ] || [ "$SHOP" = "ridgeline" ]; then
+  verify_shop "ridgeline"   "Brad   / Ridgeline  "
+fi
+
+# ── Step 4: Demo moment smoke test ───────────────────────────────
+header "Smoke testing agentic moments"
+
+smoke_ro() {
+  local RO_ID="$1"
+  local LABEL="$2"
+  local RO
+  RO=$(curl -sf "${API_BASE}/api/repair-orders/story-ro/${RO_ID}" 2>/dev/null || echo "{}")
+
+  local HAS_INSIGHTS HAS_TEXT HAS_3C
+  HAS_INSIGHTS=$(echo "$RO" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); try{const r=JSON.parse(d);console.log(Array.isArray(r.aiInsights)&&r.aiInsights.length>0?'yes':'no')}catch(e){console.log('no')}" 2>/dev/null || echo "no")
+  HAS_TEXT=$(echo "$RO"     | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); try{const r=JSON.parse(d);console.log(r.agenticCustomerText?'yes':'no')}catch(e){console.log('no')}" 2>/dev/null || echo "no")
+  HAS_3C=$(echo "$RO"       | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); try{const r=JSON.parse(d);console.log(r.threeCRewriteSuggestion?'yes':'no')}catch(e){console.log('no')}" 2>/dev/null || echo "no")
+
+  [ "$HAS_INSIGHTS" = "yes" ] && pass "${LABEL}: Moment 1 — aiInsights present" || fail "${LABEL}: Moment 1 — aiInsights missing"
+  [ "$HAS_TEXT"     = "yes" ] && pass "${LABEL}: Moment 2 — agenticCustomerText present" || fail "${LABEL}: Moment 2 — agenticCustomerText missing"
+  [ "$HAS_3C"       = "yes" ] && pass "${LABEL}: Moment 3 — threeCRewriteSuggestion present" || fail "${LABEL}: Moment 3 — threeCRewriteSuggestion missing"
+}
+
+if [ "$SHOP" = "both" ] || [ "$SHOP" = "cornerstone" ]; then
+  smoke_ro "RO-2026-0401" "Taylor J1 Elena Vasquez "
+  smoke_ro "RO-2026-0402" "Taylor J3 Frank Delgado "
+  smoke_ro "RO-2026-0403" "Taylor J2 Brenda Okafor "
+fi
+
+if [ "$SHOP" = "both" ] || [ "$SHOP" = "ridgeline" ]; then
+  smoke_ro "RO-2026-0501" "Brad   J1 Dan Whitfield  "
+  smoke_ro "RO-2026-0502" "Brad   J2 Karen Tso      "
+  smoke_ro "RO-2026-0503" "Brad   J3 Marco Esposito "
+fi
+
+# ── Summary ───────────────────────────────────────────────────────
+echo ""
+echo "────────────────────────────────────────"
+TOTAL=$((PASS+FAIL))
+echo "  ${PASS}/${TOTAL} checks passed"
+
+if [ "$FAIL" -eq 0 ]; then
+  echo ""
+  echo "  Demo environment is ready."
+  echo ""
+  if [ "$SHOP" = "both" ] || [ "$SHOP" = "cornerstone" ]; then
+    echo "  Taylor (Cornerstone / Protractor)"
+    echo "    Open: ${API_BASE}/?demo=cornerstone"
+  fi
+  if [ "$SHOP" = "both" ] || [ "$SHOP" = "ridgeline" ]; then
+    echo "  Brad   (Ridgeline / Mitchell1)"
+    echo "    Open: ${API_BASE}/?demo=ridgeline"
+  fi
+  echo ""
+else
+  echo ""
+  echo "  ${FAIL} check(s) failed. Fix before demo."
+  echo ""
+  exit 1
+fi

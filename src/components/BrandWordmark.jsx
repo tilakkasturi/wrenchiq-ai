@@ -66,8 +66,8 @@ export default function BrandWordmark({ size = "bar" }) {
         <div style={{ width: 38, height: 38, borderRadius: 10, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Wrench size={19} color="#fff" style={{ transform: "rotate(-45deg)" }} />
         </div>
-        <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.8, color: "#fff" }}>
-          WrenchIQ<span style={{ color: COLORS.accent }}>.ai</span>
+        <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.8, color: "#111827" }}>
+          WrenchIQ<span style={{ color: COLORS.gold || COLORS.accent }}>.ai</span>
         </span>
       </div>
     );

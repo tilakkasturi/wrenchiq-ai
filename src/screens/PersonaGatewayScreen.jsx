@@ -324,14 +324,29 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     }}>
 
+      {/* ── Central bordered card ── */}
+      <div style={{
+        background: "#fff",
+        border: "1.5px solid #E5E7EB",
+        borderRadius: 22,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+        padding: "40px 36px 32px",
+        width: "100%",
+        maxWidth: 540,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        marginBottom: 16,
+      }}>
+
       {/* ── Wordmark ── */}
       <div style={{ marginBottom: 6 }}>
         <BrandWordmark size="xl" />
       </div>
-      <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 10, textAlign: "center", maxWidth: 540 }}>
+      <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 12, textAlign: "center", maxWidth: 420 }}>
         AI intelligence that works alongside your shop management system.
       </div>
-      <div style={{ marginBottom: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+      <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 6,
           background: "#fff", border: "1.5px solid #22C55E",
@@ -660,7 +675,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
           </div>
 
           {/* Switch to OEM link */}
-          <div style={{ marginTop: 24, textAlign: "center" }}>
+          <div style={{ marginTop: 20, textAlign: "center" }}>
             <button
               onClick={() => setActiveTab("OEM")}
               style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}
@@ -670,6 +685,9 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
           </div>
         </>
       )}
+
+      {/* ── close central card ── */}
+      </div>
 
       {/* ══════════════════════════════════════════════════════
           API TAB
