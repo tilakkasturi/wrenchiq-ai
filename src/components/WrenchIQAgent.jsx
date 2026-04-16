@@ -7,6 +7,8 @@ import { repairOrders, customers, vehicles, getCustomer, getVehicle } from "../d
 import { useRecommendations } from "../context/RecommendationsContext";
 import RecommendationCard from "./RecommendationCard";
 
+const API_BASE_AGENT = import.meta.env.VITE_API_BASE || "";
+
 // ── Per-screen agent content ───────────────────────────────
 
 const SCREEN_CONTEXT = {
@@ -267,6 +269,47 @@ const REVENUE_OPPS = [
   { id: "opp-5", customer: "David K.", vehicle: "CR-V", action: "Goodwill warranty claim", value: 450, status: "save" },
 ];
 
+// ── Retrospective snapshot + KPI drift constants ───────────
+
+const DEMO_SNAPSHOT_90D = {
+  shopId: 'shop-001', locationId: 'all', period: '90d',
+  avgRO: { overall: 419, byLocation: { 'loc-001':487,'loc-002':341,'loc-003':412,'loc-004':456 } },
+  bayUtilization: {
+    overall: 64,
+    byDay: { Mon:71, Tue:78, Wed:68, Thu:74, Fri:82, Sat:41, Sun:0 },
+    byLocation: { 'loc-001':72, 'loc-002':51, 'loc-003':64, 'loc-004':69 },
+  },
+  upsell: { opportunities:312, conversions:121, rate:38.8,
+    topMissed:['Cabin air filter','Wiper blades','Brake fluid flush'] },
+  elr: {
+    overall: 178,
+    byTech:[
+      {techId:'tech-001',techName:'James Kowalski',elr:201,roCount:89},
+      {techId:'tech-002',techName:'Mike Reeves',elr:163,roCount:94},
+      {techId:'tech-003',techName:'Carlos Mendez',elr:189,roCount:81},
+      {techId:'tech-004',techName:'Lisa Nguyen',elr:147,roCount:72},
+    ]
+  },
+  partsMargin: 48.2,
+  revenueByMonth:[
+    {month:'Jan 2026',revenue:58400},
+    {month:'Feb 2026',revenue:61200},
+    {month:'Mar 2026',revenue:63800},
+  ],
+};
+
+const LOCATION_NAMES = {
+  'loc-001': 'Palo Alto', 'loc-002': 'Sunnyvale',
+  'loc-003': 'Mountain View', 'loc-004': 'Menlo Park',
+};
+
+const DRIFT_DATA = {
+  avg_ro: { label:'Avg RO', drift:'down $22 today', suggestion:'3 ROs closed below target today', value:'$397', metric:'avg_ro' },
+  bay_utilization: { label:'Bay utilization', drift:'below target (58%)', suggestion:'Bay 4 idle 80+ min', value:'58%', metric:'bay_utilization' },
+  upsell_conversion: { label:'Upsell rate', drift:'below 40% benchmark', suggestion:'2 cabin filters declined this morning', value:'34%', metric:'upsell_conversion' },
+  elr: { label:'ELR', drift:'down $12 from target', suggestion:'2 jobs ran over on actual hours', value:'$166', metric:'elr' },
+};
+
 // ── Sub-components ─────────────────────────────────────────
 
 function SuggestionCard({ item }) {
@@ -413,9 +456,55 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
   const sessionIdRef = useRef(null);
   const chatEndRef = useRef(null);
 
+  // Retrospective / conversation mode
+  const [convMode, setConvMode] = useState(null); // null | 'retro'
+  const [retroStep, setRetroStep] = useState(null); // null | 'topic-select' | 'revenue' | 'utilization' | 'upsell' | 'qa' | 'confirm'
+  const [pendingGoals, setPendingGoals] = useState([]);
+  const [snapshot90d, setSnapshot90d] = useState(null);
+
+  // Post-retro state
+  const [watchedKPIs, setWatchedKPIs] = useState([]);
+  const [opportunitiesShown, setOpportunitiesShown] = useState(false);
+  const [expandedOpp, setExpandedOpp] = useState(null);
+
+  // Tribal notes (for Shop Rules section and chat creation)
+  const [tribalNotes, setTribalNotes] = useState([]);
+  const [tribalNotesLoaded, setTribalNotesLoaded] = useState(false);
+  const [awaitingNoteExpiry, setAwaitingNoteExpiry] = useState(null);
+
+  // Drift alerts dismissal
+  const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
+
+  // Shop Rules expand/collapse
+  const [shopRulesExpanded, setShopRulesExpanded] = useState(false);
+
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Listen for retro mode trigger from Dashboard CTA
+  useEffect(() => {
+    const handler = () => openRetroMode();
+    window.addEventListener('wrenchiq:open-retro', handler);
+    return () => window.removeEventListener('wrenchiq:open-retro', handler);
+  }, []);
+
+  // Fetch snapshot when entering retro mode
+  useEffect(() => {
+    if (convMode !== 'retro' || snapshot90d) return;
+    fetch(`${API_BASE_AGENT}/api/snapshot/90d/shop-001`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setSnapshot90d(data && data.avgRO ? data : DEMO_SNAPSHOT_90D))
+      .catch(() => setSnapshot90d(DEMO_SNAPSHOT_90D));
+  }, [convMode]);
+
+  // Fetch tribal notes on mount (for Shop Rules section)
+  useEffect(() => {
+    fetch(`${API_BASE_AGENT}/api/tribal-notes/shop-001`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { setTribalNotes(Array.isArray(data) ? data : []); setTribalNotesLoaded(true); })
+      .catch(() => setTribalNotesLoaded(true));
   }, []);
 
   // Recommendations from context (null = provider not mounted)
@@ -468,24 +557,540 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // ── Snapshot helper ─────────────────────────────────────────
+  const snap = snapshot90d || DEMO_SNAPSHOT_90D;
+
+  // ── Retro mode helpers ──────────────────────────────────────
+
+  function openRetroMode() {
+    setConvMode('retro');
+    setRetroStep('topic-select');
+    setActiveTab('aiSuggest');
+    setMessages([{
+      role: 'assistant',
+      content: '__retro_intro__',
+      id: `retro-${Date.now()}`,
+    }]);
+  }
+
+  function retroIntroContent() {
+    return (
+      <div>
+        <div style={{fontWeight:700, fontSize:14, marginBottom:8}}>
+          Hey — I've reviewed Peninsula Precision's last 3 months across all 4 locations.
+        </div>
+        <div style={{fontSize:13, color:'#475569', marginBottom:12}}>
+          What do you want to dig into first?
+        </div>
+        <div style={{display:'flex', flexDirection:'column', gap:6}}>
+          {['Revenue', 'Bay Utilization', 'Upsell Performance'].map(topic => (
+            <button key={topic} onClick={() => handleRetroTopic(topic.toLowerCase().replace(' ','-'))}
+              style={{background:'#0D3B45', color:'#fff', border:'none', borderRadius:6,
+                padding:'8px 14px', fontSize:13, fontWeight:600, cursor:'pointer', textAlign:'left'}}>
+              {topic} →
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function revenueModuleContent() {
+    const s = snap;
+    const locs = s.avgRO?.byLocation || {};
+    const locEntries = Object.entries(locs).sort((a,b) => b[1]-a[1]);
+    return (
+      <div>
+        <div style={{fontWeight:700, fontSize:14, marginBottom:10}}>Revenue — Last 90 Days</div>
+        <div style={{background:'#F8FAFC', borderRadius:6, padding:10, marginBottom:10}}>
+          {locEntries.map(([id, val]) => (
+            <div key={id} style={{display:'flex', justifyContent:'space-between', padding:'4px 0',
+              borderBottom:'1px solid #E2E8F0', fontSize:13}}>
+              <span>{LOCATION_NAMES[id] || id}</span>
+              <span style={{fontWeight:700, color: val >= 450 ? '#059669' : val >= 400 ? '#D97706' : '#DC2626'}}>
+                ${Math.round(val)} avg RO
+              </span>
+            </div>
+          ))}
+          <div style={{display:'flex', justifyContent:'space-between', padding:'6px 0', fontSize:13, fontWeight:700}}>
+            <span>Group Average</span><span>${Math.round(s.avgRO?.overall || 419)}</span>
+          </div>
+          <div style={{fontSize:12, color:'#6B7280', marginTop:4}}>
+            Industry benchmark: $520 avg RO
+          </div>
+        </div>
+        {s.revenueByMonth?.length > 0 && (
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:12, fontWeight:600, color:'#6B7280', marginBottom:4}}>3-Month Trend</div>
+            <div style={{display:'flex', gap:4}}>
+              {s.revenueByMonth.map(m => (
+                <div key={m.month} style={{flex:1, textAlign:'center', background:'#EFF6FF', borderRadius:4, padding:'4px 2px'}}>
+                  <div style={{fontSize:10, color:'#6B7280'}}>{m.month.split(' ')[0]}</div>
+                  <div style={{fontSize:12, fontWeight:700}}>${(m.revenue/1000).toFixed(0)}k</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <div style={{fontSize:13, color:'#475569', marginBottom:8}}>
+          To set a revenue target, type something like:<br/>
+          <em>"I want to hit $480 by July"</em>
+        </div>
+      </div>
+    );
+  }
+
+  function utilizationModuleContent() {
+    const s = snap;
+    const util = s.bayUtilization || {};
+    const locs = util.byLocation || {};
+    const byDay = util.byDay || {};
+    const lowestDay = Object.entries(byDay).sort((a,b)=>a[1]-b[1])[0];
+    const lowestLoc = Object.entries(locs).sort((a,b)=>a[1]-b[1])[0];
+    const gapRevenue = lowestLoc ? Math.round((70 - lowestLoc[1]) * (snap.avgRO?.overall||419) * 3 / 10 * 5) : 0;
+    return (
+      <div>
+        <div style={{fontWeight:700, fontSize:14, marginBottom:10}}>Bay Utilization — Last 90 Days</div>
+        <div style={{background:'#F8FAFC', borderRadius:6, padding:10, marginBottom:10}}>
+          <div style={{display:'flex', justifyContent:'space-between', marginBottom:8}}>
+            <span style={{fontSize:13}}>Overall utilization</span>
+            <span style={{fontWeight:700, fontSize:14}}>{util.overall || 64}%</span>
+          </div>
+          {Object.entries(locs).sort((a,b)=>b[1]-a[1]).map(([id, val]) => (
+            <div key={id} style={{display:'flex', justifyContent:'space-between', padding:'3px 0',
+              borderTop:'1px solid #E2E8F0', fontSize:13}}>
+              <span>{LOCATION_NAMES[id] || id}</span>
+              <span style={{fontWeight:600, color: val>=70?'#059669':val>=60?'#D97706':'#DC2626'}}>{val}%</span>
+            </div>
+          ))}
+        </div>
+        {lowestDay && <div style={{fontSize:13, color:'#475569', marginBottom:6}}>
+          Lowest day: <strong>{lowestDay[0]}s at {lowestDay[1]}%</strong>
+        </div>}
+        {lowestLoc && <div style={{background:'#FFF7ED', borderRadius:6, padding:8, marginBottom:10, fontSize:13}}>
+          <strong>{LOCATION_NAMES[lowestLoc[0]]}</strong> running at {lowestLoc[1]}% — ~${gapRevenue.toLocaleString()}/month unrealized
+        </div>}
+        <div style={{fontSize:13, color:'#475569'}}>
+          To set a target: <em>"I want 70% utilization at Sunnyvale"</em>
+        </div>
+      </div>
+    );
+  }
+
+  function upsellModuleContent() {
+    const s = snap;
+    const u = s.upsell || {};
+    return (
+      <div>
+        <div style={{fontWeight:700, fontSize:14, marginBottom:10}}>Upsell Performance — Last 90 Days</div>
+        <div style={{background:'#F8FAFC', borderRadius:6, padding:10, marginBottom:10}}>
+          <div style={{display:'flex', justifyContent:'space-between', padding:'4px 0', fontSize:13}}>
+            <span>Opportunities</span><span style={{fontWeight:700}}>{u.opportunities || 312}</span>
+          </div>
+          <div style={{display:'flex', justifyContent:'space-between', padding:'4px 0', fontSize:13}}>
+            <span>Converted</span><span style={{fontWeight:700, color:'#059669'}}>{u.conversions || 121}</span>
+          </div>
+          <div style={{display:'flex', justifyContent:'space-between', padding:'4px 0', fontSize:13, borderTop:'1px solid #E2E8F0'}}>
+            <span>Conversion rate</span>
+            <span style={{fontWeight:700, color: (u.rate||38.8)>=40?'#059669':'#DC2626'}}>{(u.rate||38.8).toFixed(1)}%</span>
+          </div>
+          <div style={{fontSize:12, color:'#6B7280', marginTop:4}}>Industry average: ~40%</div>
+        </div>
+        {u.topMissed?.length > 0 && (
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:12, fontWeight:600, color:'#6B7280', marginBottom:4}}>Top missed categories</div>
+            {u.topMissed.map(m => (
+              <div key={m} style={{fontSize:13, padding:'3px 0', color:'#DC2626'}}>• {m}</div>
+            ))}
+          </div>
+        )}
+        <div style={{fontSize:13, color:'#475569'}}>
+          To set a target: <em>"I want 50% conversion rate"</em>
+        </div>
+      </div>
+    );
+  }
+
+  function goalConfirmContent() {
+    return (
+      <div>
+        <div style={{fontWeight:700, fontSize:14, marginBottom:10}}>Your Goals for Q3</div>
+        {pendingGoals.length === 0 ? (
+          <div style={{fontSize:13, color:'#6B7280'}}>No goals set yet. Go back and set at least one.</div>
+        ) : (
+          <>
+            {pendingGoals.map((g, i) => (
+              <div key={i} style={{background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:6,
+                padding:'8px 10px', marginBottom:6, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                <div>
+                  <div style={{fontSize:12, fontWeight:700, color:'#15803D'}}>{g.metric.replace(/_/g,' ').toUpperCase()}</div>
+                  <div style={{fontSize:13}}>{g.locationId === 'all' ? 'All locations' : LOCATION_NAMES[g.locationId] || g.locationId}: target <strong>{typeof g.target === 'number' && g.metric === 'avg_ro' ? `$${g.target}` : `${g.target}${g.metric === 'bay_utilization' || g.metric === 'upsell_conversion' ? '%' : ''}`}</strong> by {g.targetDate}</div>
+                </div>
+                <button onClick={() => setPendingGoals(prev => prev.filter((_,j)=>j!==i))}
+                  style={{background:'none', border:'none', color:'#DC2626', cursor:'pointer', fontSize:16}}>✕</button>
+              </div>
+            ))}
+            <button onClick={saveGoals}
+              style={{background:'#0D3B45', color:'#fff', border:'none', borderRadius:8,
+                padding:'10px 16px', fontSize:14, fontWeight:700, cursor:'pointer', width:'100%', marginTop:8}}>
+              Lock these in →
+            </button>
+          </>
+        )}
+        <button onClick={() => setRetroStep('topic-select')}
+          style={{background:'none', border:'none', color:'#6B7280', fontSize:13, cursor:'pointer', marginTop:8}}>
+          ← Back to topics
+        </button>
+      </div>
+    );
+  }
+
+  async function saveGoals() {
+    for (const goal of pendingGoals) {
+      try {
+        await fetch(`${API_BASE_AGENT}/api/shop-goals`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ ...goal, shopId: 'shop-001', createdAt: new Date().toISOString() }),
+        });
+      } catch(e) { /* continue */ }
+    }
+    setConvMode(null);
+    setRetroStep(null);
+    showOpportunities();
+  }
+
+  function showOpportunities() {
+    setOpportunitiesShown(true);
+    const oppMessage = {
+      role: 'assistant',
+      content: '__opportunities__',
+      id: `opp-${Date.now()}`,
+    };
+    setMessages(prev => [...prev, oppMessage]);
+  }
+
+  function opportunitiesContent() {
+    const s = snap;
+    const opps = [
+      {
+        title: `Raise ${LOCATION_NAMES['loc-002']} avg RO`,
+        current: `$${s.avgRO?.byLocation?.['loc-002'] || 341}`,
+        target: '$400',
+        action: 'Add cabin filter + wiper bundle to all oil changes',
+        impact: `~$${Math.round(((400-(s.avgRO?.byLocation?.['loc-002']||341)) * 270 / 12) / 100)*100}/month`,
+      },
+      {
+        title: 'Fill Monday gaps at Sunnyvale',
+        current: `${s.bayUtilization?.byDay?.Mon || 71}% Mon utilization`,
+        target: '80%',
+        action: 'SMS reminder to regulars for Monday morning slots',
+        impact: '~2.8 extra ROs/week = ~$950/week',
+      },
+      {
+        title: `Lift upsell rate`,
+        current: `${(s.upsell?.rate||38.8).toFixed(1)}% conversion`,
+        target: '50%',
+        action: '"Did you know?" card on advisor pre-close checklist',
+        impact: `~$${Math.round((50 - (s.upsell?.rate||38.8)) * (s.upsell?.opportunities||312) * (s.avgRO?.overall||419) * 0.12 / 100 / 12)*100}/month`,
+      },
+    ];
+    return (
+      <div>
+        <div style={{fontWeight:700, fontSize:14, marginBottom:10}}>Your Top 3 Opportunities</div>
+        {opps.map((opp, i) => (
+          <div key={i} style={{background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:8,
+            padding:10, marginBottom:8}}>
+            <div style={{fontWeight:700, fontSize:13, marginBottom:4}}>{opp.title}</div>
+            <div style={{fontSize:12, color:'#6B7280', marginBottom:4}}>
+              {opp.current} → {opp.target}
+            </div>
+            {expandedOpp === i && (
+              <div style={{fontSize:12, color:'#475569', margin:'6px 0', padding:'6px 8px',
+                background:'#EFF6FF', borderRadius:4}}>
+                <strong>Action:</strong> {opp.action}
+              </div>
+            )}
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:6}}>
+              <span style={{fontSize:12, fontWeight:700, color:'#059669'}}>{opp.impact}</span>
+              <button onClick={() => setExpandedOpp(expandedOpp === i ? null : i)}
+                style={{fontSize:11, background:'#EFF6FF', color:'#2563EB', border:'none',
+                  borderRadius:4, padding:'3px 8px', cursor:'pointer'}}>
+                {expandedOpp === i ? 'Less' : 'Tell me more'}
+              </button>
+            </div>
+          </div>
+        ))}
+        <button onClick={showKPISelection}
+          style={{background:'#0D3B45', color:'#fff', border:'none', borderRadius:8,
+            padding:'8px 14px', fontSize:13, fontWeight:600, cursor:'pointer', width:'100%', marginTop:4}}>
+          Set up daily monitoring →
+        </button>
+      </div>
+    );
+  }
+
+  function showKPISelection() {
+    setMessages(prev => [...prev, { role:'assistant', content:'__kpi_select__', id:`kpi-sel-${Date.now()}` }]);
+  }
+
+  function kpiSelectContent() {
+    const recommended = [
+      { metric:'avg_ro', label:'Daily avg RO', value:`$${Math.round(snap.avgRO?.overall||419)}` },
+      { metric:'bay_utilization', label:'Bay utilization', value:`${snap.bayUtilization?.overall||64}%` },
+      { metric:'upsell_conversion', label:'Upsell conversion', value:`${(snap.upsell?.rate||38.8).toFixed(1)}%` },
+    ];
+    return (
+      <div>
+        <div style={{fontWeight:700, fontSize:14, marginBottom:8}}>What should I watch daily?</div>
+        <div style={{fontSize:13, color:'#475569', marginBottom:10}}>
+          Based on your goals, I recommend:
+        </div>
+        {recommended.map(kpi => {
+          const selected = watchedKPIs.includes(kpi.metric);
+          return (
+            <div key={kpi.metric}
+              onClick={() => setWatchedKPIs(prev =>
+                selected ? prev.filter(k=>k!==kpi.metric) : [...prev, kpi.metric]
+              )}
+              style={{display:'flex', justifyContent:'space-between', alignItems:'center',
+                background: selected ? '#ECFDF5' : '#F8FAFC',
+                border: `1px solid ${selected ? '#BBF7D0' : '#E2E8F0'}`,
+                borderRadius:6, padding:'8px 10px', marginBottom:6, cursor:'pointer'}}>
+              <div>
+                <div style={{fontSize:13, fontWeight:600}}>{kpi.label}</div>
+                <div style={{fontSize:12, color:'#6B7280'}}>Current: {kpi.value}</div>
+              </div>
+              <div style={{fontSize:18}}>{selected ? '✅' : '⬜'}</div>
+            </div>
+          );
+        })}
+        <button onClick={confirmKPIs}
+          disabled={watchedKPIs.length === 0}
+          style={{background: watchedKPIs.length > 0 ? '#0D3B45' : '#9CA3AF', color:'#fff',
+            border:'none', borderRadius:8, padding:'8px 14px', fontSize:13, fontWeight:600,
+            cursor: watchedKPIs.length > 0 ? 'pointer' : 'default', width:'100%', marginTop:8}}>
+          Start watching {watchedKPIs.length > 0 ? `(${watchedKPIs.length} KPIs)` : ''} →
+        </button>
+      </div>
+    );
+  }
+
+  function confirmKPIs() {
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      content: '__kpi_confirmed__',
+      id: `kpi-conf-${Date.now()}`,
+    }]);
+  }
+
+  function handleRetroTopic(topic) {
+    setRetroStep(topic === 'bay-utilization' ? 'utilization' : topic);
+    const content = topic === 'revenue' ? '__revenue__'
+      : topic === 'bay-utilization' ? '__utilization__'
+      : topic === 'upsell-performance' ? '__upsell__' : '__qa__';
+    setMessages(prev => [...prev, { role:'assistant', content, id:`retro-topic-${Date.now()}` }]);
+  }
+
+  function parseGoalFromMessage(text, currentStep) {
+    const lower = text.toLowerCase();
+    const dollarMatch = lower.match(/\$(\d+)/);
+    const percentMatch = lower.match(/(\d+)\s*%/);
+    const months = {jan:'2026-01-31',feb:'2026-02-28',mar:'2026-03-31',apr:'2026-04-30',
+      may:'2026-05-31',jun:'2026-06-30',jul:'2026-07-31',aug:'2026-08-31',
+      sep:'2026-09-30',oct:'2026-10-31',nov:'2026-11-30',dec:'2026-12-31'};
+    let targetDate = '2026-07-31';
+    for (const [k,v] of Object.entries(months)) {
+      if (lower.includes(k)) { targetDate = v; break; }
+    }
+    let locationId = 'all';
+    if (lower.includes('sunnyvale') || lower.includes('loc-002')) locationId = 'loc-002';
+    else if (lower.includes('mountain view') || lower.includes('loc-003')) locationId = 'loc-003';
+    else if (lower.includes('menlo') || lower.includes('loc-004')) locationId = 'loc-004';
+    else if (lower.includes('palo alto') || lower.includes('loc-001')) locationId = 'loc-001';
+
+    if (currentStep === 'revenue' && dollarMatch) {
+      return { metric:'avg_ro', target:parseInt(dollarMatch[1]), baseline:Math.round(snap.avgRO?.overall||419), locationId, targetDate };
+    }
+    if (currentStep === 'utilization' && percentMatch) {
+      return { metric:'bay_utilization', target:parseInt(percentMatch[1]), baseline:snap.bayUtilization?.overall||64, locationId, targetDate };
+    }
+    if (currentStep === 'upsell' && percentMatch) {
+      return { metric:'upsell_conversion', target:parseInt(percentMatch[1]), baseline:Math.round(snap.upsell?.rate||38.8), locationId:'all', targetDate };
+    }
+    return null;
+  }
+
+  // ── renderMessageContent ────────────────────────────────────
+
+  function renderMessageContent(msg) {
+    if (msg.role === 'user') return <div style={{fontSize:13}}>{msg.content || msg.text}</div>;
+    const c = msg.content;
+    if (c === '__retro_intro__') return retroIntroContent();
+    if (c === '__revenue__') return revenueModuleContent();
+    if (c === '__utilization__') return utilizationModuleContent();
+    if (c === '__upsell__') return upsellModuleContent();
+    if (c === '__confirm__') return goalConfirmContent();
+    if (c === '__opportunities__') return opportunitiesContent();
+    if (c === '__kpi_select__') return kpiSelectContent();
+    if (c === '__kpi_confirmed__') return (
+      <div>
+        <div style={{fontWeight:700, fontSize:14, marginBottom:6}}>
+          Watching {watchedKPIs.length} KPIs daily
+        </div>
+        <div style={{fontSize:13, color:'#475569'}}>
+          I'll flag drift in the Live Feed when any metric falls below target. Check "What I'm watching today" below.
+        </div>
+      </div>
+    );
+    // Normal text content (legacy agent messages use msg.text)
+    const textContent = c !== undefined ? c : (msg.text || '');
+    return <div style={{fontSize:13, whiteSpace:'pre-wrap'}}>{textContent}</div>;
+  }
+
+  // ── handleSend ──────────────────────────────────────────────
+
   const handleSend = async () => {
-    const text = typedInput.trim();
-    if (!text || isStreaming) return;
+    const trimmed = typedInput.trim();
+    if (!trimmed || isStreaming) return;
     setTypedInput("");
     setActiveTab("aiSuggest");
 
     const userMsgId = `u-${Date.now()}`;
-    const agentMsgId = `a-${Date.now()}`;
 
+    // Add user message (using content field for retro/tribal flow, text for legacy streaming)
     setMessages(prev => [
       ...prev,
-      { role: "user", text, id: userMsgId },
-      { role: "agent", text: "", id: agentMsgId },
+      { role: "user", content: trimmed, text: trimmed, id: userMsgId },
+    ]);
+
+    // ── TRIBAL NOTE CREATION ────────────────────────────────
+    if (awaitingNoteExpiry !== null) {
+      const lower = trimmed.toLowerCase();
+      let expiresAt = null;
+      if (!lower.includes('ongoing') && !lower.includes('no expiry') && !lower.includes('forever')) {
+        const d = new Date(trimmed);
+        if (!isNaN(d.getTime())) {
+          expiresAt = d.toISOString();
+        } else {
+          const months = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+          for(const [k,v] of Object.entries(months)) {
+            if(lower.includes(k)) {
+              const year = new Date().getFullYear();
+              expiresAt = new Date(year, v-1, 28).toISOString();
+              break;
+            }
+          }
+        }
+      }
+      const noteText = awaitingNoteExpiry;
+      setAwaitingNoteExpiry(null);
+      fetch(`${API_BASE_AGENT}/api/tribal-notes`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          shopId:'shop-001', locationId:'all',
+          note: noteText, active:true,
+          expiresAt, triggerType:'any_ro',
+          createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+        }),
+      }).then(r => r.ok ? r.json() : null).then(created => {
+        if (created) {
+          setTribalNotes(prev => [...prev, created]);
+          const expMsg = expiresAt
+            ? `Active until ${new Date(expiresAt).toLocaleDateString()}`
+            : 'Active ongoing (no expiry)';
+          setMessages(prev => [...prev, {
+            role:'assistant',
+            content: `Added to Shop Rules. ${expMsg}. I'll remind advisors whenever this applies.`,
+            id: `note-saved-${Date.now()}`,
+          }]);
+        }
+      }).catch(() => {
+        setMessages(prev => [...prev, {
+          role:'assistant',
+          content:'Rule saved locally. It will sync when the server is available.',
+          id: `note-err-${Date.now()}`,
+        }]);
+      });
+      return;
+    }
+
+    // ── DETECT TRIBAL NOTE INTENT ───────────────────────────
+    const notePatterns = [/^add\s+(?:a\s+)?note:\s*(.+)/i, /^remember:\s*(.+)/i, /^note:\s*(.+)/i, /^add\s+rule:\s*(.+)/i];
+    for (const pattern of notePatterns) {
+      const m = trimmed.match(pattern);
+      if (m) {
+        setAwaitingNoteExpiry(m[1].trim());
+        setMessages(prev => [...prev, {
+          role:'assistant',
+          content:`Got it — "${m[1].trim()}". When should this rule expire? Type a date (e.g. "April 30") or say "ongoing".`,
+          id: `note-ask-${Date.now()}`,
+        }]);
+        return;
+      }
+    }
+
+    // ── RETRO MODE ──────────────────────────────────────────
+    if (convMode === 'retro') {
+      const lower = trimmed.toLowerCase();
+
+      if (retroStep === 'revenue' || retroStep === 'utilization' || retroStep === 'upsell') {
+        const goal = parseGoalFromMessage(trimmed, retroStep);
+        if (goal) {
+          setPendingGoals(prev => {
+            const filtered = prev.filter(g => g.metric !== goal.metric);
+            return [...filtered, goal];
+          });
+          const metricLabels = {avg_ro:'average RO',bay_utilization:'bay utilization',upsell_conversion:'upsell conversion'};
+          const targetStr = goal.metric === 'avg_ro' ? `$${goal.target}` : `${goal.target}%`;
+          setMessages(prev => [...prev, {
+            role:'assistant',
+            content:`Done. Goal set: ${metricLabels[goal.metric] || goal.metric} → ${targetStr} by ${new Date(goal.targetDate).toLocaleDateString('en-US',{month:'long',day:'numeric'})}. Want to review utilization or upsell next, or confirm your goals?`,
+            id: `goal-set-${Date.now()}`,
+          }]);
+          return;
+        }
+      }
+
+      // Navigation keywords
+      if (lower.includes('revenue')) { handleRetroTopic('revenue'); return; }
+      if (lower.includes('utilization') || lower.includes('bay')) { handleRetroTopic('bay-utilization'); return; }
+      if (lower.includes('upsell') || lower.includes('conversion')) { handleRetroTopic('upsell-performance'); return; }
+      if (lower.includes('confirm') || lower.includes('goals') || lower.includes('lock') || lower.includes('done')) {
+        setRetroStep('confirm');
+        setMessages(prev => [...prev, {role:'assistant', content:'__confirm__', id:`confirm-${Date.now()}`}]);
+        return;
+      }
+
+      // Free-text Q&A (AE-955) — keyword matching against snapshot
+      const s = snap;
+      let answer = null;
+      if (lower.includes('avg ro') || lower.includes('average ro') || lower.includes('ticket')) {
+        answer = `Group avg RO: $${Math.round(s.avgRO?.overall||419)}. Best: Palo Alto at $${s.avgRO?.byLocation?.['loc-001']||487}. Lowest: Sunnyvale at $${s.avgRO?.byLocation?.['loc-002']||341}. Industry benchmark: $520.`;
+      } else if (lower.includes('elr') || lower.includes('labor rate') || lower.includes('effective')) {
+        answer = `Overall ELR: $${s.elr?.overall||178}/hr. Best tech: ${s.elr?.byTech?.[0]?.techName||'James K.'} at $${s.elr?.byTech?.[0]?.elr||201}/hr. Posted rate: $195.`;
+      } else if (lower.includes('parts') || lower.includes('margin')) {
+        answer = `Parts margin: ${s.partsMargin||48.2}%. Your target is 53%. BMW/Audi jobs are pulling it down — higher OEM parts cost.`;
+      } else if (lower.includes('sunnyvale') || lower.includes('loc-002')) {
+        answer = `Sunnyvale: avg RO $${s.avgRO?.byLocation?.['loc-002']||341}, utilization ${s.bayUtilization?.byLocation?.['loc-002']||51}%. Biggest opportunity in the group.`;
+      } else if (lower.includes('palo alto') || lower.includes('loc-001')) {
+        answer = `Palo Alto: avg RO $${s.avgRO?.byLocation?.['loc-001']||487} — highest in the group. Utilization ${s.bayUtilization?.byLocation?.['loc-001']||72}%.`;
+      } else {
+        answer = `I can answer questions about revenue, bay utilization, upsell performance, ELR, or specific locations. Or type "confirm" to review the goals you've set.`;
+      }
+      setMessages(prev => [...prev, {role:'assistant', content: answer, id:`qa-${Date.now()}`}]);
+      return;
+    }
+
+    // ── NORMAL CHAT (streaming via agent API) ───────────────
+    const agentMsgId = `a-${Date.now()}`;
+    setMessages(prev => [
+      ...prev,
+      { role: "agent", content: "", text: "", id: agentMsgId },
     ]);
     setIsStreaming(true);
 
     try {
-      // Create session once per panel lifecycle
       if (!sessionIdRef.current) {
         const r = await fetch("/api/agent/sessions", {
           method: "POST",
@@ -496,11 +1101,10 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
         sessionIdRef.current = sessionId;
       }
 
-      // Stream the response
       const res = await fetch(`/api/agent/sessions/${sessionIdRef.current}/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: trimmed }),
       });
 
       const reader = res.body.getReader();
@@ -525,20 +1129,20 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
               .join("");
             if (chunk) {
               setMessages(prev => prev.map(m =>
-                m.id === agentMsgId ? { ...m, text: m.text + chunk } : m
+                m.id === agentMsgId ? { ...m, text: m.text + chunk, content: (m.content || '') + chunk } : m
               ));
             }
           }
           if (data.type === "error") {
             setMessages(prev => prev.map(m =>
-              m.id === agentMsgId ? { ...m, text: "Error: " + data.error } : m
+              m.id === agentMsgId ? { ...m, text: "Error: " + data.error, content: "Error: " + data.error } : m
             ));
           }
         }
       }
     } catch (err) {
       setMessages(prev => prev.map(m =>
-        m.id === agentMsgId ? { ...m, text: "Connection error: " + err.message } : m
+        m.id === agentMsgId ? { ...m, text: "Connection error: " + err.message, content: "Connection error: " + err.message } : m
       ));
     } finally {
       setIsStreaming(false);
@@ -682,20 +1286,20 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                     alignItems: msg.role === "user" ? "flex-end" : "flex-start",
                   }}>
                     <div style={{
-                      maxWidth: "88%",
-                      background: msg.role === "user" ? COLORS.gold : COLORS.navyMid,
-                      color: msg.role === "user" ? "#1A1A1A" : COLORS.intelText,
+                      maxWidth: "94%",
+                      background: msg.role === "user" ? COLORS.gold : "#FFFFFF",
+                      color: msg.role === "user" ? "#1A1A1A" : "#1E293B",
                       borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
                       padding: "8px 11px",
                       fontSize: 11.5,
                       lineHeight: 1.55,
-                      whiteSpace: "pre-wrap",
-                      border: msg.role === "user" ? "none" : `1px solid ${COLORS.navyBorder}`,
+                      border: msg.role === "user" ? "none" : `1px solid #E2E8F0`,
+                      boxShadow: msg.role === "user" ? "none" : "0 1px 3px rgba(0,0,0,0.08)",
                     }}>
-                      {msg.text || (msg.role === "agent" && isStreaming
+                      {msg.role === "agent" && !msg.content && !msg.text && isStreaming
                         ? <span style={{ opacity: 0.5 }}>Thinking…</span>
-                        : null
-                      )}
+                        : renderMessageContent(msg)
+                      }
                     </div>
                   </div>
                 ))}
@@ -752,9 +1356,95 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
               <div style={{ width: 6, height: 6, borderRadius: 3, background: "#22C55E" }} />
               <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.intelMuted, letterSpacing: 0.5, textTransform: "uppercase" }}>Live Feed</span>
             </div>
+
+            {/* Drift alerts for watched KPIs — AE-959 */}
+            {watchedKPIs.map(metric => {
+              if (dismissedAlerts.has(metric)) return null;
+              const d = DRIFT_DATA[metric];
+              if (!d) return null;
+              return (
+                <div key={`drift-${metric}`} style={{
+                  display:'flex', alignItems:'flex-start', gap:8, padding:'8px 9px',
+                  marginBottom:6, background:'#FEF2F2', borderRadius:8, borderLeft:'3px solid #EF4444',
+                }}>
+                  <span style={{fontSize:14, flexShrink:0}}>📉</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12, fontWeight:600, color:'#1E293B'}}>{d.label} drifting</div>
+                    <div style={{fontSize:12, color:'#6B7280'}}>{d.suggestion}</div>
+                    <div style={{fontSize:11, color:'#9CA3AF'}}>Just now · {d.value}</div>
+                  </div>
+                  <button onClick={() => setDismissedAlerts(prev => new Set([...prev, metric]))}
+                    style={{background:'none', border:'none', color:'#9CA3AF', cursor:'pointer',
+                      fontSize:14, padding:0, flexShrink:0}}>✕</button>
+                </div>
+              );
+            })}
+
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {FEED_ITEMS.map((item) => <FeedItem key={item.id} item={item} />)}
             </div>
+
+            {/* "What I'm watching today" — AE-957/958 */}
+            {watchedKPIs.length > 0 && (
+              <div style={{borderTop:'1px solid #E2E8F0', paddingTop:12, marginTop:8}}>
+                <div style={{fontSize:11, fontWeight:700, color:COLORS.intelMuted, letterSpacing:'0.08em',
+                  textTransform:'uppercase', marginBottom:8}}>
+                  What I'm Watching Today
+                </div>
+                {watchedKPIs.map(metric => {
+                  const d = DRIFT_DATA[metric];
+                  if (!d) return null;
+                  return (
+                    <div key={metric} style={{display:'flex', justifyContent:'space-between',
+                      alignItems:'center', padding:'6px 0', borderBottom:'1px solid #2D4A52'}}>
+                      <div>
+                        <div style={{fontSize:12, fontWeight:600, color:COLORS.intelText}}>{d.label}</div>
+                        <div style={{fontSize:11, color:COLORS.intelMuted}}>{d.drift}</div>
+                      </div>
+                      <div style={{fontSize:14, fontWeight:700, color:COLORS.gold}}>{d.value}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Shop Rules — AE-963 */}
+            {tribalNotesLoaded && (() => {
+              const nowDate = new Date();
+              const activeNotes = tribalNotes.filter(n => n.active && (!n.expiresAt || new Date(n.expiresAt) > nowDate));
+              if (activeNotes.length === 0) return null;
+              const threeDays = 3 * 24 * 60 * 60 * 1000;
+              const displayed = shopRulesExpanded ? activeNotes : activeNotes.slice(0,5);
+              return (
+                <div style={{borderTop:'1px solid #2D4A52', paddingTop:12, marginTop:8}}>
+                  <div style={{fontSize:11, fontWeight:700, color:COLORS.intelMuted, letterSpacing:'0.08em',
+                    textTransform:'uppercase', marginBottom:8}}>
+                    Shop Rules ({activeNotes.length})
+                  </div>
+                  {displayed.map(note => {
+                    const expiringSoon = note.expiresAt && (new Date(note.expiresAt) - nowDate) < threeDays;
+                    return (
+                      <div key={note._id || note.note} style={{display:'flex', alignItems:'flex-start', gap:6,
+                        padding:'5px 0', borderBottom:'1px solid #1E3A42'}}>
+                        <span style={{fontSize:12, flexShrink:0}}>📌</span>
+                        <div style={{flex:1, fontSize:12, color:COLORS.intelText, lineHeight:1.3}}>{note.note}</div>
+                        {expiringSoon && (
+                          <div style={{width:7, height:7, borderRadius:'50%', background:'#F97316',
+                            flexShrink:0, marginTop:3}} title="Expiring soon" />
+                        )}
+                      </div>
+                    );
+                  })}
+                  {activeNotes.length > 5 && (
+                    <button onClick={() => setShopRulesExpanded(!shopRulesExpanded)}
+                      style={{background:'none', border:'none', color:COLORS.intelMuted, fontSize:11,
+                        cursor:'pointer', padding:'4px 0', marginTop:4}}>
+                      {shopRulesExpanded ? 'Show less' : `+${activeNotes.length - 5} more rules`}
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
           </>
         )}
 
@@ -768,7 +1458,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
             value={typedInput}
             onChange={(e) => setTypedInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder={isStreaming ? "Agent is responding…" : "Ask WrenchIQ AI anything…"}
+            placeholder={awaitingNoteExpiry ? "Type a date or say 'ongoing'…" : isStreaming ? "Agent is responding…" : "Ask WrenchIQ AI anything…"}
             disabled={isStreaming}
             style={{ flex: 1, border: "none", outline: "none", fontSize: 11, background: "transparent", color: COLORS.intelText }}
           />
