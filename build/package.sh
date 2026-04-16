@@ -8,9 +8,15 @@ mkdir -p "$BUILD_HOME" "$BUILD_HOME"/"$PROJECT"
 
 echo "Packaging $MODULE"
 
-cd $MODULE
-tar --exclude $MODULE.tar.gz -zcvf ../"$BUILD_HOME"/$MODULE.tar.gz . 
+# If a subdirectory named $MODULE exists, cd into it (monorepo layout).
+# Otherwise assume we're already running from inside the repo (Bitbucket Pipelines).
+if [ -d "$MODULE" ]; then
+  cd "$MODULE"
+  tar --exclude "$MODULE.tar.gz" -zcf "../$BUILD_HOME/$MODULE.tar.gz" .
+else
+  tar --exclude "$MODULE.tar.gz" --exclude ".git" -zcf "$BUILD_HOME/$MODULE.tar.gz" .
+fi
 
-echo "$MODULE packaged created"
+echo "$MODULE package created"
 
 
