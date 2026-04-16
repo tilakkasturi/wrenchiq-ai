@@ -6,27 +6,18 @@
  * Copy .env.example → .env.local and set your values before starting the server.
  */
 
-// ── Claude / Anthropic ────────────────────────────────────────────────────────
-export const CLAUDE_API_KEY =
-  process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY || '';
+// ── Azure OpenAI ──────────────────────────────────────────────────────────────
+export const AZURE_OPENAI_API_KEY =
+  process.env.AZURE_OPENAI_API_KEY || '';
 
-export const CLAUDE_API_URL =
-  process.env.CLAUDE_API_URL || 'https://api.anthropic.com/v1/messages';
+export const AZURE_OPENAI_API_BASE =
+  process.env.AZURE_OPENAI_API_BASE || 'https://prediillm2.openai.azure.com/openai/v1/';
 
-export const CLAUDE_API_VERSION =
-  process.env.CLAUDE_API_VERSION || '2023-06-01';
+export const AZURE_OPENAI_API_VERSION =
+  process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview';
 
-// Model used for Knowledge Graph chat (fast, low-cost)
-export const CLAUDE_MODEL_CHAT =
-  process.env.CLAUDE_MODEL_CHAT || 'claude-haiku-4-5-20251001';
-
-// Model used for Recommendations engine (same default, override for higher quality)
-export const CLAUDE_MODEL_RECOMMENDATIONS =
-  process.env.CLAUDE_MODEL_RECOMMENDATIONS || 'claude-haiku-4-5-20251001';
-
-// Model used for Managed Agents (more capable model for agentic tasks)
-export const CLAUDE_MODEL_AGENT =
-  process.env.CLAUDE_MODEL_AGENT || 'claude-sonnet-4-6';
+export const AZURE_OPENAI_MODEL =
+  process.env.AZURE_OPENAI_MODEL || 'gpt-4o-mini';
 
 // Token budgets
 export const CLAUDE_MAX_TOKENS_CHAT =
@@ -34,6 +25,12 @@ export const CLAUDE_MAX_TOKENS_CHAT =
 
 export const CLAUDE_MAX_TOKENS_RECOMMENDATIONS =
   parseInt(process.env.CLAUDE_MAX_TOKENS_RECOMMENDATIONS || '2048', 10);
+
+// Legacy aliases — kept so any remaining imports don't break
+export const CLAUDE_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+export const CLAUDE_MODEL_CHAT = AZURE_OPENAI_MODEL;
+export const CLAUDE_MODEL_RECOMMENDATIONS = AZURE_OPENAI_MODEL;
+export const CLAUDE_MODEL_AGENT = AZURE_OPENAI_MODEL;
 
 // ── MongoDB ───────────────────────────────────────────────────────────────────
 export const MONGODB_URI =

@@ -6,12 +6,10 @@
  */
 
 import {
-  CLAUDE_API_KEY,
-  CLAUDE_API_URL,
-  CLAUDE_API_VERSION,
-  CLAUDE_MODEL_RECOMMENDATIONS,
+  AZURE_OPENAI_API_KEY,
   CLAUDE_MAX_TOKENS_RECOMMENDATIONS,
 } from '../config.js';
+import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
 
 /**
  * Build the system prompt for the recommendations engine.
@@ -34,10 +32,10 @@ function buildSystemPrompt(edition) {
   return `You are a shop analytics engine for WrenchIQ.
 ${editionContext}
 
-Analyze the shop snapshot. Return a JSON array of exactly 4 recommendations (one per domain: utilization, revenue, customer_risk, anomaly).
+Analyze the shop snapshot. Return a JSON object with a single key "recommendations" containing an array of exactly 4 items (one per domain: utilization, revenue, customer_risk, anomaly).
 
 STRICT RULES:
-- Raw JSON array only — absolutely no markdown, fences, or prose
+- Valid JSON object only — absolutely no markdown, fences, or prose outside the JSON
 - Never reference customer IDs, tech IDs, or internal database identifiers in any text — use RO numbers only
 - headline: max 8 words
 - explanation: max 20 words
@@ -131,11 +129,11 @@ function parseRecommendations(text) {
   try {
     parsed = JSON.parse(cleaned);
   } catch (e) {
-    throw new Error(`Claude returned invalid JSON: ${e.message}. Raw: ${text.slice(0, 200)}`);
+    throw new Error(`LLM returned invalid JSON: ${e.message}. Raw: ${text.slice(0, 200)}`);
   }
 
   if (!Array.isArray(parsed)) {
-    throw new Error(`Claude returned non-array JSON. Got: ${typeof parsed}`);
+    throw new Error(`LLM returned non-array JSON. Got: ${typeof parsed}`);
   }
 
   // Light validation
@@ -178,58 +176,47 @@ function parseRecommendations(text) {
  * @throws                   - On API error or JSON parse failure (caller returns 503)
  */
 export async function generateRecommendations(snapshot, edition) {
-  if (!CLAUDE_API_KEY) {
-    throw new Error('ANTHROPIC_API_KEY not configured — set it in .env.local');
+  if (!AZURE_OPENAI_API_KEY) {
+    throw new Error('AZURE_OPENAI_API_KEY not configured — set it in .env.local');
   }
 
-  const systemPrompt  = buildSystemPrompt(edition);
-  const userMessage   = buildSnapshotMessage(snapshot);
+  const systemPrompt = buildSystemPrompt(edition);
+  const userMessage  = buildSnapshotMessage(snapshot);
 
-  const body = {
-    model:      CLAUDE_MODEL_RECOMMENDATIONS,
-    max_tokens: CLAUDE_MAX_TOKENS_RECOMMENDATIONS,
-    system:     systemPrompt,
-    messages:   [
-      { role: 'user',      content: userMessage },
-      { role: 'assistant', content: '[' },  // prefill to force raw JSON array, no fences
-    ],
-  };
-
-  let claudeRes;
+  let data;
   try {
-    claudeRes = await fetch(CLAUDE_API_URL, {
-      method:  'POST',
-      headers: {
-        'x-api-key':         CLAUDE_API_KEY,
-        'anthropic-version': CLAUDE_API_VERSION,
-        'content-type':      'application/json',
-      },
-      body: JSON.stringify(body),
+    data = await callAzureOpenAI({
+      system:     systemPrompt,
+      messages:   [{ role: 'user', content: userMessage }],
+      max_tokens: CLAUDE_MAX_TOKENS_RECOMMENDATIONS,
+      jsonMode:   true,
     });
   } catch (fetchErr) {
-    throw new Error(`Claude API network error: ${fetchErr.message}`);
+    throw new Error(`Azure OpenAI network error: ${fetchErr.message}`);
   }
 
-  if (!claudeRes.ok) {
-    const errBody = await claudeRes.text().catch(() => '(no body)');
-    throw new Error(`Claude API error ${claudeRes.status}: ${errBody}`);
-  }
-
-  const claudeData = await claudeRes.json();
-  const rawText    = claudeData.content?.[0]?.text || '';
-  const stopReason = claudeData.stop_reason;
+  const rawText    = getTextFromResponse(data);
+  const finishReason = data.choices?.[0]?.finish_reason;
 
   if (!rawText) {
-    throw new Error('Claude returned empty response');
+    throw new Error('Azure OpenAI returned empty response');
   }
 
-  if (stopReason === 'max_tokens') {
-    throw new Error(`Claude response truncated (max_tokens hit). Input tokens: ${claudeData.usage?.input_tokens}. Increase CLAUDE_MAX_TOKENS_RECOMMENDATIONS or reduce snapshot size.`);
+  if (finishReason === 'length') {
+    throw new Error(`Azure OpenAI response truncated (max_tokens hit). Increase CLAUDE_MAX_TOKENS_RECOMMENDATIONS or reduce snapshot size.`);
   }
 
-  // The assistant prefill started with '[', so prepend it to complete the JSON array
-  const fullText = '[' + rawText;
+  // Azure json_object mode returns a wrapper object: { "recommendations": [...] }
+  // Parse and extract the array
+  let parsed;
+  try {
+    parsed = JSON.parse(rawText);
+  } catch (e) {
+    throw new Error(`Azure OpenAI returned invalid JSON: ${e.message}. Raw: ${rawText.slice(0, 200)}`);
+  }
+
+  const arr = Array.isArray(parsed) ? parsed : (parsed.recommendations || []);
 
   // parseRecommendations throws on failure — caller catches and returns 503
-  return parseRecommendations(fullText);
+  return parseRecommendations(JSON.stringify(arr));
 }

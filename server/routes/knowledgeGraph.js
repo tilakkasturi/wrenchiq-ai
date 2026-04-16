@@ -11,12 +11,10 @@
 
 import { Router } from 'express';
 import {
-  CLAUDE_API_KEY,
-  CLAUDE_API_URL,
-  CLAUDE_API_VERSION,
-  CLAUDE_MODEL_CHAT,
+  AZURE_OPENAI_API_KEY,
   CLAUDE_MAX_TOKENS_CHAT,
 } from '../config.js';
+import { callAzureOpenAI, getTextFromResponse } from '../services/azureOpenAI.js';
 
 const router = Router();
 const RO_COLL      = 'wrenchiq_ro';
@@ -349,7 +347,7 @@ router.post('/ask', async (req, res) => {
     const { question, history = [], location, customer_name } = req.body;
     if (!question?.trim()) return res.status(400).json({ error: 'question required' });
 
-    if (!CLAUDE_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured — set it in .env.local' });
+    if (!AZURE_OPENAI_API_KEY) return res.status(500).json({ error: 'AZURE_OPENAI_API_KEY not configured — set it in .env.local' });
 
     // ── 1. Assemble context from MongoDB ─────────────────────────────────────
     const q = question.toLowerCase();
@@ -549,29 +547,19 @@ RULES:
       { role: 'user', content: question },
     ];
 
-    // ── 4. Call Claude API ────────────────────────────────────────────────────
-    const claudeRes = await fetch(CLAUDE_API_URL, {
-      method: 'POST',
-      headers: {
-        'x-api-key':         CLAUDE_API_KEY,
-        'anthropic-version': CLAUDE_API_VERSION,
-        'content-type':      'application/json',
-      },
-      body: JSON.stringify({
-        model:      CLAUDE_MODEL_CHAT,
-        max_tokens: CLAUDE_MAX_TOKENS_CHAT,
+    // ── 4. Call Azure OpenAI ──────────────────────────────────────────────────
+    let azureData;
+    try {
+      azureData = await callAzureOpenAI({
         system:     systemPrompt,
         messages,
-      }),
-    });
-
-    if (!claudeRes.ok) {
-      const errBody = await claudeRes.text();
-      return res.status(502).json({ error: `Claude API error ${claudeRes.status}: ${errBody}` });
+        max_tokens: CLAUDE_MAX_TOKENS_CHAT,
+      });
+    } catch (apiErr) {
+      return res.status(502).json({ error: apiErr.message });
     }
 
-    const claudeData = await claudeRes.json();
-    const answer = claudeData.content?.[0]?.text || '(no response)';
+    const answer = getTextFromResponse(azureData) || '(no response)';
 
     // ── 5. Suggested follow-up questions ─────────────────────────────────────
     const suggested_questions = pickSuggestedQuestions(question, topClusters);

@@ -29,11 +29,9 @@ import {
   getServiceOpportunityMatrix,
 } from './aroAnalytics.js';
 import {
-  CLAUDE_API_KEY,
-  CLAUDE_API_URL,
-  CLAUDE_API_VERSION,
-  CLAUDE_MODEL_AGENT,
+  AZURE_OPENAI_API_KEY,
 } from '../config.js';
+import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
 
 // ── Goal store (in-memory; extend to MongoDB for persistence) ─────────────────
 const _goals = new Map();
@@ -54,58 +52,79 @@ export function setGoals(shopId = 'shop-001', updates) {
   return getGoals(shopId);
 }
 
-// ── Tool definitions ──────────────────────────────────────────────────────────
+// ── Tool definitions (OpenAI format) ─────────────────────────────────────────
 const ARO_TOOLS = [
   {
-    name: 'get_shop_kpis',
-    description:
-      'Returns current shop KPIs computed from the full RO dataset: ARO for the last 7, ' +
-      '30, and 90 days, revenue totals, open RO count, and ARO trend direction. ' +
-      'Call this first to understand the performance baseline.',
-    input_schema: { type: 'object', properties: {}, required: [] },
+    type: 'function',
+    function: {
+      name: 'get_shop_kpis',
+      description:
+        'Returns current shop KPIs computed from the full RO dataset: ARO for the last 7, ' +
+        '30, and 90 days, revenue totals, open RO count, and ARO trend direction. ' +
+        'Call this first to understand the performance baseline.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
   },
   {
-    name: 'get_aro_trend',
-    description:
-      'Returns monthly ARO and revenue for the past 12 months, sorted oldest to newest. ' +
-      'Use this to identify seasonal patterns and multi-month performance trajectory.',
-    input_schema: { type: 'object', properties: {}, required: [] },
+    type: 'function',
+    function: {
+      name: 'get_aro_trend',
+      description:
+        'Returns monthly ARO and revenue for the past 12 months, sorted oldest to newest. ' +
+        'Use this to identify seasonal patterns and multi-month performance trajectory.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
   },
   {
-    name: 'get_tech_performance',
-    description:
-      'Returns per-technician ELR and efficiency metrics computed across all ROs. ' +
-      'Use this to identify techs underperforming against the shop\'s minimum ELR goal.',
-    input_schema: { type: 'object', properties: {}, required: [] },
+    type: 'function',
+    function: {
+      name: 'get_tech_performance',
+      description:
+        'Returns per-technician ELR and efficiency metrics computed across all ROs. ' +
+        'Use this to identify techs underperforming against the shop\'s minimum ELR goal.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
   },
   {
-    name: 'get_customer_patterns',
-    description:
-      'Returns repeat customer metrics: what share of customers return, top customers ' +
-      'by lifetime value, and visit frequency distribution. Use this to assess retention ' +
-      'and identify high-value at-risk customers.',
-    input_schema: { type: 'object', properties: {}, required: [] },
+    type: 'function',
+    function: {
+      name: 'get_customer_patterns',
+      description:
+        'Returns repeat customer metrics: what share of customers return, top customers ' +
+        'by lifetime value, and visit frequency distribution. Use this to assess retention ' +
+        'and identify high-value at-risk customers.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
   },
   {
-    name: 'get_vehicle_segments',
-    description:
-      'Returns ARO broken down by vehicle origin (JAPANESE, GERMAN, DOMESTIC_US, OTHER). ' +
-      'Use this to find which vehicle segments generate the highest ARO and where to focus.',
-    input_schema: { type: 'object', properties: {}, required: [] },
+    type: 'function',
+    function: {
+      name: 'get_vehicle_segments',
+      description:
+        'Returns ARO broken down by vehicle origin (JAPANESE, GERMAN, DOMESTIC_US, OTHER). ' +
+        'Use this to find which vehicle segments generate the highest ARO and where to focus.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
   },
   {
-    name: 'get_declined_services',
-    description:
-      'Returns the top declined/deferred services with revenue opportunity estimates. ' +
-      'Use this to quantify the upsell gap and identify highest-impact follow-up actions.',
-    input_schema: { type: 'object', properties: {}, required: [] },
+    type: 'function',
+    function: {
+      name: 'get_declined_services',
+      description:
+        'Returns the top declined/deferred services with revenue opportunity estimates. ' +
+        'Use this to quantify the upsell gap and identify highest-impact follow-up actions.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
   },
   {
-    name: 'get_service_opportunities',
-    description:
-      'Returns high-revenue services that are underperformed relative to vehicle mix. ' +
-      'Use this to recommend specific service campaigns that will move the ARO needle.',
-    input_schema: { type: 'object', properties: {}, required: [] },
+    type: 'function',
+    function: {
+      name: 'get_service_opportunities',
+      description:
+        'Returns high-revenue services that are underperformed relative to vehicle mix. ' +
+        'Use this to recommend specific service campaigns that will move the ARO needle.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
   },
 ];
 
@@ -299,8 +318,8 @@ Rules:
  * @returns {Promise<{ goals, analysis, data: analytics summary }>}
  */
 export async function runAROAgent(shopId = 'shop-001', db) {
-  if (!CLAUDE_API_KEY) {
-    throw new Error('Anthropic API key not configured');
+  if (!AZURE_OPENAI_API_KEY) {
+    throw new Error('AZURE_OPENAI_API_KEY not configured — set it in .env.local');
   }
 
   const goals = getGoals(shopId);
@@ -321,55 +340,40 @@ export async function runAROAgent(shopId = 'shop-001', db) {
   let finalAnalysis = null;
 
   for (let turn = 0; turn < 10; turn++) {
-    const resp = await fetch(CLAUDE_API_URL, {
-      method:  'POST',
-      headers: {
-        'Content-Type':      'application/json',
-        'x-api-key':         CLAUDE_API_KEY,
-        'anthropic-version': CLAUDE_API_VERSION,
-      },
-      body: JSON.stringify({
-        model:      CLAUDE_MODEL_AGENT,
-        max_tokens: 4096,
-        system:     buildSystemPrompt(goals),
-        tools:      ARO_TOOLS,
-        messages,
-      }),
+    const data = await callAzureOpenAI({
+      system:     buildSystemPrompt(goals),
+      messages,
+      max_tokens: 4096,
+      tools:      ARO_TOOLS,
     });
 
-    if (!resp.ok) {
-      const errText = await resp.text();
-      throw new Error(`Claude API error ${resp.status}: ${errText}`);
-    }
+    const choice       = data.choices?.[0];
+    const finishReason = choice?.finish_reason;
+    const message      = choice?.message;
 
-    const data = await resp.json();
-    messages.push({ role: 'assistant', content: data.content });
+    // Save the assistant message to history
+    messages.push({ role: 'assistant', content: message?.content ?? null, tool_calls: message?.tool_calls });
 
-    if (data.stop_reason === 'end_turn') {
-      const textBlock = data.content.find(b => b.type === 'text');
-      if (textBlock) {
-        const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          finalAnalysis = JSON.parse(jsonMatch[0]);
-        }
+    if (finishReason === 'stop') {
+      const text = message?.content || '';
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        finalAnalysis = JSON.parse(jsonMatch[0]);
       }
       break;
     }
 
-    if (data.stop_reason === 'tool_use') {
-      const toolResults = [];
-      for (const block of data.content) {
-        if (block.type === 'tool_use') {
-          const result = executeTool(block.name, analyticsData, goals);
-          console.log(`[aroAgent] Tool: ${block.name} → ${JSON.stringify(result).slice(0, 160)}`);
-          toolResults.push({
-            type:        'tool_result',
-            tool_use_id: block.id,
-            content:     JSON.stringify(result),
-          });
-        }
+    if (finishReason === 'tool_calls') {
+      for (const tc of (message?.tool_calls || [])) {
+        const toolName = tc.function?.name;
+        const result   = executeTool(toolName, analyticsData, goals);
+        console.log(`[aroAgent] Tool: ${toolName} → ${JSON.stringify(result).slice(0, 160)}`);
+        messages.push({
+          role:         'tool',
+          tool_call_id: tc.id,
+          content:      JSON.stringify(result),
+        });
       }
-      messages.push({ role: 'user', content: toolResults });
     }
   }
 
