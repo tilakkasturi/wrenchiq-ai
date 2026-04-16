@@ -2,18 +2,14 @@
  * WrenchIQ — ROAgent Routes
  *
  * POST /api/ro-agent/draft
- *   Takes an inbound lead (social DM, SMS, etc.) and uses Claude to extract
+ *   Takes an inbound lead (social DM, SMS, etc.) and uses the LLM to extract
  *   structured repair intent: symptoms, recommended services, urgency, ARO estimate.
  *   Returns a prefill payload for NewROWizard.
  */
 
 import { Router } from 'express';
-import {
-  CLAUDE_API_KEY,
-  CLAUDE_API_URL,
-  CLAUDE_API_VERSION,
-  CLAUDE_MODEL_CHAT,
-} from '../config.js';
+import { AZURE_OPENAI_API_KEY } from '../config.js';
+import { callAzureOpenAI, getTextFromResponse } from '../services/azureOpenAI.js';
 
 const router = Router();
 
@@ -43,8 +39,8 @@ router.post('/draft', async (req, res) => {
     return res.status(400).json({ error: 'message is required' });
   }
 
-  if (!CLAUDE_API_KEY) {
-    return res.status(503).json({ error: 'Anthropic API key not configured' });
+  if (!AZURE_OPENAI_API_KEY) {
+    return res.status(503).json({ error: 'AZURE_OPENAI_API_KEY not configured' });
   }
 
   const userPrompt = `Inbound lead from ${channel || 'unknown channel'}:
@@ -55,36 +51,20 @@ Message: "${message}"
 Extract the repair intent and return structured JSON.`;
 
   try {
-    const response = await fetch(CLAUDE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type':            'application/json',
-        'x-api-key':               CLAUDE_API_KEY,
-        'anthropic-version':       CLAUDE_API_VERSION,
-      },
-      body: JSON.stringify({
-        model:      CLAUDE_MODEL_CHAT,
-        max_tokens: 512,
-        system:     SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userPrompt }],
-      }),
+    const data = await callAzureOpenAI({
+      system:     SYSTEM_PROMPT,
+      messages:   [{ role: 'user', content: userPrompt }],
+      max_tokens: 512,
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('[roAgent] Claude API error:', err);
-      return res.status(502).json({ error: 'Claude API error', detail: err });
-    }
-
-    const data = await response.json();
-    const raw = data.content?.[0]?.text || '{}';
+    const raw = getTextFromResponse(data) || '{}';
 
     let draft;
     try {
       draft = JSON.parse(raw);
     } catch {
       console.error('[roAgent] JSON parse error, raw:', raw);
-      return res.status(500).json({ error: 'Failed to parse Claude response', raw });
+      return res.status(500).json({ error: 'Failed to parse LLM response', raw });
     }
 
     res.json({
@@ -95,7 +75,7 @@ Extract the repair intent and return structured JSON.`;
       draft,
     });
   } catch (err) {
-    console.error('[roAgent] fetch error:', err.message);
+    console.error('[roAgent] error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

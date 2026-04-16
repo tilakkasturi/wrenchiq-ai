@@ -10,4 +10,15 @@ set -euo pipefail
 export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
 cd "$(dirname "$0")/.."
 
+# Load .env.local — unset any conflicting shell-level vars first so
+# the project file always wins for credentials.
+if [[ -f .env.local ]]; then
+  # Read each non-comment, non-empty line and export it, overriding shell env
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ -z "${line// }" ]] && continue
+    export "$line"
+  done < .env.local
+fi
+
 node server/index.js
