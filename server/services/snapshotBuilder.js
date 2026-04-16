@@ -34,6 +34,11 @@ function normalizeCalmelRO(ro) {
     waitingSince:      ro.waitingSince || ro.dateIn || null,
     techId:            ro.techId || null,
     techName:          ro.techName || null,
+    advisorId:         ro.advisorId || null,
+    advisorName:       ro.advisorName || null,
+    locationId:        ro.locationId || null,
+    upsellFlag:        ro.upsellFlag || false,
+    upsellConverted:   ro.upsellConverted || false,
     customerId:        ro.customerId || null,
     loyaltyTier:       ro.loyaltyTier || null,
     customerVisitCount: ro.customerVisitCount || null,
@@ -204,6 +209,221 @@ function rebaseDemoClosedROs(closedROs, now) {
     const newClosedDate = new Date(sevenDaysAgo + offsetMs).toISOString();
     return { ...ro, closedDate: newClosedDate };
   });
+}
+
+// ── Helper: arithmetic mean ───────────────────────────────────────────────────
+function mean(arr) {
+  if (!arr || arr.length === 0) return 0;
+  return arr.reduce((s, v) => s + (v || 0), 0) / arr.length;
+}
+
+// ── Helper: group array by key function ──────────────────────────────────────
+function groupBy(arr, keyFn) {
+  const map = {};
+  for (const item of arr) {
+    const k = keyFn(item);
+    if (k == null) continue;
+    if (!map[k]) map[k] = [];
+    map[k].push(item);
+  }
+  return map;
+}
+
+/**
+ * Build a 90-day analytics snapshot for a shop/location.
+ *
+ * @param {string} shopId      - e.g. 'shop-001' or 'all'
+ * @param {string} locationId  - e.g. 'loc-001' or 'all'
+ * @param {object} db          - MongoDB Db instance
+ * @returns {object} snapshot
+ */
+export async function buildSnapshot90d(shopId, locationId, db) {
+  const ninety = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+  const query = {
+    status: 'closed',
+    $or: [
+      { closedDate: { $gte: ninety.toISOString() } },
+      { dateIn:     { $gte: ninety.toISOString() } },
+    ],
+  };
+  if (shopId !== 'all')                      query.shopId = shopId;
+  if (locationId && locationId !== 'all')    query.locationId = locationId;
+
+  let rawDocs = [];
+  try {
+    rawDocs = await db.collection(CAMEL_COLL).find(query).toArray();
+  } catch (err) {
+    console.warn('buildSnapshot90d: query failed:', err.message);
+  }
+
+  const ros = rawDocs.map(normalizeCalmelRO);
+
+  // ── avgRO ────────────────────────────────────────────────────────────────────
+  const byLocGroup = groupBy(ros, r => r.locationId || 'all');
+  const byLocation = {};
+  for (const [loc, group] of Object.entries(byLocGroup)) {
+    byLocation[loc] = Math.round(mean(group.map(r => r.totalRevenue)));
+  }
+  const avgRO = {
+    overall: Math.round(mean(ros.map(r => r.totalRevenue))),
+    byLocation,
+  };
+
+  // ── bayUtilization ──────────────────────────────────────────────────────────
+  const DOW_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dowCounts  = { Sun:0, Mon:0, Tue:0, Wed:0, Thu:0, Fri:0, Sat:0 };
+  const hourCounts = {};
+  const locROCounts = {};
+
+  for (const ro of ros) {
+    const dt = ro.dateIn ? new Date(ro.dateIn) : null;
+    if (dt && !isNaN(dt)) {
+      const dow  = DOW_NAMES[dt.getDay()];
+      const hour = String(dt.getHours()).padStart(2, '0');
+      dowCounts[dow]++;
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+    }
+    const loc = ro.locationId || 'all';
+    locROCounts[loc] = (locROCounts[loc] || 0) + 1;
+  }
+
+  const totalDays = 90;
+  const byDay = {};
+  for (const [dow, cnt] of Object.entries(dowCounts)) {
+    const daysOfType = Math.ceil(totalDays / 7);
+    byDay[dow] = Math.min(100, Math.round((cnt / daysOfType) * 100));
+  }
+
+  const uniqueLocs = Object.keys(locROCounts);
+  const numLocations = Math.max(uniqueLocs.length, 1);
+  const byLocUtil = {};
+  for (const [loc, cnt] of Object.entries(locROCounts)) {
+    byLocUtil[loc] = Math.min(100, Math.round((cnt / (totalDays * 3)) * 100));
+  }
+  const overallUtil = Math.min(100, Math.round((ros.length / (totalDays * 3 * numLocations)) * 100));
+
+  const bayUtilization = {
+    overall: overallUtil,
+    byDay,
+    byHour: hourCounts,
+    byLocation: byLocUtil,
+  };
+
+  // ── upsell ───────────────────────────────────────────────────────────────────
+  const opportunities = ros.filter(r => r.upsellFlag || r.declinedTotal > 0).length;
+  const conversions   = ros.filter(r => r.upsellConverted).length;
+  const upsellRate    = opportunities > 0 ? Math.round((conversions / opportunities) * 1000) / 10 : 0;
+
+  // Top missed: count frequency of declined service names
+  const declinedFreq = {};
+  for (const ro of ros) {
+    for (const ds of (ro.declinedServices || [])) {
+      const name = ds.description || '';
+      if (name) declinedFreq[name] = (declinedFreq[name] || 0) + 1;
+    }
+  }
+  const topMissed = Object.entries(declinedFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([name]) => name);
+
+  const upsell = { opportunities, conversions, rate: upsellRate, topMissed };
+
+  // ── elr ──────────────────────────────────────────────────────────────────────
+  const totalLaborRev = ros.reduce((s, r) => s + r.laborRevenue, 0);
+  const totalActHrs   = ros.reduce((s, r) => s + r.totalActualHrs, 0);
+  const overallELR    = totalActHrs > 0 ? Math.round(totalLaborRev / totalActHrs) : 0;
+
+  const techGroups = groupBy(ros, r => r.techId);
+  const byTech = Object.entries(techGroups).map(([techId, group]) => {
+    const techName    = group[0].techName || techId;
+    const labRev      = group.reduce((s, r) => s + r.laborRevenue, 0);
+    const actHrs      = group.reduce((s, r) => s + r.totalActualHrs, 0);
+    return {
+      techId,
+      techName,
+      elr:     actHrs > 0 ? Math.round(labRev / actHrs) : 0,
+      roCount: group.length,
+    };
+  });
+
+  const elr = { overall: overallELR, byTech };
+
+  // ── partsMargin ──────────────────────────────────────────────────────────────
+  const totalPartsRev = ros.reduce((s, r) => s + r.partsRevenue, 0);
+  let partsMargin = 48.2;
+  if (totalPartsRev > 0) {
+    // Estimate COGS: use grossMarginPct if available, otherwise 52% COGS proxy
+    const totalCOGS = ros.reduce((s, r) => {
+      if (r.grossMarginPct != null) {
+        return s + r.partsRevenue * (1 - r.grossMarginPct / 100);
+      }
+      return s + r.partsRevenue * 0.52;
+    }, 0);
+    partsMargin = Math.round(((totalPartsRev - totalCOGS) / totalPartsRev) * 1000) / 10;
+  }
+
+  // ── advisorPerformance ───────────────────────────────────────────────────────
+  const advisorGroups = groupBy(ros, r => r.advisorId || null);
+  delete advisorGroups['null']; // exclude ROs without advisorId
+  const advisorPerformance = Object.entries(advisorGroups).map(([advisorId, group]) => {
+    const advisorName   = group[0].advisorName || advisorId;
+    const advOpp        = group.filter(r => r.upsellFlag || r.declinedTotal > 0).length;
+    const advConv       = group.filter(r => r.upsellConverted).length;
+    return {
+      advisorId,
+      advisorName,
+      roCount:    group.length,
+      avgRO:      Math.round(mean(group.map(r => r.totalRevenue))),
+      upsellRate: advOpp > 0 ? Math.round((advConv / advOpp) * 1000) / 10 : 0,
+    };
+  });
+
+  // ── revenueByMonth (last 3 calendar months) ──────────────────────────────────
+  const now = new Date();
+  const revenueByMonth = [];
+  for (let i = 2; i >= 0; i--) {
+    const monthDate  = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const monthEnd   = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1);
+    const label      = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    const revenue    = ros
+      .filter(r => {
+        const d = r.closedDate ? new Date(r.closedDate) : null;
+        return d && d >= monthStart && d < monthEnd;
+      })
+      .reduce((s, r) => s + r.totalRevenue, 0);
+    revenueByMonth.push({ month: label, revenue: Math.round(revenue) });
+  }
+
+  return {
+    shopId,
+    locationId:   locationId || 'all',
+    generatedAt:  new Date().toISOString(),
+    period:       '90d',
+    roCount:      ros.length,
+    avgRO,
+    bayUtilization,
+    upsell,
+    elr,
+    partsMargin,
+    advisorPerformance,
+    revenueByMonth,
+  };
+}
+
+/**
+ * Upsert a 90-day snapshot into the shop_snapshot_90d collection.
+ */
+export async function upsertSnapshot90d(shopId, locationId, db) {
+  const snapshot = await buildSnapshot90d(shopId, locationId, db);
+  await db.collection('shop_snapshot_90d').updateOne(
+    { shopId, locationId: locationId || 'all' },
+    { $set: snapshot },
+    { upsert: true }
+  );
+  return snapshot;
 }
 
 export async function buildSnapshot(shopId, edition, db) {

@@ -23,6 +23,9 @@ import roAgentRouter          from './routes/roAgent.js';
 import aroAgentRouter         from './routes/aroAgent.js';
 import demoRORouter           from './routes/demoRO.js';
 import claudeProxyRouter      from './routes/claudeProxy.js';
+import snapshotRouter         from './routes/snapshot.js';
+import shopGoalsRouter        from './routes/shopGoals.js';
+import tribalNotesRouter      from './routes/tribalNotes.js';
 import { ensureRecommendationIndexes } from './models/Recommendation.js';
 
 // ── Load .env.local ──────────────────────────────────────────────────────────
@@ -107,6 +110,9 @@ app.use('/api/ro-agent',        roAgentRouter);
 app.use('/api/aro-agent',       aroAgentRouter);
 app.use('/api/demo',            demoRORouter);
 app.use('/api/claude',          claudeProxyRouter);
+app.use('/api/snapshot',        snapshotRouter);
+app.use('/api/shop-goals',      shopGoalsRouter);
+app.use('/api/tribal-notes',    tribalNotesRouter);
 app.use('/api',                 recommendationsRouter);
 
 app.get('/api/health', (_req, res) => {
