@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Building2,
   Phone,
@@ -30,6 +30,8 @@ import {
 import { COLORS } from "../theme/colors";
 import { SHOP, technicians, advisors } from "../data/demoData";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "";
+
 // ── Nav items ──────────────────────────────────────────────
 const NAV_ITEMS = [
   { id: "shop", label: "Shop Profile", icon: Building2 },
@@ -38,6 +40,7 @@ const NAV_ITEMS = [
   { id: "team", label: "Team", icon: Users },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "billing", label: "Billing", icon: CreditCard },
+  { id: "tribal", label: "Shop Rules", icon: MessageSquare },
 ];
 
 // ── Badge components ────────────────────────────────────────
@@ -1338,6 +1341,234 @@ function BillingTab() {
   );
 }
 
+// ── Tribal Knowledge Panel ──────────────────────────────────
+function TribalKnowledgePanel() {
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showExpired, setShowExpired] = useState(false);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newNote, setNewNote] = useState({ note: '', triggerType: 'any_ro', expiresAt: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/tribal-notes/shop-001?includeInactive=true&includeExpired=true`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { setNotes(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const now = new Date();
+  const threeDays = 3 * 24 * 60 * 60 * 1000;
+
+  const activeNotes = notes.filter(n => n.active && (!n.expiresAt || new Date(n.expiresAt) > now));
+  const inactiveNotes = notes.filter(n => !n.active);
+  const expiredNotes = notes.filter(n => n.active && n.expiresAt && new Date(n.expiresAt) <= now);
+
+  const isExpiringSoon = (note) =>
+    note.expiresAt && new Date(note.expiresAt) - now < threeDays && new Date(note.expiresAt) > now;
+
+  const triggerLabel = (t) => {
+    if (t === 'any_ro') return { label: 'Any RO', color: '#2563EB', bg: '#EFF6FF' };
+    if (t === 'mpi_only') return { label: 'MPI Only', color: '#7C3AED', bg: '#EDE9FE' };
+    if (t?.startsWith('vehicle_type:')) return { label: t.replace('vehicle_type:', '').replace(/^\w/, c => c.toUpperCase()), color: '#059669', bg: '#ECFDF5' };
+    if (t?.startsWith('mileage_range:')) return { label: `Miles: ${t.replace('mileage_range:', '')}`, color: '#D97706', bg: '#FFFBEB' };
+    return { label: t || 'Any', color: '#6B7280', bg: '#F3F4F6' };
+  };
+
+  const toggleActive = async (note) => {
+    const res = await fetch(`${API_BASE}/api/tribal-notes/${note._id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: !note.active }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setNotes(notes.map(n => n._id === updated._id ? updated : n));
+    }
+  };
+
+  const deleteNote = async (id) => {
+    if (!window.confirm('Delete this rule?')) return;
+    const res = await fetch(`${API_BASE}/api/tribal-notes/${id}`, { method: 'DELETE' });
+    if (res.ok || res.status === 204) setNotes(notes.filter(n => n._id !== id));
+  };
+
+  const saveEdit = async (id) => {
+    const res = await fetch(`${API_BASE}/api/tribal-notes/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: editText }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setNotes(notes.map(n => n._id === updated._id ? updated : n));
+      setEditingId(null);
+    }
+  };
+
+  const addNote = async () => {
+    if (!newNote.note.trim()) return;
+    const body = { shopId: 'shop-001', locationId: 'all', ...newNote,
+      expiresAt: newNote.expiresAt || null, active: true };
+    const res = await fetch(`${API_BASE}/api/tribal-notes`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      const created = await res.json();
+      setNotes([...notes, created]);
+      setNewNote({ note: '', triggerType: 'any_ro', expiresAt: '' });
+      setShowNewForm(false);
+    }
+  };
+
+  const StickyCard = ({ note }) => {
+    const trig = triggerLabel(note.triggerType);
+    const expiringSoon = isExpiringSoon(note);
+    return (
+      <div style={{
+        background: note.active ? '#FEF9C3' : '#F3F4F6',
+        border: `1px solid ${note.active ? '#FDE047' : '#D1D5DB'}`,
+        borderRadius: 8, padding: 14,
+        opacity: note.active ? 1 : 0.65,
+        position: 'relative',
+      }}>
+        {expiringSoon && (
+          <div style={{ position:'absolute', top:8, right:8, width:8, height:8,
+            borderRadius:'50%', background:'#F97316' }} title="Expiring soon" />
+        )}
+        {editingId === note._id ? (
+          <div>
+            <textarea value={editText} onChange={e => setEditText(e.target.value)}
+              style={{ width:'100%', border:'1px solid #D1D5DB', borderRadius:4,
+                padding:6, fontSize:13, resize:'vertical', minHeight:60, marginBottom:8 }} />
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => saveEdit(note._id)}
+                style={{ background:'#0D3B45', color:'#fff', border:'none', borderRadius:4,
+                  padding:'4px 10px', fontSize:12, cursor:'pointer' }}>Save</button>
+              <button onClick={() => setEditingId(null)}
+                style={{ background:'#F3F4F6', border:'none', borderRadius:4,
+                  padding:'4px 10px', fontSize:12, cursor:'pointer' }}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ fontSize:13, color:'#1F2937', marginBottom:10, lineHeight:1.4 }}>
+            {note.note}
+          </div>
+        )}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:6 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <span style={{ background:trig.bg, color:trig.color, fontSize:11,
+              fontWeight:600, padding:'2px 7px', borderRadius:10 }}>{trig.label}</span>
+            <span style={{ fontSize:11, color:'#9CA3AF' }}>
+              {note.expiresAt ? `Until ${new Date(note.expiresAt).toLocaleDateString()}` : 'Ongoing'}
+            </span>
+          </div>
+          <div style={{ display:'flex', gap:6 }}>
+            <button onClick={() => toggleActive(note)}
+              style={{ fontSize:11, padding:'2px 8px', borderRadius:4, cursor:'pointer',
+                background: note.active ? '#FEF2F2' : '#F0FDF4',
+                color: note.active ? '#DC2626' : '#16A34A', border:'none', fontWeight:600 }}>
+              {note.active ? 'Disable' : 'Enable'}
+            </button>
+            <button onClick={() => { setEditingId(note._id); setEditText(note.note); }}
+              style={{ fontSize:11, padding:'2px 8px', borderRadius:4, cursor:'pointer',
+                background:'#F3F4F6', border:'none' }}>Edit</button>
+            <button onClick={() => deleteNote(note._id)}
+              style={{ fontSize:11, padding:'2px 8px', borderRadius:4, cursor:'pointer',
+                background:'#FEF2F2', color:'#DC2626', border:'none' }}>&#x2715;</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) return <div style={{ padding:32, color:'#6B7280' }}>Loading shop rules...</div>;
+
+  return (
+    <div style={{ padding: '0 4px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+        <div>
+          <h3 style={{ fontSize:18, fontWeight:700, color:'#1F2937', margin:0 }}>Shop Rules</h3>
+          <p style={{ fontSize:13, color:'#6B7280', marginTop:4, marginBottom:0 }}>
+            Agent operating instructions — surfaced at RO time when conditions match
+          </p>
+        </div>
+        <button onClick={() => setShowNewForm(!showNewForm)}
+          style={{ background:'#0D3B45', color:'#fff', border:'none', borderRadius:8,
+            padding:'8px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+          + New Rule
+        </button>
+      </div>
+
+      {showNewForm && (
+        <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8,
+          padding:16, marginBottom:20 }}>
+          <textarea placeholder="Rule text (e.g. Push cabin air filter to all customers this month)"
+            value={newNote.note} onChange={e => setNewNote({...newNote, note: e.target.value})}
+            style={{ width:'100%', border:'1px solid #D1D5DB', borderRadius:4, padding:8,
+              fontSize:13, resize:'vertical', minHeight:70, marginBottom:10, boxSizing:'border-box' }} />
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+            <select value={newNote.triggerType}
+              onChange={e => setNewNote({...newNote, triggerType: e.target.value})}
+              style={{ border:'1px solid #D1D5DB', borderRadius:4, padding:'6px 8px', fontSize:13 }}>
+              <option value="any_ro">Any RO</option>
+              <option value="mpi_only">MPI / DVI Only</option>
+              <option value="vehicle_type:japanese">Japanese Vehicles</option>
+              <option value="vehicle_type:german">German Vehicles</option>
+              <option value="vehicle_type:domestic_us">Domestic Vehicles</option>
+              <option value="mileage_range:50000-999999">50k+ Miles</option>
+              <option value="mileage_range:80000-100000">80k-100k Miles</option>
+            </select>
+            <input type="date" placeholder="Expiry (leave blank = ongoing)"
+              value={newNote.expiresAt} onChange={e => setNewNote({...newNote, expiresAt: e.target.value})}
+              style={{ border:'1px solid #D1D5DB', borderRadius:4, padding:'6px 8px', fontSize:13 }} />
+            <button onClick={addNote}
+              style={{ background:'#FF6B35', color:'#fff', border:'none', borderRadius:6,
+                padding:'6px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}>Add Rule</button>
+            <button onClick={() => setShowNewForm(false)}
+              style={{ background:'#F3F4F6', border:'none', borderRadius:6,
+                padding:'6px 12px', fontSize:13, cursor:'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {activeNotes.length === 0 && !showNewForm && (
+        <div style={{ textAlign:'center', padding:'32px 0', color:'#9CA3AF', fontSize:14 }}>
+          No active shop rules yet. Add your first rule above.
+        </div>
+      )}
+
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:12, marginBottom:20 }}>
+        {activeNotes.map(note => <StickyCard key={note._id} note={note} />)}
+      </div>
+
+      {inactiveNotes.length > 0 && (
+        <div style={{ marginTop:16 }}>
+          <div style={{ fontSize:13, fontWeight:600, color:'#9CA3AF', marginBottom:8 }}>Disabled ({inactiveNotes.length})</div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:12 }}>
+            {inactiveNotes.map(note => <StickyCard key={note._id} note={note} />)}
+          </div>
+        </div>
+      )}
+
+      {expiredNotes.length > 0 && (
+        <div style={{ marginTop:16 }}>
+          <button onClick={() => setShowExpired(!showExpired)}
+            style={{ background:'none', border:'none', fontSize:13, color:'#9CA3AF',
+              cursor:'pointer', padding:0, marginBottom:8 }}>
+            {showExpired ? '▼' : '▶'} Expired ({expiredNotes.length})
+          </button>
+          {showExpired && (
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:12 }}>
+              {expiredNotes.map(note => <StickyCard key={note._id} note={note} />)}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main SettingsScreen ─────────────────────────────────────
 export default function SettingsScreen() {
   const [activeTab, setActiveTab] = useState("integrations");
@@ -1349,6 +1580,7 @@ export default function SettingsScreen() {
     team: <TeamTab />,
     notifications: <NotificationsTab />,
     billing: <BillingTab />,
+    tribal: <TribalKnowledgePanel />,
   };
 
   return (

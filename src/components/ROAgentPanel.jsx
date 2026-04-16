@@ -5,7 +5,7 @@
  * calls Claude to extract repair intent, then pre-populates NewROWizard.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle, Phone, Instagram, Facebook, Zap, ChevronDown, ChevronUp, Loader } from "lucide-react";
 import { COLORS } from "../theme/colors";
 
@@ -68,11 +68,42 @@ const URGENCY_STYLE = {
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
-export default function ROAgentPanel({ onDraftRO }) {
+export default function ROAgentPanel({ onDraftRO, ro }) {
   const [expanded, setExpanded]   = useState(true);
   const [drafting, setDrafting]   = useState(null);   // lead id being drafted
   const [dismissed, setDismissed] = useState(new Set());
   const [error, setError]         = useState(null);
+  const [tribalNudges, setTribalNudges] = useState([]);
+  const [dismissedNudges, setDismissedNudges] = useState(new Set());
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/tribal-notes/shop-001`)
+      .then(r => r.ok ? r.json() : [])
+      .then(notes => {
+        if (!Array.isArray(notes)) return;
+        const matched = notes.filter(note => matchesRO(note, ro));
+        setTribalNudges(matched);
+      })
+      .catch(() => {});
+  }, [ro]);
+
+  function matchesRO(note, ro) {
+    if (!ro) return note.triggerType === 'any_ro' || !note.triggerType;
+    const t = note.triggerType || 'any_ro';
+    if (t === 'any_ro') return true;
+    if (t === 'mpi_only') return ro.hasDVI === true || ro.dviCompleted === true;
+    if (t.startsWith('vehicle_type:')) {
+      const origin = (ro.vehicleOrigin || '').toLowerCase();
+      const target = t.replace('vehicle_type:', '').toLowerCase();
+      return origin.includes(target) || (target === 'japanese' && ['toyota','honda','nissan','mazda','subaru','lexus','acura','infiniti'].some(m => (ro.vehicle?.make||'').toLowerCase().includes(m)));
+    }
+    if (t.startsWith('mileage_range:')) {
+      const [min, max] = t.replace('mileage_range:', '').split('-').map(Number);
+      const miles = ro.mileage || ro.currentMileage || ro.vehicle?.mileage || 0;
+      return miles >= min && miles <= max;
+    }
+    return false;
+  }
 
   const visibleLeads = DEMO_LEADS.filter(l => !dismissed.has(l.id));
 
@@ -166,6 +197,42 @@ export default function ROAgentPanel({ onDraftRO }) {
               {error}
             </div>
           )}
+          {tribalNudges.filter(n => !dismissedNudges.has(n._id)).map(nudge => (
+            <div key={nudge._id} style={{
+              background: '#FFF7ED',
+              borderLeft: '3px solid #FF6B35',
+              borderRadius: 6,
+              padding: '10px 12px',
+              margin: '8px 16px 0',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 8,
+            }}>
+              <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>&#x1F4CC;</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#92400E', marginBottom: 3 }}>
+                  Shop Rule
+                </div>
+                <div style={{ fontSize: 13, color: '#1F2937', lineHeight: 1.4 }}>
+                  {nudge.note}
+                </div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                  <button
+                    onClick={() => console.log('Add tribal note to RO:', nudge)}
+                    style={{ fontSize: 11, padding: '3px 8px', background: '#FF6B35', color: '#fff',
+                      border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+                    Add to RO
+                  </button>
+                  <button
+                    onClick={() => setDismissedNudges(prev => new Set([...prev, nudge._id]))}
+                    style={{ fontSize: 11, padding: '3px 8px', background: '#F3F4F6',
+                      border: 'none', borderRadius: 4, cursor: 'pointer', color: '#6B7280' }}>
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
           {visibleLeads.map((lead, i) => {
             const urgency = URGENCY_STYLE[lead.urgency];
             const isDrafting = drafting === lead.id;
