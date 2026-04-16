@@ -100,6 +100,16 @@ export default function DashboardScreen({ onNavigate }) {
     }
   };
 
+  // Fetch shop goals on mount
+  useEffect(() => {
+    fetch(`${API_BASE}/api/shop-goals/shop-001`)
+      .then(r => r.ok ? r.json() : [])
+      .then(goals => { setShopGoals(Array.isArray(goals) ? goals : []); setGoalsLoaded(true); })
+      .catch(() => setGoalsLoaded(true));
+  }, []);
+
+  const hasGoals = shopGoals.length >= 2;
+
   const todayROs = repairOrders.filter(ro => ro.status !== "scheduled");
 
   // Recommendations banner
@@ -108,8 +118,87 @@ export default function DashboardScreen({ onNavigate }) {
   const dashInsights = recCtx ? recCtx.getForScreen("dashboard") : [];
   const showBanner = recCtx && !recCtx.loading && dashInsights.length > 0 && !bannerDismissed;
 
+  // ── Shop goals state ──────────────────────────────────────────────────────
+  const [shopGoals, setShopGoals] = useState([]);
+  const [goalsLoaded, setGoalsLoaded] = useState(false);
+
   return (
     <div style={{ padding: "24px 28px" }}>
+
+      {/* Retrospective CTA */}
+      {goalsLoaded && !hasGoals && (
+        <div
+          onClick={() => window.dispatchEvent(new CustomEvent('wrenchiq:open-retro'))}
+          style={{
+            background: 'linear-gradient(135deg, #0D3B45 0%, #1a5568 100%)',
+            borderRadius: 12,
+            padding: '20px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 20,
+            cursor: 'pointer',
+            border: '1px solid #FF6B35',
+            boxShadow: '0 2px 8px rgba(255,107,53,0.15)',
+          }}
+        >
+          <div>
+            <div style={{ color: '#FF6B35', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 4, textTransform: 'uppercase' }}>
+              AI Insight
+            </div>
+            <div style={{ color: '#fff', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
+              Review your last 3 months →
+            </div>
+            <div style={{ color: '#94a3b8', fontSize: 13 }}>
+              See where Peninsula Precision left money on the table — set your Q3 goals
+            </div>
+          </div>
+          <div style={{
+            background: '#FF6B35',
+            borderRadius: 8,
+            padding: '10px 18px',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 14,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            marginLeft: 16,
+          }}>
+            Start Review
+          </div>
+        </div>
+      )}
+
+      {/* Goal progress summary — shown when 2+ goals set */}
+      {goalsLoaded && hasGoals && (
+        <div
+          onClick={() => window.dispatchEvent(new CustomEvent('wrenchiq:open-retro'))}
+          style={{
+            background: '#f0fdf4',
+            borderRadius: 12,
+            padding: '14px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 20,
+            border: '1px solid #bbf7d0',
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{ fontSize: 20 }}>🎯</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, color: '#15803d', fontSize: 14 }}>
+              {shopGoals.length} active goal{shopGoals.length !== 1 ? 's' : ''} being tracked
+            </div>
+            <div style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>
+              {shopGoals.map(g => (g.metric || '').replace(/_/g, ' ')).join(' · ')}
+            </div>
+          </div>
+          <div style={{ color: '#15803d', fontSize: 13, fontWeight: 600 }}>
+            View goals →
+          </div>
+        </div>
+      )}
 
       {/* AI Insights banner */}
       {showBanner && (
