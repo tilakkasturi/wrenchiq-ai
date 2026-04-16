@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# bin/seed-locations — Seed 4-location 90-day RO data for Peninsula Precision Auto
+#
+# Usage:
+#   bin/seed-locations                       # seeds all 4 locations (append)
+#   bin/seed-locations --reset               # drops existing ROs for these shopIds, re-seeds
+#   bin/seed-locations --location loc-002    # seeds only Sunnyvale
+#   bin/seed-locations --list                # shows what would be seeded
+
+set -euo pipefail
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+cd "$(dirname "$0")/.."
+node scripts/seedLocations.js "$@"
