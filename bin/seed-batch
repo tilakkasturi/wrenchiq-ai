@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # bin/seed-batch — Seed a batch of 25 customers into wrenchiq.RepairOrder
+# For 4-location demo data, use: bin/seed-locations
 #
 # Usage:
 #   bin/seed-batch              # batch 1 (customers 1-25)
