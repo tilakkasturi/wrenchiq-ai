@@ -44,6 +44,12 @@ echo "    Version : ${VERSION}  (was v${MAJOR}.${MINOR})"
 echo "    File    : ${RELEASES_DIR}/${FILENAME}"
 echo ""
 
+# ── Write new version BEFORE build so Vite bakes it in ───────
+echo "{" > "$VERSION_FILE"
+echo "  \"major\": ${NEW_MAJOR}," >> "$VERSION_FILE"
+echo "  \"minor\": ${NEW_MINOR}" >> "$VERSION_FILE"
+echo "}" >> "$VERSION_FILE"
+
 # ── Build ─────────────────────────────────────────────────────
 if [ "$NO_BUILD" -eq 0 ]; then
   echo "==> Building frontend..."
@@ -79,12 +85,6 @@ echo "    Size    : ${SIZE}"
 
 # ── Save current symlink ──────────────────────────────────────
 ln -sf "${FILENAME}" "${RELEASES_DIR}/wrenchiq-deploy-latest.tar.gz" 2>/dev/null || true
-
-# ── Commit version bump ───────────────────────────────────────
-echo "{" > "$VERSION_FILE"
-echo "  \"major\": ${NEW_MAJOR}," >> "$VERSION_FILE"
-echo "  \"minor\": ${NEW_MINOR}" >> "$VERSION_FILE"
-echo "}" >> "$VERSION_FILE"
 
 echo ""
 echo "  ✓ ${RELEASES_DIR}/${FILENAME}"
