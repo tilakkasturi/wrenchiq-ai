@@ -88,7 +88,7 @@ const LOCATIONS = [
     ],
   },
   {
-    id: 'loc-002', shopId: 'shop-002',
+    id: 'loc-002', shopId: 'shop-001',
     name: 'Peninsula Precision Auto — Sunnyvale',
     city: 'Sunnyvale', laborRate: 175, targetElr: 165, targetAvgRO: 341,
     technicians: [
@@ -112,7 +112,7 @@ const LOCATIONS = [
     ],
   },
   {
-    id: 'loc-003', shopId: 'shop-003',
+    id: 'loc-003', shopId: 'shop-001',
     name: 'Peninsula Precision Auto — Mountain View',
     city: 'Mountain View', laborRate: 185, targetElr: 175, targetAvgRO: 412,
     technicians: [
@@ -136,7 +136,7 @@ const LOCATIONS = [
     ],
   },
   {
-    id: 'loc-004', shopId: 'shop-004',
+    id: 'loc-004', shopId: 'shop-001',
     name: 'Peninsula Precision Auto — Menlo Park',
     city: 'Menlo Park', laborRate: 190, targetElr: 180, targetAvgRO: 456,
     technicians: [
