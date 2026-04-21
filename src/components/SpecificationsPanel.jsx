@@ -1,11 +1,12 @@
+// WrenchIQ Specifications Panel — consolidated (AM + OEM unified, agentic positioning)
 import { useState } from "react";
 import {
   X, Wrench, BookOpen, Users, FileCode, Globe, Layers, Copy, Check,
-  BarChart3, Zap, Shield, TrendingUp, GitBranch, Target,
+  BarChart3, Zap, GitBranch, Cpu, MessageSquare, FileText,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 
-// ── Code Block ────────────────────────────────────────────────
+// ── Shared UI helpers ─────────────────────────────────────────
 function CodeBlock({ code }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
@@ -24,14 +25,13 @@ function CodeBlock({ code }) {
   );
 }
 
-// ── Shared UI helpers ─────────────────────────────────────────
 function SectionTitle({ children }) {
   return <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.accent, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 14, marginTop: 24, borderBottom: `1px solid ${COLORS.accent}25`, paddingBottom: 6 }}>{children}</div>;
 }
 function Row({ label, value, accent }) {
   return (
     <div style={{ display: "flex", gap: 12, padding: "7px 0", borderBottom: "1px solid #F3F4F6", alignItems: "flex-start" }}>
-      <span style={{ fontSize: 12, color: COLORS.textMuted, width: 150, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 12, color: COLORS.textMuted, width: 160, flexShrink: 0 }}>{label}</span>
       <span style={{ fontSize: 12, color: accent ? COLORS.accent : COLORS.textPrimary, fontWeight: accent ? 700 : 500, flex: 1 }}>{value}</span>
     </div>
   );
@@ -54,383 +54,76 @@ function Table({ headers, rows }) {
   );
 }
 
-// ── File template data ────────────────────────────────────────
-const FILE_CONTENTS = {
-  shop_config: `{
-  "shop_id": "shop-001",
-  "edition": "AM",
-  "name": "Peninsula Precision Auto",
-  "address": "2847 El Camino Real, Palo Alto, CA 94306",
-  "phone": "(650) 555-0192",
-  "labor_rate": 195,
-  "labor_matrix": { "A": 1.0, "B": 1.1, "C": 1.25 },
-  "bays": 6,
-  "hours": { "open": "07:00", "close": "18:00", "days": "Mon-Fri" },
-  "personas_enabled": ["advisor", "tech", "owner", "customer"],
-  "integrations": {
-    "sms": "twilio",
-    "parts_vendors": ["worldpac", "oreilly", "partstech"],
-    "accounting": "quickbooks",
-    "payments": ["stripe", "dignifi", "sunbit"],
-    "scheduling": "google_calendar"
-  },
-  "features": {
-    "dvi_video": true,
-    "social_inbox": true,
-    "multi_location": false,
-    "ai_copilot": true,
-    "trust_engine": true,
-    "parts_intelligence": true
-  },
-  "ai": {
-    "model": "claude-sonnet-4-6",
-    "context_aware": true,
-    "proactive_alerts": true
-  }
-}`,
-  repair_order: `{
-  "ro_id": "RO-2024-1187",
-  "edition": "AM",
-  "shop_id": "shop-001",
-  "customer_id": "cust-003",
-  "vehicle_id": "veh-001",
-  "advisor_id": "adv-001",
-  "tech_id": "tech-001",
-  "status": "awaiting_approval",
-  "priority": "normal",
-  "created_at": "2024-03-21T09:15:00Z",
-  "complaint": "Check engine light, rough idle at startup",
-  "diagnosis": "P0420 — Catalyst system efficiency below threshold (Bank 1)",
-  "tsb_refs": ["TSB-2021-0144"],
-  "line_items": [
-    {
-      "id": "li-001",
-      "type": "labor",
-      "description": "Diagnostic Fee",
-      "labor_code": "D001",
-      "hours": 0.5,
-      "rate": 195,
-      "total": 97.50,
-      "margin_pct": 100
-    },
-    {
-      "id": "li-002",
-      "type": "part",
-      "description": "Catalytic Converter (OEM-equiv)",
-      "part_number": "WP-16468",
-      "vendor": "worldpac",
-      "cost": 218,
-      "price": 420,
-      "margin_pct": 48.1,
-      "quantity": 1,
-      "ai_selected": true
-    },
-    {
-      "id": "li-003",
-      "type": "labor",
-      "description": "Labor — Installation 1.5 hrs",
-      "labor_code": "E002",
-      "hours": 1.5,
-      "rate": 195,
-      "total": 292.50,
-      "margin_pct": 100
-    }
-  ],
-  "subtotal": 810.00,
-  "tax": 53.44,
-  "total": 863.44,
-  "customer_approved": null,
-  "approval_sent_at": null,
-  "approval_channel": "sms",
-  "dvi_id": "dvi-001",
-  "health_report_sent": false
-}`,
-  customer: `{
-  "customer_id": "cust-003",
-  "first_name": "Monica",
-  "last_name": "Rodriguez",
-  "phone": "(650) 555-0142",
-  "email": "monica@venturebloom.io",
-  "address": "3201 Alma St, Palo Alto, CA 94306",
-  "communication_pref": "sms",
-  "vehicle_ids": ["veh-001"],
-  "visit_count": 7,
-  "lifetime_value": 3890,
-  "trust_score": 94,
-  "approval_rate": 1.0,
-  "avg_approval_time_min": 8,
-  "tags": ["drop-off-only", "fast-approver", "text-preferred"],
-  "loyalty_tier": "Gold",
-  "portal_magic_links": ["tok_abc123"],
-  "preferred_tech": "tech-001",
-  "notes": "Busy schedule — values speed. Drop-off only.",
-  "created_at": "2021-01-10T00:00:00Z",
-  "last_visit": "2024-08-15T00:00:00Z"
-}`,
-  dvi_template: `{
-  "template_id": "dvi-std-8pt",
-  "edition": "AM",
-  "version": "2.1",
-  "ai_suggestions_enabled": true,
-  "video_walkaround": true,
-  "photo_per_item": true,
-  "sections": [
-    { "id": "tires", "label": "Tires & Wheels",
-      "items": [
-        { "id": "tread_depth", "label": "Tire Tread Depth",
-          "type": "measurement", "unit": "32nds",
-          "thresholds": { "ok": 6, "watch": 4, "fail": 3 } },
-        { "id": "tire_pressure", "label": "Tire Pressure",
-          "type": "measurement", "unit": "PSI" },
-        { "id": "wheel_condition", "label": "Wheel Condition",
-          "type": "pass_fail_watch" }
-      ]
-    },
-    { "id": "brakes", "label": "Brakes",
-      "items": [
-        { "id": "front_pads", "label": "Front Brake Pads",
-          "type": "measurement", "unit": "mm",
-          "thresholds": { "ok": 7, "watch": 4, "fail": 3 } },
-        { "id": "rear_pads", "label": "Rear Brake Pads",
-          "type": "measurement", "unit": "mm" },
-        { "id": "rotors", "label": "Rotor Condition",
-          "type": "pass_fail_watch" },
-        { "id": "brake_fluid", "label": "Brake Fluid",
-          "type": "pass_fail_watch" }
-      ]
-    },
-    { "id": "suspension", "label": "Suspension & Steering",
-      "items": [
-        { "id": "ball_joints", "label": "Ball Joints", "type": "pass_fail_watch" },
-        { "id": "tie_rods", "label": "Tie Rods", "type": "pass_fail_watch" },
-        { "id": "shocks", "label": "Shocks / Struts", "type": "pass_fail_watch" }
-      ]
-    },
-    { "id": "fluids", "label": "Fluids & Filters",
-      "items": [
-        { "id": "engine_oil", "label": "Engine Oil Level/Condition", "type": "pass_fail_watch" },
-        { "id": "coolant", "label": "Coolant Level/Condition", "type": "pass_fail_watch" },
-        { "id": "transmission_fluid", "label": "Transmission Fluid", "type": "pass_fail_watch" },
-        { "id": "air_filter", "label": "Engine Air Filter", "type": "pass_fail_watch" }
-      ]
-    }
-  ]
-}`,
-  labor_matrix: `{
-  "shop_id": "shop-001",
-  "edition": "AM",
-  "base_rate": 195,
-  "version": "2024-Q1",
-  "jobs": [
-    { "code": "B001", "desc": "Brake Pad Replacement (axle)",   "hrs": 1.2, "cat": "Brakes" },
-    { "code": "B002", "desc": "Brake Rotor Replacement (axle)", "hrs": 1.8, "cat": "Brakes" },
-    { "code": "B003", "desc": "Brake Fluid Flush",              "hrs": 0.5, "cat": "Brakes" },
-    { "code": "M001", "desc": "Oil Change + Filter",            "hrs": 0.5, "cat": "Maintenance" },
-    { "code": "M002", "desc": "Tire Rotation + Balance",        "hrs": 0.5, "cat": "Maintenance" },
-    { "code": "M003", "desc": "90K Major Service",              "hrs": 3.5, "cat": "Maintenance" },
-    { "code": "D001", "desc": "Diagnostic Scan",                "hrs": 0.5, "cat": "Diagnostic" },
-    { "code": "E001", "desc": "Serpentine Belt Replacement",    "hrs": 0.7, "cat": "Engine" },
-    { "code": "E002", "desc": "Catalytic Converter R&R",        "hrs": 1.5, "cat": "Exhaust" },
-    { "code": "A001", "desc": "A/C Recharge + Leak Check",      "hrs": 1.0, "cat": "HVAC" }
-  ]
-}`,
-  dealer_config: `{
-  "dealer_id": "dlr-00142",
-  "edition": "OEM",
-  "oem_brand": "Honda",
-  "franchise_code": "HDA-94306",
-  "dealer_name": "Peninsula Honda",
-  "dms": {
-    "provider": "cdk",
-    "endpoint": "https://api.cdk.com/fortellis/v2",
-    "dealer_code": "94306-H",
-    "auth_type": "oauth2",
-    "sync_interval_min": 5
-  },
-  "personas_enabled": [
-    "advisor", "master_tech", "service_manager",
-    "customer", "parts_manager", "warranty_admin"
-  ],
-  "warranty": {
-    "oem_portal": "https://warranty.honda.com/api/v2",
-    "auth": "certificate",
-    "auto_submit": true,
-    "claim_readiness_threshold": 85
-  },
-  "oem_parts": {
-    "catalog_api": "https://parts.honda.com/api/v1",
-    "prefer_genuine": true,
-    "allow_aftermarket": false
-  },
-  "compliance": {
-    "csi_target": 92,
-    "mpi_required": true,
-    "tech_cert_required": true,
-    "story_writer_enabled": true
-  }
-}`,
-  warranty_claim: `{
-  "claim_id": "WC-2024-00891",
-  "edition": "OEM",
-  "dealer_id": "dlr-00142",
-  "ro_id": "RO-DLR-5541",
-  "oem_brand": "Honda",
-  "claim_type": "powertrain_warranty",
-  "vin": "1HGCV1F30MA012345",
-  "mileage_at_repair": 28450,
-  "in_warranty": true,
-  "complaint": "Transmission rough shifting between 2nd and 3rd gear",
-  "cause": "Transmission control module software version 1.2.4 — calibration defect",
-  "correction": "Reflashed TCM to version 1.4.1 per HDA TSB #23-041",
-  "tsb_number": "HDA-2023-041",
-  "labor_ops": [
-    { "op_code": "28111600AA", "desc": "TCM Reprogram", "hrs": 0.4 }
-  ],
-  "parts_claimed": [],
-  "claim_amount": 78.00,
-  "readiness_score": 96,
-  "submitted_at": null,
-  "dms_ro_number": "DLR-5541",
-  "tech_cert": "Honda Master Tech — Level 3"
-}`,
-  oem_mpi_template: `{
-  "template_id": "oem-honda-mpi-v3",
-  "edition": "OEM",
-  "oem_brand": "Honda",
-  "version": "3.0",
-  "required_by_oem": true,
-  "csi_impact": true,
-  "sections": [
-    { "id": "underhood", "label": "Underhood",
-      "oem_required": true,
-      "items": [
-        { "id": "engine_air_filter", "label": "Engine Air Filter",
-          "oem_code": "HDA-F01", "type": "pass_fail_watch" },
-        { "id": "battery", "label": "Battery Load Test",
-          "oem_code": "HDA-B01", "type": "measurement", "unit": "CCA" },
-        { "id": "coolant", "label": "Coolant Condition",
-          "oem_code": "HDA-C01", "type": "pass_fail_watch" }
-      ]
-    },
-    { "id": "brakes_oem", "label": "Brake System",
-      "oem_required": true,
-      "items": [
-        { "id": "front_pads_oem", "label": "Front Brake Pads",
-          "oem_code": "HDA-BR01", "type": "measurement",
-          "unit": "mm", "thresholds": { "ok": 8, "watch": 5, "fail": 3 } }
-      ]
-    }
-  ],
-  "story_writer": {
-    "enabled": true,
-    "output_types": ["warranty_narrative", "customer_report", "tech_notes"]
-  }
-}`,
-  dms_mapping: `{
-  "mapping_id": "cdk-wrenchiq-v2",
-  "edition": "OEM",
-  "dms_provider": "CDK Global",
-  "version": "2.0",
-  "sync_direction": "bidirectional",
-  "field_mappings": {
-    "customer": {
-      "cdk_field": "CUSTOMER_NO",
-      "wrenchiq_field": "customer_id"
-    },
-    "ro_number": {
-      "cdk_field": "RO_NO",
-      "wrenchiq_field": "ro_id"
-    },
-    "labor_op": {
-      "cdk_field": "OP_CODE",
-      "wrenchiq_field": "line_items[].labor_code"
-    },
-    "tech_id": {
-      "cdk_field": "TECHNICIAN_NO",
-      "wrenchiq_field": "tech_id"
-    }
-  },
-  "webhooks": {
-    "ro_opened": "POST /api/v1/dms/ro/opened",
-    "ro_closed": "POST /api/v1/dms/ro/closed",
-    "parts_ordered": "POST /api/v1/dms/parts/ordered"
-  }
-}`
-};
-
-const AM_FILES = [
-  { id: "shop_config",  label: "shop_config.json" },
-  { id: "repair_order", label: "repair_order.json" },
-  { id: "customer",     label: "customer.json" },
-  { id: "dvi_template", label: "dvi_template.json" },
-  { id: "labor_matrix", label: "labor_matrix.json" },
-];
-
-const OEM_FILES = [
-  { id: "dealer_config",    label: "dealer_config.json" },
-  { id: "warranty_claim",   label: "warranty_claim.json" },
-  { id: "oem_mpi_template", label: "oem_mpi_template.json" },
-  { id: "dms_mapping",      label: "dms_mapping.json" },
-];
-
 // ── Nav sections ──────────────────────────────────────────────
 const SECTIONS = [
-  { id: "overview",    label: "Overview",           icon: BookOpen },
-  { id: "valueprop",   label: "Value Proposition",  icon: Zap },
-  { id: "personas",    label: "Personas & UX",      icon: Users },
-  { id: "flows",       label: "User Flows",         icon: GitBranch },
-  { id: "competitive", label: "Competitive",        icon: Target },
-  { id: "templates",   label: "Resource Templates", icon: FileCode },
-  { id: "apis",        label: "External APIs",      icon: Globe },
-  { id: "arch",        label: "Architecture",       icon: Layers },
+  { id: "overview",   label: "Overview",            icon: BookOpen },
+  { id: "agents",     label: "Agent Architecture",  icon: Cpu },
+  { id: "valueprop",  label: "Value Proposition",   icon: Zap },
+  { id: "personas",   label: "Personas & UX",       icon: Users },
+  { id: "flows",      label: "User Flows",          icon: GitBranch },
+  { id: "templates",  label: "Resource Templates",  icon: FileCode },
+  { id: "apis",       label: "External APIs",       icon: Globe },
+  { id: "arch",       label: "System Architecture", icon: Layers },
 ];
 
-// ── Section content ───────────────────────────────────────────
-
-function SectionOverview({ edition }) {
+// ── Section: Overview ─────────────────────────────────────────
+function SectionOverview() {
   return (
     <div>
-      <div style={{ background: "linear-gradient(135deg, #0D3B45, #0D2A40)", borderRadius: 12, padding: "20px 24px", marginBottom: 20 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Product Vision</div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1.5, marginBottom: 8 }}>
-          "WrenchIQ is the first shop management platform built backwards from the customer's phone screen — not the service advisor's desk."
+      {/* Vision hero */}
+      <div style={{ background: "linear-gradient(135deg, #0D3B45, #0D2A40)", borderRadius: 12, padding: "22px 26px", marginBottom: 20 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>Product Vision</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", lineHeight: 1.5, marginBottom: 10 }}>
+          Moving Shop Management to Agentic Mode
         </div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Every repair builds trust. Every trust builds loyalty.</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.65, marginBottom: 10 }}>
+          WrenchIQ is the AI intelligence layer on top of any SMS or DMS. A team of autonomous agents watches every repair order, surfaces proactive actions, and gets smarter every week — without replacing the tools shops already use.
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontStyle: "italic" }}>
+          "Your best service advisor — available 24/7, never misses a follow-up, and gets smarter every week."
+        </div>
       </div>
 
-      <SectionTitle>Two Editions</SectionTitle>
+      <SectionTitle>What WrenchIQ Is Not</SectionTitle>
+      <div style={{ background: "#FFF8F0", border: "1.5px solid #FDE68A", borderRadius: 10, padding: "14px 18px", marginBottom: 20 }}>
+        <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.7 }}>
+          WrenchIQ does <strong style={{ color: COLORS.textPrimary }}>not</strong> replace Mitchell1, Tekmetric, Shop-Ware, CDK, or Reynolds & Reynolds.
+          It <strong style={{ color: COLORS.textPrimary }}>attaches to</strong> any existing SMS or DMS — reading normalized RO data and layering autonomous AI agents on top.
+          The shop keeps its existing workflow. WrenchIQ adds the thinking layer.
+        </div>
+      </div>
+
+      <SectionTitle>Two Deployment Contexts — One Product</SectionTitle>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
         {[
-          { name: "WrenchIQ-AM", sub: "Aftermarket", target: "Independent & multi-location shops", focus: "Full SMS platform, social-to-RO, trust engine", color: COLORS.accent },
-          { name: "WrenchIQ-OEM", sub: "Dealership", target: "16,000+ franchised dealers", focus: "RO Story Writer, warranty claim automation, DMS sync", color: "#2563EB" },
-        ].map(e => (
-          <div key={e.name} style={{ border: `1.5px solid ${edition === (e.name.includes("AM") ? "AM" : "OEM") ? e.color : "#E5E7EB"}`, borderRadius: 10, padding: "14px 16px", background: edition === (e.name.includes("AM") ? "AM" : "OEM") ? `${e.color}06` : "#FAFAFA" }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: e.color, marginBottom: 2 }}>{e.name}</div>
-            <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 8 }}>{e.sub}</div>
-            <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 4 }}><strong>Target:</strong> {e.target}</div>
-            <div style={{ fontSize: 12, color: COLORS.textSecondary }}><strong>Focus:</strong> {e.focus}</div>
+          {
+            name: "Independent Repair Shops",
+            color: COLORS.accent,
+            sms: "Mitchell1 · Tekmetric · Shop-Ware · R.O. Writer · AutoFluent",
+            value: "Advisor Agent + Tech Agent + Owner Agent on every RO. Trust Engine. Multi-location orchestration.",
+          },
+          {
+            name: "OEM Dealership Locations",
+            color: "#2563EB",
+            sms: "CDK Global · Reynolds & Reynolds · Dealertrack",
+            value: "3C Story Writer. Warranty Claim Readiness Score. Op code confidence matching. Fixed Ops Director dashboard.",
+          },
+        ].map(c => (
+          <div key={c.name} style={{ border: `1.5px solid ${c.color}30`, borderRadius: 10, padding: "16px 18px", background: `${c.color}04` }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: c.color, marginBottom: 8 }}>{c.name}</div>
+            <Row label="Works on top of" value={c.sms} />
+            <Row label="WrenchIQ adds" value={c.value} accent />
           </div>
         ))}
       </div>
 
       <SectionTitle>Market</SectionTitle>
       <Table
-        headers={["Segment", "Size", "Pain Point"]}
+        headers={["Segment", "Scale", "WrenchIQ Entry Point"]}
         rows={[
-          ["OEM Franchised Dealers", "16,000+ dealers", "Warranty claim rejections, advisor write-up inconsistency"],
-          ["AM Corporate Groups", "12,000+ multi-location", "Fragmented systems, no AI across locations"],
-          ["AM Independent Shops", "168,000 shops", "$1M–$5M/yr, on Mitchell1/paper/Tekmetric"],
-        ]}
-      />
-
-      <SectionTitle>Pricing</SectionTitle>
-      <Table
-        headers={["Tier", "Price", "Target"]}
-        rows={[
-          ["Starter",        "$199/mo",           "1–2 bay, basic RO + DVI"],
-          ["Pro",            "$399/mo",           "3–8 bays, full AI features"],
-          ["Enterprise",     "Custom",            "10+ locations, API access, SLA"],
-          ["3C Writer Add-on","$99/mo/location",  "OEM story writer add-on"],
+          ["OEM Franchised Dealers", "16,000+ US dealers", "3C Story Writer — plugs into DMS, no migration"],
+          ["AM Corporate Groups", "12,000+ multi-location operators", "Agent layer on top of their existing SMS"],
+          ["AM Independent Shops", "168,000 shops, $1M–$5M/yr", "Agent-augmented SMS (Mitchell1, Tekmetric, etc.)"],
         ]}
       />
 
@@ -438,35 +131,262 @@ function SectionOverview({ edition }) {
       <Table
         headers={["Metric", "Target"]}
         rows={[
-          ["Time to open new RO",       "< 3 minutes"],
-          ["DVI completion rate",       "90%"],
+          ["RO open time (5-step wizard)", "< 3 minutes"],
+          ["DVI completion rate", "90%"],
           ["Customer digital approval", "85% same-day"],
-          ["ARO improvement",           "+20% vs. baseline"],
-          ["Tech time-on-wrenches",     "+15%"],
-          ["Parts margin capture",      "+3–5%"],
-          ["Rebate capture rate",       "80% of eligible"],
-          ["Customer trust score avg",  "75/100"],
-          ["Net Revenue Retention",     "110%"],
-        ]}
-      />
-
-      <SectionTitle>Roadmap</SectionTitle>
-      <Table
-        headers={["Milestone", "Date", "Deliverables"]}
-        rows={[
-          ["M0 Demo",     "Mar 2026",  "14-screen interactive demo, persona gateway"],
-          ["M1 Alpha",    "Apr 2026",  "Backend API v1, real data persistence"],
-          ["M2 Beta",     "Jun 2026",  "3 pilot shops, payments live, Twilio live"],
-          ["M3 GA v1.0",  "Aug 2026",  "Full launch: RO, DVI, Scheduling, Portal"],
-          ["M4 3C",       "Sep 2026",  "3C Story Writer embedded in RO workflow"],
-          ["M5 Mobile",   "Nov 2026",  "iOS + Android native technician app"],
-          ["M6 Enterprise","Q1 2027",  "Multi-location, fleet accounts, OEM GA"],
+          ["ARO improvement vs baseline", "+20%"],
+          ["Tech time-on-wrenches", "+15%"],
+          ["Warranty claim rejection reduction", "40%+"],
+          ["Parts margin capture improvement", "+3–5%"],
+          ["Customer trust score avg", "75/100"],
+          ["Agent activation time (new shop)", "< 1 business day"],
         ]}
       />
     </div>
   );
 }
 
+// ── Section: Agent Architecture ───────────────────────────────
+function SectionAgents() {
+  const AGENT_CARDS = [
+    {
+      id: "advisor", label: "WrenchIQ Advisor Agent", persona: "advisor",
+      screen: "Check-in, RO Board, Trust Engine",
+      color: "#2563EB",
+      responsibilities: [
+        "Check-in guidance, upsell framing, fleet account protocol",
+        "Surfaces customer memory: payment preferences, approval thresholds, communication style",
+        "Appends timestamped events to daily shop log",
+        "Drives Trust Engine recommendations",
+      ],
+      memory_reads: "customer_*, playbook_*, MEMORY.md",
+      memory_writes: "logs/YYYY/MM/DD.md (append-only)",
+    },
+    {
+      id: "tech", label: "WrenchIQ Tech Agent", persona: "tech",
+      screen: "Tech Mobile View, DVI",
+      color: "#16A34A",
+      responsibilities: [
+        "DVI inspection add-on recommendations",
+        "Parts reality checks (availability, cross-references, lead times)",
+        "Phrases upsell recommendations to advisor with labor overlap math",
+        "Appends inspection findings and bay events to daily log",
+      ],
+      memory_reads: "playbook_*, vendor_*, MEMORY.md",
+      memory_writes: "logs/YYYY/MM/DD.md (append-only)",
+    },
+    {
+      id: "owner", label: "WrenchIQ Owner Agent", persona: "owner",
+      screen: "Analytics, Command Center, Multi-Location",
+      color: COLORS.accent,
+      responsibilities: [
+        "End-of-day synthesis and revenue digest",
+        "Revenue pipeline visibility — pending approvals, bay utilization",
+        "Captures owner corrections as shop playbook rules",
+        "Cross-location pattern recognition and SOP deployment",
+      ],
+      memory_reads: "context_*, playbook_*, MEMORY.md (read-heavy)",
+      memory_writes: "playbook_* (owner-validated rules)",
+    },
+    {
+      id: "consolidation", label: "Memory Consolidation Agent", persona: "background",
+      screen: "Nightly background worker",
+      color: "#6B7280",
+      responsibilities: [
+        "Runs once per shop after local business close",
+        "Merges daily log signals into topic memory files",
+        "Resolves contradictions, removes stale pointers",
+        "Refreshes MEMORY.md index — coherent for next session",
+      ],
+      memory_reads: "logs/YYYY/MM/DD.md",
+      memory_writes: "customer_*, playbook_*, context_*, MEMORY.md",
+    },
+  ];
+
+  return (
+    <div>
+      {/* System overview */}
+      <div style={{ background: "linear-gradient(135deg, #0D3B45, #0D2A40)", borderRadius: 12, padding: "20px 24px", marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+          Design Principle
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.65 }}>
+          The WrenchIQ agent layer combines <strong style={{ color: "#fff" }}>live shop system state</strong> (RO system, DMS, scheduling board, bay status) with <strong style={{ color: "#fff" }}>durable memory</strong> for anything not reliably derivable from those systems — customer behavioral nuance, owner-validated playbooks, transient operational context. If you can look it up in the DMS or parts catalog, it does not belong in memory.
+        </div>
+      </div>
+
+      {/* Agent cards */}
+      {AGENT_CARDS.map(a => (
+        <div key={a.id} style={{ border: `1.5px solid ${a.color}30`, borderRadius: 12, padding: "16px 18px", marginBottom: 14, background: `${a.color}04` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: a.color }} />
+            <span style={{ fontSize: 14, fontWeight: 800, color: a.color }}>{a.label}</span>
+            <Badge label={a.screen} color={a.color} />
+          </div>
+          <div style={{ paddingLeft: 20, marginBottom: 10 }}>
+            {a.responsibilities.map((r, i) => (
+              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 5 }}>
+                <span style={{ color: a.color, fontSize: 10, marginTop: 3 }}>▸</span>
+                <span style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>{r}</span>
+              </div>
+            ))}
+          </div>
+          <Row label="Memory reads" value={a.memory_reads} />
+          <Row label="Memory writes" value={a.memory_writes} accent />
+        </div>
+      ))}
+
+      <SectionTitle>Memory Architecture — Four Types</SectionTitle>
+      <Table
+        headers={["Type", "Stores", "Does NOT store"]}
+        rows={[
+          ["customer", "Behavioral nuance, fleet protocols, communication preferences", "What happened (that's CRM)"],
+          ["shop_playbook", "Owner-validated rules, confirmed tactics, approval workflows + Why/How", "Catalog data, list prices"],
+          ["shop_context", "Current conditions systems don't model — staffing, equipment, promotions (dated)", "HR records, certifications"],
+          ["vendor_and_resource", "Supplier portals, warranty contacts, rate sheets — pointers to external truth", "Full RO payloads"],
+        ]}
+      />
+
+      <SectionTitle>Memory Layout</SectionTitle>
+      <CodeBlock code={`/platform/shops/{shop-id}/memory/
+├── MEMORY.md                          # Index — loaded at every session start (~200 lines max)
+├── customer_chen_preferences.md       # One file per memory topic
+├── customer_kim_fleet_protocol.md
+├── playbook_upsell_timing.md
+├── playbook_brake_bundle_discount.md
+├── context_surge_week_apr2026.md
+├── vendor_worldpac_brake_parts.md
+└── logs/
+    └── 2026/
+        └── 04/
+            └── 2026-04-15.md          # Append-only raw signal during business day`} />
+
+      <SectionTitle>Memory Consolidation — Nightly Phases</SectionTitle>
+      <Table
+        headers={["Phase", "Action"]}
+        rows={[
+          ["1 — Inspect", "List existing topic files + read current MEMORY.md"],
+          ["2 — Gather Signal", "Read logs/YYYY/MM/DD.md, query tools if needed"],
+          ["3 — Merge", "Push new signal into topic files, avoid near-duplicates"],
+          ["4 — Clean", "Remove stale pointers, resolve contradictions, refresh MEMORY.md index"],
+          ["Lock / unlock", "Per-shop lock with 1-hour stale timeout. Roll back watermark on failure."],
+        ]}
+      />
+
+      <SectionTitle>Real-Time: Memory + Live State Combined</SectionTitle>
+      <Table
+        headers={["Live State (from SMS/DMS)", "Durable Memory", "Agent Output"]}
+        rows={[
+          ["Open RO line items, bay idle windows", "Shop playbook rules, customer preferences", "Prioritized action + call script + price position"],
+          ["Pending approvals, clock time", "Context priorities, call window playbook", "Ordered action queue for end-of-day"],
+          ["Parts availability, labor overlap", "Timing belt/water pump playbook, customer history", "Phased upsell recommendation with labor overlap justification"],
+        ]}
+      />
+
+      <SectionTitle>Multi-Tenant Isolation</SectionTitle>
+      <div style={{ background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "14px 18px", fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.65 }}>
+        <strong style={{ color: COLORS.textPrimary }}>No cross-shop memory reads.</strong> Each shop's agents read and write only their own memory prefix. The Fleet Orchestrator schedules consolidation with jitter across shops — never a global lock. Three platform tiers: <em>real-time advisors</em> (stateless request/response, continuity from memory), <em>nightly consolidation</em> (scheduled per-shop, lock-protected), and <em>fleet orchestration</em> (kill switches, tunable windows).
+      </div>
+    </div>
+  );
+}
+
+// ── Section: Value Proposition ────────────────────────────────
+function SectionValueProp() {
+  const INDEPENDENT_VALUE = [
+    { title: "Zero SMS Replacement Friction", detail: "Any shop on Mitchell1, Tekmetric, Shop-Ware, or R.O. Writer activates the agent layer in under a day. No data migration, no workflow change, no retraining." },
+    { title: "AI Copilot on Every Screen", detail: "Contextually aware across all screens — not an isolated chat bolt-on. Each persona's agent surfaces the right action for that moment in the repair workflow." },
+    { title: "Persistent Shop Memory", detail: "The agent remembers customer preferences, owner-validated playbooks, and shop context across every session. It gets smarter every week without manual programming." },
+    { title: "Proactive Trust Engine", detail: "At-risk customer scoring before they churn. Flags unhappy customers at 72 hours, not after a 1-star review. Proactive vs. reactive." },
+    { title: "Multi-Location Fleet Intelligence", detail: "100-location command center with real-time performance visibility — 3C compliance rates, technician efficiency, revenue vs target, SOP deployment." },
+    { title: "6-Vendor AI Parts Ranking", detail: "Real-time pricing from Worldpac, O'Reilly, PartsTech and 3 more. AI-ranked by margin, availability, and delivery ETA in one screen." },
+  ];
+
+  const OEM_VALUE = [
+    { title: "3C Story Writer — Plugs Into DMS", detail: "AI-generated Complaint · Cause · Correction narratives from voice, DTC, and tech notes. OEM-compliant in under 30 seconds. Direct push to CDK, R&R, Dealertrack — no copy-paste." },
+    { title: "Warranty Claim Readiness Score", detail: "96-point real-time checklist before submission. Recovers $3,000–$6,000/mo per dealer in previously rejected warranty claims." },
+    { title: "Op Code Confidence Matching", detail: "AI matches repair to top-3 OEM labor operation codes with confidence percentage. Eliminates wrong-code rejections — the #1 cause of warranty claim rejection." },
+    { title: "Fixed Ops Director Dashboard", detail: "Per-advisor approval rates, rejection root cause analysis, dollars-at-risk, multi-dealer rollup — all in one view. No manual reporting." },
+    { title: "DMS Bi-Directional Sync", detail: "Field-mapped sync with CDK Fortellis, Reynolds ERA-IGNITE, and Dealertrack. ROs opened in DMS appear instantly in WrenchIQ. No double-entry." },
+    { title: "OEM Tech Agent on Every Bay", detail: "TSB auto-match by VIN + complaint, voice note → 3C narrative, warranty flag, op code confirm — iPad native. Guides techs without disrupting workflow." },
+  ];
+
+  const WHY = [
+    ["AI-native, not AI-retrofitted", "Every screen, every workflow was designed around AI assistance from day one. Competitors bolt on chat windows after the fact."],
+    ["Adds to what shops already have", "WrenchIQ never asks a shop to abandon their SMS or a dealer to replace their DMS. The agent layer activates on top — frictionless adoption."],
+    ["Predii's 10-year automotive data advantage", "Built on Predii's automotive AI/ML platform — OEM data, TSB/recall corpus, repair pattern models already in production. Not starting from scratch."],
+    ["Shop memory that compounds", "The more a shop uses WrenchIQ, the smarter it gets. Owner playbooks, customer preferences, and confirmed tactics accumulate into a permanent intelligence asset."],
+    ["Customer trust as a first-class metric", "Trust Engine scores every customer relationship 0–100. No competitor treats customer retention as a data model. WrenchIQ does."],
+  ];
+
+  return (
+    <div>
+      <div style={{ background: "linear-gradient(135deg, #0D3B45, #1a2e44)", borderRadius: 14, padding: "22px 28px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+        <div style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+          Internal — For Sales, Product & Engineering
+        </div>
+        <div style={{ fontSize: 17, fontWeight: 900, color: "#fff", lineHeight: 1.4, marginBottom: 8 }}>
+          WrenchIQ adds the thinking layer.<br />The SMS keeps the data.
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6, maxWidth: 540 }}>
+          Most SMS platforms are excellent record-keeping tools but passive — they store data, they do not think. WrenchIQ acts as the thinking layer on top: watching every RO, surfacing the right action to the right person at the right moment.
+        </div>
+        <div style={{ position: "absolute", right: -20, top: -20, width: 120, height: 120, borderRadius: "50%", background: `${COLORS.accent}18` }} />
+      </div>
+
+      <SectionTitle>For Independent Repair Shops</SectionTitle>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+        {INDEPENDENT_VALUE.map((h, i) => (
+          <div key={i} style={{ border: `1.5px solid ${COLORS.accent}20`, borderRadius: 10, padding: "14px 16px", background: `${COLORS.accent}04` }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 4 }}>{h.title}</div>
+            <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5 }}>{h.detail}</div>
+          </div>
+        ))}
+      </div>
+
+      <SectionTitle>For OEM Dealership Locations</SectionTitle>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+        {OEM_VALUE.map((h, i) => (
+          <div key={i} style={{ border: "1.5px solid rgba(37,99,235,0.2)", borderRadius: 10, padding: "14px 16px", background: "rgba(37,99,235,0.03)" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 4 }}>{h.title}</div>
+            <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5 }}>{h.detail}</div>
+          </div>
+        ))}
+      </div>
+
+      <SectionTitle>Why WrenchIQ — Internal Talking Points</SectionTitle>
+      {WHY.map(([title, detail], i) => (
+        <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10, padding: "12px 16px", borderRadius: 10, background: "#FFFBEB", border: "1px solid #FDE68A" }}>
+          <div style={{ width: 22, height: 22, borderRadius: 6, background: COLORS.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 3 }}>{title}</div>
+            <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>{detail}</div>
+          </div>
+        </div>
+      ))}
+
+      <SectionTitle>Quantified Impact</SectionTitle>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+        {[
+          { val: "+20%",  label: "ARO improvement",             sub: "AI parts + approval nudges" },
+          { val: "$3K+",  label: "Warranty recovery / dealer",  sub: "claim readiness score — OEM" },
+          { val: "85%",   label: "Same-day digital approvals",  sub: "magic link SMS flow" },
+          { val: "< 1d",  label: "Agent activation time",       sub: "new shop, any SMS" },
+          { val: "< 3m",  label: "New RO open time",            sub: "5-step wizard" },
+          { val: "100+",  label: "Locations, one dashboard",    sub: "corporate group command" },
+        ].map((m, i) => (
+          <div key={i} style={{ border: "1.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px", textAlign: "center" }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: COLORS.accent, letterSpacing: -1, marginBottom: 4 }}>{m.val}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 2 }}>{m.label}</div>
+            <div style={{ fontSize: 10, color: COLORS.textMuted }}>{m.sub}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Section: Personas ─────────────────────────────────────────
 function SectionPersonas() {
   const PERSONAS = [
     {
@@ -475,8 +395,7 @@ function SectionPersonas() {
       landing: "Queue + active RO board (In Queue / Diagnosing / Approval / Ready Pickup) + Next Up card",
       workflow: "5-step guided RO: Customer Lookup → Vehicle Confirm → Complaint Entry → Intelligent Estimate → Approval & RO Open",
       nav: ["RO Queue & Board", "Parts Intelligence", "Scheduling", "Trust Engine"],
-      hidden: ["Analytics", "Multi-location", "Supplier rebates", "Bay config", "Raw parts catalog", "Margin settings"],
-      ai: "Complaint → diagnosis translation, vendor auto-pricing, approval nudge, TSB flagging",
+      ai: "Complaint → diagnosis, vendor auto-pricing, approval nudge, TSB flagging. Advisor Agent surfaces memory-backed customer context.",
     },
     {
       id: "tech", label: "Technician", color: "#16A34A",
@@ -484,8 +403,7 @@ function SectionPersonas() {
       landing: "iPad-optimized job list — Active + Up Next cards with RO number, vehicle, job description",
       workflow: "8-point DVI: full-screen category by category, YES/WATCH/NO, camera + voice per item, 60s video walkaround",
       nav: ["My Jobs", "Reports"],
-      hidden: ["Pricing", "Margins", "Customer financials", "Multi-location", "Customer contact details"],
-      ai: "Auto-suggest labor code + parts + time after marking Needs Service. TSB viewer pre-loaded per RO.",
+      ai: "Tech Agent: auto-suggest labor code + parts + time after marking Needs Service. TSB viewer pre-loaded per RO. Upsell phrasing to advisor.",
     },
     {
       id: "owner", label: "Shop Owner", color: COLORS.accent,
@@ -493,8 +411,7 @@ function SectionPersonas() {
       landing: "Revenue vs target, bay utilization, approval rate, CSI; WrenchIQ Agent proactive alerts; Live 6-bay grid",
       workflow: "Natural language commands: 'What's my best tech?' / 'Move Volvo to Bay 2' / 'Worldpac spend vs last month?'",
       nav: ["Today", "Bays", "Suppliers", "Team", "Reports"],
-      hidden: ["Nothing — full visibility"],
-      ai: "Revenue forecasting, margin leak detection, rebate optimization, approval nudges, tech performance benchmarks",
+      ai: "Owner Agent: revenue forecasting, margin leak detection, rebate optimization, approval nudges, tech performance. Captures corrections as playbook rules.",
     },
     {
       id: "customer", label: "Car Owner", color: "#7C3AED",
@@ -502,27 +419,26 @@ function SectionPersonas() {
       landing: "Magic link via SMS → vehicle card, live progress bar (4 steps), What We Found, digital approval",
       workflow: "Approve All / Approve Selected / Decline / Call Shop → digital signature → live RO status → pay via Apple Pay / Stripe",
       nav: ["None — single-page progressive disclosure"],
-      hidden: ["Shop costs", "Margins", "Other customers", "Tech last names", "Parts vendors"],
-      ai: "Plain-English repair explanations, wait time estimates, price vs dealer comparison",
+      ai: "Plain-English repair explanations, wait time estimates, price transparency",
     },
   ];
 
   return (
     <div>
-      <SectionTitle>AI Integration by Persona</SectionTitle>
+      <SectionTitle>AI Capabilities by Persona</SectionTitle>
       <Table
-        headers={["Feature", "Advisor", "Tech", "Owner", "Customer"]}
+        headers={["Capability", "Advisor Agent", "Tech Agent", "Owner Agent", "Customer"]}
         rows={[
-          ["Parts auto-pricing",        "Primary", "—",       "Visibility", "—"],
-          ["Complaint → diagnosis",     "Primary", "Reference","—",         "—"],
-          ["Inspection AI suggestions", "—",       "Primary", "—",          "—"],
-          ["Revenue forecasting",       "—",       "—",       "Primary",    "—"],
-          ["Margin leak detection",     "—",       "—",       "Primary",    "—"],
-          ["Rebate optimization",       "—",       "—",       "Primary",    "—"],
-          ["Approval nudges",           "Notified","—",       "Controls",   "—"],
-          ["Plain-English report",      "—",       "—",       "—",          "Primary"],
-          ["Wait time estimates",       "Secondary","—",      "—",          "Primary"],
-          ["TSB / recall lookup",       "Primary", "Reference","—",         "—"],
+          ["Parts auto-pricing",        "Primary",   "—",         "Visibility", "—"],
+          ["Complaint → diagnosis",     "Primary",   "Reference", "—",          "—"],
+          ["Inspection AI suggestions", "—",         "Primary",   "—",          "—"],
+          ["Revenue forecasting",       "—",         "—",         "Primary",    "—"],
+          ["Upsell phrasing to advisor","—",         "Primary",   "—",          "—"],
+          ["Rebate optimization",       "—",         "—",         "Primary",    "—"],
+          ["Customer memory recall",    "Primary",   "—",         "—",          "—"],
+          ["Playbook capture",          "—",         "—",         "Primary",    "—"],
+          ["Plain-English report",      "—",         "—",         "—",          "Primary"],
+          ["TSB / recall lookup",       "Primary",   "Reference", "—",          "—"],
         ]}
       />
 
@@ -537,10 +453,6 @@ function SectionPersonas() {
           <Row label="Core Workflow"   value={p.workflow} />
           <Row label="Navigation"      value={p.nav.join(" · ")} />
           <Row label="AI Capabilities" value={p.ai} accent />
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8, paddingLeft: 0 }}>
-            <span style={{ fontSize: 11, color: COLORS.textMuted }}>Hidden:</span>
-            {p.hidden.map(h => <Badge key={h} label={h} color="#6B7280" bg="#F3F4F6" />)}
-          </div>
         </div>
       ))}
 
@@ -548,32 +460,33 @@ function SectionPersonas() {
       <Table
         headers={["#", "Section", "Key Items"]}
         rows={[
-          ["1", "Tires & Wheels",       "Tread depth (32nds), tire pressure (PSI), wheel condition"],
-          ["2", "Brakes",               "Front/rear pad thickness (mm), rotor condition, brake fluid"],
-          ["3", "Suspension & Steering","Ball joints, tie rods, shocks/struts"],
-          ["4", "Fluids & Filters",     "Engine oil, coolant, transmission fluid, air filter"],
-          ["5", "Belts & Hoses",        "Serpentine belt, coolant hoses, power steering hose"],
-          ["6", "Battery & Electrical", "CCA load test, terminals, alternator output"],
-          ["7", "Lights & Wipers",      "All exterior lights, wiper blade condition"],
-          ["8", "Engine & Exhaust",     "Leaks, exhaust condition, catalytic converter"],
+          ["1", "Tires & Wheels",        "Tread depth (32nds), tire pressure (PSI), wheel condition"],
+          ["2", "Brakes",                "Front/rear pad thickness (mm), rotor condition, brake fluid"],
+          ["3", "Suspension & Steering", "Ball joints, tie rods, shocks/struts"],
+          ["4", "Fluids & Filters",      "Engine oil, coolant, transmission fluid, air filter"],
+          ["5", "Belts & Hoses",         "Serpentine belt, coolant hoses, power steering hose"],
+          ["6", "Battery & Electrical",  "CCA load test, terminals, alternator output"],
+          ["7", "Lights & Wipers",       "All exterior lights, wiper blade condition"],
+          ["8", "Engine & Exhaust",      "Leaks, exhaust condition, catalytic converter"],
         ]}
       />
     </div>
   );
 }
 
+// ── Section: Flows ────────────────────────────────────────────
 function SectionFlows() {
   const FLOWS = [
     {
-      title: "Flow 1: Social Lead → First Visit",
-      time: "8–12 min total",
+      title: "Flow 1: SMS Adapter Activation",
+      time: "< 1 business day",
       steps: [
-        "Instagram/TikTok DM received → intent detected (Hot: brake service)",
-        "AI classifies intent + drafts reply → advisor sends in < 30 sec",
-        "Customer replies with vehicle info → auto-creates profile",
-        "Advisor books appointment → SMS confirmation sent",
-        "System notifies tech + pre-loads TSBs for vehicle",
-        "Appointment → RO → DVI → Health Report → Approval",
+        "Shop selects SMS platform (Mitchell1, Tekmetric, Shop-Ware…)",
+        "WrenchIQ Normalization Layer parses SMS-native RO format",
+        "Maps to Universal WrenchIQ RO Schema → writes to MongoDB",
+        "Agent Layer activates — Advisor, Tech, Owner agents online",
+        "MEMORY.md bootstrapped from existing customer + RO history",
+        "First proactive alert surfaced within hours of activation",
       ],
     },
     {
@@ -581,51 +494,48 @@ function SectionFlows() {
       time: "< 3 min RO open",
       steps: [
         "License plate scan → customer profile + TSBs + comm preference loads instantly",
-        "5-step RO Wizard → RO assigned to tech",
-        "Tech completes DVI with photo/video/voice",
-        "AI generates health report in < 15 sec",
-        "Customer receives SMS link → opens on phone",
-        "Customer approves digitally → parts ordered → invoice → Apple Pay",
+        "Advisor Agent recalls customer memory: 'Monica approves spend herself, no financing offers'",
+        "5-step RO Wizard → tech assigned",
+        "Tech Agent completes DVI with photo/video/voice, suggests labor codes",
+        "AI generates health report in < 15 seconds",
+        "Customer receives SMS link → digital approval → parts ordered → Apple Pay",
         "2hr post-pickup: review request auto-sent via Twilio",
       ],
     },
     {
-      title: "Flow 3: Competing Against OEM Dealer",
-      time: "Trust-building sequence",
+      title: "Flow 3: OEM Warranty Claim — 3C Story Writer",
+      time: "< 30 seconds narrative",
       steps: [
-        "VIN entered → service history + active recalls + TSBs pulled",
-        "Advisor mentions TSB customer didn't know about (loyalty signal)",
-        "Full video DVI inspection recorded and narrated",
-        "Health report shows $487 WrenchIQ vs $820 dealership price",
-        "Higher approval rate due to trust + transparency + price",
-        "Personalized care reminder scheduled 3 months out",
-        "Pre-visit text → customer books without hesitation",
+        "Tech completes repair → enters DTCs + voice note",
+        "3C Story Writer generates Complaint · Cause · Correction narrative",
+        "Op code confidence matching identifies top-3 OEM labor ops",
+        "Warranty Claim Readiness Score computed (96-point checklist)",
+        "Advisor reviews, approves → one-click DMS push to CDK/R&R/Dealertrack",
+        "Claim submitted — all fields mapped, no copy-paste",
       ],
     },
     {
-      title: "Flow 4: Corporate Group Morning Review",
+      title: "Flow 4: Owner Daily Briefing",
+      time: "5 min / day",
+      steps: [
+        "Owner opens app → Owner Agent loads context_* + playbook_* from memory",
+        "Agent queries live RO system: pending approvals, bay status, ELR",
+        "'3 pending approvals worth $2,840. Bay 4 idle since 2pm — 2hr window available.'",
+        "Owner replies: 'Add rule: always call pending approvals by 4pm'",
+        "Owner Agent writes playbook_approval_call_window.md",
+        "Rule active for all future Advisor Agent sessions",
+      ],
+    },
+    {
+      title: "Flow 5: Corporate Group Morning Review",
       time: "10 min / day",
       steps: [
         "Owner opens iPhone 6 AM → 94 green / 4 yellow / 2 red location map",
+        "Fleet Orchestrator has run nightly consolidation across all shops",
         "AI morning brief: best location Houston 3 ($67K, 4.9★)",
-        "Concern: Phoenix 7 comeback rate +12% → owner taps location",
-        "AI identifies transmission flush pattern = Houston 2 from 2024",
-        "Owner taps 'Deploy Training' → techs notified instantly",
-        "Approves parts transfer across 23 locations",
-        "Reviews before 7 AM team call — fully prepared",
-      ],
-    },
-    {
-      title: "Flow 5: Upset Customer Recovery",
-      time: "20 min resolution",
-      steps: [
-        "Facebook negative comment → Social Inbox URGENT flag (sentiment: negative)",
-        "AI drafts empathetic response → advisor personalizes + sends < 5 min",
-        "Manager pulls RO → identifies root cause",
-        "Customer called directly → same-day comeback booked",
-        "Trust score drops 62 → 45 → comeback fixed → score recovers to 58",
-        "AI queues 30-day free tire check offer",
-        "No negative review posted — relationship saved",
+        "Concern: Phoenix 7 comeback rate +12% → Fleet Agent identifies pattern",
+        "Owner taps 'Deploy Training' → playbook pushed to Phoenix 7 tech agents",
+        "Approves parts transfer across 23 locations before 7 AM team call",
       ],
     },
   ];
@@ -636,13 +546,14 @@ function SectionFlows() {
       <Table
         headers={["Action", "Target Time"]}
         rows={[
-          ["Check-in to RO open",             "< 60 seconds"],
-          ["New RO via 5-step wizard",         "< 3 minutes"],
-          ["DVI health report generation",     "< 15 seconds"],
-          ["Customer digital approval",        "< 3 minutes"],
-          ["Social DM response with AI draft", "< 30 seconds"],
-          ["Parts pricing (3 vendors)",        "< 2 seconds"],
-          ["VIN → TSB + recall check",         "< 1 second"],
+          ["Agent activation (new shop, any SMS)", "< 1 business day"],
+          ["Check-in to RO open",                  "< 60 seconds"],
+          ["New RO via 5-step wizard",              "< 3 minutes"],
+          ["DVI health report generation",          "< 15 seconds"],
+          ["Customer digital approval",             "< 3 minutes"],
+          ["3C narrative generation",               "< 30 seconds"],
+          ["Parts pricing (3 vendors, real-time)",  "< 2 seconds"],
+          ["VIN → TSB + recall check",              "< 1 second"],
         ]}
       />
 
@@ -667,98 +578,129 @@ function SectionFlows() {
   );
 }
 
-function SectionCompetitive() {
-  return (
-    <div>
-      <SectionTitle>Feature Comparison Matrix</SectionTitle>
-      <div style={{ border: `1px solid #E5E7EB`, borderRadius: 10, overflow: "hidden", marginBottom: 20 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 1fr 1fr 1fr", background: COLORS.primary, padding: "8px 14px" }}>
-          {["Feature", "Mitchell1", "Tekmetric", "Shop-Ware", "Shopmonkey", "WrenchIQ"].map(h => (
-            <div key={h} style={{ fontSize: 9, fontWeight: 700, color: h === "WrenchIQ" ? COLORS.accent : "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: 0.3 }}>{h}</div>
-          ))}
-        </div>
-        {[
-          ["Cloud-native",                  "No",  "Yes", "Yes", "Yes", "Yes"],
-          ["Mobile tech app",               "Ltd", "Yes", "Yes", "Yes", "Yes — full bay"],
-          ["DVI",                           "Basic","Str","Str","Basic","AI-assisted"],
-          ["Digital customer approval",     "Yes", "Yes", "Yes", "Yes", "Yes + financing"],
-          ["Online scheduling",             "Basic","Yes","Yes","Yes", "AI demand forecast"],
-          ["Multi-vendor parts pricing",    "No",  "No",  "No",  "No",  "6 vendors, AI-ranked"],
-          ["AI Copilot embedded",           "No",  "No",  "No",  "No",  "Every screen"],
-          ["Social DM → RO pipeline",       "No",  "No",  "No",  "No",  "TikTok/IG/Google"],
-          ["3C Story Writer (AI docs)",     "No",  "No",  "No",  "No",  "4 specialty outputs"],
-          ["Warranty claim automation",     "No",  "No",  "No",  "No",  "OEM rules engine"],
-          ["Recall auto-detection per VIN", "No",  "No",  "No",  "No",  "NHTSA live check"],
-          ["Customer trust scoring",        "No",  "No",  "No",  "No",  "Trust Engine 0–100"],
-          ["Multi-location command center", "Basic","Ltd","No","No",    "100+ locations"],
-          ["Pro tier pricing",              "$350","$299","$349","$199", "$399/mo"],
-        ].map((row, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 1fr 1fr 1fr", padding: "8px 14px", borderBottom: i < 13 ? "1px solid #F3F4F6" : "none", background: i % 2 === 0 ? "#fff" : "#FAFAFA", alignItems: "center" }}>
-            {row.map((cell, j) => (
-              <div key={j} style={{ fontSize: j === 5 && cell !== "No" && cell !== "$399/mo" ? 11 : 11, fontWeight: j === 0 ? 600 : j === 5 ? 700 : 400, color: j === 5 ? (cell === "No" || cell === "$399/mo" ? COLORS.textSecondary : COLORS.accent) : j === 0 ? COLORS.textPrimary : COLORS.textMuted }}>{cell}</div>
-            ))}
-          </div>
-        ))}
-      </div>
+// ── Section: Templates ────────────────────────────────────────
+const FILE_CONTENTS = {
+  shop_config: `{
+  "shop_id": "shop-001",
+  "name": "Peninsula Precision Auto",
+  "address": "2847 El Camino Real, Palo Alto, CA 94306",
+  "labor_rate": 195,
+  "bays": 6,
+  "sms_adapter": "tekmetric",
+  "agent_layer": {
+    "advisor_agent": true,
+    "tech_agent": true,
+    "owner_agent": true,
+    "consolidation_window": "22:00-23:59 local"
+  },
+  "integrations": {
+    "parts_vendors": ["worldpac", "oreilly", "partstech"],
+    "accounting": "quickbooks",
+    "payments": ["stripe", "dignifi", "sunbit"]
+  },
+  "ai": {
+    "model": "claude-sonnet-4-6",
+    "context_aware": true,
+    "proactive_alerts": true
+  }
+}`,
+  repair_order: `{
+  "ro_id": "RO-2024-1187",
+  "shop_id": "shop-001",
+  "customer_id": "cust-003",
+  "vehicle_id": "veh-001",
+  "advisor_id": "adv-001",
+  "tech_id": "tech-001",
+  "status": "awaiting_approval",
+  "complaint": "Check engine light, rough idle at startup",
+  "diagnosis": "P0420 — Catalyst system efficiency below threshold (Bank 1)",
+  "tsb_refs": ["TSB-2021-0144"],
+  "line_items": [
+    { "id": "li-001", "type": "labor", "description": "Diagnostic Fee", "hours": 0.5, "rate": 195, "total": 97.50 },
+    { "id": "li-002", "type": "part",  "description": "Catalytic Converter", "vendor": "worldpac", "cost": 218, "price": 420, "ai_selected": true },
+    { "id": "li-003", "type": "labor", "description": "Labor — Installation 1.5 hrs", "hours": 1.5, "rate": 195, "total": 292.50 }
+  ],
+  "subtotal": 810.00,
+  "tax": 53.44,
+  "total": 863.44,
+  "approval_channel": "sms"
+}`,
+  memory_index: `# MEMORY.md — Peninsula Precision Auto
+# Index — loaded at every agent session start
 
-      <SectionTitle>WrenchIQ's 7 Competitive Advantages</SectionTitle>
-      {[
-        { n: 1, title: "AI Copilot in Every Screen", detail: "Contextually aware across all 14 screens — not an isolated feature bolt-on. Each screen has tailored AI suggestions, not generic chat." },
-        { n: 2, title: "Social-to-RO Conversion", detail: "Zero competitors capture TikTok/Instagram/Google Business DMs and convert them to appointments and ROs. Entirely new acquisition channel." },
-        { n: 3, title: "3C Story Writer — 4 Specialty Outputs", detail: "AI generates structured Complaint-Cause-Correction narratives from one repair event: warranty docs, customer report, fleet schema, recall compliance." },
-        { n: 4, title: "Warranty Documentation Automation", detail: "Claim Readiness Score + OEM rules engine. Recovers $3,000+/mo per dealership in previously rejected warranty claims." },
-        { n: 5, title: "Trust Engine (Proactive)", detail: "Proactive at-risk scoring vs. competitors' reactive reviews. Flags customers before they churn, not after they post a 1-star." },
-        { n: 6, title: "Multi-Vendor AI Parts Ranking", detail: "6 vendors, real-time pricing, AI-ranked by price + availability + margin + delivery. No competitor does more than 1 vendor lookup." },
-        { n: 7, title: "Recall Capture Revenue Workflow", detail: "Auto-detect open recalls at check-in, structured revenue workflow, compliance documentation. Turns safety recall into revenue + trust moment." },
-      ].map(a => (
-        <div key={a.n} style={{ display: "flex", gap: 12, marginBottom: 10, padding: "10px 14px", borderRadius: 10, background: "#FFFBEB", border: "1px solid #FDE68A" }}>
-          <div style={{ width: 22, height: 22, borderRadius: 6, background: COLORS.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{a.n}</div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 3 }}>{a.title}</div>
-            <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>{a.detail}</div>
-          </div>
-        </div>
-      ))}
+- [Sarah Chen preferences](customer_chen_preferences.md) — itemized quotes, approves spend herself, no financing offers
+- [Kim Fleet protocol](customer_kim_fleet_protocol.md) — PO required >$500, call Mike not Lisa
+- [Brake bundle playbook](playbook_brake_bundle_discount.md) — 8% bundle with rotors improved close rate 23%
+- [Water pump with timing belt](playbook_upsell_timing.md) — always recommend when timing belt; labor overlap justification
+- [Worldpac net-30 terms](vendor_worldpac_terms.md) — net-30 account, rep is Jake at (650) 555-0181
+- [April surge context](context_surge_week_apr2026.md) — car show weekend Apr 19-20, 40% capacity surge expected`,
+  dealer_config: `{
+  "dealer_id": "dlr-00142",
+  "oem_brand": "Honda",
+  "franchise_code": "HDA-94306",
+  "dealer_name": "Peninsula Honda",
+  "dms": {
+    "provider": "cdk",
+    "endpoint": "https://api.cdk.com/fortellis/v2",
+    "dealer_code": "94306-H",
+    "sync_interval_min": 5
+  },
+  "agent_layer": {
+    "advisor_agent": true,
+    "tech_agent": true,
+    "story_writer": true,
+    "warranty_rules_engine": true
+  },
+  "warranty": {
+    "oem_portal": "https://warranty.honda.com/api/v2",
+    "auto_submit": true,
+    "claim_readiness_threshold": 85
+  },
+  "compliance": {
+    "csi_target": 92,
+    "mpi_required": true,
+    "story_writer_enabled": true
+  }
+}`,
+  warranty_claim: `{
+  "claim_id": "WC-2024-00891",
+  "dealer_id": "dlr-00142",
+  "ro_id": "RO-DLR-5541",
+  "oem_brand": "Honda",
+  "vin": "1HGCV1F30MA012345",
+  "complaint": "Transmission rough shifting between 2nd and 3rd gear",
+  "cause": "Transmission control module software version 1.2.4 — calibration defect",
+  "correction": "Reflashed TCM to version 1.4.1 per HDA TSB #23-041",
+  "tsb_number": "HDA-2023-041",
+  "labor_ops": [
+    { "op_code": "28111600AA", "desc": "TCM Reprogram", "hrs": 0.4 }
+  ],
+  "readiness_score": 96,
+  "claim_amount": 78.00,
+  "dms_push": { "target": "CDK", "dealer_code": "04147", "status": "ready" }
+}`,
+};
 
-      <SectionTitle>White Space — Features No Competitor Has</SectionTitle>
-      <Table
-        headers={["Priority", "Feature"]}
-        rows={[
-          ["P0", "AI-generated 3C documentation (Complaint · Cause · Correction)"],
-          ["P0", "Social media DM → RO conversion pipeline"],
-          ["P0", "Warranty Claim Readiness Score + OEM rules engine"],
-          ["P0", "Proactive Trust Engine with at-risk customer scoring"],
-          ["P0", "Multi-vendor AI parts ranking (6 vendors, real-time)"],
-          ["P1", "Recall auto-detection + structured revenue capture workflow"],
-          ["P1", "Fleet 3C documentation with schema-per-account"],
-          ["P1", "AI demand forecasting for bay scheduling"],
-          ["P1", "Technician voice capture → structured RO notes"],
-          ["P1", "Rejection recovery AI — revise and resubmit warranty claims"],
-          ["P1", "Financing at point of digital approval (DigniFi/Sunbit native)"],
-          ["P2", "Customer reading level adaptation for health reports"],
-          ["P2", "Predictive parts stocking from historical RO data"],
-          ["P2", "Cross-location knowledge sharing (AI pattern recognition)"],
-        ]}
-      />
-    </div>
-  );
-}
+const TEMPLATE_FILES = [
+  { id: "shop_config",    label: "shop_config.json",    note: "Independent shop" },
+  { id: "repair_order",   label: "repair_order.json",   note: "Universal RO schema" },
+  { id: "memory_index",   label: "MEMORY.md",           note: "Shop memory index" },
+  { id: "dealer_config",  label: "dealer_config.json",  note: "OEM dealer" },
+  { id: "warranty_claim", label: "warranty_claim.json", note: "OEM warranty" },
+];
 
-function SectionTemplates({ edition }) {
-  const files = edition === "AM" ? AM_FILES : OEM_FILES;
-  const [activeFile, setActiveFile] = useState(files[0].id);
-
+function SectionTemplates() {
+  const [activeFile, setActiveFile] = useState(TEMPLATE_FILES[0].id);
   return (
     <div>
       <p style={{ fontSize: 13, color: COLORS.textSecondary, marginTop: 0, marginBottom: 16, lineHeight: 1.6 }}>
-        {edition === "AM"
-          ? "Core JSON schemas for WrenchIQ-AM aftermarket shops. These define the data contracts between the frontend, backend API, and integration partners."
-          : "OEM-specific schemas for dealership DMS sync, warranty claim submission, and OEM-mandated MPI templates. Compliant with CDK Fortellis, Reynolds & Reynolds, and Dealertrack connectors."}
+        Core schemas for WrenchIQ — the Universal RO Schema, shop memory index format, and dealer configuration. These define the data contracts between the SMS adapter, agent layer, and integration partners.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-        {files.map(f => (
+        {TEMPLATE_FILES.map(f => (
           <button key={f.id} onClick={() => setActiveFile(f.id)} style={{ padding: "6px 14px", borderRadius: 8, border: `1.5px solid ${activeFile === f.id ? COLORS.accent : COLORS.border}`, background: activeFile === f.id ? `${COLORS.accent}10` : "#F9FAFB", color: activeFile === f.id ? COLORS.accent : COLORS.textSecondary, fontSize: 12, fontWeight: activeFile === f.id ? 700 : 500, cursor: "pointer" }}>
-            {f.label}
+            <span>{f.label}</span>
+            <span style={{ fontSize: 10, color: COLORS.textMuted, marginLeft: 6 }}>({f.note})</span>
           </button>
         ))}
       </div>
@@ -767,93 +709,61 @@ function SectionTemplates({ edition }) {
   );
 }
 
-function SectionAPIs({ edition }) {
-  const AM_APIS = [
+// ── Section: APIs ─────────────────────────────────────────────
+function SectionAPIs() {
+  const API_GROUPS = [
     {
-      group: "Communication & Messaging",
-      color: "#2563EB",
+      group: "SMS / DMS Adapters", color: "#0D3B45",
       apis: [
-        { name: "Twilio", use: "SMS approval links, status updates, review requests", endpoint: "api.twilio.com/2010-04-01", status: "DEMO" },
-        { name: "Podium", use: "Review management, customer messaging hub", endpoint: "api.podium.com/v2", status: "MOCK" },
-        { name: "Google Business Messages", use: "Google DM → appointment → RO conversion", endpoint: "businessmessages.googleapis.com/v1", status: "DEMO" },
-        { name: "Birdeye", use: "Multi-platform review aggregation, response automation", endpoint: "api.birdeye.com/resources/v1", status: "MOCK" },
+        { name: "Mitchell1",         use: "North America's largest SMS — RO read + write-back via API", endpoint: "api.mitchell1.com/v2",              status: "MOCK" },
+        { name: "Tekmetric",         use: "Cloud-native SMS — full RO, customer, vehicle API",          endpoint: "api.tekmetric.com/v1",              status: "DEMO" },
+        { name: "Shop-Ware",         use: "RO + customer + parts API — bi-directional sync",             endpoint: "app.shop-ware.com/api/v4",          status: "MOCK" },
+        { name: "CDK Global",        use: "Full DMS bi-directional sync — ROs, customers, parts, labor", endpoint: "api.cdk.com/fortellis/v2",          status: "MOCK" },
+        { name: "Reynolds & Reynolds","use": "ERA-IGNITE DMS integration — RO push/pull",               endpoint: "api.reyrey.com/v1",                 status: "MOCK" },
+        { name: "Dealertrack",        use: "F&I and service lane DMS sync",                              endpoint: "api.dealertrack.com/v1",            status: "MOCK" },
       ],
     },
     {
-      group: "Social Media",
-      color: "#7C3AED",
+      group: "Communication & Messaging", color: "#2563EB",
       apis: [
-        { name: "Meta Graph API", use: "Facebook/Instagram DM monitoring + intent detection", endpoint: "graph.facebook.com/v18.0", status: "DEMO" },
-        { name: "TikTok Business API", use: "TikTok DM + comment monitoring, social-to-RO", endpoint: "business-api.tiktok.com/open_api/v1.3", status: "DEMO" },
+        { name: "Twilio",                  use: "SMS approval links, status updates, review requests", endpoint: "api.twilio.com/2010-04-01",           status: "DEMO" },
+        { name: "Podium",                  use: "Review management, customer messaging hub",           endpoint: "api.podium.com/v2",                  status: "MOCK" },
+        { name: "Google Business Messages","use": "Google DM → appointment → RO conversion",          endpoint: "businessmessages.googleapis.com/v1",  status: "DEMO" },
       ],
     },
     {
-      group: "Payments & Financing",
-      color: "#16A34A",
+      group: "Payments & Financing", color: "#16A34A",
       apis: [
-        { name: "Stripe", use: "Invoice payment, Apple Pay, deposit collection", endpoint: "api.stripe.com/v1", status: "MOCK" },
-        { name: "DigniFi", use: "Point-of-approval financing for repairs $500–$5,000", endpoint: "api.dignifi.com/v2", status: "MOCK" },
-        { name: "Sunbit", use: "Buy-now-pay-later at digital approval screen", endpoint: "api.sunbit.com/v1", status: "MOCK" },
+        { name: "Stripe",   use: "Invoice payment, Apple Pay, deposit collection",         endpoint: "api.stripe.com/v1",     status: "MOCK" },
+        { name: "DigniFi",  use: "Point-of-approval financing for repairs $500–$5,000",   endpoint: "api.dignifi.com/v2",    status: "MOCK" },
+        { name: "Sunbit",   use: "Buy-now-pay-later at digital approval screen",           endpoint: "api.sunbit.com/v1",     status: "MOCK" },
       ],
     },
     {
-      group: "Accounting",
-      color: "#D97706",
+      group: "Parts Vendors", color: "#0891B2",
       apis: [
-        { name: "QuickBooks", use: "Invoice sync, expense categorization, P&L", endpoint: "quickbooks.api.intuit.com/v3", status: "MOCK" },
-        { name: "Xero", use: "Alternative accounting sync for multi-location", endpoint: "api.xero.com/api.xro/2.0", status: "MOCK" },
-        { name: "Gusto", use: "Payroll sync — tech hours from RO clock-in/out", endpoint: "api.gusto.com/v1", status: "MOCK" },
+        { name: "Worldpac",   use: "Real-time parts pricing + availability + ETA",             endpoint: "api.worldpac.com/v2/pricing", status: "DEMO" },
+        { name: "O'Reilly",   use: "Parts pricing + same-day availability check",              endpoint: "api.oreillyauto.com/v1",      status: "DEMO" },
+        { name: "PartsTech",  use: "Parts aggregator — 30+ suppliers in one call",             endpoint: "api.partstech.com/v2",        status: "MOCK" },
       ],
     },
     {
-      group: "Parts Vendors",
-      color: "#0891B2",
+      group: "Vehicle Data", color: "#DC2626",
       apis: [
-        { name: "Worldpac", use: "Real-time parts pricing + availability + ETA", endpoint: "api.worldpac.com/v2/pricing", status: "DEMO" },
-        { name: "O'Reilly Auto Parts", use: "Parts pricing + same-day availability check", endpoint: "api.oreillyauto.com/v1", status: "DEMO" },
-        { name: "PartsTech", use: "Parts aggregator — 30+ suppliers in one call", endpoint: "api.partstech.com/v2", status: "MOCK" },
+        { name: "NHTSA",   use: "Recall lookup per VIN, safety campaign detection",         endpoint: "api.nhtsa.gov/recalls/recallsByVehicle", status: "DEMO" },
+        { name: "ALLDATA", use: "Labor times, TSBs, wiring diagrams, OEM specs",            endpoint: "alldata.com/api/v1",                    status: "DEMO" },
       ],
     },
     {
-      group: "Vehicle Data",
-      color: "#DC2626",
+      group: "OEM Warranty Portals", color: "#7C3AED",
       apis: [
-        { name: "NHTSA", use: "Recall lookup per VIN, safety campaign detection", endpoint: "api.nhtsa.gov/recalls/recallsByVehicle", status: "DEMO" },
-        { name: "ALLDATA", use: "Labor times, TSBs, wiring diagrams, OEM specs", endpoint: "alldata.com/api/v1", status: "DEMO" },
-      ],
-    },
-    {
-      group: "Mobility & Loaner",
-      color: "#475569",
-      apis: [
-        { name: "Lyft Business", use: "Ride request from customer portal when vehicle dropped off", endpoint: "api.lyft.com/v1", status: "MOCK" },
-        { name: "Enterprise", use: "Loaner car reservation from tech board", endpoint: "api.enterprise.com/v1", status: "MOCK" },
+        { name: "Honda Warranty",    use: "Claim submission, status, rejection recovery",             endpoint: "warranty.honda.com/api/v2",        status: "MOCK" },
+        { name: "Toyota TIS",        use: "Tech info system — TSBs, warranty claims, ETM",            endpoint: "techinfo.toyota.com/api/v1",       status: "MOCK" },
+        { name: "GM GlobalConnect",  use: "Warranty claim submission + labor op validation",          endpoint: "api.gmglobalconnect.com/v2",       status: "MOCK" },
       ],
     },
   ];
 
-  const OEM_APIS = [
-    {
-      group: "DMS Connectors",
-      color: "#2563EB",
-      apis: [
-        { name: "CDK Global (Fortellis)", use: "Full DMS bi-directional sync — ROs, customers, parts, labor", endpoint: "api.cdk.com/fortellis/v2", status: "MOCK" },
-        { name: "Reynolds & Reynolds", use: "ERA-IGNITE DMS integration — RO push/pull", endpoint: "api.reyrey.com/v1", status: "MOCK" },
-        { name: "Dealertrack", use: "F&I and service lane DMS sync", endpoint: "api.dealertrack.com/v1", status: "MOCK" },
-      ],
-    },
-    {
-      group: "OEM Warranty Portals",
-      color: "#DC2626",
-      apis: [
-        { name: "Honda Warranty API", use: "Claim submission, status, rejection recovery", endpoint: "warranty.honda.com/api/v2", status: "MOCK" },
-        { name: "Toyota TIS", use: "Tech info system — TSBs, warranty claims, ETM", endpoint: "techinfo.toyota.com/api/v1", status: "MOCK" },
-        { name: "GM GlobalConnect", use: "Warranty claim submission + labor op validation", endpoint: "api.gmglobalconnect.com/v2", status: "MOCK" },
-      ],
-    },
-  ];
-
-  const apis = edition === "AM" ? AM_APIS : OEM_APIS;
   const STATUS_COLORS = { LIVE: "#16A34A", DEMO: "#2563EB", MOCK: "#6B7280" };
 
   return (
@@ -866,8 +776,7 @@ function SectionAPIs({ edition }) {
           </div>
         ))}
       </div>
-
-      {apis.map(group => (
+      {API_GROUPS.map(group => (
         <div key={group.group} style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: group.color, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ width: 8, height: 8, borderRadius: 2, background: group.color }} />
@@ -875,7 +784,7 @@ function SectionAPIs({ edition }) {
           </div>
           <div style={{ border: `1px solid #E5E7EB`, borderRadius: 10, overflow: "hidden" }}>
             {group.apis.map((api, i) => (
-              <div key={api.name} style={{ display: "grid", gridTemplateColumns: "130px 1fr 200px 56px", padding: "10px 14px", borderBottom: i < group.apis.length - 1 ? "1px solid #F3F4F6" : "none", background: "#fff", alignItems: "start", gap: 12 }}>
+              <div key={api.name} style={{ display: "grid", gridTemplateColumns: "130px 1fr 210px 56px", padding: "10px 14px", borderBottom: i < group.apis.length - 1 ? "1px solid #F3F4F6" : "none", background: "#fff", alignItems: "start", gap: 12 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary }}>{api.name}</div>
                 <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.4 }}>{api.use}</div>
                 <div style={{ fontSize: 10, color: COLORS.textMuted, fontFamily: "monospace" }}>{api.endpoint}</div>
@@ -889,50 +798,75 @@ function SectionAPIs({ edition }) {
   );
 }
 
-function SectionArch({ edition }) {
+// ── Section: System Architecture ─────────────────────────────
+function SectionArch() {
   return (
     <div>
-      {edition === "AM" && (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.accent, textTransform: "uppercase", letterSpacing: 0.8 }}>
-              WrenchIQ-AM — System Architecture
-            </div>
-            <a
-              href="/architecture-am.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, textDecoration: "none", display: "flex", alignItems: "center", gap: 4, background: `${COLORS.accent}12`, border: `1px solid ${COLORS.accent}30`, borderRadius: 6, padding: "4px 10px" }}
-            >
-              ↗ Open full screen
-            </a>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.accent, textTransform: "uppercase", letterSpacing: 0.8 }}>
+            WrenchIQ — System Architecture
           </div>
-          <div style={{ border: `1.5px solid ${COLORS.accent}30`, borderRadius: 12, overflow: "hidden", background: "#F0F4F5" }}>
-            <iframe
-              src="/architecture-am.html"
-              title="WrenchIQ-AM Architecture Diagram"
-              style={{ width: "100%", height: 520, border: "none", display: "block" }}
-            />
-          </div>
+          <a href="/architecture-am.html" target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, textDecoration: "none", display: "flex", alignItems: "center", gap: 4, background: `${COLORS.accent}12`, border: `1px solid ${COLORS.accent}30`, borderRadius: 6, padding: "4px 10px" }}>
+            ↗ Open full screen
+          </a>
         </div>
-      )}
+        <div style={{ border: `1.5px solid ${COLORS.accent}30`, borderRadius: 12, overflow: "hidden", background: "#F0F4F5" }}>
+          <iframe src="/architecture-am.html" title="WrenchIQ Architecture Diagram" style={{ width: "100%", height: 520, border: "none", display: "block" }} />
+        </div>
+      </div>
+
+      <SectionTitle>Layered Architecture</SectionTitle>
+      <CodeBlock code={`Existing SMS / DMS
+  (Mitchell1 · Tekmetric · Shop-Ware · CDK · Reynolds & Reynolds)
+         │  SMS/DMS Adapter (read + optional write-back)
+         ▼
+┌─────────────────────────────────────────┐
+│  WrenchIQ Normalization Layer           │
+│  • Parses SMS-native RO format          │
+│  • Maps to Universal WrenchIQ RO Schema │
+│  • Stores normalized ROs in MongoDB     │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  WrenchIQ Agent Layer (ADK)             │
+│                                         │
+│  Advisor Agent  Tech Agent  Owner Agent │
+│  Memory Layer   Tool Access  Monitoring │
+│  ─────────────  ───────────  ────────── │
+│  • Shop prefs   • RO data    • 5-min    │
+│  • Playbooks    • Parts      • Events   │
+│  • Customer*    • Recalls    • Digest   │
+│  • Context*     • TSBs                  │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Delivery Channels                      │
+│  • WrenchIQ UI (web/mobile)             │
+│  • SMS / push notification to advisor   │
+│  • Customer-facing magic link           │
+│  • Optional: write-back to source SMS   │
+└─────────────────────────────────────────┘`} />
 
       <SectionTitle>Tech Stack</SectionTitle>
       <Table
         headers={["Layer", "Technology"]}
         rows={[
-          ["Frontend",    "React 18 + Vite, Lucide React icons, Recharts"],
-          ["State",       "React useState / Context — no Redux"],
-          ["Styling",     "Inline styles, COLORS theme (src/theme/colors.js)"],
-          ["AI / LLM",    "Claude claude-sonnet-4-6 (claude-sonnet-4-6) via Anthropic API"],
-          ["Vector DB",   "Pinecone — semantic TSB/recall/history search"],
-          ["Backend",     "Node.js on AWS ECS/Fargate"],
-          ["Database",    "PostgreSQL (RDS) + Redis (ElastiCache) + S3"],
-          ["SMS",         "Twilio — approval links, status updates"],
-          ["Payments",    "Square (Web SDK · Terminal API · Reader SDK) + DigniFi + Sunbit"],
-          ["Accounting",  "Xero (GL sync · invoice lifecycle · credit notes) + QuickBooks"],
-          ["Build",       "Vite → dist/ — base path /wrenchiq-ai"],
-          ["Security",    "SOC 2 Type II · PCI-DSS (Square tokenizes) · CCPA"],
+          ["Frontend",      "React 18 + Vite, Lucide React icons, Recharts"],
+          ["State",         "React useState / Context — no Redux"],
+          ["AI / LLM",      "Claude claude-sonnet-4-6 (claude-sonnet-4-6) via Anthropic API"],
+          ["Agent SDK",     "Google ADK — Advisor, Tech, Owner, Consolidation agents"],
+          ["Vector DB",     "Pinecone — semantic TSB/recall/history search"],
+          ["Backend",       "Node.js on AWS ECS/Fargate"],
+          ["Database",      "MongoDB (ROs, memory) + Redis (cache) + S3 (media)"],
+          ["SMS",           "Twilio — approval links, status updates"],
+          ["Payments",      "Square + DigniFi + Sunbit"],
+          ["Accounting",    "Xero (GL sync · invoice lifecycle) + QuickBooks"],
+          ["Telemetry",     "OTel — quality monitoring across all agents"],
+          ["Security",      "SOC 2 Type II · PCI-DSS (Square tokenizes) · CCPA"],
         ]}
       />
 
@@ -940,14 +874,15 @@ function SectionArch({ edition }) {
       <Table
         headers={["Entity", "Key Fields"]}
         rows={[
-          ["Shop",        "shop_id, edition, labor_rate, bays, integrations, features"],
+          ["Shop",        "shop_id, sms_adapter, labor_rate, bays, agent_layer config"],
           ["Customer",    "customer_id, trust_score, ltv, approval_rate, communication_pref"],
           ["Vehicle",     "vin, year/make/model, mileage, license_plate, service_history"],
           ["RepairOrder", "ro_id, status, complaint, diagnosis, line_items, total, dvi_id"],
           ["LineItem",    "type (labor/part), labor_code, vendor, cost, price, margin_pct"],
           ["DVI",         "template_id, sections[], findings, video_url, ai_suggestions"],
-          ["Technician",  "tech_id, certifications, efficiency_score, active_ro"],
-          ["Appointment", "slot, bay, vehicle, advisor, capacity_score, source"],
+          ["MemoryIndex", "MEMORY.md per shop — pointer to all topic files"],
+          ["MemoryTopic", "customer_*, playbook_*, context_*, vendor_* files per shop"],
+          ["DailyLog",    "logs/YYYY/MM/DD.md — append-only raw signal during business day"],
         ]}
       />
 
@@ -956,215 +891,19 @@ function SectionArch({ edition }) {
         headers={["Screen", "Agent Behavior"]}
         rows={[
           ["Dashboard",          "Revenue opportunities, bottleneck alerts, daily priorities"],
-          ["Social Inbox",       "Draft replies, appointment slot recommendations"],
-          ["Scheduling",         "Demand forecast, optimal slot suggestions, tech availability"],
+          ["Repair Orders",      "Next action prompts, ETA recalculation, upsell flags"],
           ["DVI",                "Auto-suggest repairs from inspection findings, TSB lookup"],
           ["Health Report",      "Customer communication tone coaching, price framing"],
-          ["Repair Orders",      "Next action prompts, ETA recalculation, upsell flags"],
           ["Parts Intelligence", "Vendor recommendation, margin optimization, ETA comparison"],
           ["Trust Engine",       "Customer recovery scripts, review request timing, VIP flags"],
           ["Analytics",          "Anomaly detection, benchmark comparisons, trend narration"],
           ["Multi-Location",     "Underperformer alerts, best-practice sharing, SOP gaps"],
           ["Owner — Today",      "Revenue gap analysis, bay utilization, approval nudges"],
-          ["Advisor — RO",       "Complaint → diagnosis, vendor auto-pricing, TSB flagging"],
-          ["Tech — DVI",         "Labor code suggestion, parts estimate, safety flag detection"],
-          ["Customer Portal",    "Wait time estimate, plain-English explanations, follow-up"],
+          ["Advisor — RO",       "Complaint → diagnosis, vendor auto-pricing, memory-backed customer context"],
+          ["Tech — DVI",         "Labor code suggestion, parts estimate, upsell phrasing to advisor"],
+          ["Customer Portal",    "Wait time estimate, plain-English explanations"],
         ]}
       />
-
-      <SectionTitle>{edition === "OEM" ? "OEM Architecture" : "AM Deployment Architecture"}</SectionTitle>
-      <div style={{ background: "#0D1117", borderRadius: 10, padding: "16px 18px", fontFamily: "monospace", fontSize: 11, color: "#E2E8F0", lineHeight: 1.8 }}>
-        {edition === "AM" ? `
-  Customer Phone (PWA / Magic Link)
-         │ HTTPS
-  ┌──────▼──────────────────────────────┐
-  │  React 18 + Vite (SPA)             │
-  │  /wrenchiq-ai (base path)          │
-  │  14 screens · 4 persona shells      │
-  └──────┬──────────────────────────────┘
-         │ REST / WebSocket
-  ┌──────▼──────────────────────────────┐
-  │  Node.js API (ECS Fargate)         │
-  │  /api/v1 — RO, DVI, Customer,      │
-  │           Parts, Schedule, AI       │
-  └──┬────┬────┬────┬────────────────────┘
-     │    │    │    │
-  [RDS] [Redis] [S3] [Pinecone]
-  Postgres Cache  Media  Vector
-
-  External: Twilio · Meta · Worldpac
-            O'Reilly · Stripe · NHTSA
-            ALLDATA · QuickBooks · Gusto
-` : `
-  Dealership DMS (CDK / R&R / Dealertrack)
-         │ Fortellis / OAuth2
-  ┌──────▼──────────────────────────────┐
-  │  WrenchIQ-OEM React Shell           │
-  │  Personas: Advisor · Tech ·         │
-  │            Warranty Admin · Owner   │
-  └──────┬──────────────────────────────┘
-         │ REST / Webhook
-  ┌──────▼──────────────────────────────┐
-  │  Node.js API + OEM Rules Engine    │
-  │  Warranty Claim Readiness Score    │
-  │  3C Story Writer (Claude API)       │
-  └──┬────┬────┬────────────────────────┘
-     │    │    │
-  [RDS]  [S3]  [Claude claude-sonnet-4-6]
-  Postgres  Docs   3C Narratives
-
-  External: Honda/Toyota/GM Warranty APIs
-            ALLDATA · CDK Fortellis
-            Reynolds ERA-IGNITE
-`}
-      </div>
-    </div>
-  );
-}
-
-function SectionValueProp({ edition }) {
-  const amHighlights = [
-    { icon: "🔧", title: "Zero-Paper RO in 3 Minutes", detail: "License plate scan → customer profile → 5-step wizard → tech assigned. No clipboard, no paper." },
-    { icon: "📲", title: "Social DM → Revenue", detail: "TikTok/Instagram/Google DM intent detection converts social followers into booked appointments and repair orders." },
-    { icon: "🧠", title: "AI Copilot on Every Screen", detail: "Context-aware suggestions across all 14 screens — not a chat bolt-on. Parts pricing, diagnosis translation, approval nudges." },
-    { icon: "🔍", title: "6-Vendor Parts AI Ranking", detail: "Real-time pricing from Worldpac, O'Reilly, PartsTech + 3 more. AI-ranked by margin, availability, and delivery ETA." },
-    { icon: "🛡️", title: "Proactive Trust Engine", detail: "At-risk customer scoring before they churn. Flags unhappy customers at 72h, not after a 1-star review." },
-    { icon: "📍", title: "100-Location Command Center", detail: "Single dashboard for corporate groups — revenue, tech performance, parts transfers, alerts, SOP deployment." },
-  ];
-
-  const oemHighlights = [
-    { icon: "📝", title: "RO Story Writer (3C AI)", detail: "AI generates Complaint · Cause · Correction narratives from voice/DTC input. OEM-compliant in < 30 seconds." },
-    { icon: "✅", title: "Claim Readiness Score", detail: "96-point real-time checklist before submission. Recovers $3,000–$6,000/mo per dealer in rejected warranty claims." },
-    { icon: "🔗", title: "One-Click DMS Push", detail: "CDK Fortellis, Reynolds ERA-IGNITE, Dealertrack — direct push with field-mapped sync. No copy-paste." },
-    { icon: "🏆", title: "Op Code Confidence Matching", detail: "AI matches repair to top-3 OEM labor operation codes with confidence %. Eliminates wrong-code rejections." },
-    { icon: "📊", title: "Fixed Ops Director Dashboard", detail: "Per-advisor approval rates, rejection root cause analysis, dollars-at-risk, multi-dealer rollup — all in one view." },
-    { icon: "🔧", title: "OEM-Branded Technician View", detail: "TSB auto-match by VIN + complaint, voice note → 3C narrative, warranty flag, op code confirm — iPad native." },
-  ];
-
-  const whyRows = [
-    ["Built for AI-first — not AI-retrofitted", "Every screen, every workflow was designed around AI assistance from day one. Competitors bolt on chat windows."],
-    ["Same API, two editions", "One schema with an `edition` field controls AM vs OEM behavior. No forked codebases, no duplicated infrastructure."],
-    ["Trust as a product feature", "Trust Engine scores every customer relationship 0–100. No competitor treats customer retention as a first-class data model."],
-    ["The customer's phone IS the platform", "Health report, approval, payment — the customer never needs an app or a login. SMS magic link, done."],
-    ["Revenue recovery built in", "Warranty claim automation, rebate capture, recall revenue workflow — WrenchIQ finds money the shop is leaving on the table."],
-    ["Predii's 10-year data advantage", "Pre-built on Predii's automotive AI/ML platform. OEM data, TSB/recall corpus, repair pattern models — not starting from scratch."],
-  ];
-
-  const competitiveMatrix = [
-    { feature: "AI Copilot on every screen",      am: true,  oem: true,  tek: false, sw: false, m1: false, cdk: false },
-    { feature: "Social DM → RO pipeline",         am: true,  oem: false, tek: false, sw: false, m1: false, cdk: false },
-    { feature: "3C RO Story Writer (AI)",         am: false, oem: true,  tek: false, sw: false, m1: false, cdk: false },
-    { feature: "Warranty Claim Readiness Score",  am: false, oem: true,  tek: false, sw: false, m1: false, cdk: false },
-    { feature: "DMS Push (CDK/R&R/Dealertrack)",  am: false, oem: true,  tek: false, sw: false, m1: false, cdk: "partial" },
-    { feature: "6-vendor AI parts ranking",       am: true,  oem: true,  tek: false, sw: false, m1: false, cdk: false },
-    { feature: "Proactive Trust Engine",          am: true,  oem: true,  tek: false, sw: false, m1: false, cdk: false },
-    { feature: "Customer magic-link approval",    am: true,  oem: true,  tek: true,  sw: true,  m1: true,  cdk: false },
-    { feature: "Multi-location (100+ sites)",     am: true,  oem: true,  tek: false, sw: false, m1: false, cdk: false },
-    { feature: "Recall auto-detect + revenue WF", am: true,  oem: true,  tek: false, sw: false, m1: false, cdk: false },
-    { feature: "Video DVI walkaround",            am: true,  oem: true,  tek: true,  sw: true,  m1: false, cdk: false },
-    { feature: "Built-in financing (BNPL)",       am: true,  oem: false, tek: false, sw: false, m1: false, cdk: false },
-  ];
-
-  const Check2 = ({ val }) => {
-    if (val === true)      return <span style={{ color: "#16A34A", fontWeight: 800, fontSize: 13 }}>✓</span>;
-    if (val === "partial") return <span style={{ color: "#D97706", fontWeight: 700, fontSize: 11 }}>~</span>;
-    return <span style={{ color: "#D1D5DB", fontSize: 11 }}>—</span>;
-  };
-
-  const highlightData = edition === "OEM" ? oemHighlights : amHighlights;
-  const edColor = edition === "OEM" ? "#2563EB" : COLORS.accent;
-
-  return (
-    <div>
-      {/* Hero statement */}
-      <div style={{ background: "linear-gradient(135deg, #0D3B45, #1a2e44)", borderRadius: 14, padding: "22px 28px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
-        <div style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Internal — For Sales, Product & Engineering</div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", lineHeight: 1.4, marginBottom: 6 }}>
-          "The Dealership's Intelligence.<br />The Neighborhood's Trust."
-        </div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
-          WrenchIQ is the first shop management platform where AI is native to every screen — not bolted on. Built for independent shops (AM) and franchise dealerships (OEM) on a single API, same intelligence layer.
-        </div>
-        <div style={{ position: "absolute", right: -20, top: -20, width: 120, height: 120, borderRadius: "50%", background: `${COLORS.accent}18` }} />
-      </div>
-
-      {/* Edition toggle bar */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-        {["AM", "OEM"].map(e => (
-          <div key={e} style={{
-            flex: 1, padding: "10px 16px", borderRadius: 10,
-            border: `2px solid ${(edition === "OEM" ? e === "OEM" : e === "AM") ? edColor : "#E5E7EB"}`,
-            background: (edition === "OEM" ? e === "OEM" : e === "AM") ? `${edColor}08` : "#FAFAFA",
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: e === "AM" ? COLORS.accent : "#2563EB", marginBottom: 2 }}>WrenchIQ-{e}</div>
-            <div style={{ fontSize: 11, color: COLORS.textMuted }}>{e === "AM" ? "Independent & multi-location aftermarket shops" : "Franchise dealerships — OEM warranty automation"}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Key Highlights grid */}
-      <SectionTitle>Key Highlights — WrenchIQ-{edition}</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
-        {highlightData.map((h, i) => (
-          <div key={i} style={{ border: `1.5px solid ${edColor}22`, borderRadius: 10, padding: "14px 16px", background: `${edColor}04` }}>
-            <div style={{ fontSize: 18, marginBottom: 8 }}>{h.icon}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 4 }}>{h.title}</div>
-            <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5 }}>{h.detail}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Competitive checklist */}
-      <SectionTitle>Competitive Feature Checklist</SectionTitle>
-      <div style={{ border: "1px solid #E5E7EB", borderRadius: 10, overflow: "hidden", marginBottom: 24 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.8fr 0.7fr 0.7fr 0.7fr 0.7fr 0.7fr 0.7fr", background: COLORS.primary, padding: "8px 14px" }}>
-          {["Feature", "WrenchIQ-AM", "WrenchIQ-OEM", "Tekmetric", "Shop-Ware", "Mitchell1", "CDK/DMS"].map((h, i) => (
-            <div key={h} style={{ fontSize: 9, fontWeight: 700, color: i <= 2 ? COLORS.accent : "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: 0.3 }}>{h}</div>
-          ))}
-        </div>
-        {competitiveMatrix.map((row, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "1.8fr 0.7fr 0.7fr 0.7fr 0.7fr 0.7fr 0.7fr", padding: "8px 14px", borderBottom: i < competitiveMatrix.length - 1 ? "1px solid #F3F4F6" : "none", background: i % 2 === 0 ? "#fff" : "#FAFAFA", alignItems: "center" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textPrimary }}>{row.feature}</div>
-            <div style={{ textAlign: "center" }}><Check2 val={row.am} /></div>
-            <div style={{ textAlign: "center" }}><Check2 val={row.oem} /></div>
-            <div style={{ textAlign: "center" }}><Check2 val={row.tek} /></div>
-            <div style={{ textAlign: "center" }}><Check2 val={row.sw} /></div>
-            <div style={{ textAlign: "center" }}><Check2 val={row.m1} /></div>
-            <div style={{ textAlign: "center" }}><Check2 val={row.cdk} /></div>
-          </div>
-        ))}
-      </div>
-
-      {/* Why WrenchIQ */}
-      <SectionTitle>Why WrenchIQ — Internal Talking Points</SectionTitle>
-      {whyRows.map(([title, detail], i) => (
-        <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10, padding: "12px 16px", borderRadius: 10, background: "#FFFBEB", border: "1px solid #FDE68A" }}>
-          <div style={{ width: 22, height: 22, borderRadius: 6, background: COLORS.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 3 }}>{title}</div>
-            <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>{detail}</div>
-          </div>
-        </div>
-      ))}
-
-      {/* Metrics summary */}
-      <SectionTitle>Quantified Impact (Demo Targets)</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 8 }}>
-        {[
-          { val: "+20%", label: "ARO improvement",              sub: "via AI parts + approval nudges" },
-          { val: "$3K+", label: "Warranty recovery / dealer",   sub: "claim readiness score — OEM" },
-          { val: "85%",  label: "Same-day digital approvals",   sub: "magic link SMS flow — AM" },
-          { val: "6",    label: "Parts vendors, 1 screen",      sub: "AI-ranked, real-time pricing" },
-          { val: "< 3m", label: "New RO open time",             sub: "5-step wizard, license plate scan" },
-          { val: "100+", label: "Locations, one dashboard",     sub: "Corporate group command center" },
-        ].map((m, i) => (
-          <div key={i} style={{ border: "1.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: edColor, letterSpacing: -1, marginBottom: 4 }}>{m.val}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 2 }}>{m.label}</div>
-            <div style={{ fontSize: 10, color: COLORS.textMuted }}>{m.sub}</div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -1172,8 +911,6 @@ function SectionValueProp({ edition }) {
 // ── Main Panel ────────────────────────────────────────────────
 export default function SpecificationsPanel({ onClose }) {
   const [section, setSection] = useState("overview");
-  const [edition, setEdition] = useState("AM");
-
   const activeSection = SECTIONS.find(s => s.id === section);
 
   return (
@@ -1191,14 +928,6 @@ export default function SpecificationsPanel({ onClose }) {
               <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginLeft: 8 }}>Product Specifications</span>
             </span>
           </button>
-          {/* Edition toggle */}
-          <div style={{ display: "flex", background: "rgba(255,255,255,0.1)", borderRadius: 8, padding: 3, gap: 2 }}>
-            {["AM", "OEM"].map(e => (
-              <button key={e} onClick={() => setEdition(e)} style={{ padding: "4px 14px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 700, background: edition === e ? COLORS.accent : "transparent", color: edition === e ? "#fff" : "rgba(255,255,255,0.5)", transition: "all 0.15s" }}>
-                WrenchIQ-{e}
-              </button>
-            ))}
-          </div>
         </div>
         <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, padding: "6px 14px", cursor: "pointer", color: "rgba(255,255,255,0.7)", fontSize: 12, display: "flex", alignItems: "center", gap: 5 }}>
           <X size={14} /> Close
@@ -1209,7 +938,7 @@ export default function SpecificationsPanel({ onClose }) {
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
         {/* Sidebar */}
-        <div style={{ width: 200, background: COLORS.bgDark, display: "flex", flexDirection: "column", flexShrink: 0, padding: "12px 8px" }}>
+        <div style={{ width: 210, background: COLORS.bgDark, display: "flex", flexDirection: "column", flexShrink: 0, padding: "12px 8px" }}>
           {SECTIONS.map(s => {
             const Icon = s.icon;
             const active = section === s.id;
@@ -1221,11 +950,10 @@ export default function SpecificationsPanel({ onClose }) {
             );
           })}
 
-          {/* Edition badge at bottom */}
           <div style={{ marginTop: "auto", padding: "10px 12px" }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: COLORS.accent, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>Edition</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>WrenchIQ-{edition}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>v1.0 · Mar 2026</div>
+            <div style={{ fontSize: 9, fontWeight: 800, color: COLORS.accent, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>WrenchIQ.ai</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Agentic Shop Intelligence</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 2 }}>© 2026 Predii, Inc.</div>
           </div>
         </div>
 
@@ -1233,16 +961,16 @@ export default function SpecificationsPanel({ onClose }) {
         <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px" }}>
           <div style={{ maxWidth: 860 }}>
             <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 800, color: COLORS.textPrimary }}>{activeSection?.label}</h2>
-            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 24 }}>WrenchIQ-{edition} · Product Specifications v1.0 · March 2026</div>
+            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 24 }}>WrenchIQ.ai · Product Specifications · April 2026 · PREDII CONFIDENTIAL</div>
 
-            {section === "overview"    && <SectionOverview    edition={edition} />}
-            {section === "valueprop"   && <SectionValueProp   edition={edition} />}
-            {section === "personas"    && <SectionPersonas />}
-            {section === "flows"       && <SectionFlows />}
-            {section === "competitive" && <SectionCompetitive />}
-            {section === "templates"   && <SectionTemplates   edition={edition} />}
-            {section === "apis"        && <SectionAPIs        edition={edition} />}
-            {section === "arch"        && <SectionArch        edition={edition} />}
+            {section === "overview"   && <SectionOverview />}
+            {section === "agents"     && <SectionAgents />}
+            {section === "valueprop"  && <SectionValueProp />}
+            {section === "personas"   && <SectionPersonas />}
+            {section === "flows"      && <SectionFlows />}
+            {section === "templates"  && <SectionTemplates />}
+            {section === "apis"       && <SectionAPIs />}
+            {section === "arch"       && <SectionArch />}
           </div>
         </div>
       </div>
