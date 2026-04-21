@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppVersion } from "./hooks/useAppVersion";
 import {
   Wrench, Home, ClipboardList, Smartphone, BarChart3, Settings,
@@ -37,7 +37,8 @@ import AIAgentScreen from "./screens/AIAgentScreen";
 import AROAgentScreen from "./screens/AROAgentScreen";
 
 // ── Persona screens ───────────────────────────────────────────
-import LoginScreen from "./screens/LoginScreen";
+import SplashScreen from "./screens/SplashScreen";
+import LoginModal from "./components/LoginModal";
 import PersonaGatewayScreen from "./screens/PersonaGatewayScreen";
 import PersonaShell from "./components/PersonaShell";
 import AdvisorHomeScreen from "./screens/AdvisorHomeScreen";
@@ -88,11 +89,11 @@ const ADMIN_SCREENS = [
 function resolvePersonaScreen(persona, screenId, extraProps) {
   // Advisor persona screens
   if (persona === "advisor") {
-    if (screenId === "advisorHome") return <AdvisorHomeScreen {...extraProps} />;
+    if (screenId === "advisorHome") return <AdvisorHomeScreen {...extraProps} onRoSelect={extraProps.onRoSelect} />;
     if (screenId === "aiAgent")     return <AIAgentScreen />;
     if (screenId === "aroAgent")    return <AROAgentScreen />;
     if (screenId === "am3cWriter")  return <AM3CStoryWriterScreen />;
-    if (screenId === "orders")     return <RepairOrderScreen onNavigate={extraProps.onNavigate} />;
+    if (screenId === "orders")     return <RepairOrderScreen onNavigate={extraProps.onNavigate} onRoSelect={extraProps.onRoSelect} />;
     if (screenId === "parts")      return <PartsIntelligenceScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "scheduling") return <SmartSchedulingScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "trust")      return <TrustEngineScreen onNavigate={extraProps.onNavigate} />;
@@ -171,13 +172,62 @@ const PERSONA_DEFAULT_SCREEN = {
   gwgCorporate: "gwgCorporate",
 };
 
+// ── Session helpers (localStorage) ──────────────────────────
+function loadSession() {
+  try { const s = localStorage.getItem("wrenchiq_session"); return s ? JSON.parse(s) : null; }
+  catch { return null; }
+}
+function saveSession(role) {
+  localStorage.setItem("wrenchiq_session", JSON.stringify({ role, ts: Date.now() }));
+}
+
+// ── Embedded mode (Chrome extension side panel) ──────────────
+// ?persona=advisor|owner&embedded=1 → skip login + gateway,
+// hide WrenchIQ agent panel and footer inside PersonaShell.
+const _sp              = new URLSearchParams(window.location.search);
+const _embeddedPersona = _sp.get('persona');   // 'advisor' | 'owner' | null
+const _isEmbedded      = _sp.get('embedded') === '1';
+// ?mode=agent → render only WrenchIQAgent fullscreen (no PersonaShell, no screen content)
+const _agentOnlyMode   = _sp.get('mode') === 'agent';
+// Comma-separated screen IDs to show in embedded mode (filters nav + routing)
+const _embeddedScreens = _sp.get('screens')
+  ? new Set(_sp.get('screens').split(',').map(s => s.trim()))
+  : null;
+
+// ── Persona display labels (for login modal subtitle) ────────
+const AM_PERSONAS_LABELS = {
+  advisor:      "Service Advisor",
+  owner:        "Shop Owner",
+  gwgCorporate: "GWG Corporate",
+  fixedOps:     "Fixed Ops Director",
+  oemAdvisor:   "OEM Service Advisor",
+  oemTech:      "Technician",
+  tech:         "Technician",
+  customer:     "Customer Portal",
+};
+
 // ── Main App ─────────────────────────────────────────────────
 
 export default function WrenchIQApp() {
   const appVersion = useAppVersion();
-  const [authenticated, setAuthenticated] = useState(false);
-  const [activePersona, setActivePersona] = useState(null);
-  const [activeScreen, setActiveScreen]   = useState("dashboard");
+  const _session = loadSession();
+  const [authenticated, setAuthenticated] = useState(_isEmbedded || !!_session);
+  const [authRole, setAuthRole] = useState(_isEmbedded ? "user" : _session?.role || null);
+  const [showSplash, setShowSplash] = useState(!_isEmbedded && !_session);
+  const [loginModalVisible, setLoginModalVisible] = useState(false);
+  const [pendingPersona, setPendingPersona] = useState(null);
+  const [activePersona, setActivePersona] = useState(
+    _isEmbedded && _embeddedPersona ? _embeddedPersona : null
+  );
+  const [activeScreen, setActiveScreen]   = useState(() => {
+    if (!_isEmbedded || !_embeddedPersona) return "dashboard";
+    const def = PERSONA_DEFAULT_SCREEN[_embeddedPersona] || "dashboard";
+    // If screens filter is active and the default screen is excluded, pick the first allowed
+    if (_embeddedScreens && !_embeddedScreens.has(def)) {
+      return _embeddedScreens.values().next().value || def;
+    }
+    return def;
+  });
   const [agentVisible, setAgentVisible]   = useState(true);
   const [specsOpen, setSpecsOpen]         = useState(false);
   const [showOEMGateway, setShowOEMGateway] = useState(false);
@@ -192,34 +242,102 @@ export default function WrenchIQApp() {
   const [roInitialCust, setRoInitialCust] = useState(null);
   const [roInitialStep, setRoInitialStep] = useState(1);
 
-  // ── Login gate ───────────────────────────────────────────────
-  if (!authenticated) {
-    return <LoginScreen onLogin={() => setAuthenticated(true)} />;
+  // ── Agent-only mode (Chrome extension Advisor/Owner tabs) ────
+  // Renders WrenchIQAgent fullscreen with no PersonaShell chrome.
+  // Driven by postMessage({ type:'WRENCHIQ_SCREEN_CHANGE', screen, persona }) from the extension.
+  const [agentScreen, setAgentScreen] = useState(
+    _embeddedPersona === 'owner' ? 'ownerHome' : 'advisorHome'
+  );
+  const [agentPersona] = useState(_embeddedPersona || 'advisor');
+
+  useEffect(() => {
+    if (!_agentOnlyMode) return;
+    const handler = (e) => {
+      if (e.data?.type === 'WRENCHIQ_SCREEN_CHANGE' && e.data.screen) {
+        setAgentScreen(e.data.screen);
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  if (_agentOnlyMode) {
+    return (
+      <RecommendationsProvider shopId="shop-001" edition="am" persona={agentPersona}>
+        <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
+          <WrenchIQAgent
+            activeScreen={agentScreen}
+            persona={agentPersona}
+            standalone={true}
+          />
+        </div>
+      </RecommendationsProvider>
+    );
   }
 
-  // ── Gateway (combined AM + OEM) ───────────────────────────
+  // ── Splash (public landing page) ────────────────────────────
+  if (showSplash) {
+    return <SplashScreen onEnter={() => setShowSplash(false)} />;
+  }
+
+  // ── Login modal handler ──────────────────────────────────────
+  function handleLoginSuccess(role) {
+    saveSession(role);
+    setAuthenticated(true);
+    setAuthRole(role);
+    setLoginModalVisible(false);
+    if (role === "admin") {
+      setActivePersona("admin");
+      setActiveScreen("dashboard");
+      setPendingPersona(null);
+      return;
+    }
+    if (pendingPersona) {
+      const { id: p, opts = {} } = pendingPersona;
+      setRoInitialCust(opts.initialCust || null);
+      setRoInitialStep(opts.initialStep || 1);
+      setActivePersona(p);
+      setActiveScreen(PERSONA_DEFAULT_SCREEN[p] || "dashboard");
+      setPendingPersona(null);
+    }
+  }
+
+  function handlePersonaSelect(p, opts = {}) {
+    if (!authenticated) {
+      setPendingPersona({ id: p, opts });
+      setLoginModalVisible(true);
+      return;
+    }
+    setRoInitialCust(opts.initialCust || null);
+    setRoInitialStep(opts.initialStep || 1);
+    if (authRole === "admin") {
+      setActivePersona("admin");
+      setActiveScreen("dashboard");
+    } else {
+      setActivePersona(p);
+      setActiveScreen(PERSONA_DEFAULT_SCREEN[p] || "dashboard");
+    }
+  }
+
+  // ── Gateway (combined AM + OEM) — always visible ──────────
   if (!activePersona) {
     return (
       <>
         <PersonaGatewayScreen
-          onSelectPersona={(p, opts = {}) => {
-            setRoInitialCust(opts.initialCust || null);
-            setRoInitialStep(opts.initialStep || 1);
-            setActivePersona(p);
-            if (p === "admin") {
-              setActiveScreen("dashboard");
-            } else {
-              setActiveScreen(PERSONA_DEFAULT_SCREEN[p] || "dashboard");
-            }
-          }}
+          onSelectPersona={handlePersonaSelect}
           onOpenSpecs={() => setSpecsOpen(true)}
           onOpenOEM={(personaId) => {
-            // personaId is optional — defaults to oemAdvisor (RO Story Writer)
             const p = personaId || "oemAdvisor";
-            setActivePersona(p);
-            setActiveScreen(PERSONA_DEFAULT_SCREEN[p] || "roWriter");
+            handlePersonaSelect(p);
           }}
         />
+        {loginModalVisible && (
+          <LoginModal
+            personaLabel={AM_PERSONAS_LABELS[pendingPersona?.id] || pendingPersona?.id}
+            onSuccess={handleLoginSuccess}
+            onCancel={() => { setLoginModalVisible(false); setPendingPersona(null); }}
+          />
+        )}
         {specsOpen && <SpecificationsPanel onClose={() => setSpecsOpen(false)} />}
       </>
     );
@@ -275,11 +393,14 @@ export default function WrenchIQApp() {
             persona={activePersona}
             activeScreen={effectiveScreen}
             selectedRO={advisorSelectedRO}
+            embedded={_isEmbedded}
+            embeddedScreens={_embeddedScreens}
             onNavigate={(id) => {
               setTechDVIData(null);
               setActiveScreen(id);
             }}
             onExitPersona={() => {
+              if (_isEmbedded) return; // no exit in embedded mode
               setActivePersona(null);
               setTechDVIData(null);
               setActiveScreen("dashboard");
