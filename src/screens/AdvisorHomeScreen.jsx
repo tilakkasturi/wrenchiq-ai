@@ -16,6 +16,8 @@ import {
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
 import { customers, vehicles } from "../data/demoData";
+import { useShopObjectives } from "../context/ShopObjectivesContext";
+import { filterIngsByRO } from "../services/ingEntityExtractor";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -308,13 +310,20 @@ function KGPanel() {
 export default function AdvisorHomeScreen({ onRoSelect } = {}) {
   const { smsName, shopName, smsHeaderColor } = useDemo();
   const [selectedRoNum, setSelectedRoNum] = useState(null);
+  const { ings } = useShopObjectives();
+  const [checkedIngs, setCheckedIngs] = useState(new Set());
 
   const selected = BOARD_ROS.find(r => r.roNum === selectedRoNum) || null;
 
   function selectRO(ro) {
     const next = selectedRoNum === ro?.roNum ? null : ro;
     setSelectedRoNum(next?.roNum || null);
-    onRoSelect?.(next ? { ...next, shopId: "cornerstone" } : null);
+    if (next) {
+      const veh = vehicles.find(v => v.customerId === next.custId);
+      onRoSelect?.({ ...next, shopId: "cornerstone", _vehicle: veh || null });
+    } else {
+      onRoSelect?.(null);
+    }
   }
 
   // Derived stats
@@ -562,6 +571,60 @@ export default function AdvisorHomeScreen({ onRoSelect } = {}) {
           ))}
         </div>
 
+        {/* ings — filtered by vehicle conditions */}
+        {ings.length > 0 && (() => {
+          const roForFilter = veh ? { _vehicle: veh } : null;
+          const relevantIngs = filterIngsByRO(ings, roForFilter);
+          const activeIngs   = relevantIngs.filter(n => n.active);
+          if (activeIngs.length === 0) return null;
+          const unchecked = activeIngs.filter(n => !checkedIngs.has(n._id));
+          return (
+            <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
+              <div style={{ background: "rgba(255,255,255,0.06)", padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.5)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  ings — Don't Forget
+                </div>
+                {unchecked.length === 0
+                  ? <div style={{ fontSize: 10, color: "#10B981", fontWeight: 700 }}>All done</div>
+                  : <div style={{ fontSize: 10, color: "#F97316", fontWeight: 700 }}>{unchecked.length} remaining</div>
+                }
+              </div>
+              <div style={{ padding: "6px 8px" }}>
+                {activeIngs.map(ing => {
+                  const done  = checkedIngs.has(ing._id);
+                  const label = ing.entityData?.displayLabel;
+                  const disc  = ing.entityData?.discount;
+                  return (
+                    <div key={ing._id}
+                      onClick={() => setCheckedIngs(prev => {
+                        const s = new Set(prev);
+                        done ? s.delete(ing._id) : s.add(ing._id);
+                        return s;
+                      })}
+                      style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "5px 4px", cursor: "pointer", borderRadius: 5, opacity: done ? 0.45 : 1, transition: "opacity 0.15s" }}
+                    >
+                      <div style={{ width: 14, height: 14, borderRadius: 3, border: `2px solid ${done ? "#10B981" : "rgba(255,255,255,0.3)"}`, background: done ? "#10B981" : "transparent", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {done && <span style={{ color: "#fff", fontSize: 9, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, color: done ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.85)", lineHeight: 1.35, textDecoration: done ? "line-through" : "none" }}>
+                          {ing.note}
+                        </div>
+                        {(label || disc) && !done && (
+                          <div style={{ display: "flex", gap: 4, marginTop: 3 }}>
+                            {label && <span style={{ fontSize: 8, fontWeight: 700, background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.55)", borderRadius: 3, padding: "1px 5px", letterSpacing: "0.04em" }}>{label}</span>}
+                            {disc  && <span style={{ fontSize: 8, fontWeight: 700, background: "rgba(74,222,128,0.15)", color: "#4ADE80", borderRadius: 3, padding: "1px 5px" }}>{disc} off</span>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
       </div>
     );
   }
@@ -668,6 +731,58 @@ export default function AdvisorHomeScreen({ onRoSelect } = {}) {
 
         {/* Live KG intelligence */}
         <KGPanel />
+
+        {/* ings — Don't Forget (all active ings, no vehicle filter when no RO selected) */}
+        {ings.length > 0 && (() => {
+          const activeIngs = ings.filter(n => n.active);
+          if (activeIngs.length === 0) return null;
+          const unchecked = activeIngs.filter(n => !checkedIngs.has(n._id));
+          return (
+            <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
+              <div style={{ background: "rgba(255,255,255,0.06)", padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.5)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  ings — Don't Forget
+                </div>
+                {unchecked.length === 0
+                  ? <div style={{ fontSize: 10, color: "#10B981", fontWeight: 700 }}>All done</div>
+                  : <div style={{ fontSize: 10, color: "#F97316", fontWeight: 700 }}>{unchecked.length} remaining</div>
+                }
+              </div>
+              <div style={{ padding: "6px 8px" }}>
+                {activeIngs.map(ing => {
+                  const done  = checkedIngs.has(ing._id);
+                  const label = ing.entityData?.displayLabel;
+                  const disc  = ing.entityData?.discount;
+                  return (
+                    <div key={ing._id}
+                      onClick={() => setCheckedIngs(prev => {
+                        const s = new Set(prev);
+                        done ? s.delete(ing._id) : s.add(ing._id);
+                        return s;
+                      })}
+                      style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "5px 4px", cursor: "pointer", borderRadius: 5, opacity: done ? 0.45 : 1, transition: "opacity 0.15s" }}
+                    >
+                      <div style={{ width: 14, height: 14, borderRadius: 3, border: `2px solid ${done ? "#10B981" : "rgba(255,255,255,0.3)"}`, background: done ? "#10B981" : "transparent", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {done && <span style={{ color: "#fff", fontSize: 9, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, color: done ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.85)", lineHeight: 1.35, textDecoration: done ? "line-through" : "none" }}>
+                          {ing.note}
+                        </div>
+                        {(label || disc) && !done && (
+                          <div style={{ display: "flex", gap: 4, marginTop: 3 }}>
+                            {label && <span style={{ fontSize: 8, fontWeight: 700, background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.55)", borderRadius: 3, padding: "1px 5px", letterSpacing: "0.04em" }}>{label}</span>}
+                            {disc  && <span style={{ fontSize: 8, fontWeight: 700, background: "rgba(74,222,128,0.15)", color: "#4ADE80", borderRadius: 3, padding: "1px 5px" }}>{disc} off</span>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Click hint */}
         <div style={{
