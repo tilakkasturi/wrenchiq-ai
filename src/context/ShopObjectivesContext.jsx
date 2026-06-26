@@ -22,6 +22,10 @@ const FALLBACK_INGS = [
     note: "Check cabin air filter on vehicles over 25K miles — we have 40 units in stock" },
   { _id: "fallback-ing-4", noteType: "ing", active: true, expiresAt: null, triggerType: "any_ro",
     note: "Present Predii protection plan to first-time customers before checkout" },
+  { _id: "fallback-ing-5", noteType: "ing", active: true, expiresAt: null, triggerType: "any_ro",
+    note: "Remind customer about wiper blade replacement — offer both front + rear while vehicle is in" },
+  { _id: "fallback-ing-6", noteType: "ing", active: true, expiresAt: null, triggerType: "vehicle_make:ford",
+    note: "Ford F-150: offer 10% off brake job — mention the promotion before presenting the estimate" },
 ];
 
 const ShopObjectivesContext = createContext(null);

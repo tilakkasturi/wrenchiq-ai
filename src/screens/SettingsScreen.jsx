@@ -40,7 +40,7 @@ const NAV_ITEMS = [
   { id: "team", label: "Team", icon: Users },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "billing", label: "Billing", icon: CreditCard },
-  { id: "tribal", label: "Shop Rules", icon: MessageSquare },
+  { id: "tribal", label: "Shop Objectives", icon: MessageSquare },
 ];
 
 // ── Badge components ────────────────────────────────────────
@@ -1343,6 +1343,8 @@ function BillingTab() {
 
 // ── Tribal Knowledge Panel ──────────────────────────────────
 function TribalKnowledgePanel() {
+  const SHOP_ID = 'cornerstone';
+  const [activeSubTab, setActiveSubTab] = useState('objectives');
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showExpired, setShowExpired] = useState(false);
@@ -1352,7 +1354,7 @@ function TribalKnowledgePanel() {
   const [editText, setEditText] = useState('');
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/tribal-notes/shop-001?includeInactive=true&includeExpired=true`)
+    fetch(`${API_BASE}/api/tribal-notes/${SHOP_ID}?includeInactive=true&includeExpired=true`)
       .then(r => r.ok ? r.json() : [])
       .then(data => { setNotes(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
@@ -1361,9 +1363,13 @@ function TribalKnowledgePanel() {
   const now = new Date();
   const threeDays = 3 * 24 * 60 * 60 * 1000;
 
-  const activeNotes = notes.filter(n => n.active && (!n.expiresAt || new Date(n.expiresAt) > now));
-  const inactiveNotes = notes.filter(n => !n.active);
-  const expiredNotes = notes.filter(n => n.active && n.expiresAt && new Date(n.expiresAt) <= now);
+  const isIng = n => n.noteType === 'ing';
+  const isObj = n => !n.noteType || n.noteType === 'objective';
+  const typeFilter = activeSubTab === 'ings' ? isIng : isObj;
+
+  const activeNotes   = notes.filter(n => typeFilter(n) && n.active && (!n.expiresAt || new Date(n.expiresAt) > now));
+  const inactiveNotes = notes.filter(n => typeFilter(n) && !n.active);
+  const expiredNotes  = notes.filter(n => typeFilter(n) && n.active && n.expiresAt && new Date(n.expiresAt) <= now);
 
   const isExpiringSoon = (note) =>
     note.expiresAt && new Date(note.expiresAt) - now < threeDays && new Date(note.expiresAt) > now;
@@ -1372,6 +1378,7 @@ function TribalKnowledgePanel() {
     if (t === 'any_ro') return { label: 'Any RO', color: '#2563EB', bg: '#EFF6FF' };
     if (t === 'mpi_only') return { label: 'MPI Only', color: '#7C3AED', bg: '#EDE9FE' };
     if (t?.startsWith('vehicle_type:')) return { label: t.replace('vehicle_type:', '').replace(/^\w/, c => c.toUpperCase()), color: '#059669', bg: '#ECFDF5' };
+    if (t?.startsWith('vehicle_make:')) return { label: `Make: ${t.replace('vehicle_make:', '').replace(/^\w/, c => c.toUpperCase())}`, color: '#0891B2', bg: '#ECFEFF' };
     if (t?.startsWith('mileage_range:')) return { label: `Miles: ${t.replace('mileage_range:', '')}`, color: '#D97706', bg: '#FFFBEB' };
     return { label: t || 'Any', color: '#6B7280', bg: '#F3F4F6' };
   };
@@ -1407,8 +1414,11 @@ function TribalKnowledgePanel() {
 
   const addNote = async () => {
     if (!newNote.note.trim()) return;
-    const body = { shopId: 'shop-001', locationId: 'all', ...newNote,
-      expiresAt: newNote.expiresAt || null, active: true };
+    const body = {
+      shopId: SHOP_ID, locationId: 'all', ...newNote,
+      noteType: activeSubTab === 'ings' ? 'ing' : 'objective',
+      expiresAt: newNote.expiresAt || null, active: true,
+    };
     const res = await fetch(`${API_BASE}/api/tribal-notes`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -1482,49 +1492,80 @@ function TribalKnowledgePanel() {
     );
   };
 
-  if (loading) return <div style={{ padding:32, color:'#6B7280' }}>Loading shop rules...</div>;
+  if (loading) return <div style={{ padding:32, color:'#6B7280' }}>Loading shop objectives...</div>;
 
   return (
     <div style={{ padding: '0 4px' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
         <div>
-          <h3 style={{ fontSize:18, fontWeight:700, color:'#1F2937', margin:0 }}>Shop Rules</h3>
+          <h3 style={{ fontSize:18, fontWeight:700, color:'#1F2937', margin:0 }}>Shop Objectives</h3>
           <p style={{ fontSize:13, color:'#6B7280', marginTop:4, marginBottom:0 }}>
-            Agent operating instructions — surfaced at RO time when conditions match
+            Surfaced in the WrenchIQ overlay when an RO is open
           </p>
         </div>
         <button onClick={() => setShowNewForm(!showNewForm)}
           style={{ background:'#0D3B45', color:'#fff', border:'none', borderRadius:8,
             padding:'8px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
-          + New Rule
+          + {isIng ? 'New ing' : 'New Objective'}
         </button>
       </div>
+
+      {/* Sub-tabs */}
+      <div style={{ display:'flex', gap:4, marginBottom:20, background:'#F3F4F6', borderRadius:8, padding:3, width:'fit-content' }}>
+        {[
+          { id:'objectives', label:'Objectives' },
+          { id:'ings',       label:'ings — Don\'t Forget' },
+        ].map(t => (
+          <button key={t.id} onClick={() => { setActiveSubTab(t.id); setShowNewForm(false); }}
+            style={{
+              padding:'6px 16px', borderRadius:6, border:'none', cursor:'pointer', fontSize:12, fontWeight:700,
+              background: activeSubTab === t.id ? '#fff' : 'transparent',
+              color: activeSubTab === t.id ? COLORS.textPrimary : '#6B7280',
+              boxShadow: activeSubTab === t.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {isIng && (
+        <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:8, padding:'10px 14px', marginBottom:16, fontSize:12, color:'#92400E' }}>
+          <strong>ings</strong> are automatic reminders shown in the WrenchIQ overlay when an RO is open. They prompt advisors and techs to add commonly forgotten line items — fees, parts, or services.
+        </div>
+      )}
 
       {showNewForm && (
         <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8,
           padding:16, marginBottom:20 }}>
-          <textarea placeholder="Rule text (e.g. Push cabin air filter to all customers this month)"
+          <textarea
+            placeholder={isIng
+              ? 'e.g. Add waste disposal fee to every oil change'
+              : 'e.g. Push cabin air filter to all customers this month'}
             value={newNote.note} onChange={e => setNewNote({...newNote, note: e.target.value})}
             style={{ width:'100%', border:'1px solid #D1D5DB', borderRadius:4, padding:8,
               fontSize:13, resize:'vertical', minHeight:70, marginBottom:10, boxSizing:'border-box' }} />
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
-            <select value={newNote.triggerType}
-              onChange={e => setNewNote({...newNote, triggerType: e.target.value})}
-              style={{ border:'1px solid #D1D5DB', borderRadius:4, padding:'6px 8px', fontSize:13 }}>
-              <option value="any_ro">Any RO</option>
-              <option value="mpi_only">MPI / DVI Only</option>
-              <option value="vehicle_type:japanese">Japanese Vehicles</option>
-              <option value="vehicle_type:german">German Vehicles</option>
-              <option value="vehicle_type:domestic_us">Domestic Vehicles</option>
-              <option value="mileage_range:50000-999999">50k+ Miles</option>
-              <option value="mileage_range:80000-100000">80k-100k Miles</option>
-            </select>
+            {!isIng && (
+              <select value={newNote.triggerType}
+                onChange={e => setNewNote({...newNote, triggerType: e.target.value})}
+                style={{ border:'1px solid #D1D5DB', borderRadius:4, padding:'6px 8px', fontSize:13 }}>
+                <option value="any_ro">Any RO</option>
+                <option value="mpi_only">MPI / DVI Only</option>
+                <option value="vehicle_type:japanese">Japanese Vehicles</option>
+                <option value="vehicle_type:german">German Vehicles</option>
+                <option value="vehicle_type:domestic_us">Domestic Vehicles</option>
+                <option value="mileage_range:50000-999999">50k+ Miles</option>
+                <option value="mileage_range:80000-100000">80k-100k Miles</option>
+              </select>
+            )}
             <input type="date" placeholder="Expiry (leave blank = ongoing)"
               value={newNote.expiresAt} onChange={e => setNewNote({...newNote, expiresAt: e.target.value})}
               style={{ border:'1px solid #D1D5DB', borderRadius:4, padding:'6px 8px', fontSize:13 }} />
             <button onClick={addNote}
               style={{ background:'#FF6B35', color:'#fff', border:'none', borderRadius:6,
-                padding:'6px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}>Add Rule</button>
+                padding:'6px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+              {isIng ? 'Add ing' : 'Add Objective'}
+            </button>
             <button onClick={() => setShowNewForm(false)}
               style={{ background:'#F3F4F6', border:'none', borderRadius:6,
                 padding:'6px 12px', fontSize:13, cursor:'pointer' }}>Cancel</button>
@@ -1534,7 +1575,7 @@ function TribalKnowledgePanel() {
 
       {activeNotes.length === 0 && !showNewForm && (
         <div style={{ textAlign:'center', padding:'32px 0', color:'#9CA3AF', fontSize:14 }}>
-          No active shop rules yet. Add your first rule above.
+          {isIng ? 'No ings yet. Add your first reminder above.' : 'No active objectives yet. Add your first above.'}
         </div>
       )}
 

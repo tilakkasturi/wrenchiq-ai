@@ -67,6 +67,16 @@ const DEMO_NOTES = [
     note: 'Present Predii protection plan to first-time customers before checkout',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
+  {
+    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    note: 'Remind customer about wiper blade replacement — offer both front + rear while vehicle is in',
+    active: true, expiresAt: null, triggerType: 'any_ro',
+  },
+  {
+    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    note: 'Ford F-150: offer 10% off brake job — mention the promotion before presenting the estimate',
+    active: true, expiresAt: null, triggerType: 'vehicle_make:ford',
+  },
 ];
 
 // ── POST / — Create a new note ────────────────────────────────────────────────
