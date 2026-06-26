@@ -83,6 +83,12 @@ export function ShopObjectivesProvider({ shopId = "cornerstone", children }) {
   const [loaded, setLoaded]         = useState(false);
   const shopIdRef = useRef(shopId);
 
+  // Run LLM entity extraction on ings that lack entityData, then update state
+  const enrichIngs = useCallback(async (rawIngs) => {
+    const enriched = await extractIngEntities(rawIngs).catch(() => rawIngs);
+    setIngs(enriched);
+  }, []);
+
   // Hydrate from localStorage synchronously on shopId change
   useEffect(() => {
     shopIdRef.current = shopId;
@@ -100,12 +106,6 @@ export function ShopObjectivesProvider({ shopId = "cornerstone", children }) {
       enrichIngs(FALLBACK_INGS);
     }
   }, [shopId, enrichIngs]);
-
-  // Run LLM entity extraction on ings that lack entityData, then update state
-  const enrichIngs = useCallback(async (rawIngs) => {
-    const enriched = await extractIngEntities(rawIngs).catch(() => rawIngs);
-    setIngs(enriched);
-  }, []);
 
   // Fetch from API on shopId change
   const fetchFromAPI = useCallback((sid) => {
