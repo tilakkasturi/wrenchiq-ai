@@ -52,25 +52,27 @@ const BOARD_ROS = [
     },
   },
   {
-    roNum: "RO-2024-1188", custId: "cust-006",
-    job: "Oil change + tire rotation",
-    column: "queue", minAgo: 9,
+    roNum: "RO-2026-0408", custId: "cust-006",
+    job: "Engine Diagnostic — Timing Chain Stretch (P0016+P0017)",
+    column: "approval", minAgo: 1440,
     _liveRO: {
-      customerConcern: "Due for oil change, tires pulling slightly left",
-      loyaltyTier: "regular", preferredContact: "email",
-      customerApprovalRate: 0.72, customerVisitCount: 4, customerLTV: 2210,
-      totalEstimate: 189.95, totalLabor: 97.50, totalPartsCharged: 68.45,
-      grossMarginDollars: 72.80, grossMarginPct: 38,
-      effectiveLaborRate: 187, declinedTotal: 149,
+      customerConcern: "Check engine light on for 2 weeks. Hesitation under acceleration. Rough idle on cold start.",
+      loyaltyTier: "loyal", preferredContact: "call",
+      customerApprovalRate: 0.82, customerVisitCount: 24, customerLTV: 16400,
+      totalEstimate: 2480, totalLabor: 1662.50, totalPartsCharged: 690,
+      grossMarginDollars: 868, grossMarginPct: 35,
+      effectiveLaborRate: 175, declinedTotal: 0,
+      dtcs: ["P0016", "P0017"],
       services: [
-        { name: "Full Synthetic Oil Change (5W-20)", laborHrs: 0.4, laborCost: 52, partsCost: 38.45 },
-        { name: "Tire Rotation & Balance",           laborHrs: 0.4, laborCost: 52, partsCost: 30.00 },
+        { name: "Engine Diagnostic & DTC Analysis",                    laborHrs: 1.0, laborCost: 175,    partsCost: 0   },
+        { name: "Timing Chain Kit Replacement (TSB PIP5765G)",         laborHrs: 8.0, laborCost: 1400,   partsCost: 638 },
+        { name: "Engine Oil & Filter Change — Post-Timing (0W-20 8qt)",laborHrs: 0.5, laborCost: 87.50,  partsCost: 52  },
       ],
       aiInsights: [
-        "F-150 pulling left — check alignment while on the lift. Alignment ($149) declined last visit; re-present with photos.",
-        "2022 F-150 at 48K: brake inspection and cabin air filter are overdue. Add to MPI checklist.",
-        "Trust-building visit for a regular customer — fast turnaround + text update will increase loyalty score.",
-        "Tire tread depth check: F-150 owners drive high mileage — proactive tire recommendation could convert to $1,200+.",
+        "TSB PIP5765G: GM Gen V EcoTec3 5.3L/6.2L timing chain stretch — P0016+P0017 at 80-100K mi. Ray's Silverado at 88.4K. Stretch confirmed on inspection.",
+        "P0016 + P0017 together = Bank 1 intake AND exhaust cam offset. Both VVT solenoids must be replaced with the chain — prevents callback within 20K mi.",
+        "Ray is your most loyal customer (24 visits, $16.4K LTV). He negotiates — show him the chain comparison photo (stretched vs new). He'll approve when he sees it.",
+        "Estimate sent yesterday at 4:30 PM. No response yet — suggest follow-up call this morning. Ray likes to talk shop.",
       ],
     },
   },
@@ -303,11 +305,17 @@ function KGPanel() {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-export default function AdvisorHomeScreen() {
+export default function AdvisorHomeScreen({ onRoSelect } = {}) {
   const { smsName, shopName, smsHeaderColor } = useDemo();
   const [selectedRoNum, setSelectedRoNum] = useState(null);
 
   const selected = BOARD_ROS.find(r => r.roNum === selectedRoNum) || null;
+
+  function selectRO(ro) {
+    const next = selectedRoNum === ro?.roNum ? null : ro;
+    setSelectedRoNum(next?.roNum || null);
+    onRoSelect?.(next ? { ...next, shopId: "cornerstone" } : null);
+  }
 
   // Derived stats
   const approvalROs      = BOARD_ROS.filter(r => r.column === "approval");
@@ -330,7 +338,7 @@ export default function AdvisorHomeScreen() {
 
     return (
       <div
-        onClick={() => setSelectedRoNum(isSelected ? null : ro.roNum)}
+        onClick={() => selectRO(isSelected ? null : ro)}
         style={{
           background: isSelected ? colCfg.bg : COLORS.bgCard,
           border: `1.5px solid ${isSelected ? colCfg.color : COLORS.border}`,
@@ -633,7 +641,7 @@ export default function AdvisorHomeScreen() {
               return (
                 <div
                   key={ro.roNum}
-                  onClick={() => setSelectedRoNum(ro.roNum)}
+                  onClick={() => selectRO(ro)}
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                     padding: "6px 0", cursor: "pointer",
@@ -831,7 +839,7 @@ export default function AdvisorHomeScreen() {
             </span>
             {selected && (
               <button
-                onClick={() => setSelectedRoNum(null)}
+                onClick={() => selectRO(null)}
                 style={{
                   marginLeft: "auto", background: "none", border: "none",
                   cursor: "pointer", fontSize: 11, color: "rgba(255,255,255,0.35)",
