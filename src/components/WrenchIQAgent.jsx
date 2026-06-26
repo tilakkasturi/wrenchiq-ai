@@ -1258,8 +1258,8 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
           </div>
         </div>
 
-        {/* Shop Objectives — always visible for advisor; visible for others when RO is open */}
-        {tribalNotesLoaded && (persona === "advisor" || persona === "advisorLite" || selectedRO) && (() => {
+        {/* Shop Objectives — always visible for advisor/owner; visible for others when RO is open */}
+        {tribalNotesLoaded && (persona === "advisor" || persona === "advisorLite" || persona === "owner" || selectedRO) && (() => {
           const nowDate = new Date();
           const activeNotes = tribalNotes.filter(n =>
             n.active && (!n.expiresAt || new Date(n.expiresAt) > nowDate)
@@ -1284,8 +1284,8 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
           );
         })()}
 
-        {/* ings checklist — shown for advisor always; others when RO is open */}
-        {ings.length > 0 && (persona === "advisor" || persona === "advisorLite" || selectedRO) && (() => {
+        {/* ings checklist — shown for advisor/owner always; others when RO is open */}
+        {ings.length > 0 && (persona === "advisor" || persona === "advisorLite" || persona === "owner" || selectedRO) && (() => {
           const unchecked = ings.filter(n => n.active && !checkedIngs.has(n._id));
           const checked   = ings.filter(n => n.active && checkedIngs.has(n._id));
           if (ings.filter(n => n.active).length === 0) return null;

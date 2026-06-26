@@ -30,29 +30,42 @@ async function ensureNoteIndexes(db) {
 }
 
 const DEMO_NOTES = [
+  // ── Objectives ─────────────────────────────────────────────
   {
-    shopId: 'shop-001',
-    locationId: 'all',
+    shopId: 'shop-001', locationId: 'all', noteType: 'objective',
     note: 'Push cabin air filter on all vehicles — shop is overstocked 40 units',
-    active: true,
-    expiresAt: null,
-    triggerType: 'any_ro',
+    active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'shop-001',
-    locationId: 'all',
+    shopId: 'shop-001', locationId: 'all', noteType: 'objective',
     note: 'Offer brake fluid flush on any vehicle over 50k miles',
-    active: true,
-    expiresAt: null,
-    triggerType: 'mileage_range:50000-999999',
+    active: true, expiresAt: null, triggerType: 'mileage_range:50000-999999',
   },
   {
-    shopId: 'shop-001',
-    locationId: 'all',
+    shopId: 'shop-001', locationId: 'all', noteType: 'objective',
     note: 'Check for timing belt service on Japanese vehicles 80k–100k miles',
-    active: true,
-    expiresAt: null,
-    triggerType: 'vehicle_type:japanese',
+    active: true, expiresAt: null, triggerType: 'vehicle_type:japanese',
+  },
+  // ── ings (per-RO advisor reminders) ────────────────────────
+  {
+    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    note: 'Add shop supply fee ($29.95) to every RO before closing',
+    active: true, expiresAt: null, triggerType: 'any_ro',
+  },
+  {
+    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    note: 'Offer alignment check on every tire rotation — alignment revenue is up 18% when presented',
+    active: true, expiresAt: null, triggerType: 'any_ro',
+  },
+  {
+    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    note: 'Check cabin air filter on vehicles over 25K miles — we have 40 units in stock',
+    active: true, expiresAt: null, triggerType: 'mileage_range:25000-999999',
+  },
+  {
+    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    note: 'Present Predii protection plan to first-time customers before checkout',
+    active: true, expiresAt: null, triggerType: 'any_ro',
   },
 ];
 
@@ -63,7 +76,7 @@ router.post('/', async (req, res) => {
     await ensureNoteIndexes(db);
     const col = db.collection(COLL);
 
-    const { shopId, locationId, note, active, expiresAt, triggerType } = req.body;
+    const { shopId, locationId, note, active, expiresAt, triggerType, noteType } = req.body;
 
     if (!shopId || !note) {
       return res.status(400).json({ error: 'shopId and note are required.' });
@@ -74,6 +87,7 @@ router.post('/', async (req, res) => {
       shopId,
       locationId: locationId || 'all',
       note,
+      noteType: noteType || 'objective',
       active: active !== undefined ? Boolean(active) : true,
       expiresAt: expiresAt || null,
       triggerType: triggerType || 'any_ro',
@@ -95,7 +109,7 @@ router.get('/:shopId', async (req, res) => {
     await ensureNoteIndexes(db);
     const col = db.collection(COLL);
     const { shopId } = req.params;
-    const { includeInactive, includeExpired } = req.query;
+    const { includeInactive, includeExpired, noteType } = req.query;
 
     const count = await col.countDocuments({ shopId });
 
@@ -106,6 +120,8 @@ router.get('/:shopId', async (req, res) => {
     }
 
     const filter = { shopId };
+
+    if (noteType) filter.noteType = noteType;
 
     if (includeInactive !== 'true') {
       filter.active = true;
@@ -139,7 +155,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid id format.' });
     }
 
-    const ALLOWED_FIELDS = ['note', 'active', 'expiresAt', 'triggerType', 'locationId'];
+    const ALLOWED_FIELDS = ['note', 'active', 'expiresAt', 'triggerType', 'locationId', 'noteType'];
     const update = {};
     for (const f of ALLOWED_FIELDS) {
       if (req.body[f] !== undefined) update[f] = req.body[f];
