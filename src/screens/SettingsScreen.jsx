@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Building2,
   Phone,
@@ -1345,30 +1345,45 @@ function BillingTab() {
 // ── Tribal Knowledge Panel ──────────────────────────────────
 function TribalKnowledgePanel() {
   const SHOP_ID = 'cornerstone';
+  const LOCAL_STORAGE_KEY = `wrenchiq_tribal_${SHOP_ID}`;
   const [activeSubTab, setActiveSubTab] = useState('objectives');
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [apiOffline, setApiOffline] = useState(false);
   const [showExpired, setShowExpired] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
   const [newNote, setNewNote] = useState({ note: '', triggerType: 'any_ro', expiresAt: '' });
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
 
+  // Enrich ings in a list and update state
+  const enrichAndSet = useCallback(async (raw) => {
+    const ings   = raw.filter(n => n.noteType === 'ing');
+    const others = raw.filter(n => n.noteType !== 'ing');
+    const enriched = await extractIngEntities(ings).catch(() => ings);
+    setNotes([...others, ...enriched]);
+  }, []);
+
   useEffect(() => {
     fetch(`${API_BASE}/api/tribal-notes/${SHOP_ID}?includeInactive=true&includeExpired=true`)
-      .then(r => r.ok ? r.json() : [])
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('api_error')))
       .then(async data => {
         const raw = Array.isArray(data) ? data : [];
         setNotes(raw);
         setLoading(false);
-        // Enrich ings with LLM entity extraction, then update display
-        const ings    = raw.filter(n => n.noteType === 'ing');
-        const others  = raw.filter(n => n.noteType !== 'ing');
-        const enriched = await extractIngEntities(ings).catch(() => ings);
-        setNotes([...others, ...enriched]);
+        enrichAndSet(raw);
       })
-      .catch(() => setLoading(false));
-  }, []);
+      .catch(() => {
+        // API unavailable — load from localStorage so locally-added notes survive
+        try {
+          const cached = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+          setNotes(Array.isArray(cached) ? cached : []);
+          enrichAndSet(Array.isArray(cached) ? cached : []);
+        } catch {}
+        setApiOffline(true);
+        setLoading(false);
+      });
+  }, [enrichAndSet]);
 
   const now = new Date();
   const threeDays = 3 * 24 * 60 * 60 * 1000;
@@ -1422,6 +1437,13 @@ function TribalKnowledgePanel() {
     }
   };
 
+  const persistLocalNote = useCallback((note) => {
+    try {
+      const cached = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([...cached, note]));
+    } catch {}
+  }, [LOCAL_STORAGE_KEY]);
+
   const addNote = async () => {
     if (!newNote.note.trim()) return;
     const body = {
@@ -1429,24 +1451,43 @@ function TribalKnowledgePanel() {
       noteType: activeSubTab === 'ings' ? 'ing' : 'objective',
       expiresAt: newNote.expiresAt || null, active: true,
     };
-    const res = await fetch(`${API_BASE}/api/tribal-notes`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) {
-      const created = await res.json();
-      const next = [...notes, created];
-      setNotes(next);
-      setNewNote({ note: '', triggerType: 'any_ro', expiresAt: '' });
-      setShowNewForm(false);
-      // For ings: run entity extraction on the new note immediately
-      if (created.noteType === 'ing') {
-        extractIngEntities([created]).then(enriched => {
-          if (enriched[0]?.entityData) {
-            setNotes(prev => prev.map(n => n._id === created._id ? enriched[0] : n));
+
+    let created = null;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/tribal-notes`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) created = await res.json();
+    } catch {}
+
+    // API unavailable — create locally with a temp ID and persist to localStorage
+    if (!created) {
+      created = { ...body, _id: `local-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      persistLocalNote(created);
+    }
+
+    setNotes(prev => [...prev, created]);
+    setNewNote({ note: '', triggerType: 'any_ro', expiresAt: '' });
+    setShowNewForm(false);
+
+    // For ings: run entity extraction immediately so the badge appears
+    if (created.noteType === 'ing') {
+      extractIngEntities([created]).then(enriched => {
+        if (enriched[0]?.entityData) {
+          setNotes(prev => prev.map(n => n._id === created._id ? enriched[0] : n));
+          // Update localStorage with enriched version
+          if (created._id?.startsWith('local-')) {
+            try {
+              const cached = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(
+                cached.map(n => n._id === created._id ? enriched[0] : n)
+              ));
+            } catch {}
           }
-        }).catch(() => {});
-      }
+        }
+      }).catch(() => {});
     }
   };
 
@@ -1524,6 +1565,11 @@ function TribalKnowledgePanel() {
 
   return (
     <div style={{ padding: '0 4px' }}>
+      {apiOffline && (
+        <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:8, padding:'8px 12px', marginBottom:14, fontSize:12, color:'#92400E', display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontWeight:700 }}>Offline mode</span> — server unavailable. Notes are saved locally and will sync when the server is back.
+        </div>
+      )}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
         <div>
           <h3 style={{ fontSize:18, fontWeight:700, color:'#1F2937', margin:0 }}>Shop Objectives</h3>
