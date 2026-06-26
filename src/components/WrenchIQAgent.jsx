@@ -6,6 +6,7 @@ import { COLORS } from "../theme/colors";
 import { repairOrders, customers, vehicles, getCustomer, getVehicle } from "../data/demoData";
 import { useRecommendations } from "../context/RecommendationsContext";
 import { useShopObjectives } from "../context/ShopObjectivesContext";
+import { filterIngsByRO } from "../services/ingEntityExtractor";
 import RecommendationCard from "./RecommendationCard";
 
 const API_BASE_AGENT = import.meta.env.VITE_API_BASE || "";
@@ -1284,27 +1285,28 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
           );
         })()}
 
-        {/* ings checklist — shown for advisor/owner always; others when RO is open */}
+        {/* ings checklist — filtered by LLM entityData conditions against current RO vehicle */}
         {ings.length > 0 && (persona === "advisor" || persona === "advisorLite" || persona === "owner" || selectedRO) && (() => {
-          const unchecked = ings.filter(n => n.active && !checkedIngs.has(n._id));
-          const checked   = ings.filter(n => n.active && checkedIngs.has(n._id));
-          if (ings.filter(n => n.active).length === 0) return null;
+          const relevantIngs = filterIngsByRO(ings, selectedRO);
+          const activeIngs   = relevantIngs.filter(n => n.active);
+          if (activeIngs.length === 0) return null;
+          const unchecked = activeIngs.filter(n => !checkedIngs.has(n._id));
           return (
             <div style={{ marginBottom: 10, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
               <div style={{ background: "rgba(255,255,255,0.06)", padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.5)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                   ings — Don't Forget
                 </div>
-                {unchecked.length === 0 && (
-                  <div style={{ fontSize: 10, color: "#10B981", fontWeight: 700 }}>All done</div>
-                )}
-                {unchecked.length > 0 && (
-                  <div style={{ fontSize: 10, color: "#F97316", fontWeight: 700 }}>{unchecked.length} remaining</div>
-                )}
+                {unchecked.length === 0
+                  ? <div style={{ fontSize: 10, color: "#10B981", fontWeight: 700 }}>All done</div>
+                  : <div style={{ fontSize: 10, color: "#F97316", fontWeight: 700 }}>{unchecked.length} remaining</div>
+                }
               </div>
               <div style={{ padding: "6px 8px" }}>
-                {ings.filter(n => n.active).map(ing => {
-                  const done = checkedIngs.has(ing._id);
+                {activeIngs.map(ing => {
+                  const done  = checkedIngs.has(ing._id);
+                  const label = ing.entityData?.displayLabel;
+                  const disc  = ing.entityData?.discount;
                   return (
                     <div key={ing._id}
                       onClick={() => setCheckedIngs(prev => {
@@ -1317,8 +1319,24 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                       <div style={{ width: 14, height: 14, borderRadius: 3, border: `2px solid ${done ? "#10B981" : "rgba(255,255,255,0.3)"}`, background: done ? "#10B981" : "transparent", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         {done && <span style={{ color: "#fff", fontSize: 9, fontWeight: 900, lineHeight: 1 }}>✓</span>}
                       </div>
-                      <div style={{ fontSize: 11, color: done ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.85)", lineHeight: 1.35, textDecoration: done ? "line-through" : "none" }}>
-                        {ing.note}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, color: done ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.85)", lineHeight: 1.35, textDecoration: done ? "line-through" : "none" }}>
+                          {ing.note}
+                        </div>
+                        {(label || disc) && !done && (
+                          <div style={{ display: "flex", gap: 4, marginTop: 3 }}>
+                            {label && (
+                              <span style={{ fontSize: 8, fontWeight: 700, background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.55)", borderRadius: 3, padding: "1px 5px", letterSpacing: "0.04em" }}>
+                                {label}
+                              </span>
+                            )}
+                            {disc && (
+                              <span style={{ fontSize: 8, fontWeight: 700, background: "rgba(74,222,128,0.15)", color: "#4ADE80", borderRadius: 3, padding: "1px 5px" }}>
+                                {disc} off
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

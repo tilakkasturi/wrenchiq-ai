@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { SHOP, technicians, advisors } from "../data/demoData";
+import { extractIngEntities } from "../services/ingEntityExtractor";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -1356,7 +1357,16 @@ function TribalKnowledgePanel() {
   useEffect(() => {
     fetch(`${API_BASE}/api/tribal-notes/${SHOP_ID}?includeInactive=true&includeExpired=true`)
       .then(r => r.ok ? r.json() : [])
-      .then(data => { setNotes(Array.isArray(data) ? data : []); setLoading(false); })
+      .then(async data => {
+        const raw = Array.isArray(data) ? data : [];
+        setNotes(raw);
+        setLoading(false);
+        // Enrich ings with LLM entity extraction, then update display
+        const ings    = raw.filter(n => n.noteType === 'ing');
+        const others  = raw.filter(n => n.noteType !== 'ing');
+        const enriched = await extractIngEntities(ings).catch(() => ings);
+        setNotes([...others, ...enriched]);
+      })
       .catch(() => setLoading(false));
   }, []);
 
@@ -1425,14 +1435,28 @@ function TribalKnowledgePanel() {
     });
     if (res.ok) {
       const created = await res.json();
-      setNotes([...notes, created]);
+      const next = [...notes, created];
+      setNotes(next);
       setNewNote({ note: '', triggerType: 'any_ro', expiresAt: '' });
       setShowNewForm(false);
+      // For ings: run entity extraction on the new note immediately
+      if (created.noteType === 'ing') {
+        extractIngEntities([created]).then(enriched => {
+          if (enriched[0]?.entityData) {
+            setNotes(prev => prev.map(n => n._id === created._id ? enriched[0] : n));
+          }
+        }).catch(() => {});
+      }
     }
   };
 
   const StickyCard = ({ note }) => {
-    const trig = triggerLabel(note.triggerType);
+    // For ings: use LLM-extracted entityData label; for objectives: use triggerType label
+    const isIngNote = note.noteType === 'ing';
+    const trig = isIngNote && note.entityData
+      ? { label: note.entityData.displayLabel || 'Any Vehicle', color: '#7C3AED', bg: '#EDE9FE' }
+      : triggerLabel(note.triggerType);
+    const disc = isIngNote && note.entityData?.discount;
     const expiringSoon = isExpiringSoon(note);
     return (
       <div style={{
@@ -1469,6 +1493,10 @@ function TribalKnowledgePanel() {
           <div style={{ display:'flex', alignItems:'center', gap:6 }}>
             <span style={{ background:trig.bg, color:trig.color, fontSize:11,
               fontWeight:600, padding:'2px 7px', borderRadius:10 }}>{trig.label}</span>
+            {disc && (
+              <span style={{ background:'#DCFCE7', color:'#16A34A', fontSize:11,
+                fontWeight:600, padding:'2px 7px', borderRadius:10 }}>{disc} off</span>
+            )}
             <span style={{ fontSize:11, color:'#9CA3AF' }}>
               {note.expiresAt ? `Until ${new Date(note.expiresAt).toLocaleDateString()}` : 'Ongoing'}
             </span>
@@ -1543,7 +1571,13 @@ function TribalKnowledgePanel() {
               : 'e.g. Push cabin air filter to all customers this month'}
             value={newNote.note} onChange={e => setNewNote({...newNote, note: e.target.value})}
             style={{ width:'100%', border:'1px solid #D1D5DB', borderRadius:4, padding:8,
-              fontSize:13, resize:'vertical', minHeight:70, marginBottom:10, boxSizing:'border-box' }} />
+              fontSize:13, resize:'vertical', minHeight:70, marginBottom: isIng ? 4 : 10, boxSizing:'border-box' }} />
+          {isIng && (
+            <div style={{ fontSize:11, color:'#6B7280', marginBottom:10, display:'flex', alignItems:'center', gap:4 }}>
+              <span style={{ color:'#7C3AED', fontWeight:700 }}>AI</span>
+              WrenchIQ will automatically extract conditions (vehicle make/model, mileage, promotion type) from your text.
+            </div>
+          )}
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
             {!isIng && (
               <select value={newNote.triggerType}
