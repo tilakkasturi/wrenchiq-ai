@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  Sparkles, Send, Zap, X,
+  Sparkles, Send, Zap, X, Target,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { repairOrders, customers, vehicles, getCustomer, getVehicle } from "../data/demoData";
 import { useRecommendations } from "../context/RecommendationsContext";
+import { useShopObjectives } from "../context/ShopObjectivesContext";
 import RecommendationCard from "./RecommendationCard";
 
 const API_BASE_AGENT = import.meta.env.VITE_API_BASE || "";
@@ -34,13 +35,7 @@ const SCREEN_CONTEXT = {
   },
   customer: {
     label: "Watching: Customer Portal",
-    customerFocus: {
-      name: "Monica Rodriguez",
-      vehicle: "2021 Toyota Camry SE",
-      roId: "RO-2024-1187",
-      status: "Awaiting approval on 3 items",
-      statusColor: COLORS.warning,
-    },
+    customerFocus: null,
     suggestions: [
       { type: "alert", icon: "⏳", text: "Monica's approval pending 35 min — she's a busy founder, send a 1-tap approve link", action: "Send SMS", value: "+$294", color: COLORS.warning },
       { type: "upsell", icon: "💬", text: "She's never declined a recommendation (7 visits, 100% approval rate) — add tire rotation", action: "Add to portal", value: "+$95", color: COLORS.accent },
@@ -99,13 +94,7 @@ const SCREEN_CONTEXT = {
   },
   health: {
     label: "Watching: Health Report",
-    customerFocus: {
-      name: "Sarah Chen",
-      vehicle: "2022 Tesla Model 3",
-      roId: "RO-2024-1192",
-      status: "Report sent · awaiting approval",
-      statusColor: COLORS.warning,
-    },
+    customerFocus: null,
     suggestions: [
       { type: "alert", icon: "⏳", text: "Sarah opened the health report 2× but hasn't approved. She uses text — send 1-tap approve link.", action: "Send Approve Link", value: "+$287–420", color: COLORS.warning },
       { type: "upsell", icon: "🎥", text: "DeShawn's inspection video for front brakes is 47s. Customers who watch approve 31% more often.", action: "Resend with Video", value: "+31% approval", color: "#3B82F6" },
@@ -241,6 +230,66 @@ const SCREEN_CONTEXT = {
       { type: "revenue", icon: "🤖", text: "AI prepared 3 RO narratives this morning — $4,280 in labor written, 0 sent back for edits.", action: "View Narratives", value: "$4,280 written", color: COLORS.success },
       { type: "alert",   icon: "⚡", text: "David Kim RO pending advisor sign-off — AI flagged P0420 with TSB match. Review now.", action: "Review RO", value: "Flagged", color: COLORS.warning },
       { type: "upsell",  icon: "💬", text: "AI spotted 4 upsell opportunities in today's queue worth $920. 1-tap to add.", action: "Review Opps", value: "+$920", color: COLORS.accent },
+    ],
+  },
+
+  job1Intake: {
+    label: "Watching: Intake & Diagnosis",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert",   icon: "🔍", text: "VIN decode complete — check for open NHTSA recalls before finalizing the estimate.", action: "Check Recalls", value: "Safety check", color: COLORS.warning },
+      { type: "upsell",  icon: "📋", text: "Mileage-based services due: brake fluid (60K), cabin air filter (15K), and tire rotation. Add to MPI.", action: "Add to MPI", value: "Upsell ready", color: COLORS.accent },
+      { type: "revenue", icon: "⏱️", text: "Average intake takes 8 min — customers who get a same-day estimate approve 2× faster.", action: "Send Estimate", value: "+2× approval", color: "#2563EB" },
+    ],
+  },
+
+  job2ThreeC: {
+    label: "Watching: 3C Compliance",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert",   icon: "✍️", text: "Cause section needs a DTC and measured value — vague causes get rejected by service managers.", action: "Enhance Cause", value: "Compliance risk", color: COLORS.warning },
+      { type: "upsell",  icon: "📎", text: "Add TSB reference number to the correction section — increases customer approval rate by 40%.", action: "Add TSB", value: "+40% approval", color: COLORS.accent },
+      { type: "ok",      icon: "✅", text: "Shop 3C compliance score: 91% — top 10% of WrenchIQ shops. Keep narratives specific.", action: null, value: "91% score", color: COLORS.success },
+    ],
+  },
+
+  job3Upsell: {
+    label: "Watching: Smart Upsell",
+    customerFocus: null,
+    suggestions: [
+      { type: "revenue", icon: "💡", text: "Present declined services as a prioritized list — customers approve 28% more when ranked by urgency.", action: "Rank by Urgency", value: "+28% approve", color: COLORS.accent },
+      { type: "upsell",  icon: "🔧", text: "Mileage milestone services convert best when paired with a photo from the DVI — attach one now.", action: "Attach Photo", value: "Converts 2×", color: "#2563EB" },
+      { type: "ok",      icon: "📊", text: "This shop's upsell approval rate: 64% — above the 53% network average. Keep presenting.", action: null, value: "64% rate", color: COLORS.success },
+    ],
+  },
+
+  ownerProtractor: {
+    label: "Watching: Daily View",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert",   icon: "🏁", text: "Revenue at $5,840 — need $1,660 more to hit daily target. 3 pending approvals can close the gap.", action: "View Pending", value: "$1,660 gap", color: COLORS.warning },
+      { type: "alert",   icon: "🔴", text: "Bay 3 idle 45 min — move Tom's Tucson forward to recover $280 in labor.", action: "Reschedule", value: "Recover $280", color: COLORS.danger },
+      { type: "upsell",  icon: "📊", text: "Tech efficiency today: shop avg 84% — assign heavier jobs to Marcus who is currently at 91%.", action: "Reassign", value: "+1.2 hrs", color: "#7C3AED" },
+    ],
+  },
+
+  opIntel: {
+    label: "Watching: Operational Intelligence",
+    customerFocus: null,
+    suggestions: [
+      { type: "alert",   icon: "📉", text: "Gross profit margin this week: 48.2% — below 53% target. Two BMW jobs used OEM parts at low markup.", action: "Review Margins", value: "-4.8% margin", color: COLORS.danger },
+      { type: "revenue", icon: "📈", text: "Top revenue driver this month: oil service upsells ($8,240). Advisors presenting at 89% rate.", action: "View Breakdown", value: "$8,240", color: COLORS.success },
+      { type: "upsell",  icon: "⚡", text: "3 technicians below 85% efficiency this week — coaching on time logging can recover 4+ billable hrs.", action: "View Tech Report", value: "4 hrs recoverable", color: COLORS.warning },
+    ],
+  },
+
+  impactDash: {
+    label: "Watching: Impact Dashboard",
+    customerFocus: null,
+    suggestions: [
+      { type: "revenue", icon: "💰", text: "WrenchIQ AI generated $42,800 in incremental revenue this quarter via upsell and recall prompts.", action: "View Breakdown", value: "$42,800 impact", color: COLORS.success },
+      { type: "upsell",  icon: "⭐", text: "Trust score improvement: shop average up 11 pts this quarter. Google rating trending to 4.9★.", action: "View Trust", value: "+11 pts", color: COLORS.accent },
+      { type: "alert",   icon: "📊", text: "2 locations in the group haven't enabled AI upsell prompts — they're leaving $18K/mo on the table.", action: "Enable Locations", value: "$18K gap", color: COLORS.warning },
     ],
   },
 };
@@ -447,7 +496,7 @@ const TABS = [
   { id: "liveFeed",        label: "Live Feed" },
 ];
 
-export default function WrenchIQAgent({ activeScreen, persona = "admin", selectedRO = null, onHide }) {
+export default function WrenchIQAgent({ activeScreen, persona = "admin", selectedRO = null, onHide, standalone = false }) {
   const [typedInput, setTypedInput] = useState("");
   const [activeTab, setActiveTab] = useState("aiSuggest");
   const [now, setNow] = useState(new Date());
@@ -467,15 +516,15 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
   const [opportunitiesShown, setOpportunitiesShown] = useState(false);
   const [expandedOpp, setExpandedOpp] = useState(null);
 
-  // Tribal notes (for Shop Rules section and chat creation)
-  const [tribalNotes, setTribalNotes] = useState([]);
-  const [tribalNotesLoaded, setTribalNotesLoaded] = useState(false);
+  // Tribal notes from shared context
+  const { objectives: tribalNotes, ings, loaded: tribalNotesLoaded, addObjective } = useShopObjectives();
+  const [checkedIngs, setCheckedIngs] = useState(new Set());
   const [awaitingNoteExpiry, setAwaitingNoteExpiry] = useState(null);
 
   // Drift alerts dismissal
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
 
-  // Shop Rules expand/collapse
+  // Shop Objectives expand/collapse
   const [shopRulesExpanded, setShopRulesExpanded] = useState(false);
 
   useEffect(() => {
@@ -499,13 +548,9 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
       .catch(() => setSnapshot90d(DEMO_SNAPSHOT_90D));
   }, [convMode]);
 
-  // Fetch tribal notes on mount (for Shop Rules section)
-  useEffect(() => {
-    fetch(`${API_BASE_AGENT}/api/tribal-notes/shop-001`)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => { setTribalNotes(Array.isArray(data) ? data : []); setTribalNotesLoaded(true); })
-      .catch(() => setTribalNotesLoaded(true));
-  }, []);
+
+  // Reset checked ings when RO changes
+  useEffect(() => { setCheckedIngs(new Set()); }, [selectedRO?.id]);
 
   // Recommendations from context (null = provider not mounted)
   const recCtx = useRecommendations();
@@ -514,30 +559,34 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
   let ctx;
   if (persona === "owner") {
     ctx = OWNER_CONTEXT;
-  } else if (persona === "advisor" && selectedRO?._liveRO) {
-    // Narrow to selected RO's customer
-    const liveRO = selectedRO._liveRO;
-    const demoCust = customers.find(c => c.id === selectedRO.custId);
-    const demoVeh  = vehicles.find(v => v.customerId === selectedRO.custId);
-    const custSrc  = selectedRO._customer || demoCust;
-    const vehSrc   = selectedRO._vehicle  || demoVeh;
-    const custName = custSrc
+  } else if (persona === "advisor" && selectedRO && (selectedRO._liveRO || selectedRO.aiInsights?.length)) {
+    // Narrow to selected RO's customer — supports both AdvisorHomeScreen (_liveRO format)
+    // and RepairOrderScreen (direct aiInsights on demo RO)
+    const liveRO    = selectedRO._liveRO || selectedRO;
+    const custId    = selectedRO.custId || selectedRO.customerId;
+    const vehicleId = selectedRO.vehicleId;
+    const demoCust  = customers.find(c => c.id === custId);
+    const demoVeh   = vehicles.find(v => v.id === vehicleId || v.customerId === custId);
+    const custSrc   = selectedRO._customer || demoCust;
+    const vehSrc    = selectedRO._vehicle  || demoVeh;
+    const custName  = custSrc
       ? `${custSrc.firstName} ${custSrc.lastName}`
-      : selectedRO.custId;
+      : custId || "Customer";
     const vehicle = vehSrc
       ? `${vehSrc.year} ${vehSrc.make} ${vehSrc.model}`
       : "Vehicle";
+    const insights = liveRO.aiInsights || [];
     ctx = {
       label: `Focused: ${custName} · ${vehicle}`,
       customerFocus: {
         name: custName,
         vehicle,
-        roId: selectedRO.roNum,
-        status: liveRO.customerConcern || selectedRO.job,
+        roId: selectedRO.roNum || selectedRO.id,
+        status: liveRO.customerConcern || selectedRO.job || selectedRO.serviceType || selectedRO.customerConcern,
         statusColor: COLORS.warning,
       },
-      suggestions: (liveRO.aiInsights || []).map((text, i) => ({
-        type: i === 0 ? "alert" : i === (liveRO.aiInsights.length - 1) ? "revenue" : "upsell",
+      suggestions: insights.map((text, i) => ({
+        type: i === 0 ? "alert" : i === (insights.length - 1) ? "revenue" : "upsell",
         icon: i === 0 ? "⚡" : i % 2 === 0 ? "🔧" : "💡",
         text,
         action: null,
@@ -995,7 +1044,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
         }),
       }).then(r => r.ok ? r.json() : null).then(created => {
         if (created) {
-          setTribalNotes(prev => [...prev, created]);
+          addObjective(created);
           const expMsg = expiresAt
             ? `Active until ${new Date(expiresAt).toLocaleDateString()}`
             : 'Active ongoing (no expiry)';
@@ -1153,11 +1202,11 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
 
   return (
     <div style={{
-      width: 300,
+      width: standalone ? "100%" : 300,
       flexShrink: 0,
       height: "100%",
       background: COLORS.navyDark,
-      borderLeft: `1px solid ${COLORS.navyBorder}`,
+      borderLeft: standalone ? "none" : `1px solid ${COLORS.navyBorder}`,
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
@@ -1181,13 +1230,15 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ width: 7, height: 7, borderRadius: 4, background: "#22C55E", boxShadow: "0 0 0 2px rgba(34,197,94,0.3)" }} />
-            <button
-              onClick={onHide}
-              title="Hide AI panel"
-              style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 5, width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            >
-              <X size={12} color="rgba(255,255,255,0.7)" />
-            </button>
+            {!standalone && (
+              <button
+                onClick={onHide}
+                title="Hide AI panel"
+                style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 5, width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              >
+                <X size={12} color="rgba(255,255,255,0.7)" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -1206,6 +1257,76 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
             </div>
           </div>
         </div>
+
+        {/* Shop Objectives — always visible for advisor; visible for others when RO is open */}
+        {tribalNotesLoaded && (persona === "advisor" || persona === "advisorLite" || selectedRO) && (() => {
+          const nowDate = new Date();
+          const activeNotes = tribalNotes.filter(n =>
+            n.active && (!n.expiresAt || new Date(n.expiresAt) > nowDate)
+          );
+          if (activeNotes.length === 0) return null;
+          return (
+            <div style={{ marginBottom: 10, background: "rgba(255,107,53,0.07)", border: "1px solid rgba(255,107,53,0.25)", borderRadius: 8, padding: "8px 10px" }}>
+              <div style={{ fontSize: 9, fontWeight: 800, color: COLORS.accent, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 7, display: "flex", alignItems: "center", gap: 5 }}>
+                <Target size={10} color={COLORS.accent} /> Shop Objectives
+              </div>
+              {activeNotes.map((note, i) => {
+                const expiringSoon = note.expiresAt && (new Date(note.expiresAt) - nowDate) < 3 * 24 * 60 * 60 * 1000;
+                return (
+                  <div key={note._id || i} style={{ display: "flex", alignItems: "flex-start", gap: 5, padding: "5px 7px", marginBottom: i < activeNotes.length - 1 ? 4 : 0, background: "rgba(255,255,255,0.05)", borderRadius: 5, border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: COLORS.accent, flexShrink: 0, marginTop: 4 }} />
+                    <div style={{ flex: 1, fontSize: 11, color: "rgba(255,255,255,0.85)", lineHeight: 1.35 }}>{note.note}</div>
+                    {expiringSoon && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#F97316", flexShrink: 0, marginTop: 3 }} title="Expiring soon" />}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* ings checklist — shown for advisor always; others when RO is open */}
+        {ings.length > 0 && (persona === "advisor" || persona === "advisorLite" || selectedRO) && (() => {
+          const unchecked = ings.filter(n => n.active && !checkedIngs.has(n._id));
+          const checked   = ings.filter(n => n.active && checkedIngs.has(n._id));
+          if (ings.filter(n => n.active).length === 0) return null;
+          return (
+            <div style={{ marginBottom: 10, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
+              <div style={{ background: "rgba(255,255,255,0.06)", padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.5)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  ings — Don't Forget
+                </div>
+                {unchecked.length === 0 && (
+                  <div style={{ fontSize: 10, color: "#10B981", fontWeight: 700 }}>All done</div>
+                )}
+                {unchecked.length > 0 && (
+                  <div style={{ fontSize: 10, color: "#F97316", fontWeight: 700 }}>{unchecked.length} remaining</div>
+                )}
+              </div>
+              <div style={{ padding: "6px 8px" }}>
+                {ings.filter(n => n.active).map(ing => {
+                  const done = checkedIngs.has(ing._id);
+                  return (
+                    <div key={ing._id}
+                      onClick={() => setCheckedIngs(prev => {
+                        const s = new Set(prev);
+                        done ? s.delete(ing._id) : s.add(ing._id);
+                        return s;
+                      })}
+                      style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "5px 4px", cursor: "pointer", borderRadius: 5, opacity: done ? 0.45 : 1, transition: "opacity 0.15s" }}
+                    >
+                      <div style={{ width: 14, height: 14, borderRadius: 3, border: `2px solid ${done ? "#10B981" : "rgba(255,255,255,0.3)"}`, background: done ? "#10B981" : "transparent", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {done && <span style={{ color: "#fff", fontSize: 9, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: done ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.85)", lineHeight: 1.35, textDecoration: done ? "line-through" : "none" }}>
+                        {ing.note}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Tab buttons */}
         <div style={{ display: "flex", gap: 4 }}>
@@ -1306,6 +1427,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                 <div ref={chatEndRef} />
               </div>
             )}
+
           </>
         )}
 
@@ -1408,7 +1530,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
               </div>
             )}
 
-            {/* Shop Rules — AE-963 */}
+            {/* Shop Objectives */}
             {tribalNotesLoaded && (() => {
               const nowDate = new Date();
               const activeNotes = tribalNotes.filter(n => n.active && (!n.expiresAt || new Date(n.expiresAt) > nowDate));
@@ -1419,7 +1541,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                 <div style={{borderTop:'1px solid #2D4A52', paddingTop:12, marginTop:8}}>
                   <div style={{fontSize:11, fontWeight:700, color:COLORS.intelMuted, letterSpacing:'0.08em',
                     textTransform:'uppercase', marginBottom:8}}>
-                    Shop Rules ({activeNotes.length})
+                    Shop Objectives ({activeNotes.length})
                   </div>
                   {displayed.map(note => {
                     const expiringSoon = note.expiresAt && (new Date(note.expiresAt) - nowDate) < threeDays;
@@ -1439,7 +1561,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                     <button onClick={() => setShopRulesExpanded(!shopRulesExpanded)}
                       style={{background:'none', border:'none', color:COLORS.intelMuted, fontSize:11,
                         cursor:'pointer', padding:'4px 0', marginTop:4}}>
-                      {shopRulesExpanded ? 'Show less' : `+${activeNotes.length - 5} more rules`}
+                      {shopRulesExpanded ? 'Show less' : `+${activeNotes.length - 5} more objectives`}
                     </button>
                   )}
                 </div>

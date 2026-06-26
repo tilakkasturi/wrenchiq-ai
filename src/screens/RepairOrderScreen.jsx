@@ -278,7 +278,7 @@ function FlagCard({ icon: Icon, iconColor, borderColor, title, sub, action }) {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-export default function RepairOrderScreen() {
+export default function RepairOrderScreen({ onRoSelect } = {}) {
   const { smsName, shopName, activeShopId, smsHeaderColor } = useDemo();
   const [searchQuery, setSearchQuery]     = useState("");
   const [selectedRoId, setSelectedRoId]  = useState(null);
@@ -585,7 +585,17 @@ export default function RepairOrderScreen() {
                   key={ro.id}
                   ro={ro}
                   selected={selectedRoId === ro.id}
-                  onSelect={setSelectedRoId}
+                  onSelect={(id) => {
+                    setSelectedRoId(id);
+                    const ro = displayROs.find(r => r.id === id);
+                    if (!ro) { onRoSelect?.(null); return; }
+                    onRoSelect?.({
+                      ...ro,
+                      shopId:    activeShopId || "cornerstone",
+                      _customer: ro._customer || getCustomer(ro.customerId),
+                      _vehicle:  ro._vehicle  || getVehicle(ro.vehicleId),
+                    });
+                  }}
                   onDVI={setDviRoId}
                   onCheckout={setCheckoutRoId}
                   paidRos={paidRos}
