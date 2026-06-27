@@ -55,6 +55,7 @@ Extract the repair intent and return structured JSON.`;
       system:     SYSTEM_PROMPT,
       messages:   [{ role: 'user', content: userPrompt }],
       max_tokens: 512,
+      _route: '/api/ro-agent',
     });
 
     const raw = getTextFromResponse(data) || '{}';

@@ -13,7 +13,13 @@ export default function LoginScreen({ onLogin }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (username === "wrenchiq" && password === "wrenchiq2026") {
+    const success = username === "wrenchiq" && password === "wrenchiq2026";
+    fetch("/api/auth/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, success, edition: "am" }),
+    }).catch(() => {});
+    if (success) {
       onLogin();
     } else {
       setError("Invalid username or password.");

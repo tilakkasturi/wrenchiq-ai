@@ -92,7 +92,7 @@ export default function OEMGatewayScreen({ onSelectPersona, onBack, standaloneMo
       {/* Quick stats bar */}
       <div style={{
         display: "flex", gap: 12, marginBottom: 28,
-        width: "100%", maxWidth: 780,
+        width: "100%", maxWidth: 960,
       }}>
         {[
           { label: "This Month — Submitted",    value: `$${(WARRANTY_CLAIMS.thisMonth.dollarSubmitted / 1000).toFixed(0)}K`,  sub: `${WARRANTY_CLAIMS.thisMonth.submitted} claims`, color: "rgba(255,255,255,0.7)" },
@@ -103,17 +103,17 @@ export default function OEMGatewayScreen({ onSelectPersona, onBack, standaloneMo
           <div key={s.label} style={{
             flex: 1, background: "rgba(255,255,255,0.05)",
             border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 12, padding: "12px 16px",
+            borderRadius: 12, padding: "14px 20px",
           }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 4 }}>{s.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: s.color, letterSpacing: -0.5 }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{s.sub}</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: 0.6, textTransform: "uppercase", marginBottom: 6 }}>{s.label}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: s.color, letterSpacing: -0.5 }}>{s.value}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>{s.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Persona cards */}
-      <div style={{ display: "flex", gap: 14, width: "100%", maxWidth: 780, marginBottom: 28 }}>
+      <div style={{ display: "flex", gap: 16, width: "100%", maxWidth: 960, marginBottom: 28 }}>
         {OEM_PERSONAS.map((p) => {
           const isHov = hovered === p.id;
           const Icon = p.icon;
@@ -127,17 +127,18 @@ export default function OEMGatewayScreen({ onSelectPersona, onBack, standaloneMo
                 flex: 1,
                 background: isHov ? "#fff" : "rgba(255,255,255,0.04)",
                 border: isHov ? `2px solid ${p.accent}` : "1.5px solid rgba(255,255,255,0.1)",
-                borderRadius: 16, padding: "20px 18px",
+                borderRadius: 16, padding: "22px 22px",
                 cursor: "pointer", textAlign: "left",
                 transition: "all 0.15s",
                 transform: isHov ? "translateY(-2px)" : "none",
               }}
             >
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
                 <div style={{
-                  width: 40, height: 40, borderRadius: 10,
+                  width: 42, height: 42, borderRadius: 10,
                   background: isHov ? `${p.accent}18` : "rgba(255,255,255,0.1)",
                   display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
                 }}>
                   <Icon size={20} color={isHov ? p.accent : "rgba(255,255,255,0.6)"} />
                 </div>
@@ -145,13 +146,15 @@ export default function OEMGatewayScreen({ onSelectPersona, onBack, standaloneMo
                   fontSize: 9, fontWeight: 700,
                   color: isHov ? p.accent : "rgba(255,255,255,0.4)",
                   background: isHov ? `${p.accent}14` : "rgba(255,255,255,0.07)",
-                  borderRadius: 5, padding: "2px 8px",
+                  borderRadius: 5, padding: "3px 9px",
+                  whiteSpace: "nowrap",
+                  marginLeft: 8,
                 }}>{p.badge}</span>
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: isHov ? "#111827" : "#fff", marginBottom: 4 }}>{p.label}</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: isHov ? p.accent : "rgba(255,255,255,0.5)", marginBottom: 8 }}>{p.tagline}</div>
-              <div style={{ fontSize: 10, color: isHov ? "#6B7280" : "rgba(255,255,255,0.28)", lineHeight: 1.5 }}>{p.detail}</div>
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: isHov ? "#111827" : "#fff", marginBottom: 5, whiteSpace: "nowrap" }}>{p.label}</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: isHov ? p.accent : "rgba(255,255,255,0.5)", marginBottom: 10, lineHeight: 1.4 }}>{p.tagline}</div>
+              <div style={{ fontSize: 10, color: isHov ? "#6B7280" : "rgba(255,255,255,0.28)", lineHeight: 1.6 }}>{p.detail}</div>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
                 <ChevronRight size={14} color={isHov ? p.accent : "rgba(255,255,255,0.2)"} />
               </div>
             </button>
@@ -161,12 +164,13 @@ export default function OEMGatewayScreen({ onSelectPersona, onBack, standaloneMo
 
       {/* What OEM edition includes */}
       <div style={{
-        width: "100%", maxWidth: 780,
+        width: "100%", maxWidth: 960,
         background: "rgba(255,255,255,0.03)",
         border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 12, padding: "14px 20px",
-        display: "flex", alignItems: "center", gap: 28,
+        borderRadius: 12, padding: "14px 24px",
+        display: "flex", alignItems: "center", gap: 24,
         marginBottom: 24,
+        flexWrap: "wrap",
       }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: 0.6, textTransform: "uppercase", whiteSpace: "nowrap" }}>OEM Edition includes</div>
         {[

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
+import PoweredByPredii from "../components/PoweredByPredii";
 import {
   Sparkles,
   RefreshCw,
@@ -464,12 +465,13 @@ export default function OperationalIntelligenceScreen() {
                 fontSize: 13,
                 color: COLORS.textSecondary,
                 marginTop: 2,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
               }}
             >
               Operational Intelligence &middot;{" "}
-              <span style={{ color: COLORS.accent, fontWeight: 600 }}>
-                Powered by Predii
-              </span>
+              <PoweredByPredii variant="sm" />
             </div>
           </div>
 
@@ -606,7 +608,7 @@ export default function OperationalIntelligenceScreen() {
                 marginLeft: 4,
               }}
             >
-              Predii analyzed 2,400 ROs + {smsName} data
+              WrenchIQ analyzed 2,400 ROs + {smsName} data
             </span>
           </div>
 
@@ -687,7 +689,7 @@ export default function OperationalIntelligenceScreen() {
           textAlign: "center",
         }}
       >
-        Operational intelligence powered by{" "}
+        Powered by{" "}
         <span style={{ fontWeight: 700, color: COLORS.primary }}>Predii</span>{" "}
         &middot; {shopName} &middot; Connected to{" "}
         <span style={{ fontWeight: 600, color: COLORS.success }}>{smsName}</span>

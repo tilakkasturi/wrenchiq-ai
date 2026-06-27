@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
+  ExternalLink,
 } from "lucide-react";
 import { COLORS } from "../../theme/colors";
 
@@ -97,7 +98,7 @@ function sentencesForSection(roContext, sectionKey, fallback = {}) {
       items.push({ text: f.finding || f.text || JSON.stringify(f), confidence: f.confidence ?? 0.8 });
     });
     (roContext?.tsbMatches || []).filter(t => t.accepted).forEach(t => {
-      items.push({ text: `TSB ${t.id || ""}: ${t.title || t.summary || "Matched TSB"}`, confidence: t.confidence ?? 0.85 });
+      items.push({ text: `TSB ${t.tsbNumber || t.id || ""}: ${t.title || t.summary || "Matched TSB"}`, confidence: t.confidence ?? 0.85, tsb: t });
     });
     (roContext?.dtcCodes || []).forEach(d => {
       items.push({ text: `DTC ${d.code || d}: ${d.description || "Fault code detected"}`, confidence: 0.92 });
@@ -227,7 +228,7 @@ function StageBar({ currentStage }) {
   );
 }
 
-function SectionCard({ meta, count, sentences, expanded, onToggle }) {
+function SectionCard({ meta, count, sentences, expanded, onToggle, onViewTSB }) {
   return (
     <div style={{
       background: "#FAFAFA",
@@ -296,14 +297,30 @@ function SectionCard({ meta, count, sentences, expanded, onToggle }) {
                   <div style={{ flex: 1, fontSize: 10, color: COLORS.textPrimary, lineHeight: 1.4 }}>
                     {s.text}
                   </div>
-                  <span style={{
-                    fontSize: 8, fontWeight: 700, letterSpacing: 0.3,
-                    background: badge.bg, color: badge.color,
-                    borderRadius: 3, padding: "2px 4px",
-                    flexShrink: 0, marginTop: 1,
-                  }}>
-                    {badge.label}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginTop: 1 }}>
+                    {s.tsb && onViewTSB && (
+                      <button
+                        onClick={() => onViewTSB(s.tsb)}
+                        title="View full TSB details"
+                        style={{
+                          background: "none", border: "none", cursor: "pointer",
+                          padding: "1px 4px", borderRadius: 3,
+                          color: "#2563EB", fontSize: 8, fontWeight: 700,
+                          display: "flex", alignItems: "center", gap: 2,
+                        }}
+                      >
+                        <ExternalLink size={9} />
+                        View
+                      </button>
+                    )}
+                    <span style={{
+                      fontSize: 8, fontWeight: 700, letterSpacing: 0.3,
+                      background: badge.bg, color: badge.color,
+                      borderRadius: 3, padding: "2px 4px",
+                    }}>
+                      {badge.label}
+                    </span>
+                  </div>
                 </div>
               );
             })
@@ -430,6 +447,7 @@ export default function ROActivePanel({
   onToggleCollapse,
 }) {
   const [expandedSection, setExpandedSection] = useState(null);
+  const [tsbModal, setTsbModal] = useState(null);
 
   function handleToggleSection(key) {
     setExpandedSection(prev => (prev === key ? null : key));
@@ -588,6 +606,7 @@ export default function ROActivePanel({
               sentences={sentencesForSection(roContext, meta.key, fallback)}
               expanded={expandedSection === meta.key}
               onToggle={() => handleToggleSection(meta.key)}
+              onViewTSB={setTsbModal}
             />
           ))}
         </div>
@@ -624,6 +643,86 @@ export default function ROActivePanel({
           Open Full Review
         </button>
       </div>
+
+      {/* TSB Detail Modal */}
+      {tsbModal && (
+        <div
+          onClick={() => setTsbModal(null)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.45)", display: "flex",
+            alignItems: "center", justifyContent: "center", padding: 24,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#fff", borderRadius: 14, width: "100%", maxWidth: 560,
+              maxHeight: "80vh", display: "flex", flexDirection: "column",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+            }}
+          >
+            {/* Modal header */}
+            <div style={{
+              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+              padding: "16px 20px", borderBottom: "1px solid #F3F4F6",
+            }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.3, color: COLORS.primary, fontFamily: "monospace", marginBottom: 3 }}>
+                  {tsbModal.tsbNumber || tsbModal.id}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", lineHeight: 1.4 }}>
+                  {tsbModal.title}
+                </div>
+              </div>
+              <button
+                onClick={() => setTsbModal(null)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", padding: 4, flexShrink: 0, marginLeft: 12 }}
+              >
+                ✕
+              </button>
+            </div>
+            {/* Modal body */}
+            <div style={{ overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* Relevance score */}
+              {tsbModal.relevanceScore != null && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: 0.4 }}>
+                    Match Confidence
+                  </div>
+                  <div style={{
+                    padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 800,
+                    background: tsbModal.relevanceScore >= 0.8 ? "#DCFCE7" : tsbModal.relevanceScore >= 0.6 ? "#FEF9C3" : "#FEE2E2",
+                    color:      tsbModal.relevanceScore >= 0.8 ? "#16A34A" : tsbModal.relevanceScore >= 0.6 ? "#A16207" : "#DC2626",
+                  }}>
+                    {Math.round(tsbModal.relevanceScore * 100)}%
+                  </div>
+                </div>
+              )}
+              {/* Affected condition */}
+              {tsbModal.affectedCondition && (
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: "#6B7280", marginBottom: 6 }}>
+                    Affected Condition
+                  </div>
+                  <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.7, background: "#F9FAFB", borderRadius: 8, padding: "10px 12px", border: "1px solid #E5E7EB" }}>
+                    {tsbModal.affectedCondition}
+                  </div>
+                </div>
+              )}
+              {/* Source */}
+              {tsbModal.source && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "#6B7280" }}>
+                    Source
+                  </div>
+                  <div style={{ fontSize: 11, color: "#374151" }}>{tsbModal.source}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

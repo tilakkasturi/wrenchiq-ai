@@ -32,6 +32,7 @@ router.post('/messages', async (req, res) => {
       system,
       messages,
       max_tokens: max_tokens || 1024,
+      _route: '/api/claude/messages',
     });
 
     const text        = getTextFromResponse(data);

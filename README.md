@@ -171,6 +171,8 @@ Base URL: `http://localhost:3001` (proxied from Vite at `/api`)
 | GET | `/api/repair-orders/active` | Active queue (open/estimate/approved) |
 | GET | `/api/repair-orders/:id` | Single RO |
 | PATCH | `/api/repair-orders/:id/status` | Update workflow status |
+| POST | `/api/auth/log` | Record login attempt |
+| GET | `/api/auth/activity` | Recent login activity (limit, max 500) |
 
 **Query params for GET /api/repair-orders:**
 - `status` — `open` \| `estimate` \| `approved` \| `closed`
@@ -178,6 +180,47 @@ Base URL: `http://localhost:3001` (proxied from Vite at `/api`)
 - `customerId` — e.g. `cust-001`
 - `vin` — partial match
 - `limit` / `skip` — pagination (default limit 200)
+
+---
+
+## Login Activity Logging
+
+Every login attempt (success and failure) is logged to the `LoginActivity` MongoDB collection.
+
+### What's captured
+
+| Field | Description |
+|-------|-------------|
+| `username` | Username entered |
+| `success` | `true` if credentials matched, `false` otherwise |
+| `ip` | Client IP (from `X-Forwarded-For` or socket) |
+| `userAgent` | Browser user-agent string |
+| `edition` | `am` or `oem` |
+| `persona` | Persona selected (if login was via persona gateway) |
+| `ts` | ISO timestamp |
+
+### API
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/auth/log` | Record a login attempt (called automatically by frontend) |
+| GET | `/api/auth/activity` | Retrieve recent login activity |
+
+**Query params for GET /api/auth/activity:**
+- `limit` — number of records (default 100, max 500)
+
+### Usage
+
+```bash
+# View recent login activity
+curl -s https://wrenchiq.ai/api/auth/activity | python3 -m json.tool
+
+# View last 10 attempts
+curl -s https://wrenchiq.ai/api/auth/activity?limit=10 | python3 -m json.tool
+
+# From production server
+ssh wrenchiq-demo 'curl -s http://localhost:3001/api/auth/activity'
+```
 
 ---
 

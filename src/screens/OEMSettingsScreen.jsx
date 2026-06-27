@@ -160,6 +160,7 @@ function Btn({ label, variant = "primary", onClick }) {
 // ── Tab Contents ──────────────────────────────────────────────
 
 function TabEdition() {
+  const oemName = useEditionName("OEM");
   return (
     <div>
       <div

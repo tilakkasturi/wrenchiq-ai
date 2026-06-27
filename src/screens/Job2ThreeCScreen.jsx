@@ -38,14 +38,14 @@ const BEFORE_NARRATIVE_FALLBACK = `car makes weird noise at highway speed
 engine light on
 replaced catalytic converter - fixed`;
 
-const AFTER_NARRATIVE = `COMPLAINT: Customer reports unusual noise at highway speed accompanied by malfunction indicator lamp illumination. Customer states condition began approximately one week ago and is consistent across driving conditions above 65 mph.
+const AFTER_NARRATIVE = `COMPLAINT: Customer states: intermittent ticking/knocking noise from engine bay, most noticeable on cold start and at idle. Noise persists approximately 2–3 minutes after startup, then diminishes at operating temperature. Condition present for approximately 2 weeks. No malfunction indicator lamp (MIL/CEL) illuminated. Customer confirmed oil level at full mark on dipstick prior to visit.
 
-CAUSE: Diagnostic scan revealed DTC P0420 (Catalyst Efficiency Below Threshold, Bank 1). Per TSB-2021-0144, upstream oxygen sensor degradation is confirmed at 58,420 miles — consistent with known failure pattern in 2.5L 4-cylinder Camry engines between 45K–70K miles. Catalytic converter inspected and confirmed structurally intact. O2 sensor output confirmed lean bias via live data.
+CAUSE: Diagnostic scan performed — no active or pending DTCs retrieved; MIL not illuminated. Oil pressure test results: 42 PSI at idle, 64 PSI at 2,000 RPM (within OEM specification; no bearing or oil pump concern). Cold-start audible inspection performed per TSB-22-2346 (Ford Motor Company — 5.0L Coyote V8: Variable Cam Timing solenoid cold-start rattle at 40–50K miles). Bank 1 intake VCT solenoid rattle confirmed audibly on two consecutive cold-start cycles at 68°F ambient. Symptom matches TSB-22-2346 criteria at 41,000 miles.
 
-CORRECTION: Replaced upstream oxygen sensor (P/N: 89467-06170). Cleared DTC P0420. Performed extended test drive (12 miles, including sustained highway operation above 65 mph). All OBD-II monitors completed. No DTCs present. Noise eliminated. Vehicle returned to customer.`;
+CORRECTION: WORK PERFORMED (per approved estimate): Engine Noise Diagnostic and Oil Pressure Test completed. Oil pressure confirmed within OEM specification (42 PSI at idle). No parts installed at this stage. WORK RECOMMENDED (based on inspection findings): Per TSB-22-2346 diagnosis, recommend replacement of Bank 1 intake Variable Cam Timing (VCT) solenoid — Ford OEM P/N BL3Z-6M280-A, qty 1. Post-repair verification: two cold-start cycles to confirm noise absent. Pending customer authorization.`;
 
 const AFTER_NARRATIVE_PREVIEW =
-  "COMPLAINT: Customer reports unusual noise at highway speed accompanied by MIL illumination — condition above 65 mph for ~1 week. CAUSE: DTC P0420 per TSB-2021-0144…";
+  "COMPLAINT: Intermittent ticking/knocking on cold start, 2–3 min duration. No MIL. CAUSE: No DTCs. TSB-22-2346 — Ford 5.0L Coyote VCT solenoid rattle confirmed Bank 1. CORRECTION: Diagnostic 2.0 hrs performed. Recommend VCT solenoid P/N BL3Z-6M280-A…";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -135,7 +135,7 @@ export default function Job2ThreeCScreen() {
   const mileageStr      = s?._vehicle ? Number(s._vehicle.mileage).toLocaleString() : ro ? Number(ro.vehicle.odometer).toLocaleString() : "58,420";
 
   // 3C before/after from story RO, fallback to static
-  const beforeScore     = s?.threeCScore || 31;
+  const beforeScore     = s?.threeCScore || 34;
   const beforeNarrative = s?.threeCConcern || ro?.techNotes || BEFORE_NARRATIVE_FALLBACK;
   const afterNarrative  = s?.threeCRewriteSuggestion?.concern
     ? `COMPLAINT: ${s.threeCRewriteSuggestion.concern}\n\nCAUSE: ${s.threeCRewriteSuggestion.diagnosis || "Pending inspection."}\n\nCORRECTION: ${s.threeCRewriteSuggestion.correction || "Pending diagnostic completion."}`
@@ -880,6 +880,18 @@ export default function Job2ThreeCScreen() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Powered by Predii footer */}
+        <div style={{
+          padding: "10px 18px",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          flexShrink: 0,
+          fontSize: 10,
+          color: "rgba(255,255,255,0.25)",
+          textAlign: "center",
+        }}>
+          Powered by Predii
         </div>
       </div>
     </div>

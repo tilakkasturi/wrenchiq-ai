@@ -10,6 +10,7 @@ import { COLORS } from "./theme/colors";
 import { SHOP } from "./data/demoData";
 import BrandWordmark from "./components/BrandWordmark";
 import { RecommendationsProvider } from "./context/RecommendationsContext";
+import { useShopObjectives } from "./context/ShopObjectivesContext";
 
 
 // ── Screens ──────────────────────────────────────────────────
@@ -173,12 +174,24 @@ const PERSONA_DEFAULT_SCREEN = {
 };
 
 // ── Session helpers (localStorage) ──────────────────────────
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
 function loadSession() {
-  try { const s = localStorage.getItem("wrenchiq_session"); return s ? JSON.parse(s) : null; }
-  catch { return null; }
+  try {
+    const s = localStorage.getItem("wrenchiq_session");
+    if (!s) return null;
+    const parsed = JSON.parse(s);
+    if (!parsed.ts || Date.now() - parsed.ts > SESSION_TTL_MS) {
+      localStorage.removeItem("wrenchiq_session");
+      return null;
+    }
+    return parsed;
+  } catch { return null; }
 }
 function saveSession(role) {
   localStorage.setItem("wrenchiq_session", JSON.stringify({ role, ts: Date.now() }));
+}
+function clearSession() {
+  localStorage.removeItem("wrenchiq_session");
 }
 
 // ── Embedded mode (Chrome extension side panel) ──────────────
@@ -210,6 +223,7 @@ const AM_PERSONAS_LABELS = {
 
 export default function WrenchIQApp() {
   const appVersion = useAppVersion();
+  const { refresh: refreshObjectives } = useShopObjectives();
   const _session = loadSession();
   const [authenticated, setAuthenticated] = useState(_isEmbedded || !!_session);
   const [authRole, setAuthRole] = useState(_isEmbedded ? "user" : _session?.role || null);
@@ -231,6 +245,7 @@ export default function WrenchIQApp() {
   const [agentVisible, setAgentVisible]   = useState(true);
   const [specsOpen, setSpecsOpen]         = useState(false);
   const [showOEMGateway, setShowOEMGateway] = useState(false);
+  const [gatewayTab, setGatewayTab] = useState("AM"); // "AM" | "OEM" — which tab to open on gateway
 
   // Tech-specific DVI state (screen within screen)
   const [techDVIData, setTechDVIData] = useState(null);
@@ -286,6 +301,7 @@ export default function WrenchIQApp() {
     setAuthenticated(true);
     setAuthRole(role);
     setLoginModalVisible(false);
+    refreshObjectives();
     if (role === "admin") {
       setActivePersona("admin");
       setActiveScreen("dashboard");
@@ -300,6 +316,17 @@ export default function WrenchIQApp() {
       setActiveScreen(PERSONA_DEFAULT_SCREEN[p] || "dashboard");
       setPendingPersona(null);
     }
+  }
+
+  function handleLogout() {
+    clearSession();
+    setAuthenticated(false);
+    setAuthRole(null);
+    setActivePersona(null);
+    setTechDVIData(null);
+    setActiveScreen("dashboard");
+    setAdvisorSelectedRO(null);
+    setShowSplash(true);
   }
 
   function handlePersonaSelect(p, opts = {}) {
@@ -324,7 +351,11 @@ export default function WrenchIQApp() {
     return (
       <>
         <PersonaGatewayScreen
-          onSelectPersona={handlePersonaSelect}
+          defaultTab={gatewayTab}
+          onSelectPersona={(p, opts) => {
+            setGatewayTab("AM"); // reset for next visit
+            handlePersonaSelect(p, opts);
+          }}
           onOpenSpecs={() => setSpecsOpen(true)}
           onOpenOEM={(personaId) => {
             const p = personaId || "oemAdvisor";
@@ -406,6 +437,16 @@ export default function WrenchIQApp() {
               setActiveScreen("dashboard");
               setAdvisorSelectedRO(null);
             }}
+            onSwitchEdition={_isEmbedded ? null : (() => {
+              const OEM = ["fixedOps", "oemAdvisor", "oemTech"];
+              const targetTab = OEM.includes(activePersona) ? "AM" : "OEM";
+              setGatewayTab(targetTab);
+              setActivePersona(null);
+              setTechDVIData(null);
+              setActiveScreen("dashboard");
+              setAdvisorSelectedRO(null);
+            })}
+            onLogout={_isEmbedded ? null : handleLogout}
             onOpenSpecs={() => setSpecsOpen(true)}
           >
             {resolvePersonaScreen(activePersona, effectiveScreen, extraProps)}

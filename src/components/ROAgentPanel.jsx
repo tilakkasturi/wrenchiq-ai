@@ -211,7 +211,7 @@ export default function ROAgentPanel({ onDraftRO, ro }) {
               <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>&#x1F4CC;</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#92400E', marginBottom: 3 }}>
-                  Shop Rule
+                  Shop Objective
                 </div>
                 <div style={{ fontSize: 13, color: '#1F2937', lineHeight: 1.4 }}>
                   {nudge.note}

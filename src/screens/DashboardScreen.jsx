@@ -100,6 +100,10 @@ export default function DashboardScreen({ onNavigate }) {
     }
   };
 
+  // ── Shop goals state ──────────────────────────────────────────────────────
+  const [shopGoals, setShopGoals] = useState([]);
+  const [goalsLoaded, setGoalsLoaded] = useState(false);
+
   // Fetch shop goals on mount
   useEffect(() => {
     fetch(`${API_BASE}/api/shop-goals/shop-001`)
@@ -117,10 +121,6 @@ export default function DashboardScreen({ onNavigate }) {
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const dashInsights = recCtx ? recCtx.getForScreen("dashboard") : [];
   const showBanner = recCtx && !recCtx.loading && dashInsights.length > 0 && !bannerDismissed;
-
-  // ── Shop goals state ──────────────────────────────────────────────────────
-  const [shopGoals, setShopGoals] = useState([]);
-  const [goalsLoaded, setGoalsLoaded] = useState(false);
 
   return (
     <div style={{ padding: "24px 28px" }}>

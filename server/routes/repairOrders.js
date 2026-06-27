@@ -425,6 +425,7 @@ function normalizeStoryRO(doc) {
     laborTimeTracking:  ltt,
 
     // ── Agentic fields (passed through in full) ────────────────────────────
+    tsbMatches:            doc.tsbMatches || [],
     dtcs:                  doc.dtcs || [],
     aiInsights:            doc.aiInsights || [],
     agenticUpsells:        doc.agenticUpsells || [],

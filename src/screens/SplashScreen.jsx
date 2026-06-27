@@ -2,7 +2,7 @@
 import { useState } from "react";
 import {
   ArrowRight, Cpu, CheckCircle,
-  MessageSquare, BarChart3, Wrench, FileText,
+  MessageSquare, BarChart3, Wrench, FileText, ExternalLink,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import BrandWordmark from "../components/BrandWordmark";
@@ -95,20 +95,36 @@ export default function SplashScreen({ onEnter }) {
         flexShrink: 0,
       }}>
         <BrandWordmark size="bar" />
-        <button
-          onClick={onEnter}
-          onMouseEnter={() => setEnterHov(true)}
-          onMouseLeave={() => setEnterHov(false)}
-          style={{
-            background: enterHov ? "#e55c28" : COLORS.accent,
-            border: "none", borderRadius: 8, padding: "7px 18px",
-            color: "#fff", fontSize: 13, fontWeight: 700,
-            cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
-            transition: "background 0.15s",
-          }}
-        >
-          Enter Demo <ArrowRight size={14} />
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <a
+            href="/oem.html"
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600,
+              textDecoration: "none", padding: "7px 14px", borderRadius: 8,
+              border: "1px solid rgba(255,255,255,0.12)",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
+          >
+            WrenchIQ-OEM <ExternalLink size={12} />
+          </a>
+          <button
+            onClick={onEnter}
+            onMouseEnter={() => setEnterHov(true)}
+            onMouseLeave={() => setEnterHov(false)}
+            style={{
+              background: enterHov ? "#e55c28" : COLORS.accent,
+              border: "none", borderRadius: 8, padding: "7px 18px",
+              color: "#fff", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+              transition: "background 0.15s",
+            }}
+          >
+            Enter Demo <ArrowRight size={14} />
+          </button>
+        </div>
       </div>
 
       {/* ── Hero ── */}

@@ -314,6 +314,7 @@ export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
   const [recalls, setRecalls]               = useState([]);
   const [recallChecked, setRecallChecked]   = useState(false);
   const [recallError, setRecallError]       = useState(null);
+  const [recallModalOpen, setRecallModalOpen] = useState(false);
   const [roSearch, setROSearch]             = useState("");
 
   const [bayAssignment, setBayAssignment]   = useState(null); // selected bay id
@@ -443,6 +444,22 @@ export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
       const baseCorrection = doc.sections?.correction?.text || correction || "";
 
       // Apply generation mode via LLM service
+      // Build labor and parts arrays from the selected RO's service lines
+      const roServices = selectedRO.services || [];
+      const laborLines = roServices.map(s => ({
+        description: s.name,
+        laborHours:  s.laborHrs ?? s.laborHours ?? 0,
+        lineCost:    s.laborCost ?? s.lineCost ?? 0,
+      }));
+      const partsFromRO = roServices.flatMap(s =>
+        (s.parts || []).map(p => ({
+          description: p.description || p.name || s.name,
+          partNumber:  p.partNumber || p.partNum || null,
+          qty:         p.qty ?? 1,
+          cost:        p.cost ?? p.lineCost ?? 0,
+        }))
+      );
+
       const narrative = await generateNarrative(generationMode, {
         complaint:   baseComplaint,
         cause:       baseCause,
@@ -453,6 +470,8 @@ export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
         tsbMatches:  ctx.tsbMatches   || [],
         dtcCodes:    ctx.dtcCodes     || [],
         techNotes,
+        laborLines,
+        parts:       partsFromRO,
       });
 
       setComplaint(narrative.complaint);
@@ -661,11 +680,11 @@ export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
         {recallChecked && recalls.length > 0 && (
           <div style={{
             background: "#FEF2F2", borderBottom: "1px solid #FECACA",
-            padding: "8px 20px", display: "flex", alignItems: "flex-start", gap: 8, flexShrink: 0,
+            padding: "8px 20px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
           }}>
-            <AlertCircle size={14} color="#DC2626" style={{ marginTop: 1, flexShrink: 0 }} />
-            <div style={{ fontSize: 11, color: "#991B1B" }}>
-              <strong>NHTSA Recall Alert:</strong>{" "}
+            <AlertCircle size={14} color="#DC2626" style={{ flexShrink: 0 }} />
+            <div style={{ fontSize: 11, color: "#991B1B", flex: 1 }}>
+              <strong>NHTSA Recall Alert ({recalls.length}):</strong>{" "}
               {recalls.slice(0, 2).map((r, i) => (
                 <span key={i}>
                   Campaign {r.NHTSACampaignNumber} — {r.Component?.split(":")[0]}
@@ -675,6 +694,16 @@ export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
               {recalls.length > 2 && ` +${recalls.length - 2} more`}.
               {" "}Advise customer and document in RO.
             </div>
+            <button
+              onClick={() => setRecallModalOpen(true)}
+              style={{
+                flexShrink: 0, padding: "4px 10px", borderRadius: 6,
+                border: "1px solid #FECACA", background: "#fff",
+                color: "#DC2626", fontSize: 11, fontWeight: 700, cursor: "pointer",
+              }}
+            >
+              View Details
+            </button>
           </div>
         )}
         {recallError && (
@@ -859,6 +888,95 @@ export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
         onToggleCollapse={() => setPanelCollapsed(!panelCollapsed)}
       />
       </div>
+
+      {/* ── Recall Detail Modal ── */}
+      {recallModalOpen && recalls.length > 0 && (
+        <div
+          onClick={() => setRecallModalOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.45)", display: "flex",
+            alignItems: "center", justifyContent: "center", padding: 24,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#fff", borderRadius: 14, width: "100%", maxWidth: 680,
+              maxHeight: "82vh", display: "flex", flexDirection: "column",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+            }}
+          >
+            {/* Modal header */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "16px 20px", borderBottom: "1px solid #F3F4F6",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <AlertCircle size={16} color="#DC2626" />
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
+                  NHTSA Recalls — {recalls.length} found
+                </span>
+              </div>
+              <button
+                onClick={() => setRecallModalOpen(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", padding: 4 }}
+              >
+                ✕
+              </button>
+            </div>
+            {/* Modal body */}
+            <div style={{ overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+              {recalls.map((r, i) => (
+                <div key={i} style={{
+                  borderRadius: 10, border: "1px solid #FECACA",
+                  background: r.parkIt ? "#FEF2F2" : "#FFFBEB",
+                  padding: "14px 16px",
+                }}>
+                  {/* Recall header row */}
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: "#DC2626", fontFamily: "monospace", marginBottom: 2 }}>
+                        Campaign {r.NHTSACampaignNumber}
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>
+                        {r.Component}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
+                      {r.parkIt && (
+                        <span style={{
+                          fontSize: 9, fontWeight: 800, letterSpacing: 0.5,
+                          background: "#DC2626", color: "#fff",
+                          borderRadius: 4, padding: "2px 7px", display: "block", marginBottom: 4,
+                        }}>PARK IT</span>
+                      )}
+                      <div style={{ fontSize: 9, color: "#9CA3AF" }}>{r.ReportReceivedDate}</div>
+                      <div style={{ fontSize: 9, color: "#9CA3AF" }}>{r.Manufacturer}</div>
+                    </div>
+                  </div>
+                  {/* Fields */}
+                  {[
+                    { label: "Summary",     value: r.Summary },
+                    { label: "Consequence", value: r.Consequence },
+                    { label: "Remedy",      value: r.Remedy },
+                    { label: "Notes",       value: r.Notes },
+                  ].filter(f => f.value).map(f => (
+                    <div key={f.label} style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: "#6B7280", marginBottom: 3 }}>
+                        {f.label}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#374151", lineHeight: 1.6 }}>
+                        {f.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

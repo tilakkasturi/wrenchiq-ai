@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { Settings2, X, RotateCcw, Check } from "lucide-react";
-import { useDemo } from "../context/DemoContext";
+import { useDemo, smsNameToProvider, SMS_VENDOR_CONFIG } from "../context/DemoContext";
 import { COLORS } from "../theme/colors";
 
 export default function DemoConfigPanel({ onClose }) {
@@ -17,7 +17,8 @@ export default function DemoConfigPanel({ onClose }) {
   const [saved, setSaved] = useState(false);
 
   function handleSave() {
-    setDemo(local);
+    const smsProvider = smsNameToProvider(local.smsName);
+    setDemo({ ...local, smsProvider });
     setSaved(true);
     setTimeout(() => { setSaved(false); onClose(); }, 700);
   }
@@ -78,24 +79,48 @@ export default function DemoConfigPanel({ onClose }) {
               Shop Management System
             </label>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
-              {SMS_OPTIONS.map(opt => (
-                <button
-                  key={opt}
-                  onClick={() => setLocal(p => ({ ...p, smsName: opt }))}
-                  style={{
-                    padding: "4px 10px",
-                    borderRadius: 6,
-                    border: `1.5px solid ${local.smsName === opt ? COLORS.primary : COLORS.border}`,
-                    background: local.smsName === opt ? `${COLORS.primary}12` : "#fff",
-                    color: local.smsName === opt ? COLORS.primary : COLORS.textSecondary,
-                    fontSize: 12,
-                    fontWeight: local.smsName === opt ? 700 : 500,
-                    cursor: "pointer",
-                  }}
-                >
-                  {opt}
-                </button>
-              ))}
+              {SMS_OPTIONS.map(opt => {
+                const provider = smsNameToProvider(opt);
+                const hasPredii = SMS_VENDOR_CONFIG[provider]?.poweredByPredii;
+                const isSelected = local.smsName === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setLocal(p => ({ ...p, smsName: opt }))}
+                    title={hasPredii ? `${opt} — Powered by Predii` : opt}
+                    style={{
+                      padding: "4px 10px",
+                      borderRadius: 6,
+                      border: `1.5px solid ${isSelected ? COLORS.primary : COLORS.border}`,
+                      background: isSelected ? `${COLORS.primary}12` : "#fff",
+                      color: isSelected ? COLORS.primary : COLORS.textSecondary,
+                      fontSize: 12,
+                      fontWeight: isSelected ? 700 : 500,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    {opt}
+                    {hasPredii && (
+                      <svg width={8} height={8} viewBox="0 0 24 24" fill="none" style={{ opacity: isSelected ? 1 : 0.4 }}>
+                        <path d="M4 8 Q12 2 20 8"  stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" fill="none"/>
+                        <path d="M4 12 Q12 6 20 12" stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" fill="none"/>
+                        <path d="M4 16 Q12 10 20 16" stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" fill="none"/>
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2, marginBottom: 4 }}>
+              <svg width={8} height={8} viewBox="0 0 24 24" fill="none">
+                <path d="M4 8 Q12 2 20 8"  stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" fill="none"/>
+                <path d="M4 12 Q12 6 20 12" stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" fill="none"/>
+                <path d="M4 16 Q12 10 20 16" stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" fill="none"/>
+              </svg>
+              <span style={{ fontSize: 10, color: "#9CA3AF" }}>= Powered by Predii integration available</span>
             </div>
             {local.smsName === "Other" && (
               <input

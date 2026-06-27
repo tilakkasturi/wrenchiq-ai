@@ -4,19 +4,21 @@
  * Falls back to local text transformations when VITE_ANTHROPIC_API_KEY is not set.
  */
 
-const MODEL = "claude-sonnet-4-6";
-// Proxy through our backend to avoid browser CORS issues with Anthropic API.
-// Falls back to direct call if VITE_ANTHROPIC_API_KEY is set (browser can call with danger header).
+const MODEL = "gpt-4o-mini";
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 const PROXY_URL = `${API_BASE}/api/claude/messages`;
-const DIRECT_URL = "https://api.anthropic.com/v1/messages";
 
 // ── Prompts ───────────────────────────────────────────────────
 
 const SYSTEM_SHORT = `You are an automotive repair documentation assistant.
 Rewrite the 3C (Complaint, Cause, Correction) narrative in SHORT, concise technical language.
-Each section must be 1–2 sentences maximum. Use precise automotive terminology.
-Avoid filler words. Return valid JSON only: { "complaint": "...", "cause": "...", "correction": "..." }`;
+Rules:
+- Each section: 1–2 sentences maximum
+- Cause MUST cite every DTC by code (e.g. P0420) and tie it to the TSB number if provided
+- If a check engine light / MIL is on, say so explicitly in Cause
+- Correction MUST name each part installed with part number and quantity — no labor hours
+- Use precise automotive terminology, no filler words
+Return valid JSON only: { "complaint": "...", "cause": "...", "correction": "..." }`;
 
 const SYSTEM_VERBOSE = `You are an automotive repair communication specialist who writes for customers, not technicians.
 Rewrite the 3C narrative in VERBOSE, customer-friendly language that:
@@ -25,42 +27,80 @@ Rewrite the 3C narrative in VERBOSE, customer-friendly language that:
 - Explains WHY things happened, not just what was found
 - Uses "your vehicle", "we found", "we repaired" framing
 - Is 3–5 sentences per section
+- Cause: if a check engine light is on, explain what it means in plain English; mention the code briefly
+- Correction: describe each repair performed including parts replaced (plain name, no raw part numbers needed)
 Return valid JSON only: { "complaint": "...", "cause": "...", "correction": "..." }`;
 
 const SYSTEM_REWRITE = `You are an expert automotive service writer with 20 years of experience.
-Given the raw 3C data, write a PROFESSIONAL, complete narrative that:
-- Is accurate and technically precise
-- Flows naturally as connected prose
-- Includes all relevant findings (DTCs, TSBs, DVI items, tech notes)
-- Meets OEM and insurance documentation standards
-- Complaint: 2 sentences, Cause: 3–4 sentences (cite specific findings), Correction: 2–3 sentences
+Given the raw 3C data, write a PROFESSIONAL, complete narrative that meets OEM and insurance documentation standards.
+
+COMPLAINT (2 sentences):
+- Document customer's exact concern with onset, frequency, and conditions
+
+CAUSE (3–5 sentences):
+- State whether a diagnostic scan was performed and list every DTC found (code + short description)
+- If DTCs are present and the check engine / MIL light is on, state that explicitly
+- Cite the specific TSB number and full title for any applicable technical service bulletin
+- Tie each DTC directly to the TSB it matches
+- Include test results (pressure readings, voltage measurements, live data observations)
+
+CORRECTION (4–6 sentences, two logical sections — do NOT mention labor hours):
+SECTION A — Work Performed (based on approved estimate):
+- List every part replaced or installed: description, OEM part number, and quantity (e.g. "Upstream O2 Sensor, P/N 89467-06170, qty 1")
+- If no parts were installed (diagnostic only), state what diagnostic procedures were completed
+- State test/verification performed after completed work (road test miles, monitor status, recheck result)
+SECTION B — Work Recommended (based on inspection findings):
+- If additional repair was identified but is pending customer authorization, list the recommended parts (name + part number + qty)
+- Do NOT include labor hours — parts only
+- Phrase as: "Based on inspection, recommend: [repair description] — [part name, P/N, qty]. Pending customer authorization."
+
 Return valid JSON only: { "complaint": "...", "cause": "...", "correction": "..." }`;
 
 // ── Build the user message ────────────────────────────────────
 
-function buildUserMessage({ complaint, cause, correction, vehicle, roId, dviFindings, tsbMatches, dtcCodes, techNotes }) {
+function buildUserMessage({ complaint, cause, correction, vehicle, roId, dviFindings, tsbMatches, dtcCodes, techNotes, laborLines, parts }) {
   const vehicleStr = vehicle
     ? `${vehicle.year} ${vehicle.make} ${vehicle.model}${vehicle.trim ? " " + vehicle.trim : ""} (VIN: ${vehicle.vin || "N/A"})`
     : "Unknown vehicle";
 
   const dtcStr = (dtcCodes || []).map(d => `${d.code || d}: ${d.description || ""}`).join("; ") || "None";
-  const tsbStr = (tsbMatches || []).filter(t => t.accepted).map(t => `${t.id || ""}: ${t.title || t.summary || ""}`).join("; ") || "None";
+  const milOn  = (dtcCodes || []).length > 0 ? "YES — MIL/CEL illuminated" : "No active DTCs — MIL off";
+  const tsbStr = (tsbMatches || [])
+    .filter(t => t.accepted !== false)
+    .map(t => `${t.id || t.tsbId || ""}: ${t.title || t.summary || ""}`)
+    .join("\n  ") || "None";
   const dviStr = (dviFindings || []).filter(f => f.severity === "red" || f.status === "red")
     .map(f => f.finding || f.text || "").join("; ") || "None";
+
+  const laborStr = (laborLines || []).map(l =>
+    `  - ${l.description || l.name || ""}`
+  ).join("\n") || "  None provided";
+
+  const partsStr = (parts || []).map(p =>
+    `  - ${p.description || p.name || ""} | P/N: ${p.partNumber || p.partNum || "N/A"} | Qty: ${p.qty ?? 1}`
+  ).join("\n") || "  None provided";
 
   return `RO: ${roId || "N/A"}
 Vehicle: ${vehicleStr}
 
-Current 3C:
+Current 3C (raw — rewrite this):
 COMPLAINT: ${complaint || "(empty)"}
 CAUSE: ${cause || "(empty)"}
 CORRECTION: ${correction || "(empty)"}
 
-Supporting findings:
-- DTCs: ${dtcStr}
-- TSBs: ${tsbStr}
+Diagnostic findings:
+- Check Engine Light / MIL: ${milOn}
+- DTCs scanned: ${dtcStr}
+- Applicable TSBs:
+  ${tsbStr}
 - DVI red items: ${dviStr}
 - Tech notes: ${techNotes || "None"}
+
+Work performed (procedures completed):
+${laborStr}
+
+Parts installed/recommended (include in Correction with part numbers — no labor hours):
+${partsStr}
 
 Rewrite the 3C narrative per the instructions. Return JSON only.`;
 }
@@ -93,20 +133,6 @@ function localVerbose({ complaint, cause, correction, vehicle }) {
  * @returns {Promise<{ complaint: string, cause: string, correction: string, usedLLM: boolean }>}
  */
 export async function generateNarrative(mode, context) {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-
-  // Short and Verbose can work without the API
-  if (mode === "short" && !apiKey) {
-    return { ...localShort(context), usedLLM: false };
-  }
-  if (mode === "verbose" && !apiKey) {
-    return { ...localVerbose(context), usedLLM: false };
-  }
-  if (!apiKey) {
-    // LLM mode requested but no key — fall back to verbose
-    return { ...localVerbose(context), usedLLM: false, fallback: true };
-  }
-
   const systemPrompt =
     mode === "short"   ? SYSTEM_SHORT   :
     mode === "verbose" ? SYSTEM_VERBOSE :
@@ -121,43 +147,34 @@ export async function generateNarrative(mode, context) {
 
   let res;
   try {
-    // Try server proxy first (avoids CORS; server reads key from env)
+    // Server proxy translates to Azure OpenAI — no browser API key needed
     res = await fetch(PROXY_URL, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body,
     });
 
-    // If proxy returns 503 (no key on server), fall back to direct browser call
-    if (res.status === 503 && apiKey) {
-      console.warn("[am3cLLM] Server proxy unavailable, trying direct call");
-      res = await fetch(DIRECT_URL, {
-        method: "POST",
-        headers: {
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-allow-browser": "true",
-          "content-type": "application/json",
-        },
-        body,
-      });
+    // Proxy unavailable — fall back to local transformations
+    if (res.status === 503) {
+      console.warn("[am3cLLM] Server proxy unavailable, using local fallback");
+      const fallback = mode === "short" ? localShort(context) : localVerbose(context);
+      return { ...fallback, usedLLM: false, fallback: true };
     }
   } catch (networkErr) {
-    console.error("Claude API network error:", networkErr);
-    // CORS or network failure — fall back to local
+    console.error("Azure proxy network error:", networkErr);
     const fallback = mode === "short" ? localShort(context) : localVerbose(context);
     return { ...fallback, usedLLM: false, fallback: true, error: networkErr.message };
   }
 
   if (!res.ok) {
     const errText = await res.text();
-    console.error("Claude API HTTP error:", res.status, errText);
-    throw new Error(`Claude API ${res.status}: ${errText.slice(0, 200)}`);
+    console.error("Azure proxy HTTP error:", res.status, errText);
+    throw new Error(`Azure proxy ${res.status}: ${errText.slice(0, 200)}`);
   }
 
   const data = await res.json();
   const raw = data.content?.[0]?.text || "{}";
-  console.log("Claude raw response:", raw);
+  console.log("Azure raw response:", raw);
 
   // Extract JSON from the response (handle markdown code fences)
   const jsonMatch = raw.match(/\{[\s\S]*\}/);

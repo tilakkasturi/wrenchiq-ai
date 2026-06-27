@@ -20,8 +20,15 @@ export default function LoginModal({ personaLabel, onSuccess, onCancel }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    const entry = CREDS[username.trim().toLowerCase()];
-    if (entry && password === entry.password) {
+    const user = username.trim().toLowerCase();
+    const entry = CREDS[user];
+    const success = !!(entry && password === entry.password);
+    fetch("/api/auth/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: user, success, edition: "am", persona: personaLabel }),
+    }).catch(() => {});
+    if (success) {
       onSuccess(entry.role);
     } else {
       setError("Invalid username or password.");

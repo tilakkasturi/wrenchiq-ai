@@ -255,11 +255,11 @@ function renderInline(text) {
 }
 
 // ── Main gateway ─────────────────────────────────────────────
-export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onOpenOEM }) {
+export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onOpenOEM, defaultTab = "AM" }) {
   const amName  = useEditionName("AM");
   const oemName = useEditionName("OEM");
   const { smsName, activeShopId, setDemo } = useDemo();
-  const [activeTab, setActiveTab]        = useState("AM");     // "AM" | "OEM" | "API"
+  const [activeTab, setActiveTab]        = useState(defaultTab); // "AM" | "OEM" | "API"
   const [hoveredPersona, setHoveredPersona] = useState(null);
   const [selectedCust, setSelectedCust]  = useState(null);
   const [apiEdition, setApiEdition]      = useState("OEM");   // "AM" | "OEM"
@@ -674,15 +674,6 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
               })}
           </div>
 
-          {/* Switch to OEM link */}
-          <div style={{ marginTop: 20, textAlign: "center" }}>
-            <button
-              onClick={() => setActiveTab("OEM")}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}
-            >
-              Switch to OEM view →
-            </button>
-          </div>
         </>
       )}
 
@@ -887,21 +878,6 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
         </div>
       )}
 
-      {/* ── Footer links ── */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 24 }}>
-        {onOpenSpecs && (
-          <button onClick={onOpenSpecs}
-            style={{ background: "none", border: "1px solid #E5E7EB", borderRadius: 8, padding: "7px 16px", cursor: "pointer", color: "#9CA3AF", fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
-            <Menu size={11} />
-            Product Specifications
-          </button>
-        )}
-        <button onClick={() => onSelectPersona("admin")}
-          style={{ background: "none", border: "1px solid #E5E7EB", borderRadius: 8, padding: "7px 16px", cursor: "pointer", color: "#9CA3AF", fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", gap: 5 }}>
-          <Shield size={11} />
-          Full Admin View
-        </button>
-      </div>
 
       <div style={{ position: "fixed", bottom: 16, right: 20, fontSize: 10, color: "#D1D5DB" }}>
         © {new Date().getFullYear()} Predii, Inc. · PREDII CONFIDENTIAL

@@ -554,6 +554,7 @@ RULES:
         system:     systemPrompt,
         messages,
         max_tokens: CLAUDE_MAX_TOKENS_CHAT,
+        _route: '/api/knowledge-graph/ask',
       });
     } catch (apiErr) {
       return res.status(502).json({ error: apiErr.message });

@@ -24,6 +24,29 @@ const SMS_OPTIONS = [
   "Other",
 ];
 
+// Per-vendor Predii co-branding config
+export const SMS_VENDOR_CONFIG = {
+  protractor:  { displayName: "Protractor",  poweredByPredii: true },
+  mitchell1:   { displayName: "Mitchell1",   poweredByPredii: true },
+  tekmetric:   { displayName: "Tekmetric",   poweredByPredii: true },
+  shopware:    { displayName: "Shop-Ware",   poweredByPredii: true },
+  autoleap:    { displayName: "AutoLeap",    poweredByPredii: true },
+  shopmonkey:  { displayName: "Shopmonkey",  poweredByPredii: true },
+  other:       { displayName: "Other",       poweredByPredii: false },
+};
+
+// Derive provider key from display name
+export function smsNameToProvider(name = "") {
+  const n = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (n === "mitchellone" || n.startsWith("mitchell")) return "mitchell1";
+  if (n === "shopware" || n === "shopware") return "shopware";
+  if (n === "autoleap") return "autoleap";
+  if (n === "shopmonkey") return "shopmonkey";
+  if (n === "tekmetric") return "tekmetric";
+  if (n === "protractor") return "protractor";
+  return "other";
+}
+
 // Demo landing configs — set via PersonaGatewayScreen when a persona card is clicked
 export const DEMO_SHOPS = {
   cornerstone: {

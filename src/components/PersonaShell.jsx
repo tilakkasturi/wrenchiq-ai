@@ -6,12 +6,13 @@ import {
   BarChart3, Settings, Building2, Sparkles, Bell, Search,
   LogOut, Hammer, CheckSquare, BarChart, Users, Truck,
   Home, Smartphone, Menu, FileText, Brain, Activity, SlidersHorizontal,
-  Stethoscope, TrendingUp, ShoppingCart, LineChart, Zap,
+  Stethoscope, TrendingUp, ShoppingCart, LineChart, Zap, ArrowLeftRight,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { SHOP } from "../data/demoData";
 import WrenchIQAgent from "./WrenchIQAgent";
 import BrandWordmark from "./BrandWordmark";
+import PoweredByPredii from "./PoweredByPredii";
 import { useBranding } from "../context/BrandingContext";
 import { useDemo } from "../context/DemoContext";
 import DemoConfigPanel from "./DemoConfigPanel";
@@ -24,12 +25,7 @@ const PERSONA_NAV = {
     { id: "job1Intake",   label: "Intake & Diagnosis",  icon: Stethoscope },
     { id: "job2ThreeC",   label: "3C Compliance",       icon: FileText },
     { id: "job3Upsell",   label: "Smart Upsell",        icon: ShoppingCart },
-    { id: "aroAgent",     label: "ARO Agent",           icon: Activity },
     { id: "am3cWriter",   label: "3C Story Writer",     icon: CheckSquare },
-    { id: "parts",        label: "Parts Intelligence",  icon: Package },
-    { id: "scheduling",   label: "Scheduling",          icon: Calendar },
-    { id: "trust",        label: "Trust Engine",        icon: Shield },
-    { id: "aiAgent",      label: "AI Agent",            icon: Brain },
   ],
   advisorLite: [],
   tech: [
@@ -37,13 +33,11 @@ const PERSONA_NAV = {
     { id: "health",   label: "Reports",    icon: ClipboardCheck },
   ],
   owner: [
-    { id: "ownerHome",   label: "Today",                   icon: Home },
-    { id: "opIntel",     label: "Operational Intelligence", icon: Zap },
-    { id: "impactDash",  label: "Impact Dashboard",         icon: TrendingUp },
-    { id: "analytics",   label: "Reports",                  icon: BarChart3 },
-    { id: "network",     label: "Locations",                icon: Building2 },
-    { id: "trust",       label: "Customers",                icon: Shield },
-    { id: "settings",    label: "Settings",                 icon: Settings },
+    { id: "ownerProtractor", label: "Daily View",               icon: Home },
+    { id: "opIntel",         label: "Operational Intelligence",  icon: Zap },
+    { id: "impactDash",      label: "Impact Dashboard",          icon: TrendingUp },
+    { id: "analytics",       label: "Reports",                   icon: BarChart3 },
+    { id: "settings",        label: "Settings",                  icon: Settings },
   ],
   customer: [],
   // OEM personas
@@ -106,17 +100,30 @@ export default function PersonaShell({
   selectedRO = null,
   onNavigate,
   onExitPersona,
+  onSwitchEdition,
+  onLogout,
   onOpenSpecs,
   children,
   showAgent = true,
+  embedded = false,
+  embeddedScreens = null, // Set of screen IDs to show; null = all
 }) {
-  const [agentVisible, setAgentVisible] = useState(persona !== "tech" && persona !== "advisor");
+  // In embedded mode (Chrome extension side panel), never show the agent panel —
+  // the extension itself is the agent. Also hide demo/specs noise.
+  const OEM_PERSONAS = ["fixedOps", "oemAdvisor", "oemTech"];
+  const [agentVisible, setAgentVisible] = useState(
+    !embedded && persona !== "tech" && persona !== "advisor" && !OEM_PERSONAS.includes(persona)
+  );
   const [demoOpen, setDemoOpen] = useState(false);
   const { brand } = useBranding();
-  const { shopName, ownerName, ownerInitials } = useDemo();
+  const { shopName, ownerName, ownerInitials, smsName } = useDemo();
   const appVersion = useAppVersion();
   const appBuilt = useAppBuilt();
-  const navItems = PERSONA_NAV[persona] || [];
+  // Filter nav to embedded-allowed screens when running in extension panel
+  const allNavItems = PERSONA_NAV[persona] || [];
+  const navItems = (embedded && embeddedScreens)
+    ? allNavItems.filter(item => embeddedScreens.has(item.id))
+    : allNavItems;
   const personaColor = PERSONA_COLORS[persona] || COLORS.primary;
   const personaLabel = PERSONA_LABELS[persona] || persona;
   const baseUser = PERSONA_USER[persona] || { name: "User", initials: "U" };
@@ -273,6 +280,11 @@ export default function PersonaShell({
             <span style={{ fontSize: 12, color: COLORS.textMuted }}>
               {navItems.find(n => n.id === activeScreen)?.label || ""}
             </span>
+
+            {/* Powered by Predii — AM personas only, not embedded */}
+            {!embedded && !OEM_PERSONAS.includes(persona) && (
+              <PoweredByPredii variant="topbar" showSmsName />
+            )}
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -308,18 +320,40 @@ export default function PersonaShell({
               </button>
             )}
 
-            {/* Demo config */}
-            <button
+            {/* Edition switcher — AM ↔ OEM */}
+            {!embedded && onSwitchEdition && (() => {
+              const isOEM = OEM_PERSONAS.includes(persona);
+              return (
+                <button
+                  onClick={onSwitchEdition}
+                  title={isOEM ? "Switch to WrenchIQ-AM" : "Switch to WrenchIQ-OEM"}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "5px 10px", borderRadius: 8, cursor: "pointer",
+                    border: "1px solid #E5E7EB",
+                    background: "#F9FAFB",
+                    color: COLORS.textSecondary,
+                    fontSize: 12, fontWeight: 600,
+                  }}
+                >
+                  <ArrowLeftRight size={13} />
+                  {isOEM ? "AM" : "OEM"}
+                </button>
+              );
+            })()}
+
+            {/* Demo config (hidden in embedded mode) */}
+            {!embedded && <button
               onClick={() => setDemoOpen(v => !v)}
               title="Demo Setup"
               style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, border: `1px solid ${demoOpen ? COLORS.accent : "#E5E7EB"}`, cursor: "pointer", background: demoOpen ? `${COLORS.accent}12` : "#F9FAFB", color: demoOpen ? COLORS.accent : COLORS.textSecondary, fontSize: 12, fontWeight: 600 }}
             >
               <SlidersHorizontal size={13} />
               Demo
-            </button>
+            </button>}
 
-            {/* Specs */}
-            {onOpenSpecs && (
+            {/* Specs (hidden in embedded mode) */}
+            {!embedded && onOpenSpecs && (
               <button
                 onClick={onOpenSpecs}
                 title="Specifications"
@@ -337,21 +371,40 @@ export default function PersonaShell({
             </div>
 
             {/* User */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: 8,
-                background: personaColor,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#fff", fontSize: 11, fontWeight: 700,
-              }}>
-                {user.initials}
-              </div>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600 }}>{user.name}</div>
-                <div style={{ fontSize: 10, color: COLORS.textMuted }}>
-                  {["fixedOps", "oemAdvisor", "oemTech"].includes(persona) ? "Palo Alto Toyota" : shopName}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "default" }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: personaColor,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#fff", fontSize: 11, fontWeight: 700,
+                }}>
+                  {user.initials}
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{user.name}</div>
+                  <div style={{ fontSize: 10, color: COLORS.textMuted }}>
+                    {["fixedOps", "oemAdvisor", "oemTech"].includes(persona) ? "Palo Alto Toyota" : shopName}
+                  </div>
                 </div>
               </div>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  title="Log out"
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    padding: "4px 6px", borderRadius: 6,
+                    color: COLORS.textMuted,
+                    display: "flex", alignItems: "center",
+                    transition: "color 0.15s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = "#EF4444"}
+                  onMouseLeave={e => e.currentTarget.style.color = COLORS.textMuted}
+                >
+                  <LogOut size={15} />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -361,8 +414,8 @@ export default function PersonaShell({
           {children}
         </div>
 
-        {/* Footer — pinned to bottom */}
-        <div style={{
+        {/* Footer — pinned to bottom (hidden in embedded mode) */}
+        {!embedded && <div style={{
           borderTop: "1px solid #E5E7EB",
           background: "#fff",
           padding: "6px 20px",
@@ -381,11 +434,11 @@ export default function PersonaShell({
             <span style={{ fontWeight: 600, color: "#6B7280", letterSpacing: 0.5 }}>PREDII CONFIDENTIAL</span>
             {appVersion && <span style={{ color: "#D1D5DB", marginLeft: 8 }}>{appVersion}{appBuilt ? ` · ${appBuilt}` : ""}</span>}
           </div>
-        </div>
+        </div>}
       </div>{/* end screen content column */}
 
-      {/* AI Panel — right column, full height */}
-      {agentVisible && persona !== "tech" && (
+      {/* AI Panel — right column, full height (hidden in embedded mode) */}
+      {!embedded && agentVisible && persona !== "tech" && (
         <WrenchIQAgent
           activeScreen={activeScreen}
           persona={persona}

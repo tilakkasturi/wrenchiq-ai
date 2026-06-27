@@ -189,9 +189,10 @@ function IntelRow({ icon: Icon, iconColor, label, value, sub }) {
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
-export default function Job1IntakeScreen() {
+export default function Job1IntakeScreen({ onNavigate }) {
   const { smsName, activeShopId } = useDemo();
   const [showResult, setShowResult] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [copyLabel, setCopyLabel] = useState(null);
   const [roData, setRoData] = useState(null);
   const [storyRO, setStoryRO] = useState(null);
@@ -219,14 +220,24 @@ export default function Job1IntakeScreen() {
   const concern      = s?.customerConcern || ro?.concern || CONCERN_FALLBACK;
   const aiInsights   = s?.aiInsights || [];
 
+  function handleShowResult() {
+    if (showResult) return;
+    setAnalyzing(true);
+    setTimeout(() => {
+      setAnalyzing(false);
+      setShowResult(true);
+    }, 1600);
+  }
+
   function handleCopy() {
-    setShowResult(true);
+    if (!showResult) { handleShowResult(); return; }
     setCopyLabel("Copied!");
     setTimeout(() => setCopyLabel(null), 1500);
   }
 
   function handleReset() {
     setShowResult(false);
+    setAnalyzing(false);
     setCopyLabel(null);
   }
 

@@ -345,6 +345,7 @@ export async function runAROAgent(shopId = 'shop-001', db) {
       messages,
       max_tokens: 4096,
       tools:      ARO_TOOLS,
+      _route: '/api/aro-agent',
     });
 
     const choice       = data.choices?.[0];

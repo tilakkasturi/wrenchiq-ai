@@ -190,6 +190,7 @@ export async function generateRecommendations(snapshot, edition) {
       messages:   [{ role: 'user', content: userMessage }],
       max_tokens: CLAUDE_MAX_TOKENS_RECOMMENDATIONS,
       jsonMode:   true,
+      _route: '/api/recommendations',
     });
   } catch (fetchErr) {
     throw new Error(`Azure OpenAI network error: ${fetchErr.message}`);

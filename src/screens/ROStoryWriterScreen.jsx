@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import {
   FileText, Sparkles, CheckCircle, AlertCircle, Mic, Send,
   ChevronRight, Clock, Car, Hash, Clipboard, ArrowRight,
-  XCircle, Info, Globe, Zap, Package, Wrench,
+  XCircle, Info, Globe, Zap, Package, Wrench, ExternalLink,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { OEM_ROS, OP_CODES, OEM_DEALER, GENERATED_NARRATIVES } from "../data/oemDemoData";
@@ -735,6 +735,9 @@ export default function ROStoryWriterScreen() {
   const [nhtsaEntities, setNhtsaEntities] = useState(null);
   const [nhtsaError, setNhtsaError] = useState(null);
 
+  // Detail modals — { type: 'recall'|'tsb', data: object }
+  const [detailModal, setDetailModal] = useState(null);
+
   // ── ROAgent state (declared here so rebuild useEffect can reference manualParts)
   const [roAgentBuilding, setROAgentBuilding] = useState(false);
   const [roAgentCenter, setROAgentCenter] = useState(false);
@@ -1283,6 +1286,17 @@ export default function ROStoryWriterScreen() {
                               <strong>Remedy:</strong> {r.Remedy.length > 120 ? r.Remedy.slice(0, 120) + "…" : r.Remedy}
                             </div>
                           )}
+                          <button
+                            onClick={e => { e.stopPropagation(); setDetailModal({ type: "recall", data: r }); }}
+                            style={{
+                              marginTop: 6, display: "flex", alignItems: "center", gap: 4,
+                              background: "none", border: "none", cursor: "pointer",
+                              color: isSel ? "#1D4ED8" : "#6B7280", fontSize: 10, fontWeight: 700, padding: 0,
+                            }}
+                          >
+                            <ExternalLink size={10} />
+                            View Full Recall
+                          </button>
                         </div>
                       </div>
                     );
@@ -1420,6 +1434,17 @@ export default function ROStoryWriterScreen() {
                           <div style={{ fontSize: 11, color: isSel ? "#78350F" : COLORS.textMuted, lineHeight: 1.5, paddingLeft: 22 }}>
                             {tsb.title}
                           </div>
+                          <button
+                            onClick={e => { e.stopPropagation(); setDetailModal({ type: "tsb", data: tsb }); }}
+                            style={{
+                              marginTop: 6, marginLeft: 22, display: "flex", alignItems: "center", gap: 4,
+                              background: "none", border: "none", cursor: "pointer",
+                              color: isSel ? "#D97706" : "#6B7280", fontSize: 10, fontWeight: 700, padding: 0,
+                            }}
+                          >
+                            <ExternalLink size={10} />
+                            View Details
+                          </button>
                         </div>
                       );
                     })}
@@ -2703,6 +2728,132 @@ export default function ROStoryWriterScreen() {
           </div>
         </div>
       </div>
+
+      {/* ── Detail Modal (Recall or TSB) ── */}
+      {detailModal && (
+        <div
+          onClick={() => setDetailModal(null)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.45)", display: "flex",
+            alignItems: "center", justifyContent: "center", padding: 24,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#fff", borderRadius: 14, width: "100%", maxWidth: 640,
+              maxHeight: "82vh", display: "flex", flexDirection: "column",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+              padding: "16px 20px", borderBottom: "1px solid #F3F4F6",
+            }}>
+              <div>
+                {detailModal.type === "recall" ? (
+                  <>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                      <AlertCircle size={14} color="#DC2626" />
+                      <span style={{ fontSize: 11, fontWeight: 800, fontFamily: "monospace", color: "#DC2626" }}>
+                        NHTSA Campaign {detailModal.data.NHTSACampaignNumber}
+                      </span>
+                      {detailModal.data.parkIt && (
+                        <span style={{ fontSize: 9, fontWeight: 800, background: "#DC2626", color: "#fff", borderRadius: 4, padding: "2px 7px" }}>
+                          PARK IT
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
+                      {detailModal.data.Component}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 800, fontFamily: "monospace", color: COLORS.primary, marginBottom: 3 }}>
+                      TSB {detailModal.data.number}
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
+                      {detailModal.data.title}
+                    </div>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => setDetailModal(null)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", padding: 4, flexShrink: 0, marginLeft: 12 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+              {detailModal.type === "recall" ? (
+                <>
+                  {[
+                    { label: "Summary",     value: detailModal.data.Summary },
+                    { label: "Consequence", value: detailModal.data.Consequence },
+                    { label: "Remedy",      value: detailModal.data.Remedy },
+                    { label: "Notes",       value: detailModal.data.Notes },
+                  ].filter(f => f.value).map(f => (
+                    <div key={f.label}>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: "#6B7280", marginBottom: 5 }}>
+                        {f.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.7, background: "#F9FAFB", borderRadius: 8, padding: "10px 12px", border: "1px solid #E5E7EB" }}>
+                        {f.value}
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", gap: 16 }}>
+                    {detailModal.data.ReportReceivedDate && (
+                      <div>
+                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "#6B7280", marginBottom: 3 }}>Report Date</div>
+                        <div style={{ fontSize: 11, color: "#374151" }}>{detailModal.data.ReportReceivedDate}</div>
+                      </div>
+                    )}
+                    {detailModal.data.Manufacturer && (
+                      <div>
+                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "#6B7280", marginBottom: 3 }}>Manufacturer</div>
+                        <div style={{ fontSize: 11, color: "#374151" }}>{detailModal.data.Manufacturer}</div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "#6B7280" }}>
+                      Match Confidence
+                    </div>
+                    <span style={{
+                      fontSize: 11, fontWeight: 800, borderRadius: 4, padding: "2px 8px",
+                      background: detailModal.data.confidence >= 90 ? "#DCFCE7" : "#FEF9C3",
+                      color:      detailModal.data.confidence >= 90 ? "#16A34A" : "#A16207",
+                    }}>
+                      {detailModal.data.confidence}%
+                    </span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: "#6B7280", marginBottom: 5 }}>
+                      Bulletin Title
+                    </div>
+                    <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.7, background: "#F9FAFB", borderRadius: 8, padding: "10px 12px", border: "1px solid #E5E7EB" }}>
+                      {detailModal.data.title}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "#6B7280", fontStyle: "italic" }}>
+                    Full TSB content available via Predii Normalized Content API. Contact your account manager to enable live TSB retrieval.
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
