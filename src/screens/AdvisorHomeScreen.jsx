@@ -312,15 +312,42 @@ export default function AdvisorHomeScreen({ onRoSelect } = {}) {
   const [selectedRoNum, setSelectedRoNum] = useState(null);
   const { ings } = useShopObjectives();
   const [checkedIngs, setCheckedIngs] = useState(new Set());
+  const [agentData, setAgentData]       = useState(null);
+  const [agentLoading, setAgentLoading] = useState(false);
 
   const selected = BOARD_ROS.find(r => r.roNum === selectedRoNum) || null;
 
   function selectRO(ro) {
     const next = selectedRoNum === ro?.roNum ? null : ro;
     setSelectedRoNum(next?.roNum || null);
+    setAgentData(null);
+
     if (next) {
       const veh = vehicles.find(v => v.customerId === next.custId);
+      const cust = customers.find(c => c.id === next.custId);
       onRoSelect?.({ ...next, shopId: "cornerstone", _vehicle: veh || null });
+
+      // Fire RO Advisor Agent
+      setAgentLoading(true);
+      const apiBase = (import.meta.env.VITE_API_BASE || "");
+      fetch(`${apiBase}/api/agent/ro-advisor`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          ro: {
+            ...(next._liveRO || {}),
+            customerId:  next.custId,
+            serviceType: next._liveRO?.serviceType || next.column,
+            roNum:       next.roNum,
+          },
+          customer: cust || null,
+          vehicle:  veh  || null,
+          shopId:   "shop-001",
+        }),
+      })
+        .then(r => r.json())
+        .then(data => { setAgentData(data); setAgentLoading(false); })
+        .catch(() => { setAgentLoading(false); });
     } else {
       onRoSelect?.(null);
     }
@@ -547,19 +574,123 @@ export default function AdvisorHomeScreen({ onRoSelect } = {}) {
           )}
         </div>
 
-        {/* AI Insights */}
+        {/* WrenchIQ Intelligence — live agent output */}
         <div style={{
           background: "rgba(34,197,94,0.06)",
-          border: "1px solid rgba(34,197,94,0.18)",
+          border: `1px solid ${agentLoading ? "rgba(34,197,94,0.3)" : "rgba(34,197,94,0.18)"}`,
           borderRadius: 8, padding: "12px 14px",
+          transition: "border-color 0.3s",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-            <Sparkles size={13} color="#4ADE80" />
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#86EFAC", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-              WrenchIQ Intelligence
-            </span>
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Sparkles size={13} color="#4ADE80" />
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#86EFAC", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                WrenchIQ Intelligence
+              </span>
+            </div>
+            {agentLoading && (
+              <span style={{ fontSize: 10, color: "#86EFAC", opacity: 0.7 }}>Analyzing…</span>
+            )}
           </div>
-          {(lro?.aiInsights || []).map((ins, i) => (
+
+          {/* Loading state */}
+          {agentLoading && !agentData && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {[80, 60, 90].map((w, i) => (
+                <div key={i} style={{
+                  height: 10, borderRadius: 4,
+                  background: "rgba(34,197,94,0.12)",
+                  width: `${w}%`,
+                  animation: "pulse 1.4s ease-in-out infinite",
+                  animationDelay: `${i * 0.2}s`,
+                }} />
+              ))}
+              <style>{`@keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.9} }`}</style>
+            </div>
+          )}
+
+          {/* Agent brief */}
+          {agentData?.advisorBrief && (
+            <div style={{
+              fontSize: 12, color: "#86EFAC", lineHeight: 1.55, marginBottom: 10,
+              fontStyle: "italic", padding: "8px 10px",
+              background: "rgba(34,197,94,0.08)", borderRadius: 6,
+            }}>
+              {agentData.advisorBrief}
+            </div>
+          )}
+
+          {/* Upsells */}
+          {(agentData?.upsells || []).length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(134,239,172,0.5)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+                Upsell Opportunities
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {(agentData.upsells || []).map((u, i) => (
+                  <div key={i} style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 6, padding: "9px 11px",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#F1F5F9", flex: 1, marginRight: 8 }}>
+                        {u.service}
+                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.accent }}>
+                          ~${u.estimatedCost}
+                        </span>
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, borderRadius: 3, padding: "1px 5px",
+                          background: u.confidence === "high" ? "rgba(74,222,128,0.15)" : "rgba(250,204,21,0.12)",
+                          color:      u.confidence === "high" ? "#4ADE80"               : "#FBBF24",
+                        }}>
+                          {u.confidence}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6, lineHeight: 1.4 }}>
+                      {u.reason}
+                    </div>
+                    {u.talkTrack && (
+                      <div style={{
+                        fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.5,
+                        fontStyle: "italic",
+                        borderLeft: "2px solid rgba(255,107,53,0.4)",
+                        paddingLeft: 8,
+                      }}>
+                        "{u.talkTrack}"
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Alerts */}
+          {(agentData?.alerts || []).length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(252,211,77,0.6)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+                Alerts
+              </div>
+              {(agentData.alerts || []).map((a, i) => (
+                <div key={i} style={{
+                  display: "flex", gap: 7, alignItems: "flex-start",
+                  padding: "5px 0",
+                  borderBottom: i < agentData.alerts.length - 1 ? "1px solid rgba(252,211,77,0.08)" : "none",
+                }}>
+                  <AlertTriangle size={11} color="#FCD34D" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>{a.message}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Fallback: hardcoded aiInsights when agent hasn't responded yet */}
+          {!agentData && !agentLoading && (lro?.aiInsights || []).map((ins, i) => (
             <div key={i} style={{
               display: "flex", gap: 8, alignItems: "flex-start",
               padding: "6px 0",

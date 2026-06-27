@@ -9,11 +9,22 @@
  * processed once. No hardcoded trigger logic — the LLM owns the parsing.
  */
 
-const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const PROXY_URL     = `${import.meta.env.VITE_API_BASE || ""}/api/claude/messages`;
-const MODEL         = "claude-haiku-4-5-20251001";
-const CACHE_KEY     = "wrenchiq_ing_entity_cache_v1";
+// ── LLM endpoint config ───────────────────────────────────────────────────────
+// Priority:
+//   1. VITE_LLM_BASE_URL (local/custom OpenAI-compatible server) — direct call
+//   2. VITE_ANTHROPIC_API_KEY — direct Anthropic call
+//   3. Server proxy /api/claude/messages (uses LLM_BASE_URL from .env.local)
+
+const LLM_BASE_URL   = import.meta.env.VITE_LLM_BASE_URL;   // e.g. http://192.222.55.177:8081
+const LLM_API_KEY    = import.meta.env.VITE_LLM_API_KEY || "";
+const LLM_MODEL      = import.meta.env.VITE_LLM_MODEL || "gpt-4o-mini";
+
+const ANTHROPIC_KEY  = import.meta.env.VITE_ANTHROPIC_API_KEY;
+const ANTHROPIC_URL  = "https://api.anthropic.com/v1/messages";
+const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
+const PROXY_URL      = `${import.meta.env.VITE_API_BASE || ""}/api/claude/messages`;
+
+const CACHE_KEY = "wrenchiq_ing_entity_cache_v1";
 
 // ── localStorage cache ────────────────────────────────────────────────────────
 
@@ -64,10 +75,28 @@ function buildPrompt(ings) {
 }
 
 async function callLLM(userMessage) {
-  const body = { model: MODEL, max_tokens: 1024, system: SYSTEM, messages: [{ role: "user", content: userMessage }] };
+  // ── 1. Local / custom OpenAI-compatible endpoint (highest priority) ────────
+  if (LLM_BASE_URL) {
+    const base = LLM_BASE_URL.replace(/\/$/, "");
+    const url  = `${base}/v1/chat/completions`;
+    const headers = { "content-type": "application/json" };
+    if (LLM_API_KEY) headers["Authorization"] = `Bearer ${LLM_API_KEY}`;
 
-  // Prefer direct Anthropic API (browser key); fall back to server proxy (Azure)
+    const oaiBody = {
+      model:      LLM_MODEL,
+      max_tokens: 1024,
+      messages:   [{ role: "system", content: SYSTEM }, { role: "user", content: userMessage }],
+    };
+
+    const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(oaiBody) });
+    if (!res.ok) throw new Error(`LLM ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || "[]";
+  }
+
+  // ── 2. Direct Anthropic API (browser key) ─────────────────────────────────
   if (ANTHROPIC_KEY) {
+    const body = { model: ANTHROPIC_MODEL, max_tokens: 1024, system: SYSTEM, messages: [{ role: "user", content: userMessage }] };
     const res = await fetch(ANTHROPIC_URL, {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
@@ -78,7 +107,8 @@ async function callLLM(userMessage) {
     return data.content?.[0]?.text || "[]";
   }
 
-  // Server proxy fallback (Azure OpenAI — returns Anthropic-shaped response)
+  // ── 3. Server proxy (uses LLM_BASE_URL from .env.local on the server) ─────
+  const body = { model: ANTHROPIC_MODEL, max_tokens: 1024, system: SYSTEM, messages: [{ role: "user", content: userMessage }] };
   const res = await fetch(PROXY_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },

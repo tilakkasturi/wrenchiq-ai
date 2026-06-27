@@ -26,6 +26,10 @@ import claudeProxyRouter      from './routes/claudeProxy.js';
 import snapshotRouter         from './routes/snapshot.js';
 import shopGoalsRouter        from './routes/shopGoals.js';
 import tribalNotesRouter      from './routes/tribalNotes.js';
+import customersRouter        from './routes/customers.js';
+import authLogRouter          from './routes/authLog.js';
+import llmLogRouter           from './routes/llmLog.js';
+import roAdvisorRouter        from './routes/roAdvisor.js';
 import { ensureRecommendationIndexes } from './models/Recommendation.js';
 
 // ── Load .env.local ──────────────────────────────────────────────────────────
@@ -107,12 +111,16 @@ app.use('/api/repair-orders',   repairOrderRoutes);
 app.use('/api/knowledge-graph', knowledgeGraphRoutes);
 app.use('/api/agent',           agentRouter);
 app.use('/api/ro-agent',        roAgentRouter);
+app.use('/api/agent/ro-advisor', roAdvisorRouter);
 app.use('/api/aro-agent',       aroAgentRouter);
 app.use('/api/demo',            demoRORouter);
 app.use('/api/claude',          claudeProxyRouter);
 app.use('/api/snapshot',        snapshotRouter);
 app.use('/api/shop-goals',      shopGoalsRouter);
 app.use('/api/tribal-notes',    tribalNotesRouter);
+app.use('/api/customers',       customersRouter);
+app.use('/api/auth',            authLogRouter);
+app.use('/api/llm-log',         llmLogRouter);
 app.use('/api',                 recommendationsRouter);
 
 app.get('/api/health', (_req, res) => {

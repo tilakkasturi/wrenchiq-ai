@@ -6,11 +6,12 @@
  */
 
 import {
-  AZURE_OPENAI_API_KEY,
-  AZURE_OPENAI_API_BASE,
+  LLM_BASE_URL,
+  LLM_API_KEY,
+  LLM_MODEL,
   AZURE_OPENAI_API_VERSION,
-  AZURE_OPENAI_MODEL,
 } from '../config.js';
+import { logLLMRequest } from './llmLogger.js';
 
 /**
  * Call Azure OpenAI chat completions.
@@ -24,15 +25,12 @@ import {
  * @param {Array}    [opts.tools]     - OpenAI-format tool definitions
  * @returns {object} Raw Azure OpenAI response
  */
-export async function callAzureOpenAI({ system, messages, max_tokens, model, jsonMode = false, tools }) {
-  if (!AZURE_OPENAI_API_KEY) {
-    throw new Error('AZURE_OPENAI_API_KEY not configured — set it in .env.local');
-  }
-
-  const effectiveModel = model || AZURE_OPENAI_MODEL;
+export async function callAzureOpenAI({ system, messages, max_tokens, model, jsonMode = false, tools, _route }) {
+  const effectiveModel = model || LLM_MODEL;
   // Strip trailing slash, then append the path.
-  // The /openai/v1/ endpoint does NOT accept api-version; older deployment paths do.
-  const base = AZURE_OPENAI_API_BASE.replace(/\/$/, '');
+  // Endpoints ending in /v1 are OpenAI-compatible (Bearer auth, no api-version param).
+  // Azure deployment-style endpoints use api-key header + api-version query param.
+  const base = LLM_BASE_URL.replace(/\/$/, '');
   const isV1Endpoint = base.endsWith('/v1') || base.endsWith('/openai/v1');
   const url = isV1Endpoint
     ? `${base}/chat/completions`
@@ -56,21 +54,53 @@ export async function callAzureOpenAI({ system, messages, max_tokens, model, jso
     body.tools = tools;
   }
 
-  const res = await fetch(url, {
-    method:  'POST',
-    headers: {
-      'api-key':      AZURE_OPENAI_API_KEY,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  // OpenAI-compatible (/v1) uses Bearer auth; Azure deployment-style uses api-key header.
+  // Local servers with no key: omit the auth header entirely to avoid rejected requests.
+  const authHeader = LLM_API_KEY
+    ? isV1Endpoint
+      ? { 'Authorization': `Bearer ${LLM_API_KEY}` }
+      : { 'api-key': LLM_API_KEY }
+    : {};
+
+  const t0 = Date.now();
+  let res;
+  try {
+    res = await fetch(url, {
+      method:  'POST',
+      headers: {
+        ...authHeader,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (fetchErr) {
+    const dur = Date.now() - t0;
+    logLLMRequest({ provider: 'llm', route: _route, model: effectiveModel, durationMs: dur, status: 'error', error: fetchErr.message }).catch(() => {});
+    throw fetchErr;
+  }
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => '(no body)');
-    throw new Error(`Azure OpenAI error ${res.status}: ${errBody}`);
+    const dur = Date.now() - t0;
+    logLLMRequest({ provider: 'llm', route: _route, model: effectiveModel, durationMs: dur, status: 'error', error: `${res.status}: ${errBody}` }).catch(() => {});
+    throw new Error(`LLM error ${res.status}: ${errBody}`);
   }
 
-  return res.json();
+  const data = await res.json();
+  const dur = Date.now() - t0;
+  const usage = data.usage || {};
+  logLLMRequest({
+    provider: 'llm',
+    route: _route,
+    model: effectiveModel,
+    promptTokens: usage.prompt_tokens,
+    completionTokens: usage.completion_tokens,
+    totalTokens: usage.total_tokens,
+    durationMs: dur,
+    status: 'ok',
+  }).catch(() => {});
+
+  return data;
 }
 
 /**
