@@ -35,23 +35,40 @@ const DEMO_NOTES_FALLBACK = [
 async function fetchCustomerHistory(customerId, db) {
   if (!db || !customerId) return [];
   try {
-    const col = db.collection('RepairOrder');
-    const ros = await col
-      .find({ 'customer.id': customerId })
-      .sort({ dateIn: -1 })
-      .limit(8)
-      .project({ roNumber: 1, dateIn: 1, serviceCategory: 1, repairJobs: 1, invoice: 1, dtcs: 1, status: 1 })
-      .toArray();
-    // Normalize to a consistent shape the agent prompt understands
-    return ros.map(ro => ({
-      roNumber:         ro.roNumber,
-      date:             ro.dateIn,
-      serviceType:      ro.serviceCategory,
-      services:         (ro.repairJobs || []).map(j => j.description || j.name || j.service || '').filter(Boolean),
+    const query   = { 'customer.id': customerId };
+    const [ros, wqros] = await Promise.all([
+      db.collection('RepairOrder')
+        .find(query)
+        .sort({ dateIn: -1 })
+        .limit(8)
+        .project({ roNumber: 1, dateIn: 1, serviceCategory: 1, repairJobs: 1, invoice: 1, dtcs: 1 })
+        .toArray(),
+      db.collection('wrenchiq_ro')
+        .find(query)
+        .sort({ date_in: -1 })
+        .limit(8)
+        .project({ ro_number: 1, date_in: 1, service_category: 1, repair_jobs: 1, invoice: 1 })
+        .toArray(),
+    ]);
+
+    const normalize = (ro, isWQ) => ({
+      roNumber:         isWQ ? ro.ro_number    : ro.roNumber,
+      date:             isWQ ? ro.date_in      : ro.dateIn,
+      serviceType:      isWQ ? ro.service_category : ro.serviceCategory,
+      services:         isWQ
+        ? (ro.repair_jobs || []).map(j => j.repair_job || j.description || '').filter(Boolean)
+        : (ro.repairJobs  || []).map(j => j.description || j.name || j.service || '').filter(Boolean),
       declinedServices: [],
-      totalEstimate:    typeof ro.invoice === 'number' ? ro.invoice : (ro.invoice?.total || ro.invoice?.totalCharges || 0),
+      totalEstimate:    typeof ro.invoice === 'number' ? ro.invoice : (ro.invoice?.total || 0),
       dtcs:             ro.dtcs || [],
-    }));
+    });
+
+    const all = [
+      ...ros.map(r => normalize(r, false)),
+      ...wqros.map(r => normalize(r, true)),
+    ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+
+    return all;
   } catch (err) {
     console.warn('[roAdvisor] fetchCustomerHistory error:', err.message);
     return [];
