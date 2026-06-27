@@ -330,7 +330,7 @@ export default function AdvisorHomeScreen({ onRoSelect } = {}) {
       // Fire RO Advisor Agent
       setAgentLoading(true);
       const apiBase = (import.meta.env.VITE_API_BASE || "");
-      fetch(`${apiBase}/api/agent/ro-advisor`, {
+      fetch(`${apiBase}/api/ro-advisor`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

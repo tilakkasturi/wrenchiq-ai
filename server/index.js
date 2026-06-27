@@ -111,7 +111,7 @@ app.use('/api/repair-orders',   repairOrderRoutes);
 app.use('/api/knowledge-graph', knowledgeGraphRoutes);
 app.use('/api/agent',           agentRouter);
 app.use('/api/ro-agent',        roAgentRouter);
-app.use('/api/agent/ro-advisor', roAdvisorRouter);
+app.use('/api/ro-advisor',       roAdvisorRouter);
 app.use('/api/aro-agent',       aroAgentRouter);
 app.use('/api/demo',            demoRORouter);
 app.use('/api/claude',          claudeProxyRouter);
