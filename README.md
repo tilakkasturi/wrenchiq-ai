@@ -2,7 +2,7 @@
 
 **"The Dealership's Intelligence. The Neighborhood's Trust."**
 
-Cloud-native, AI-native shop management system for independent auto repair shops.
+Cloud-native, AI-native shop management system for independent auto repair shops and multi-location groups.
 Built by [Predii, Inc.](https://predii.com) — CONFIDENTIAL.
 
 ---
@@ -15,16 +15,19 @@ npm install
 
 # 2. Configure environment
 cp .env.example .env.local
-# edit .env.local with your MongoDB URI
+# Edit .env.local — see Environment Variables section below
 
-# 3. Seed the database (batch 1)
-bin/seed-batch
+# 3. Start the API server (terminal 1)
+PATH="/opt/homebrew/opt/node@24/bin:$PATH" node --env-file=.env.local server/index.js
 
-# 4. Start the API server + Vite dev server
-npm run dev:full
+# 4. Start the Vite dev server (terminal 2)
+PATH="/opt/homebrew/opt/node@24/bin:$PATH" npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173)
+
+> **Node path:** Node 24 is at `/opt/homebrew/opt/node@24/bin/node`. Prefix commands with
+> `PATH="/opt/homebrew/opt/node@24/bin:$PATH"` if `node`/`npm` is not found.
 
 ---
 
@@ -32,45 +35,84 @@ Open [http://localhost:5173](http://localhost:5173)
 
 | Entry point | URL | Description |
 |-------------|-----|-------------|
-| `index.html` | `/` | WrenchIQ — Aftermarket (AM) full shop management |
-| `oem.html` | `/oem.html` | WrenchIQ — OEM dealership portal |
-| `am-3c.html` | `/am-3c.html` | WrenchIQ AM — 3C Story Writer |
+| `index.html` | `/` | WrenchIQ-AM — full aftermarket shop management |
+| `oem.html` | `/oem.html` | WrenchIQ-OEM — dealership portal |
+| `am-3c.html` | `/am-3c.html` | WrenchIQ-AM — standalone 3C Story Writer |
 
 ---
 
-## MongoDB Database
+## Architecture
 
+### Persona gateway
+
+`WrenchIQApp.jsx` → `PersonaGatewayScreen.jsx` → persona selection → `PersonaShell.jsx` (nav + AI panel).
+
+**AM personas:** `advisor`, `tech`, `owner`, `customer`, `advisorLite`
+**OEM personas:** `fixedOps`, `oemAdvisor`, `oemTech`
+
+### AI panel — WrenchIQ Intelligence
+
+`src/components/WrenchIQAgent.jsx` — fixed right panel, context-aware per screen.
+
+### RO Advisor Agent
+
+A tool-calling LLM agent (`server/services/roAdvisorService.js`) that fires every time an advisor selects a repair order. It consults three data sources in parallel via OpenAI-format tool calls:
+
+| Tool | Source |
+|------|--------|
+| `get_customer_history` | `RepairOrder` + `wrenchiq_ro` collections (up to 8 most recent visits) |
+| `get_shop_objectives` | `tribal_notes` collection (active ings / advisor reminders) |
+| `get_mileage_services` | Domain knowledge — standard maintenance intervals by make/model/mileage |
+
+Returns: `advisorBrief`, `upsells[]` with talk tracks, `ings[]`, `alerts[]`.
+
+Set `LLM_SKIP_TOOLS=true` to bypass tool calling and use a single-pass prompt with pre-injected data (for LLM servers that don't support tool_calls).
+
+---
+
+## MongoDB
+
+**Primary host:** `172.16.80.7:27017` (dst)
+**Source host:** `172.16.80.16:27017` (src, import only)
 **Database:** `wrenchiq`
-**Collection:** `RepairOrder`
 
-### Schema — RepairOrder
+### Collections
+
+| Collection | Docs | Description |
+|------------|------|-------------|
+| `RepairOrder` | ~1,100 | Seeded demo ROs — primary operational collection |
+| `wrenchiq_ro` | ~100,000 | Production import — real shop ROs, used for customer history |
+| `tribal_notes` | varies | Shop ings and advisor reminders, scoped by `shopId` |
+| `Recommendation` | varies | Cached AI recommendations (15-min TTL) |
+| `LoginActivity` | varies | Login audit log |
+| `LLMLog` | varies | LLM call log (model, tokens, duration, route) |
+
+### RepairOrder schema (key fields)
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | String | RO number, e.g. `RO-2024-1042` |
-| `status` | String | Workflow: `open` \| `estimate` \| `approved` \| `closed` |
-| `kanbanStatus` | String | Board column: `checked_in` \| `inspecting` \| `estimate_sent` \| `approved` \| `in_progress` \| `ready` |
-| `customerName` | String | Full name |
-| `customerPhone` | String | Contact phone |
-| `customerEmail` | String | Contact email |
+| `status` | String | `open` \| `estimate` \| `approved` \| `closed` |
+| `kanbanStatus` | String | `checked_in` \| `inspecting` \| `estimate_sent` \| `approved` \| `in_progress` \| `ready` |
+| `customer.id` | String | Customer ID, e.g. `cust-003` |
+| `customer.name` | String | Full name |
 | `vin` | String | 17-char VIN |
-| `year` / `make` / `model` / `trim` | String/Number | Vehicle info |
+| `year` / `make` / `model` | String/Number | Vehicle info |
 | `mileageIn` / `mileageOut` | Number | Per-visit odometer |
-| `services` | Array | Service lines (4–9 per RO) |
-| `totalEstimate` / `totalLabor` / `totalParts` | Number | Financials |
+| `repairJobs` | Array | Service lines |
+| `invoice` | Number | Total invoice amount |
 | `dateIn` / `promisedDate` / `closedDate` | ISO String | Timestamps |
-| `batchNumber` | Number | Which seed batch created this RO |
 
 ---
 
 ## Seed Data
 
-### Overview
-
-100 Repair Orders per batch, 25 unique customers per batch, spread across 3 years (2023–2026).
-Each RO has 4–9 realistic service lines.
-
-### Batch Summary
+```bash
+bin/seed-batch              # batch 1 — customers 1-25 (default)
+bin/seed-batch 2            # batch 2 — customers 26-50
+bin/seed-batch --reset      # drop collection, re-seed batch 1
+bin/seed-list               # print all batches and customer rosters
+```
 
 | Batch | Customers | ROs | Profiles |
 |-------|-----------|-----|---------|
@@ -79,169 +121,153 @@ Each RO has 4–9 realistic service lines.
 | 3 | 51–75 | 100 | Tradespeople, medical workers, local businesses |
 | 4 | 76–100 | 100 | Executives, academics, specialty vehicles |
 
-### RO Status Distribution (per batch)
-
-| Status | Kanban Column | Approx count |
-|--------|--------------|-------------|
-| `open` | Checked In / Inspecting | ~2 |
-| `estimate` | Estimate Sent | ~6 |
-| `approved` | Approved / In Progress | ~7 |
-| `closed` | Ready (historical) | ~85 |
-
 ---
 
 ## bin/ Scripts
 
 ```
 bin/
-  seed-batch      Seed a batch of 25 customers into MongoDB
+  server          Start the WrenchIQ API server (port $API_PORT, default 3001)
+  package         Build + package a versioned release tarball
+  seed-batch      Seed a batch of demo repair orders into MongoDB
   seed-list       Print all batches and customer rosters
-  import-prod     One-time import from production backup
-  server          Start the WrenchIQ API server
 ```
 
-### `bin/seed-batch`
+### `bin/package`
 
-Seeds 100 Repair Orders for one batch of 25 customers.
-**Appends** to the existing collection — existing data is never touched.
+Builds the frontend (`npm run build`), increments `version.json`, and creates a versioned tarball under `releases/`.
 
 ```bash
-bin/seed-batch              # batch 1 — customers 1-25 (default)
-bin/seed-batch 2            # batch 2 — customers 26-50
-bin/seed-batch 3            # batch 3 — customers 51-75
-bin/seed-batch 4            # batch 4 — customers 76-100
-bin/seed-batch --reset      # drop collection, re-seed batch 1
-bin/seed-batch 2 --reset    # drop collection, seed batch 2
+bin/package              # build + package (increments minor version)
+bin/package --no-build   # package without rebuilding (server/config changes only)
 ```
 
-### `bin/seed-list`
-
-Prints every customer across all batches with visit counts and occupations.
-
-```bash
-bin/seed-list
-```
-
-### `bin/import-prod`
-
-One-time import from the production backup database.
-Scans 50,000 real line items from `repair_smith_prod-PDRMS-Cluster-Production-Backup`,
-groups into ROs with 4+ lines, samples 100, and writes them into `wrenchiq.RepairOrder`.
-
-```bash
-bin/import-prod
-```
-
-> Drops and recreates the `RepairOrder` collection each run.
-
-### `bin/server`
-
-Starts the Express API server that the Vite frontend proxies to.
-
-```bash
-bin/server         # listens on $API_PORT (default 3001)
-```
+Output: `releases/wrenchiq-deploy-YYYY-MM-DD-HHMM-vX.Y.tar.gz` + `wrenchiq-deploy-latest.tar.gz` symlink.
 
 ---
 
-## npm Scripts
+## Deploy
+
+Deploy target: `wrenchiq-demo` SSH host (`172.16.40.19`), path `/opt/predii/wrenchiq`.
 
 ```bash
-npm run dev          # Vite dev server only (port 5173)
-npm run server       # API server only (port 3001)
-npm run dev:full     # Both in parallel (requires concurrently)
-npm run build        # Production build → dist/
+# 1. Build and package
+bin/package
 
-npm run seed         # Seed batch 1
-npm run seed:batch 2 # Seed a specific batch
-npm run seed:list    # List all batches
-npm run import       # Import from production backup
+# 2. Upload and deploy
+scp releases/wrenchiq-deploy-latest.tar.gz releases/deploy-remote.sh wrenchiq-demo:~/Downloads/
+ssh wrenchiq-demo 'bash ~/Downloads/deploy-remote.sh'
+```
+
+The deploy script:
+- Extracts the tarball to `/opt/predii/wrenchiq`
+- Preserves the existing `.env.local` (never overwrites)
+- Runs `npm install --omit=dev`
+- Stops any running server and starts a fresh one
+- Logs to `/tmp/wrenchiq-server.log`
+
+After first deploy, manually add new env vars to `/opt/predii/wrenchiq/.env.local` via SSH if they were not in the original `.env.local`.
+
+### Check deploy
+
+```bash
+ssh wrenchiq-demo 'curl -s http://localhost:3001/api/health'
+ssh wrenchiq-demo 'cat /opt/predii/wrenchiq/version.json'
+ssh wrenchiq-demo 'tail -f /tmp/wrenchiq-server.log'
 ```
 
 ---
 
 ## API Endpoints
 
-Base URL: `http://localhost:3001` (proxied from Vite at `/api`)
+Base URL: `http://localhost:3001`
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/health` | Server health check |
-| GET | `/api/repair-orders` | List ROs (filterable) |
+| GET | `/api/repair-orders` | List ROs (filterable by status, kanbanStatus, customerId, vin) |
 | GET | `/api/repair-orders/active` | Active queue (open/estimate/approved) |
 | GET | `/api/repair-orders/:id` | Single RO |
 | PATCH | `/api/repair-orders/:id/status` | Update workflow status |
+| POST | `/api/ro-advisor` | RO Advisor Agent — upsells + talk tracks for a specific RO |
+| GET | `/api/recommendations` | AI shop recommendations (15-min MongoDB cache) |
+| GET/POST | `/api/knowledge-graph` | Knowledge graph queries |
+| POST | `/api/knowledge-graph/ask` | Chat with the knowledge graph (LLM) |
+| GET/POST | `/api/tribal-notes` | Shop ings / advisor reminders |
+| GET/POST | `/api/shop-goals` | Shop objectives |
+| POST | `/api/claude` | Claude proxy (client-side LLM calls) |
+| GET | `/api/snapshot` | Shop snapshot for recommendation engine |
 | POST | `/api/auth/log` | Record login attempt |
-| GET | `/api/auth/activity` | Recent login activity (limit, max 500) |
+| GET | `/api/auth/activity` | Recent login activity |
+| GET | `/api/llm-log` | LLM call log (model, tokens, duration) |
 
-**Query params for GET /api/repair-orders:**
-- `status` — `open` \| `estimate` \| `approved` \| `closed`
-- `kanbanStatus` — e.g. `checked_in`, `estimate_sent`
-- `customerId` — e.g. `cust-001`
-- `vin` — partial match
-- `limit` / `skip` — pagination (default limit 200)
-
----
-
-## Login Activity Logging
-
-Every login attempt (success and failure) is logged to the `LoginActivity` MongoDB collection.
-
-### What's captured
-
-| Field | Description |
-|-------|-------------|
-| `username` | Username entered |
-| `success` | `true` if credentials matched, `false` otherwise |
-| `ip` | Client IP (from `X-Forwarded-For` or socket) |
-| `userAgent` | Browser user-agent string |
-| `edition` | `am` or `oem` |
-| `persona` | Persona selected (if login was via persona gateway) |
-| `ts` | ISO timestamp |
-
-### API
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/auth/log` | Record a login attempt (called automatically by frontend) |
-| GET | `/api/auth/activity` | Retrieve recent login activity |
-
-**Query params for GET /api/auth/activity:**
-- `limit` — number of records (default 100, max 500)
-
-### Usage
+### POST /api/ro-advisor
 
 ```bash
-# View recent login activity
-curl -s https://wrenchiq.ai/api/auth/activity | python3 -m json.tool
-
-# View last 10 attempts
-curl -s https://wrenchiq.ai/api/auth/activity?limit=10 | python3 -m json.tool
-
-# From production server
-ssh wrenchiq-demo 'curl -s http://localhost:3001/api/auth/activity'
+curl -s -X POST http://localhost:3001/api/ro-advisor \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ro":       { "customerName": "Brenda Okafor", "customerId": "cust-003",
+                  "serviceType": "Emissions Diagnostic", "dtcs": ["P0420"] },
+    "customer": { "id": "cust-003" },
+    "vehicle":  { "year": 2020, "make": "Toyota", "model": "Camry", "mileage": 67000 },
+    "shopId":   "shop-001"
+  }'
 ```
 
 ---
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.local` and fill in:
+Copy `.env.example` to `.env.local` and configure:
 
 ```bash
-MONGODB_URI=mongodb://172.16.80.7:27017   # or Atlas URI
+# MongoDB
+MONGODB_URI=mongodb://172.16.80.7:27017
 MONGODB_DB=wrenchiq
+SOURCE_MONGODB_URI=mongodb://172.16.80.16:27017/
+
+# Server
 API_PORT=3001
 VITE_API_BASE=http://localhost:3001
+
+# LLM — generic (takes priority over Azure vars)
+LLM_BASE_URL=http://192.222.55.177:8081/v1   # vLLM or any OpenAI-compatible endpoint
+LLM_API_KEY=                                  # leave empty for local servers
+LLM_MODEL=Qwen/Qwen3-VL-32B-Instruct-FP8
+LLM_SKIP_TOOLS=false                          # set true if server doesn't support tool_calls
+
+# LLM — browser-side (Vite)
+VITE_LLM_BASE_URL=http://192.222.55.177:8081
+VITE_LLM_API_KEY=
+VITE_LLM_MODEL=Qwen/Qwen3-VL-32B-Instruct-FP8
+
+# Claude / Anthropic (optional — used for 3C Story Writer browser-side calls)
+VITE_ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_API_KEY=sk-ant-...
 ```
+
+### LLM fallback chain
+
+Server: `LLM_BASE_URL` → `AZURE_OPENAI_API_BASE`
+Browser: `VITE_LLM_BASE_URL` → `VITE_ANTHROPIC_API_KEY` → server proxy (`/api/claude`)
+
+---
+
+## Versioning
+
+`version.json` tracks `{ major, minor }`. `bin/package` increments minor (rolls to next major at 10).
+
+Version and build date are injected at build time as `__APP_VERSION__` and `__APP_BUILT__` — consumed by `src/hooks/useAppVersion.js` and displayed in the login screen and footers.
 
 ---
 
 ## Tech Stack
 
 - **Frontend:** React 19, Vite 6, Recharts, Lucide React
-- **Backend:** Node.js, Express 5, MongoDB 7
-- **Build:** Multi-entry Vite (main / oem / am-3c)
+- **Backend:** Node.js 24, Express 5, MongoDB 7
+- **AI:** OpenAI-compatible tool-calling agent (vLLM / Qwen3), Anthropic Claude (3C pipeline)
+- **Build:** Multi-entry Vite (`main` / `oem` / `am-3c`)
 
 ---
 
