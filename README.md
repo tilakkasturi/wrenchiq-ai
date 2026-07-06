@@ -2,7 +2,8 @@
 
 **"The Dealership's Intelligence. The Neighborhood's Trust."**
 
-Cloud-native, AI-native shop management system for independent auto repair shops and multi-location groups.
+WrenchIQ is your AI assistant for fixed ops and independent repair — a trusted partner that handles the background work so advisors, technicians, and owners can focus on the customer in front of them. It works alongside your existing tools, not instead of them.
+
 Built by [Predii, Inc.](https://predii.com) — CONFIDENTIAL.
 
 ---

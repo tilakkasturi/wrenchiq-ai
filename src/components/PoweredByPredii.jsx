@@ -95,7 +95,7 @@ export default function PoweredByPredii({ variant = "topbar", showSmsName = fals
             Powered by Predii
           </div>
           <div style={{ fontSize: 10, color: "#9CA3AF" }}>
-            AI-native shop intelligence · predii.com
+            Your AI assistant for fixed ops · predii.com
           </div>
         </div>
       </div>

@@ -77,7 +77,7 @@ function SectionOverview() {
           Moving Shop Management to Agentic Mode
         </div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.65, marginBottom: 10 }}>
-          WrenchIQ is the AI intelligence layer on top of any SMS or DMS. A team of autonomous agents watches every repair order, surfaces proactive actions, and gets smarter every week — without replacing the tools shops already use.
+          WrenchIQ is your trusted AI assistant for running fixed ops or an independent repair shop. It handles the background work — monitoring every RO, surfacing what needs attention, and briefing your team — so advisors and owners can stay focused on the customer in front of them.
         </div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontStyle: "italic" }}>
           "Your best service advisor — available 24/7, never misses a follow-up, and gets smarter every week."
@@ -312,7 +312,7 @@ function SectionValueProp() {
   ];
 
   const WHY = [
-    ["AI-native, not AI-retrofitted", "Every screen, every workflow was designed around AI assistance from day one. Competitors bolt on chat windows after the fact."],
+    ["Built as an AI assistant, not a bolt-on", "Every workflow was designed around AI doing the background work from day one. Competitors add chat windows after the fact — WrenchIQ was built this way."],
     ["Adds to what shops already have", "WrenchIQ never asks a shop to abandon their SMS or a dealer to replace their DMS. The agent layer activates on top — frictionless adoption."],
     ["Predii's 10-year automotive data advantage", "Built on Predii's automotive AI/ML platform — OEM data, TSB/recall corpus, repair pattern models already in production. Not starting from scratch."],
     ["Shop memory that compounds", "The more a shop uses WrenchIQ, the smarter it gets. Owner playbooks, customer preferences, and confirmed tactics accumulate into a permanent intelligence asset."],

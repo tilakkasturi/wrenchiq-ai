@@ -344,7 +344,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
         <BrandWordmark size="xl" />
       </div>
       <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 12, textAlign: "center", maxWidth: 420 }}>
-        AI intelligence that works alongside your shop management system.
+        Your AI assistant for fixed ops and independent repair — handling the background work so you can focus on the customer.
       </div>
       <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
         <span style={{
