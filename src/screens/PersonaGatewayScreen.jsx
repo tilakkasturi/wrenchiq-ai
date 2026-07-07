@@ -4,7 +4,7 @@ import {
   Wrench, ClipboardList, ArrowRight, Shield, Menu, Sparkles,
   CheckCircle, Clock, ChevronRight, Building2, FileText,
   Code2, Play, BarChart3, Hammer, Copy, ChevronDown,
-  Zap, Package, Send,
+  Zap, Package, Send, Settings2,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { SHOP, customers, vehicles } from "../data/demoData";
@@ -12,6 +12,7 @@ import { WARRANTY_CLAIMS } from "../data/oemDemoData";
 import BrandWordmark from "../components/BrandWordmark";
 import { useEditionName } from "../context/BrandingContext";
 import { useDemo, DEMO_SHOPS } from "../context/DemoContext";
+import DemoConfigPanel from "../components/DemoConfigPanel";
 
 // ── AM data ─────────────────────────────────────────────────
 const QUEUE = [
@@ -258,8 +259,13 @@ function renderInline(text) {
 export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onOpenOEM, defaultTab = "AM" }) {
   const amName  = useEditionName("AM");
   const oemName = useEditionName("OEM");
-  const { smsName, activeShopId, setDemo } = useDemo();
-  const [activeTab, setActiveTab]        = useState(defaultTab); // "AM" | "OEM" | "API"
+  const { smsName, activeShopId, setDemo, moduleConfig } = useDemo();
+  const [demoConfigOpen, setDemoConfigOpen] = useState(false);
+
+  // Derive initial tab from saved edition config
+  const edition = moduleConfig?.edition ?? "am";
+  const computedDefaultTab = edition === "oem" ? "OEM" : "AM";
+  const [activeTab, setActiveTab] = useState(computedDefaultTab); // "AM" | "OEM" | "API"
   const [hoveredPersona, setHoveredPersona] = useState(null);
   const [selectedCust, setSelectedCust]  = useState(null);
   const [apiEdition, setApiEdition]      = useState("OEM");   // "AM" | "OEM"
@@ -314,6 +320,9 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
   }
 
   const isOEM = activeTab === "OEM";
+  const showAM  = edition === "am"   || edition === "both";
+  const showOEM = edition === "oem"  || edition === "both";
+  const showBoth = showAM && showOEM;
 
   return (
     <div style={{
@@ -326,6 +335,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
 
       {/* ── Central bordered card ── */}
       <div style={{
+        position: "relative",
         background: "#fff",
         border: "1.5px solid #E5E7EB",
         borderRadius: 22,
@@ -338,6 +348,26 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
         alignItems: "center",
         marginBottom: 16,
       }}>
+
+      {/* ── Gear icon (top-right of card) ── */}
+      <div style={{ position: "absolute", top: 16, right: 16 }}>
+        <button
+          onClick={() => setDemoConfigOpen(true)}
+          title="Demo configuration"
+          style={{
+            width: 32, height: 32, borderRadius: 8,
+            border: "1.5px solid #E5E7EB",
+            background: "#F9FAFB",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = COLORS.bgDark; e.currentTarget.style.borderColor = COLORS.bgDark; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "#F9FAFB"; e.currentTarget.style.borderColor = "#E5E7EB"; }}
+        >
+          <Settings2 size={15} color={COLORS.textMuted} />
+        </button>
+      </div>
 
       {/* ── Wordmark ── */}
       <div style={{ marginBottom: 6 }}>
@@ -397,7 +427,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       {/* ══════════════════════════════════════════════════════
           TOP TABS: AM · OEM (API tab hidden in demo mode)
       ══════════════════════════════════════════════════════ */}
-      {activeTab === "OEM" && (
+      {showBoth && (
         <div style={{
           display: "flex", gap: 0,
           background: "rgba(0,0,0,0.06)",
@@ -437,7 +467,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       {/* ══════════════════════════════════════════════════════
           OEM EDITION
       ══════════════════════════════════════════════════════ */}
-      {isOEM && (
+      {isOEM && showOEM && (
         <div style={{ width: "100%", background: "linear-gradient(160deg, #0D3B45 0%, #0D2A40 55%, #111827 100%)", borderRadius: 20, padding: "28px 24px", display: "flex", flexDirection: "column", alignItems: "center", maxWidth: 940 }}>
           {/* Dealer context */}
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 20 }}>
@@ -618,7 +648,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       {/* ══════════════════════════════════════════════════════
           AM EDITION
       ══════════════════════════════════════════════════════ */}
-      {!isOEM && (
+      {!isOEM && showAM && (
         <>
           {/* AM persona cards — clean light design */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 480 }}>
@@ -882,6 +912,9 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
       <div style={{ position: "fixed", bottom: 16, right: 20, fontSize: 10, color: "#D1D5DB" }}>
         © {new Date().getFullYear()} Predii, Inc. · PREDII CONFIDENTIAL
       </div>
+
+      {/* ── Demo config panel (gear icon) ── */}
+      {demoConfigOpen && <DemoConfigPanel onClose={() => setDemoConfigOpen(false)} />}
     </div>
   );
 }

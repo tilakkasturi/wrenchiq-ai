@@ -73,6 +73,36 @@ export const DEMO_SHOPS = {
   },
 };
 
+// ── Module registry (mirrors product spec) ───────────────────
+// Each module has: id, label, am (available in AM), oem (available in OEM)
+export const MODULE_REGISTRY = [
+  { id: "roAdvisor",     label: "RO Advisor Agent",          am: true,  oem: true  },
+  { id: "storyWriter",   label: "3C Story Writer",            am: true,  oem: true  },
+  { id: "repairOrders",  label: "Repair Order Board",         am: true,  oem: true  },
+  { id: "dashboard",     label: "Command Center / Dashboard", am: true,  oem: true  },
+  { id: "aiCopilot",    label: "AI Repair Advisor",           am: true,  oem: true  },
+  { id: "techMobile",    label: "Technician Mobile",          am: true,  oem: true  },
+  { id: "dvi",           label: "Digital Vehicle Inspection", am: true,  oem: false },
+  { id: "socialInbox",   label: "Social Inbox",               am: true,  oem: false },
+  { id: "scheduling",    label: "Smart Scheduling",           am: true,  oem: false },
+  { id: "trustEngine",   label: "Trust Engine",               am: true,  oem: false },
+  { id: "multiLocation", label: "Multi-Location Hub",         am: true,  oem: false },
+  { id: "parts",         label: "Parts Intelligence",         am: true,  oem: false },
+  { id: "checkout",      label: "Checkout & Payment",         am: true,  oem: false },
+  { id: "customerPortal",label: "Customer Portal",            am: true,  oem: false },
+  { id: "analytics",     label: "Analytics",                  am: true,  oem: false },
+  { id: "dmsPush",       label: "DMS Push (CDK / R&R)",       am: false, oem: true  },
+  { id: "warrantyPortal",label: "OEM Warranty Portal",        am: false, oem: true  },
+  { id: "settings",      label: "Settings",                   am: true,  oem: true  },
+];
+
+// Default module config: all modules on, show both editions
+function defaultModuleConfig() {
+  const modules = {};
+  MODULE_REGISTRY.forEach(m => { modules[m.id] = true; });
+  return { edition: "am", modules }; // "am" | "oem" | "both"
+}
+
 const DEFAULTS = {
   smsName:         "Protractor",
   corporateName:   "GWG Auto Group",
@@ -80,15 +110,31 @@ const DEFAULTS = {
   ownerName:       SHOP.owner,
   ownerInitials:   SHOP.ownerInitials,
   primaryCustomer: "Robert Taylor",
-  activeShopId:    "cornerstone",  // default to Cornerstone (Taylor demo)
+  activeShopId:    "cornerstone",
   smsProvider:     "protractor",
   advisorName:     "James Kowalski",
+  moduleConfig:    defaultModuleConfig(),
 };
 
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS };
+    if (!raw) return { ...DEFAULTS };
+    const parsed = JSON.parse(raw);
+    // Merge moduleConfig carefully so new modules in the registry get their defaults
+    const savedModules = parsed.moduleConfig?.modules || {};
+    const mergedModules = {};
+    MODULE_REGISTRY.forEach(m => {
+      mergedModules[m.id] = m.id in savedModules ? savedModules[m.id] : true;
+    });
+    return {
+      ...DEFAULTS,
+      ...parsed,
+      moduleConfig: {
+        edition: parsed.moduleConfig?.edition ?? "am",
+        modules: mergedModules,
+      },
+    };
   } catch {
     return { ...DEFAULTS };
   }

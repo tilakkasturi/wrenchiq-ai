@@ -18,42 +18,44 @@ import { useDemo } from "../context/DemoContext";
 import DemoConfigPanel from "./DemoConfigPanel";
 
 // ── Per-persona nav configs ──────────────────────────────────
+// moduleId maps each nav item to a MODULE_REGISTRY id so it can be
+// hidden when that module is disabled in demo config.
 
 const PERSONA_NAV = {
   advisor: [
-    { id: "advisorHome",  label: "RO Queue & Board",   icon: ClipboardList },
-    { id: "job1Intake",   label: "Intake & Diagnosis",  icon: Stethoscope },
-    { id: "job2ThreeC",   label: "3C Compliance",       icon: FileText },
-    { id: "job3Upsell",   label: "Smart Upsell",        icon: ShoppingCart },
-    { id: "am3cWriter",   label: "3C Story Writer",     icon: CheckSquare },
+    { id: "advisorHome",  label: "RO Queue & Board",   icon: ClipboardList, moduleId: "repairOrders" },
+    { id: "job1Intake",   label: "Intake & Diagnosis",  icon: Stethoscope,   moduleId: "repairOrders" },
+    { id: "job2ThreeC",   label: "3C Compliance",       icon: FileText,      moduleId: "storyWriter"  },
+    { id: "job3Upsell",   label: "Smart Upsell",        icon: ShoppingCart,  moduleId: "roAdvisor"    },
+    { id: "am3cWriter",   label: "3C Story Writer",     icon: CheckSquare,   moduleId: "storyWriter"  },
   ],
   advisorLite: [],
   tech: [
-    { id: "techHome", label: "My Jobs",    icon: Hammer },
-    { id: "health",   label: "Reports",    icon: ClipboardCheck },
+    { id: "techHome", label: "My Jobs",    icon: Hammer,        moduleId: "techMobile" },
+    { id: "health",   label: "Reports",    icon: ClipboardCheck, moduleId: "dvi"       },
   ],
   owner: [
-    { id: "ownerProtractor", label: "Daily View",               icon: Home },
-    { id: "opIntel",         label: "Operational Intelligence",  icon: Zap },
-    { id: "impactDash",      label: "Impact Dashboard",          icon: TrendingUp },
-    { id: "analytics",       label: "Reports",                   icon: BarChart3 },
-    { id: "settings",        label: "Settings",                  icon: Settings },
+    { id: "ownerProtractor", label: "Daily View",               icon: Home,     moduleId: "dashboard" },
+    { id: "opIntel",         label: "Operational Intelligence",  icon: Zap,      moduleId: "dashboard" },
+    { id: "impactDash",      label: "Impact Dashboard",          icon: TrendingUp, moduleId: "analytics" },
+    { id: "analytics",       label: "Reports",                   icon: BarChart3,  moduleId: "analytics" },
+    { id: "settings",        label: "Settings",                  icon: Settings,   moduleId: "settings"  },
   ],
   customer: [],
   // OEM personas
   fixedOps: [
-    { id: "fixedOpsHome",      label: "Warranty Dashboard", icon: BarChart3 },
-    { id: "warrantyAnalytics", label: "Analytics",          icon: BarChart },
-    { id: "oemNetwork",        label: "Dealer Group",       icon: Building2 },
-    { id: "oemSettings",       label: "Settings",           icon: Settings },
+    { id: "fixedOpsHome",      label: "Warranty Dashboard", icon: BarChart3,  moduleId: "dashboard"      },
+    { id: "warrantyAnalytics", label: "Analytics",          icon: BarChart,   moduleId: "analytics"      },
+    { id: "oemNetwork",        label: "Dealer Group",       icon: Building2,  moduleId: "multiLocation"  },
+    { id: "oemSettings",       label: "Settings",           icon: Settings,   moduleId: "settings"       },
   ],
   oemAdvisor: [
-    { id: "roWriter",          label: "RO Story Writer",    icon: ClipboardList },
-    { id: "oemParts",          label: "OEM Parts Lane",     icon: Package },
-    { id: "oemSettings",       label: "Settings",           icon: Settings },
+    { id: "roWriter",          label: "RO Story Writer",    icon: ClipboardList, moduleId: "storyWriter" },
+    { id: "oemParts",          label: "OEM Parts Lane",     icon: Package,       moduleId: "parts"       },
+    { id: "oemSettings",       label: "Settings",           icon: Settings,      moduleId: "settings"    },
   ],
   oemTech: [
-    { id: "oemTechHome",       label: "My Jobs",            icon: Hammer },
+    { id: "oemTechHome",       label: "My Jobs",            icon: Hammer,        moduleId: "techMobile"  },
   ],
 };
 
@@ -116,14 +118,17 @@ export default function PersonaShell({
   );
   const [demoOpen, setDemoOpen] = useState(false);
   const { brand } = useBranding();
-  const { shopName, ownerName, ownerInitials, smsName } = useDemo();
+  const { shopName, ownerName, ownerInitials, smsName, moduleConfig } = useDemo();
   const appVersion = useAppVersion();
   const appBuilt = useAppBuilt();
-  // Filter nav to embedded-allowed screens when running in extension panel
+  // Filter nav: embedded screens first, then disabled modules
+  const enabledModules = moduleConfig?.modules ?? {};
   const allNavItems = PERSONA_NAV[persona] || [];
-  const navItems = (embedded && embeddedScreens)
-    ? allNavItems.filter(item => embeddedScreens.has(item.id))
-    : allNavItems;
+  const navItems = allNavItems.filter(item => {
+    if (embedded && embeddedScreens && !embeddedScreens.has(item.id)) return false;
+    if (item.moduleId && enabledModules[item.moduleId] === false) return false;
+    return true;
+  });
   const personaColor = PERSONA_COLORS[persona] || COLORS.primary;
   const personaLabel = PERSONA_LABELS[persona] || persona;
   const baseUser = PERSONA_USER[persona] || { name: "User", initials: "U" };
