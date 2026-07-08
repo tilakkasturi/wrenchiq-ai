@@ -43,7 +43,6 @@ import SplashScreen from "./screens/SplashScreen";
 import LoginModal from "./components/LoginModal";
 import PersonaGatewayScreen from "./screens/PersonaGatewayScreen";
 import PersonaShell from "./components/PersonaShell";
-import AdvisorHomeScreen from "./screens/AdvisorHomeScreen";
 import TechHomeScreen from "./screens/TechHomeScreen";
 import TechDVIScreen from "./screens/TechDVIScreen";
 import OwnerCommandCenterScreen from "./screens/OwnerCommandCenterScreen";
@@ -90,7 +89,6 @@ const ADMIN_SCREENS = [
 function resolvePersonaScreen(persona, screenId, extraProps) {
   // Advisor persona screens
   if (persona === "advisor") {
-    if (screenId === "advisorHome") return <AdvisorHomeScreen {...extraProps} onRoSelect={extraProps.onRoSelect} />;
     if (screenId === "aiAgent")     return <AIAgentScreen />;
     if (screenId === "aroAgent")    return <AROAgentScreen />;
     if (screenId === "am3cWriter")  return <AM3CStoryWriterScreen />;
