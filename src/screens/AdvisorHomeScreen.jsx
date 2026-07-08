@@ -307,7 +307,7 @@ function KGPanel() {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
+export default function AdvisorHomeScreen({ onRoSelect, ros, showIntelligencePanel = true } = {}) {
   const { smsName, shopName, smsHeaderColor } = useDemo();
   const [selectedRoNum, setSelectedRoNum] = useState(null);
   const { ings } = useShopObjectives();
@@ -943,10 +943,10 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
       overflow: "hidden",
     }}>
 
-      {/* ── LEFT: SMS kanban (65%) ─────────────────────────────────────────── */}
+      {/* ── LEFT: SMS kanban (65%, or 100% when the intelligence panel is hidden) ── */}
       <div style={{
-        width: "65%", display: "flex", flexDirection: "column",
-        borderRight: `1px solid ${COLORS.border}`, overflow: "hidden",
+        width: showIntelligencePanel ? "65%" : "100%", display: "flex", flexDirection: "column",
+        borderRight: showIntelligencePanel ? `1px solid ${COLORS.border}` : "none", overflow: "hidden",
       }}>
 
         {/* SMS chrome header */}
@@ -1066,65 +1066,69 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
         </div>
       </div>
 
-      {/* ── RIGHT: WrenchIQ Agent panel (35%) ─────────────────────────────── */}
-      <div style={{
-        width: "35%", display: "flex", flexDirection: "column",
-        background: COLORS.navyDark, overflow: "hidden",
-      }}>
-
-        {/* Panel header */}
+      {/* ── RIGHT: WrenchIQ Agent panel (35%) — omitted entirely when this screen is
+           hosted as the standalone SMS/DMS Representative UI (Surface C), which must
+           show only the shop's own system, not a WrenchIQ sidecar ─────────────────── */}
+      {showIntelligencePanel && (
         <div style={{
-          padding: "16px 20px 14px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          flexShrink: 0,
+          width: "35%", display: "flex", flexDirection: "column",
+          background: COLORS.navyDark, overflow: "hidden",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-            <div style={{
-              width: 26, height: 26, background: COLORS.gold,
-              borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <Sparkles size={13} color="#fff" />
+
+          {/* Panel header */}
+          <div style={{
+            padding: "16px 20px 14px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            flexShrink: 0,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+              <div style={{
+                width: 26, height: 26, background: COLORS.gold,
+                borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Sparkles size={13} color="#fff" />
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                WrenchIQ
+              </span>
+              {selected && (
+                <button
+                  onClick={() => selectRO(null)}
+                  style={{
+                    marginLeft: "auto", background: "none", border: "none",
+                    cursor: "pointer", fontSize: 11, color: "rgba(255,255,255,0.35)",
+                    padding: 0,
+                  }}
+                >
+                  ← Queue view
+                </button>
+              )}
             </div>
-            <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
-              WrenchIQ
-            </span>
-            {selected && (
-              <button
-                onClick={() => selectRO(null)}
-                style={{
-                  marginLeft: "auto", background: "none", border: "none",
-                  cursor: "pointer", fontSize: 11, color: "rgba(255,255,255,0.35)",
-                  padding: 0,
-                }}
-              >
-                ← Queue view
-              </button>
-            )}
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", paddingLeft: 34 }}>
+              {selected
+                ? `${selected.roNum} · ${BOARD_COLUMNS.find(c => c.id === selected.column)?.label}`
+                : `Queue Intelligence — ${shopName}`}
+            </div>
           </div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", paddingLeft: 34 }}>
-            {selected
-              ? `${selected.roNum} · ${BOARD_COLUMNS.find(c => c.id === selected.column)?.label}`
-              : `Queue Intelligence — ${shopName}`}
+
+          {/* Scrollable content */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
+            {selected ? <SelectedROPanel ro={selected} /> : <QueueOverviewPanel />}
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            padding: "10px 18px 14px",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            flexShrink: 0,
+            display: "flex", alignItems: "center", gap: 6,
+            fontSize: 10, color: "rgba(255,255,255,0.25)",
+          }}>
+            <Target size={11} color="rgba(255,255,255,0.25)" />
+            WrenchIQ reads {smsName} — never writes to it
           </div>
         </div>
-
-        {/* Scrollable content */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
-          {selected ? <SelectedROPanel ro={selected} /> : <QueueOverviewPanel />}
-        </div>
-
-        {/* Footer */}
-        <div style={{
-          padding: "10px 18px 14px",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          flexShrink: 0,
-          display: "flex", alignItems: "center", gap: 6,
-          fontSize: 10, color: "rgba(255,255,255,0.25)",
-        }}>
-          <Target size={11} color="rgba(255,255,255,0.25)" />
-          WrenchIQ reads {smsName} — never writes to it
-        </div>
-      </div>
+      )}
     </div>
   );
 }

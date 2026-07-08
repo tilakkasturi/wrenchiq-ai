@@ -3,11 +3,12 @@
  *
  * This is explicitly NOT a WrenchIQ-branded surface. It plays the role of a
  * third-party Shop/Dealer Management System (Tekmetric, Mitchell1, Protractor…)
- * that WrenchIQ observes read-only via the Data Feed Model. AdvisorHomeScreen
- * already renders its own embedded WrenchIQ intelligence column on the right
- * (a larger refactor to split that out is tracked separately) — here we just
- * host it full-screen with a thin, distinctly non-WrenchIQ title bar and feed
- * it a simulated stream of RO activity in place of live shop data.
+ * that WrenchIQ observes read-only via the Data Feed Model. AdvisorHomeScreen's
+ * embedded WrenchIQ intelligence column is explicitly hidden here
+ * (showIntelligencePanel={false}) — this surface must show only the shop's own
+ * system, never a WrenchIQ sidecar — so we host it full-screen (Kanban only)
+ * with a thin, distinctly non-WrenchIQ title bar and feed it a simulated stream
+ * of RO activity in place of live shop data.
  */
 
 import AdvisorHomeScreen, { STATIC_BOARD_ROS } from "./screens/AdvisorHomeScreen";
@@ -32,7 +33,7 @@ export default function SMSRepresentativeApp() {
         {smsName || "Shop Management System"} · {shopName || "Repair Shop"} (Representative — read-only feed to WrenchIQ)
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
-        <AdvisorHomeScreen ros={ros} />
+        <AdvisorHomeScreen ros={ros} showIntelligencePanel={false} />
       </div>
     </div>
   );
