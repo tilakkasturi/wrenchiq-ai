@@ -22,11 +22,21 @@ them with `npx tauri icon <path-to-a-1024x1024-png>` once the CLI is installed.
 
 ## What this wraps
 
-This scaffold wraps the existing **Surface B** web build — the "main" Vite entry
-(`index.html` → `dist/index.html`, i.e. `WrenchIQApp.jsx`) — as a native desktop
-window via Tauri's WebView. `tauri.conf.json` points `build.frontendDist` at
-`../dist` (the existing `npm run build` output) and `build.devUrl` at the Vite
-dev server (`http://localhost:5173`) for `tauri:dev`.
+Surface B is scoped as a **WrenchIQ Intelligence sidecar only** — not the full
+persona-gateway app. This scaffold wraps the dedicated `sidecar.html` → `WrenchIQSidecarScreen.jsx`
+Vite entry as a native desktop window via Tauri's WebView: search/select a
+customer's RO from the live Data Feed (`CustomerSelector` + `SelectedCustomerContext`,
+already polling `GET /api/data-feed/*`), and WrenchIQ intelligence for that RO
+(`GET /api/repair-orders/story-ro/:roId` + `POST /api/ro-advisor`) loads
+automatically on selection. `tauri.conf.json`'s window `url` points at
+`sidecar.html` (resolved against `build.frontendDist: "../dist"` in production,
+`build.devUrl: "http://localhost:5173"` for `tauri:dev`) — a narrow ~420x720
+window, matching the sidecar form factor.
+
+The full multi-screen AI-assistant app (`index.html` → `WrenchIQApp.jsx` — ARO
+Agent, 3C Story Writer, dashboards, Trust Engine, Tech/OEM screens, etc.)
+remains available as a regular web app but is **not** part of the Tauri desktop
+surface.
 
 ## Platform targets
 

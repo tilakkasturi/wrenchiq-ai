@@ -1,0 +1,347 @@
+/**
+ * WrenchIQSidecarScreen — Surface B (Tauri): WrenchIQ Intelligence sidecar
+ *
+ * Narrow, single-purpose window: search/select a customer's RO from the
+ * live Data Feed (CustomerSelector + SelectedCustomerContext, already
+ * polling GET /api/data-feed/*), then automatically load WrenchIQ
+ * intelligence for that RO (GET /api/repair-orders/story-ro/:roId for full
+ * RO detail, then POST /api/ro-advisor for the advisor brief / upsells /
+ * alerts). This is intentionally narrow — no Kanban, no shop-wide Knowledge
+ * Graph panel, no tribal-knowledge checklist. Just: pick a customer, get
+ * WrenchIQ intelligence.
+ */
+
+import { useState, useEffect } from "react";
+import { Sparkles, AlertTriangle, Search } from "lucide-react";
+import { COLORS } from "../theme/colors";
+import { useSelectedCustomer } from "../context/SelectedCustomerContext";
+import { fetchStoryRO } from "../services/repairOrderService";
+import CustomerSelector from "../components/CustomerSelector";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "";
+
+function fmtMoney(n) {
+  if (n == null) return "$0";
+  return `$${Math.round(n).toLocaleString()}`;
+}
+
+export default function WrenchIQSidecarScreen() {
+  const { activeCustomer } = useSelectedCustomer();
+  const [storyRO, setStoryRO] = useState(null);
+  const [agentData, setAgentData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const roId = activeCustomer?.roNumber;
+    setStoryRO(null);
+    setAgentData(null);
+
+    if (!roId) return;
+
+    let cancelled = false;
+    setLoading(true);
+
+    fetchStoryRO(roId)
+      .then((ro) => {
+        if (cancelled || !ro) return;
+        setStoryRO(ro);
+
+        return fetch(`${API_BASE}/api/ro-advisor`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            ro: {
+              ...ro,
+              customerId: ro._customer?.id,
+              customerName: [ro._customer?.firstName, ro._customer?.lastName].filter(Boolean).join(" "),
+            },
+            customer: ro.customer || null,
+            vehicle: ro.vehicle || null,
+            shopId: ro.shopId,
+          }),
+        })
+          .then((r) => r.json())
+          .then((data) => { if (!cancelled) setAgentData(data); });
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [activeCustomer?.roNumber]);
+
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", height: "100vh",
+      background: COLORS.navyDark, fontFamily: "'Inter', system-ui, sans-serif",
+      overflow: "hidden",
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: "16px 18px 14px",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        flexShrink: 0,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <div style={{
+            width: 26, height: 26, background: COLORS.gold,
+            borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Sparkles size={13} color="#fff" />
+          </div>
+          <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+            WrenchIQ Intelligence
+          </span>
+        </div>
+        <CustomerSelector />
+      </div>
+
+      {/* Scrollable content */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
+        {!activeCustomer && (
+          <EmptyState icon={<Search size={18} color="rgba(255,255,255,0.3)" />} text="No active customer in the data feed yet." />
+        )}
+
+        {activeCustomer && loading && !storyRO && (
+          <LoadingSkeleton />
+        )}
+
+        {activeCustomer && !loading && !storyRO && (
+          <EmptyState icon={<AlertTriangle size={18} color="rgba(255,255,255,0.3)" />} text={`No RO detail found for ${activeCustomer.roNumber || activeCustomer.customerName}.`} />
+        )}
+
+        {storyRO && (
+          <IntelligencePanel ro={storyRO} agentData={agentData} agentLoading={loading} />
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        padding: "10px 18px 14px",
+        borderTop: "1px solid rgba(255,255,255,0.08)",
+        flexShrink: 0,
+        display: "flex", alignItems: "center", gap: 6,
+        fontSize: 10, color: "rgba(255,255,255,0.25)",
+      }}>
+        WrenchIQ reads the shop's data feed — never writes to it
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ icon, text }) {
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      gap: 10, padding: "48px 16px", textAlign: "center",
+    }}>
+      {icon}
+      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>{text}</span>
+    </div>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+      {[80, 60, 90, 45].map((w, i) => (
+        <div key={i} style={{
+          height: 10, borderRadius: 4,
+          background: "rgba(34,197,94,0.12)",
+          width: `${w}%`,
+          animation: "pulse 1.4s ease-in-out infinite",
+          animationDelay: `${i * 0.2}s`,
+        }} />
+      ))}
+      <style>{`@keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.9} }`}</style>
+    </div>
+  );
+}
+
+function IntelligencePanel({ ro, agentData, agentLoading }) {
+  const cust = ro._customer;
+  const veh = ro._vehicle;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+      {/* Customer / RO card */}
+      <div style={{
+        background: "rgba(255,255,255,0.05)",
+        borderRadius: 10,
+        borderLeft: `3px solid ${COLORS.accent}`,
+        padding: "14px 16px",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <span style={{
+            fontSize: 10, fontWeight: 800, color: COLORS.accent,
+            background: "rgba(255,255,255,0.07)", borderRadius: 4,
+            padding: "2px 7px", letterSpacing: "0.06em",
+          }}>
+            {(ro.status || "").replace(/_/g, " ").toUpperCase()}
+          </span>
+          <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>
+            {ro.roNumber}
+          </span>
+        </div>
+
+        <div style={{ fontSize: 15, fontWeight: 800, color: "#F1F5F9", marginBottom: 4 }}>
+          {cust?.firstName ? `${cust.firstName} ${cust.lastName}` : "Unknown customer"}
+        </div>
+
+        {veh?.make && (
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+            {veh.year} {veh.make} {veh.model}
+          </div>
+        )}
+      </div>
+
+      {/* Concern */}
+      {ro.customerConcern && (
+        <div style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 8, padding: "11px 13px",
+        }}>
+          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.5, fontStyle: "italic" }}>
+            "{ro.customerConcern}"
+          </p>
+        </div>
+      )}
+
+      {/* Services */}
+      {(ro.services || []).length > 0 && (
+        <div style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 8, overflow: "hidden",
+        }}>
+          <div style={{
+            padding: "8px 13px",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+            textTransform: "uppercase", letterSpacing: "0.1em",
+          }}>
+            Services · {fmtMoney(ro.totalEstimate)}
+          </div>
+          {ro.services.map((svc, i) => (
+            <div key={i} style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "8px 13px",
+              borderBottom: i < ro.services.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+            }}>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", flex: 1, marginRight: 8 }}>
+                {svc.name}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", flexShrink: 0 }}>
+                {fmtMoney((svc.laborCost || 0) + (svc.partsCost || 0))}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* WrenchIQ Intelligence — live agent output */}
+      <div style={{
+        background: "rgba(34,197,94,0.06)",
+        border: `1px solid ${agentLoading ? "rgba(34,197,94,0.3)" : "rgba(34,197,94,0.18)"}`,
+        borderRadius: 8, padding: "12px 14px",
+        transition: "border-color 0.3s",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Sparkles size={13} color="#4ADE80" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#86EFAC", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              WrenchIQ Intelligence
+            </span>
+          </div>
+          {agentLoading && (
+            <span style={{ fontSize: 10, color: "#86EFAC", opacity: 0.7 }}>Analyzing…</span>
+          )}
+        </div>
+
+        {agentLoading && !agentData && <LoadingSkeleton />}
+
+        {agentData?.advisorBrief && (
+          <div style={{
+            fontSize: 12, color: "#86EFAC", lineHeight: 1.55, marginBottom: 10,
+            fontStyle: "italic", padding: "8px 10px",
+            background: "rgba(34,197,94,0.08)", borderRadius: 6,
+          }}>
+            {agentData.advisorBrief}
+          </div>
+        )}
+
+        {(agentData?.upsells || []).length > 0 && (
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(134,239,172,0.5)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+              Upsell Opportunities
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {agentData.upsells.map((u, i) => (
+                <div key={i} style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 6, padding: "9px 11px",
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#F1F5F9", flex: 1, marginRight: 8 }}>
+                      {u.service}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.accent }}>
+                        ~${u.estimatedCost}
+                      </span>
+                      <span style={{
+                        fontSize: 9, fontWeight: 700, borderRadius: 3, padding: "1px 5px",
+                        background: u.confidence === "high" ? "rgba(74,222,128,0.15)" : "rgba(250,204,21,0.12)",
+                        color: u.confidence === "high" ? "#4ADE80" : "#FBBF24",
+                      }}>
+                        {u.confidence}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6, lineHeight: 1.4 }}>
+                    {u.reason}
+                  </div>
+                  {u.talkTrack && (
+                    <div style={{
+                      fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.5,
+                      fontStyle: "italic",
+                      borderLeft: "2px solid rgba(255,107,53,0.4)",
+                      paddingLeft: 8,
+                    }}>
+                      "{u.talkTrack}"
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {(agentData?.alerts || []).length > 0 && (
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(252,211,77,0.6)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+              Alerts
+            </div>
+            {agentData.alerts.map((a, i) => (
+              <div key={i} style={{
+                display: "flex", gap: 7, alignItems: "flex-start",
+                padding: "5px 0",
+                borderBottom: i < agentData.alerts.length - 1 ? "1px solid rgba(252,211,77,0.08)" : "none",
+              }}>
+                <AlertTriangle size={11} color="#FCD34D" style={{ flexShrink: 0, marginTop: 2 }} />
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>{a.message}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!agentLoading && !agentData?.advisorBrief && (agentData?.upsells || []).length === 0 && (agentData?.alerts || []).length === 0 && (
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
+            No intelligence signals for this RO right now.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

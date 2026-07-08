@@ -38,6 +38,7 @@ export default defineConfig({
         am3c:  resolve(__dirname, 'am-3c.html'),
         admin: resolve(__dirname, 'admin.html'),
         smsRepresentative: resolve(__dirname, 'sms-representative.html'),
+        sidecar: resolve(__dirname, 'sidecar.html'),
       },
     },
   },
