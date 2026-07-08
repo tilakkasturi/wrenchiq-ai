@@ -413,32 +413,23 @@ function SectionPersonas() {
       nav: ["Today", "Bays", "Suppliers", "Team", "Reports"],
       ai: "Owner Agent: revenue forecasting, margin leak detection, rebate optimization, approval nudges, tech performance. Captures corrections as playbook rules.",
     },
-    {
-      id: "customer", label: "Car Owner", color: "#7C3AED",
-      philosophy: "DoorDash for your car. Real-time, visual, mobile-first. No login friction.",
-      landing: "Magic link via SMS → vehicle card, live progress bar (4 steps), What We Found, digital approval",
-      workflow: "Approve All / Approve Selected / Decline / Call Shop → digital signature → live RO status → pay via Apple Pay / Stripe",
-      nav: ["None — single-page progressive disclosure"],
-      ai: "Plain-English repair explanations, wait time estimates, price transparency",
-    },
   ];
 
   return (
     <div>
       <SectionTitle>AI Capabilities by Persona</SectionTitle>
       <Table
-        headers={["Capability", "Advisor Agent", "Tech Agent", "Owner Agent", "Customer"]}
+        headers={["Capability", "Advisor Agent", "Tech Agent", "Owner Agent"]}
         rows={[
-          ["Parts auto-pricing",        "Primary",   "—",         "Visibility", "—"],
-          ["Complaint → diagnosis",     "Primary",   "Reference", "—",          "—"],
-          ["Inspection AI suggestions", "—",         "Primary",   "—",          "—"],
-          ["Revenue forecasting",       "—",         "—",         "Primary",    "—"],
-          ["Upsell phrasing to advisor","—",         "Primary",   "—",          "—"],
-          ["Rebate optimization",       "—",         "—",         "Primary",    "—"],
-          ["Customer memory recall",    "Primary",   "—",         "—",          "—"],
-          ["Playbook capture",          "—",         "—",         "Primary",    "—"],
-          ["Plain-English report",      "—",         "—",         "—",          "Primary"],
-          ["TSB / recall lookup",       "Primary",   "Reference", "—",          "—"],
+          ["Parts auto-pricing",        "Primary",   "—",         "Visibility"],
+          ["Complaint → diagnosis",     "Primary",   "Reference", "—"],
+          ["Inspection AI suggestions", "—",         "Primary",   "—"],
+          ["Revenue forecasting",       "—",         "—",         "Primary"],
+          ["Upsell phrasing to advisor","—",         "Primary",   "—"],
+          ["Rebate optimization",       "—",         "—",         "Primary"],
+          ["Customer memory recall",    "Primary",   "—",         "—"],
+          ["Playbook capture",          "—",         "—",         "Primary"],
+          ["TSB / recall lookup",       "Primary",   "Reference", "—"],
         ]}
       />
 

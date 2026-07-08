@@ -25,9 +25,6 @@
 | Advisor mobile layout | — | ❌ | ❌ | ❌ | ❌ | Desktop only currently |
 | Technician home (iPad) | TechMobileScreen.jsx | ✅ | ✅ | ✅ | ❌ | Phone mockup only |
 | Tech DVI entry | DVIScreen.jsx | ✅ | ✅ | ✅ | ❌ | AI photo analysis simulated |
-| Car owner magic link auth | — | ❌ | ❌ | ❌ | ❌ | Simulated only |
-| Customer portal | CustomerPortalScreen.jsx | ✅ | ✅ | ✅ | ❌ | |
-| Customer approval flow | HealthReportScreen.jsx | ✅ | ✅ | ✅ | ❌ | No Twilio send |
 | Owner command center | DashboardScreen.jsx | ✅ | ✅ | ✅ | ❌ | |
 | Owner AI agent | WrenchIQAgent.jsx, AICopilotScreen.jsx | ✅ | ✅ | ✅ | ❌ | Responses hardcoded |
 | VP Ops 100-location view | MultiLocationScreen.jsx | ✅ | ✅ | ✅ | ❌ | |
@@ -156,8 +153,7 @@ This is the "Intelligent 2.0" feature. No manual parts lookup.
 ```
 
 **Step 5 — Approval & RO Open**
-- One-tap SMS or email to customer with estimate link
-- Customer approves on phone (CustomerPortal experience)
+- One-tap SMS or email to customer with estimate link, handled by the shop's own SMS/DMS or communication tool
 - RO auto-opens and appears on tech board — advisor's job is done
 
 ### What's Hidden from Advisor
@@ -261,96 +257,7 @@ Tapping "Open DVI" launches the inspection workflow — designed for one-handed 
 
 ---
 
-## Persona 3: Car Owner
-
-### Who They Are
-A customer who dropped off their car and is now at work, at home, or getting coffee nearby. They want to know: what's wrong, how much, and when can I pick it up — on their phone, in under 30 seconds.
-
-### Design Philosophy
-DoorDash for your car. Real-time, visual, mobile-first. No login friction.
-
-### Entry: Magic Link (No App Required)
-- Customer receives SMS: "Your Honda Accord is checked in at Peninsula Precision. Track progress here: [link]"
-- Link opens a mobile web view — no app download, no account creation
-- Optionally save to home screen as PWA
-
-### Customer Portal Layout (Mobile)
-
-```
-┌────────────────────────┐
-│  WrenchIQ.ai           │
-│  Peninsula Precision   │
-├────────────────────────┤
-│                        │
-│  Your Accord           │
-│  2019 Honda Accord     │
-│  Lic: 7ABC123          │
-│                        │
-│  ●───●───○───○         │
-│  In   Diag  Appr  Ready│
-│                        │
-│  Status: Being Diagnosed│
-│  Tech: Marcus           │
-│  Est. Ready: 2:30 PM   │
-│                        │
-├────────────────────────┤
-│  What We Found         │
-│                        │
-│  ⚠ Needs Service (2)  │
-│  ┌──────────────────┐  │
-│  │ Catalytic Conv.  │  │
-│  │ $865 est.        │  │
-│  │ [View Details]   │  │
-│  └──────────────────┘  │
-│  ┌──────────────────┐  │
-│  │ Front Brake Pads │  │
-│  │ $320 est.        │  │
-│  │ [View Details]   │  │
-│  └──────────────────┘  │
-│                        │
-│  ✅ All Good (14)      │
-│  [See full report]     │
-│                        │
-├────────────────────────┤
-│  Total Estimate        │
-│  $1,185                │
-│  ┌──────────────────┐  │
-│  │  APPROVE ALL     │  │
-│  └──────────────────┘  │
-│  [Approve selected]    │
-│  [Decline for now]     │
-│  [Call shop]           │
-│                        │
-├────────────────────────┤
-│  Pickup Options        │
-│  [Request Lyft]        │
-│  [Notify when ready]   │
-└────────────────────────┘
-```
-
-### Real-Time Progress
-- Each status change triggers an SMS push notification (no app required)
-- Progress bar updates live on the page
-- "Tech is performing your inspection now" → shows live (anonymized) tech activity feed
-
-### Approval Flow
-- Customer taps "Approve All" or selects individual items
-- Digital signature on phone
-- Confirmation SMS + email
-- RO status updates instantly in shop
-
-### Customer-Facing Health Report
-- Clean, visual (no shop jargon)
-- Traffic-light system: Green / Yellow / Red
-- Each red/yellow item has: what it is, why it matters, cost, and a 1-sentence plain-English explanation
-- Video from tech walkaround embedded (30-60 sec)
-- Can share report with family member for second opinion
-
-### What's NOT Shown to Car Owner
-- Shop's cost, margins, parts vendors
-- Other customers' vehicles
-- Internal RO details, tech names/last names
-- Any financial data beyond their own estimate
+> **Note:** A "Car Owner" persona (customer-facing mobile portal) was previously specified here. It has been removed — WrenchIQ does not own a customer-facing surface; that belongs to the shop's own customer communication tools per the Data Feed Model boundary.
 
 ---
 
@@ -503,8 +410,7 @@ Login
 Role from credentials?
   ├── advisor   → Advisor Home (guided flow)
   ├── tech      → Tech Home (job list + DVI)
-  ├── owner     → Owner Command Center
-  └── customer  → Customer Portal (magic link, no login)
+  └── owner     → Owner Command Center
 
 Multi-role user (e.g., owner who also writes estimates):
   → Role picker on login, remembers last selection
@@ -517,7 +423,6 @@ Multi-role user (e.g., owner who also writes estimates):
 | `/advisor` | Service Advisor home |
 | `/tech` | Technician home (iPad) |
 | `/owner` | Shop Owner command center |
-| `/car/:token` | Customer portal (magic link) |
 | `/admin` | Full legacy UI (power users / IT) |
 
 The `/admin` route preserves the full 14-screen experience for advanced users and system configuration. It is not promoted in any persona flow.
@@ -539,8 +444,6 @@ My Jobs | Completed | [Scan VIN]
 **Owner nav (5 items max):**
 Today | Bays | Suppliers | Team | Reports
 
-**Customer:** No navigation — single-page progressive disclosure
-
 ### Accessing Other Capabilities
 
 Each persona has an escape hatch — a discrete "More" or settings icon that reveals additional tools. It is never the default view. The default is always the most important 20% of features.
@@ -549,17 +452,15 @@ Each persona has an escape hatch — a discrete "More" or settings icon that rev
 
 ## AI Integration Points by Persona
 
-| Feature | Advisor | Tech | Owner | Customer |
-|---------|---------|------|-------|----------|
-| Parts auto-pricing | Primary | — | Visibility | — |
-| Complaint → diagnosis | Primary | Reference | — | — |
-| Inspection AI suggestions | — | Primary | — | — |
-| Revenue forecasting | — | — | Primary | — |
-| Margin leak detection | — | — | Primary | — |
-| Rebate optimization | — | — | Primary | — |
-| Approval nudges | Notified | — | Controls | — |
-| Plain-English report | — | — | — | Primary |
-| Wait time estimates | Secondary | — | — | Primary |
+| Feature | Advisor | Tech | Owner |
+|---------|---------|------|-------|
+| Parts auto-pricing | Primary | — | Visibility |
+| Complaint → diagnosis | Primary | Reference | — |
+| Inspection AI suggestions | — | Primary | — |
+| Revenue forecasting | — | — | Primary |
+| Margin leak detection | — | — | Primary |
+| Rebate optimization | — | — | Primary |
+| Approval nudges | Notified | — | Controls |
 
 ---
 
@@ -569,7 +470,6 @@ Each persona has an escape hatch — a discrete "More" or settings icon that rev
 |--------|---------------|
 | Time to open new RO | < 3 minutes (from greeting to sent estimate) |
 | Tech DVI completion rate | > 90% of inspections fully documented |
-| Customer approval rate | > 85% same-day approvals |
 | Owner daily logins | > 5 sessions/day (ambient monitoring) |
 | Parts margin capture | +3–5% improvement from auto-pricing |
 | Rebate capture rate | > 80% of eligible rebates redeemed |
@@ -581,7 +481,6 @@ Each persona has an escape hatch — a discrete "More" or settings icon that rev
 ### Phase 1 — Persona Routing (Foundation)
 - Auth-based role detection and routing
 - Advisor home + guided RO wizard
-- Customer portal (magic link, progress tracking)
 
 ### Phase 2 — Tech DVI (Workflow)
 - iPad-optimized inspection UI
@@ -608,5 +507,3 @@ Each persona has an escape hatch — a discrete "More" or settings icon that rev
 2. **Owner multi-location:** Should the Owner persona auto-detect single-shop vs multi-location and adjust the command center accordingly? Yes — same shell, different data scope.
 
 3. **Advisor vs Service Writer title:** Some shops use "Service Writer" — UI copy should be configurable per shop.
-
-4. **Customer portal authentication:** Magic link is frictionless but expires. For repeat customers, offer optional account creation post-visit for history access.

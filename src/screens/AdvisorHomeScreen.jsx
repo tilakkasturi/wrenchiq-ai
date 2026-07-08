@@ -28,7 +28,7 @@ const BOARD_COLUMNS = [
   { id: "pickup",   label: "Ready for Pickup",  color: "#22C55E", bg: "#F0FDF4", border: "#BBF7D0" },
 ];
 
-const BOARD_ROS = [
+export const STATIC_BOARD_ROS = [
   {
     roNum: "RO-2024-1187", custId: "cust-004",
     job: "Brake service + 65K inspection",
@@ -307,13 +307,18 @@ function KGPanel() {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-export default function AdvisorHomeScreen({ onRoSelect } = {}) {
+export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
   const { smsName, shopName, smsHeaderColor } = useDemo();
   const [selectedRoNum, setSelectedRoNum] = useState(null);
   const { ings } = useShopObjectives();
   const [checkedIngs, setCheckedIngs] = useState(new Set());
   const [agentData, setAgentData]       = useState(null);
   const [agentLoading, setAgentLoading] = useState(false);
+
+  // Optional externally-driven RO list (e.g. a data feed simulator). Falls
+  // back to the static demo board so this screen keeps working standalone
+  // with zero behavior change when the prop isn't passed.
+  const BOARD_ROS = ros || STATIC_BOARD_ROS;
 
   const selected = BOARD_ROS.find(r => r.roNum === selectedRoNum) || null;
 

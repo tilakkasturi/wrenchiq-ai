@@ -54,6 +54,9 @@ Each feature is tracked against four implementation levels. Levels are cumulativ
 | Persona Gateway / Role Routing | PersonaGatewayScreen.jsx, PersonaShell.jsx | ✅ | ✅ | ✅ | ❌ | All 8 personas routed; AM + OEM gateways operational |
 | **OEM White-Label Branding Toggle** | **OEMSettingsScreen.jsx (Admin tab), PersonaShell.jsx** | ✅ | ✅ | ✅ | ❌ | **Toggle in OEM Admin: WrenchIQ.ai (default) or PrediiPowered™. Swaps wordmark in top bar + footer across all OEM personas. State in WrenchIQOEMApp.** |
 | WrenchIQ-AM Standalone App | WrenchIQAMApp.jsx, main.am3c.jsx, am-3c.html | ✅ | ✅ | ✅ | ❌ | Standalone AM 3C Story Writer at `/am-3c.html` — no persona gateway required |
+| **WrenchIQ Admin (Surface A)** | **WrenchIQAdminApp.jsx, main.admin.jsx, admin.html** | ✅ | ✅ | ✅ | ❌ | **Standalone config console at `/admin.html`: Settings, Integrations, AM3C Admin, AM Admin, OEM Settings, GWG Corporate. Owner/OEM "Settings" nav items now open this in a new tab instead of rendering inline — see [Three-Surface Architecture Spec](https://predii.atlassian.net/wiki/spaces/prediiv2/pages/4111335427)** |
+| **SMS/DMS Representative UI (Surface C)** | **SMSRepresentativeApp.jsx, main.smsRepresentative.jsx, sms-representative.html, dataFeedSimulator.js** | ✅ | ✅ | ✅ | ❌ | **Standalone stand-in for the shop's real SMS/DMS at `/sms-representative.html`, hosting `AdvisorHomeScreen` (RO Kanban) with a periodic Data Feed Simulator (25s tick) advancing ROs through the board. Advisor's "RO Queue & Board" nav item now opens this in a new tab. Note: `AdvisorHomeScreen`'s embedded WrenchIQ AI-intelligence column is still coupled inside this screen — decoupling it into a Surface B component is a follow-up.** |
+| **Tauri Desktop Scaffold (Surface B wrapper)** | **src-tauri/** | ✅ | ❌ | ❌ | ❌ | **Tauri v2 project scaffold (Cargo.toml, tauri.conf.json, main.rs/lib.rs) wrapping the existing `dist/index.html` build, macOS v1 target. Not built/run — no Rust toolchain in dev sandbox; requires `rustup` + `npm run tauri:dev` locally. Sidecar (local data-feed cache + auth relay) not yet implemented.** |
 
 ---
 
@@ -108,7 +111,6 @@ Each feature is tracked against four implementation levels. Levels are cumulativ
 |---------|:--------------:|:---------:|:-------------:|:----------------:|:------------:|
 | Service Advisor (AM) | ✅ PersonaShell | ✅ RO Queue & Board | ✅ Intelligent RO + **3C Story Writer** | ⚠️ Desktop only | ✅ |
 | Technician (AM) | ✅ PersonaShell | ✅ My Jobs | ✅ DVI entry | ✅ Phone mockup | ✅ |
-| Car Owner | ✅ PersonaShell | ✅ Customer Portal | ✅ Approval flow | ✅ Mobile layout | ✅ |
 | Shop Owner | ✅ PersonaShell | ✅ Owner Command Center | ✅ Analytics + AI Copilot | ⚠️ Desktop only | ✅ |
 | VP Ops (100-loc) | ✅ PersonaShell | ✅ Multi-Location screen | ✅ Network overview | ⚠️ Desktop only | ✅ |
 | Fixed Ops Director (OEM) | ✅ OEM Gateway | ✅ Warranty Dashboard | ✅ Analytics + Dealer Group | ⚠️ Desktop only | ✅ |

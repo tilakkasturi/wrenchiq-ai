@@ -32,7 +32,6 @@
 | Module 9 — Parts Intelligence | PartsIntelligenceScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Module 10 — Checkout & Payment | CheckoutModal.jsx (AM) | ✅ | ✅ | ✅ | ❌ |
 | Integration Ecosystem (all APIs) | IntegrationsScreen.jsx | ✅ | ❌ | ❌ | ❌ |
-| Customer Portal | CustomerPortalScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Analytics | AnalyticsScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 | Settings | SettingsScreen.jsx | ✅ | ✅ | ✅ | ❌ |
 
@@ -148,7 +147,6 @@ The toggle state is managed at the app shell level (`WrenchIQOEMApp.jsx`) and pr
 | Multi-Location Hub | ❌ | ✅ | AM only today |
 | Parts Intelligence | ❌ | ✅ | AM only — OEM dealers source through OEM channels |
 | Technician Mobile | ✅ | ✅ | Shared module — `edition` controls OEM op codes vs. AM labor guide view |
-| Customer Portal | ❌ | ✅ | AM only today |
 | AI Repair Advisor | ✅ | ✅ | Shared; OEM context = warranty + TSB; AM context = estimate + upsell |
 
 ### API Consistency Policy

@@ -24,7 +24,7 @@ import DemoConfigPanel from "./DemoConfigPanel";
 
 const PERSONA_NAV = {
   advisor: [
-    { id: "advisorHome",  label: "RO Queue & Board",   icon: ClipboardList, moduleId: "repairOrders" },
+    { id: "advisorHome",  label: "RO Queue & Board",   icon: ClipboardList, moduleId: "repairOrders", external: "/sms-representative.html" },
     { id: "job1Intake",   label: "Intake & Diagnosis",  icon: Stethoscope,   moduleId: "repairOrders" },
     { id: "job2ThreeC",   label: "3C Compliance",       icon: FileText,      moduleId: "storyWriter"  },
     { id: "job3Upsell",   label: "Smart Upsell",        icon: ShoppingCart,  moduleId: "roAdvisor"    },
@@ -40,20 +40,19 @@ const PERSONA_NAV = {
     { id: "opIntel",         label: "Operational Intelligence",  icon: Zap,      moduleId: "dashboard" },
     { id: "impactDash",      label: "Impact Dashboard",          icon: TrendingUp, moduleId: "analytics" },
     { id: "analytics",       label: "Reports",                   icon: BarChart3,  moduleId: "analytics" },
-    { id: "settings",        label: "Settings",                  icon: Settings,   moduleId: "settings"  },
+    { id: "settings",        label: "Settings",                  icon: Settings,   moduleId: "settings", external: "/admin.html"  },
   ],
-  customer: [],
   // OEM personas
   fixedOps: [
     { id: "fixedOpsHome",      label: "Warranty Dashboard", icon: BarChart3,  moduleId: "dashboard"      },
     { id: "warrantyAnalytics", label: "Analytics",          icon: BarChart,   moduleId: "analytics"      },
     { id: "oemNetwork",        label: "Dealer Group",       icon: Building2,  moduleId: "multiLocation"  },
-    { id: "oemSettings",       label: "Settings",           icon: Settings,   moduleId: "settings"       },
+    { id: "oemSettings",       label: "Settings",           icon: Settings,   moduleId: "settings", external: "/admin.html"       },
   ],
   oemAdvisor: [
     { id: "roWriter",          label: "RO Story Writer",    icon: ClipboardList, moduleId: "storyWriter" },
     { id: "oemParts",          label: "OEM Parts Lane",     icon: Package,       moduleId: "parts"       },
-    { id: "oemSettings",       label: "Settings",           icon: Settings,      moduleId: "settings"    },
+    { id: "oemSettings",       label: "Settings",           icon: Settings,      moduleId: "settings", external: "/admin.html"    },
   ],
   oemTech: [
     { id: "oemTechHome",       label: "My Jobs",            icon: Hammer,        moduleId: "techMobile"  },
@@ -65,7 +64,6 @@ const PERSONA_LABELS = {
   advisorLite: "Intelligent RO",
   tech:        "Technician",
   owner:       "Shop Owner",
-  customer:    "Car Owner",
   fixedOps:    "Fixed Ops Director",
   oemAdvisor:  "Service Advisor",
   oemTech:     "Technician",
@@ -76,7 +74,6 @@ const PERSONA_COLORS = {
   advisorLite: COLORS.accent,
   tech:        "#16A34A",
   owner:       COLORS.accent,
-  customer:    "#7C3AED",
   fixedOps:    "#0D3B45",
   oemAdvisor:  "#2563EB",
   oemTech:     "#16A34A",
@@ -89,7 +86,6 @@ const PERSONA_USER = {
   advisorLite: { name: "Service Advisor", initials: "SA" },
   tech:        { name: "Marcus Williams", initials: "MW" },
   owner:       { name: SHOP.owner, initials: SHOP.ownerInitials },
-  customer:    { name: "Monica R.", initials: "MR" },
   fixedOps:    { name: "Ryan Cho", initials: "RC" },
   oemAdvisor:  { name: "Jessica Torres", initials: "JT" },
   oemTech:     { name: "Marcus Williams", initials: "MW" },
@@ -138,43 +134,6 @@ export default function PersonaShell({
     ? { name: ownerName, initials: ownerInitials }
     : baseUser;
 
-  // Customer persona: no shell chrome at all
-  if (persona === "customer") {
-    return (
-      <div style={{ minHeight: "100vh", background: COLORS.bg, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
-        {/* Minimal customer top strip */}
-        <div style={{
-          height: 40,
-          background: COLORS.primary,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "0 16px",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <BrandWordmark size="sm" />
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            {onOpenSpecs && (
-              <button
-                onClick={onOpenSpecs}
-                style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "rgba(255,255,255,0.6)", fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}
-              >
-                <Menu size={11} />
-                Specs
-              </button>
-            )}
-            <button
-              onClick={onExitPersona}
-              style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "rgba(255,255,255,0.6)", fontSize: 11 }}
-            >
-              Exit
-            </button>
-          </div>
-        </div>
-        {children}
-      </div>
-    );
-  }
-
   return (
     <div style={{
       display: "flex", height: "100vh",
@@ -212,7 +171,7 @@ export default function PersonaShell({
             return (
               <button
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => item.external ? window.open(item.external, "_blank") : onNavigate(item.id)}
                 title={item.label}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center",

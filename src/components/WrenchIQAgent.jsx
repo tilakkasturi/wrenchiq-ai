@@ -35,15 +35,6 @@ const SCREEN_CONTEXT = {
       { type: "upsell", icon: "🔩", text: "James Park's BMW — brake fluid flush due at 64K, add to estimate", action: "Add service", value: "+$185", color: COLORS.accent },
     ],
   },
-  customer: {
-    label: "Watching: Customer Portal",
-    customerFocus: null,
-    suggestions: [
-      { type: "alert", icon: "⏳", text: "Monica's approval pending 35 min — she's a busy founder, send a 1-tap approve link", action: "Send SMS", value: "+$294", color: COLORS.warning },
-      { type: "upsell", icon: "💬", text: "She's never declined a recommendation (7 visits, 100% approval rate) — add tire rotation", action: "Add to portal", value: "+$95", color: COLORS.accent },
-      { type: "revenue", icon: "📱", text: "Portal opened 3 times — customer is engaged, now is the right time to call", action: "Call Monica", value: "Close faster", color: "#2563EB" },
-    ],
-  },
   analytics: {
     label: "Watching: Analytics & Finance",
     customerFocus: null,

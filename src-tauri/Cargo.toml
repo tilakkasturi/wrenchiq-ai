@@ -1,0 +1,24 @@
+[package]
+name = "wrenchiq"
+version = "0.1.0"
+description = "WrenchIQ desktop shell (Tauri v2 wrapper around the Surface B web build)"
+authors = ["Predii, Inc."]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "wrenchiq_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[[bin]]
+name = "wrenchiq"
+path = "src/main.rs"

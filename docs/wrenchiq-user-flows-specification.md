@@ -24,7 +24,6 @@
 | Health Report | HealthReportScreen.jsx | `DEMO` | Twilio (approval SMS) |
 | Repair Orders | RepairOrderScreen.jsx | `DEMO` | — |
 | Trust Engine | TrustEngineScreen.jsx | `DEMO` | — |
-| Customer Portal | CustomerPortalScreen.jsx | `DEMO` | Twilio (magic link auth) |
 | Analytics | AnalyticsScreen.jsx | `DEMO` | — |
 | Multi-Location | MultiLocationScreen.jsx | `DEMO` | — |
 | Integrations | IntegrationsScreen.jsx | `MOCK` | All 18 APIs pending |
@@ -60,7 +59,6 @@
 | Health Report | `HealthReportScreen.jsx` | Customer-facing DVI report with approvals | Advisor previews; Customer acts |
 | Repair Orders | `RepairOrderScreen.jsx` | Kanban RO management board | Advisor |
 | Trust Engine | `TrustEngineScreen.jsx` | Customer relationship health & lifetime value | Owner, Advisor |
-| Customer Portal | `CustomerPortalScreen.jsx` | Customer-facing mobile experience | Customer |
 | Analytics | `AnalyticsScreen.jsx` | Revenue, ARO, tech efficiency reporting | Owner |
 | Network (100 Loc) | `MultiLocationScreen.jsx` | Corporate multi-location command | VP Ops, CFO |
 | Integrations | `IntegrationsScreen.jsx` | All partner connections & status | Owner, IT |

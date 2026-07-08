@@ -12,7 +12,10 @@
     "seed:batch": "node scripts/seedRepairOrders.js --batch",
     "seed:list": "node scripts/seedRepairOrders.js --list",
     "import": "node scripts/importFromProd.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run server\""
+    "dev:full": "concurrently \"npm run dev\" \"npm run server\"",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.86.1",
@@ -27,6 +30,7 @@
     "recharts": "^2.15.0"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.3.0"
   },

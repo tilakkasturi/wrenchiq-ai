@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAppVersion } from "./hooks/useAppVersion";
 import {
-  Wrench, Home, ClipboardList, Smartphone, BarChart3, Settings,
+  Wrench, Home, ClipboardList, BarChart3, Settings,
   Search, Bell, Camera, Sparkles, MessageSquare,
   Shield, Zap, Building2, FileText, Calendar, Package, Cpu, Menu, Database, Share2,
 } from "lucide-react";
@@ -19,7 +19,6 @@ import { useDemo } from "./context/DemoContext";
 import DashboardScreen from "./screens/DashboardScreen";
 import DVIScreen from "./screens/DVIScreen";
 import RepairOrderScreen from "./screens/RepairOrderScreen";
-import CustomerPortalScreen from "./screens/CustomerPortalScreen";
 import AnalyticsScreen from "./screens/AnalyticsScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import WrenchIQAgent from "./components/WrenchIQAgent";
@@ -77,7 +76,6 @@ const ADMIN_SCREENS = [
   { id: "parts",        label: "Parts Intelligence", icon: Package,       component: PartsIntelligenceScreen, group: "shop" },
   { id: "techview",     label: "Tech Mobile",        icon: Cpu,           component: TechMobileScreen,        group: "shop" },
   { id: "trust",        label: "Trust Engine",       icon: Shield,        component: TrustEngineScreen,       group: "shop" },
-  { id: "customer",     label: "Customer Portal",    icon: Smartphone,    component: CustomerPortalScreen,    group: "shop" },
   { id: "analytics",    label: "Analytics",          icon: BarChart3,     component: AnalyticsScreen,         group: "insights" },
   { id: "network",      label: "Network (100 Loc)",  icon: Building2,     component: MultiLocationScreen,     group: "insights" },
   { id: "aiInsights",   label: "AI Insights",        icon: Sparkles,      component: AIInsightsScreen,        group: "insights" },
@@ -128,11 +126,6 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
     return <IntelligentROScreen initialCust={extraProps.roInitialCust} initialStep={extraProps.roInitialStep} />;
   }
 
-  // Customer persona
-  if (persona === "customer") {
-    return <CustomerPortalScreen standaloneMode={true} />;
-  }
-
   // OEM — Fixed Ops Director
   if (persona === "fixedOps") {
     if (screenId === "fixedOpsHome")      return <FixedOpsDashboardScreen />;
@@ -164,11 +157,10 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
 // ── Default screen per persona ───────────────────────────────
 
 const PERSONA_DEFAULT_SCREEN = {
-  advisor:      "advisorHome",
+  advisor:      "job1Intake",
   advisorLite:  "intelligentRO",
   tech:         "techHome",
   owner:        "ownerHome",
-  customer:     "customerPortal",
   fixedOps:     "fixedOpsHome",
   oemAdvisor:   "roWriter",
   oemTech:      "oemTechHome",
@@ -218,7 +210,6 @@ const AM_PERSONAS_LABELS = {
   oemAdvisor:   "OEM Service Advisor",
   oemTech:      "Technician",
   tech:         "Technician",
-  customer:     "Customer Portal",
 };
 
 // ── Main App ─────────────────────────────────────────────────

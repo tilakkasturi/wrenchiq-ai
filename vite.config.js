@@ -36,6 +36,8 @@ export default defineConfig({
         main:  resolve(__dirname, 'index.html'),
         oem:   resolve(__dirname, 'oem.html'),
         am3c:  resolve(__dirname, 'am-3c.html'),
+        admin: resolve(__dirname, 'admin.html'),
+        smsRepresentative: resolve(__dirname, 'sms-representative.html'),
       },
     },
   },
