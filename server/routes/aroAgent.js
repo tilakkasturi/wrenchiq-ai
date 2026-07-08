@@ -1,8 +1,8 @@
 /**
  * WrenchIQ — ARO Agent Routes
  *
- * GET  /api/aro-agent/status          — Fast ARO snapshot (no Claude)
- * POST /api/aro-agent/run             — Full agent mission (Claude tool loop)
+ * GET  /api/aro-agent/status          — Fast ARO snapshot (no LLM call)
+ * POST /api/aro-agent/run             — Full agent mission (LLM tool-calling loop)
  * GET  /api/aro-agent/config/:shopId  — Get shop goals
  * POST /api/aro-agent/config/:shopId  — Update shop goals
  */
@@ -13,7 +13,7 @@ import { runAROAgent, getAROStatus, getGoals, setGoals } from '../services/aroAg
 const router = Router();
 
 // ── GET /api/aro-agent/status ─────────────────────────────────────────────────
-// Fast math-only ARO check — returns current KPIs vs goal without Claude.
+// Fast math-only ARO check — returns current KPIs vs goal without an LLM call.
 router.get('/status', async (req, res) => {
   const shopId = req.query.shopId || 'shop-001';
   try {
@@ -26,7 +26,7 @@ router.get('/status', async (req, res) => {
 });
 
 // ── POST /api/aro-agent/run ───────────────────────────────────────────────────
-// Full agent mission: Claude tool-calling loop → structured analysis.
+// Full agent mission: LLM tool-calling loop → structured analysis.
 router.post('/run', async (req, res) => {
   const shopId = req.body?.shopId || 'shop-001';
   try {

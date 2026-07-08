@@ -1,11 +1,13 @@
 /**
- * WrenchIQ — LLM Proxy (Azure OpenAI)
+ * WrenchIQ — LLM Proxy
  *
  * POST /api/claude/messages
  *
  * Accepts Anthropic-format request bodies from the browser,
- * translates them to Azure OpenAI format, calls Azure, and
- * returns an Anthropic-format response so the frontend is unchanged.
+ * translates them to OpenAI-compatible format, calls the LLM configured
+ * via LLM_BASE_URL / LLM_MODEL in server/config.js (self-hosted vLLM Qwen
+ * by default, Azure OpenAI as fallback), and returns an Anthropic-format
+ * response so the frontend is unchanged.
  *
  * Anthropic body shape: { model, max_tokens, system?, messages, ... }
  * OpenAI body shape:    { model, max_tokens, messages: [{role,content}] }

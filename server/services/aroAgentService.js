@@ -311,7 +311,8 @@ Rules:
 
 /**
  * Run the ARO Agent for a shop.
- * Pre-fetches all analytics in parallel, then runs the Claude tool-calling loop.
+ * Pre-fetches all analytics in parallel, then runs the LLM tool-calling loop
+ * (model configured via LLM_BASE_URL / LLM_MODEL in server/config.js).
  *
  * @param {string} shopId
  * @param {object} db  - MongoDB db handle
@@ -406,7 +407,7 @@ export async function runAROAgent(shopId = 'shop-001', db) {
 }
 
 /**
- * Fast ARO status — no Claude, pure aggregation math from full dataset.
+ * Fast ARO status — no LLM call, pure aggregation math from full dataset.
  * Returns the current ARO vs goal without running the full agent loop.
  */
 export async function getAROStatus(shopId = 'shop-001', db) {

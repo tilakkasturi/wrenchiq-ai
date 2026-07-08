@@ -1,12 +1,12 @@
 /**
  * WrenchIQ — Recommendation LLM Service
  *
- * Calls Claude to generate shop recommendations from a snapshot.
+ * Calls the configured LLM (see LLM_BASE_URL / LLM_MODEL in server/config.js)
+ * to generate shop recommendations from a snapshot.
  * Model and token settings are read from server/config.js (set via .env.local).
  */
 
 import {
-  AZURE_OPENAI_API_KEY,
   CLAUDE_MAX_TOKENS_RECOMMENDATIONS,
 } from '../config.js';
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
@@ -115,7 +115,7 @@ function buildSnapshotMessage(snapshot) {
 }
 
 /**
- * Parse Claude's response and validate it is a proper recommendations array.
+ * Parse the LLM's response and validate it is a proper recommendations array.
  * Throws if parsing fails.
  */
 function parseRecommendations(text) {
@@ -168,7 +168,8 @@ function parseRecommendations(text) {
 }
 
 /**
- * Generate recommendations from a shop snapshot using Claude Haiku.
+ * Generate recommendations from a shop snapshot using the configured LLM
+ * (self-hosted Qwen3-VL-32B-Instruct-FP8 by default, see server/config.js).
  *
  * @param {object} snapshot  - Output of buildSnapshot()
  * @param {string} edition   - 'am' | 'oem'
@@ -176,10 +177,6 @@ function parseRecommendations(text) {
  * @throws                   - On API error or JSON parse failure (caller returns 503)
  */
 export async function generateRecommendations(snapshot, edition) {
-  if (!AZURE_OPENAI_API_KEY) {
-    throw new Error('AZURE_OPENAI_API_KEY not configured — set it in .env.local');
-  }
-
   const systemPrompt = buildSystemPrompt(edition);
   const userMessage  = buildSnapshotMessage(snapshot);
 

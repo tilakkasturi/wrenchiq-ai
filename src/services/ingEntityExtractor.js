@@ -1,7 +1,9 @@
 /**
  * ingEntityExtractor — LLM-based entity extraction for shop ings
  *
- * Sends free-text ings to Claude in a single batch call and returns
+ * Sends free-text ings to the configured LLM (self-hosted Qwen by default,
+ * falling back to direct Anthropic Claude — see priority list below) in a
+ * single batch call and returns
  * structured entity data for each:
  *   { promotionType, conditions, action, discount, displayLabel }
  *

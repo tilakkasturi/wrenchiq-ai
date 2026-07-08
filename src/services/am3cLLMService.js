@@ -1,9 +1,13 @@
 /**
  * am3cLLMService.js
- * Calls Claude to generate Short / Verbose / AI-Rewrite 3C narratives.
- * Falls back to local text transformations when VITE_ANTHROPIC_API_KEY is not set.
+ * Calls the configured LLM (proxied server-side via /api/claude/messages,
+ * which uses LLM_BASE_URL / LLM_MODEL from server/config.js) to generate
+ * Short / Verbose / AI-Rewrite 3C narratives.
+ * Falls back to local text transformations when the proxy is unavailable.
  */
 
+// This model name is sent in the request body but ignored by the proxy —
+// the proxy always uses the server-configured LLM_MODEL.
 const MODEL = "gpt-4o-mini";
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 const PROXY_URL = `${API_BASE}/api/claude/messages`;
@@ -178,7 +182,7 @@ export async function generateNarrative(mode, context) {
 
   // Extract JSON from the response (handle markdown code fences)
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("Claude returned non-JSON: " + raw.slice(0, 200));
+  if (!jsonMatch) throw new Error("LLM returned non-JSON: " + raw.slice(0, 200));
   const parsed = JSON.parse(jsonMatch[0]);
 
   return {
