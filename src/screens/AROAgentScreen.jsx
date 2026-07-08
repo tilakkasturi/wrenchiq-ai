@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
+import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 const SHOP_ID  = "shop-001";
@@ -353,6 +354,7 @@ function CustomerPatternsPanel({ data }) {
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function AROAgentScreen() {
   const { shopName } = useDemo();
+  const { activeCustomer, selectedCustomerId, loading: feedLoading } = useSelectedCustomer();
   const [status,        setStatus]        = useState(null);
   const [analysis,      setAnalysis]      = useState(null);
   const [analytics,     setAnalytics]     = useState(null);  // enriched data from agent run
@@ -563,6 +565,38 @@ export default function AROAgentScreen() {
       </div>
 
       <div style={{ flex: 1, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+
+        {/* ── Currently Briefing — Data Feed Model default/override ───────────── */}
+        {!feedLoading && activeCustomer && (
+          <div style={{
+            background: "#fff",
+            border: `1.5px solid ${COLORS.border}`,
+            borderRadius: 14,
+            padding: "12px 18px",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Users size={15} color={COLORS.accent} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>
+                  Briefing: {activeCustomer.customerName}
+                  {activeCustomer.vehicle && (
+                    <span style={{ fontWeight: 500, color: COLORS.textSecondary }}>
+                      {" "}· {[activeCustomer.vehicle.year, activeCustomer.vehicle.make, activeCustomer.vehicle.model].filter(Boolean).join(" ")}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted }}>
+                  {activeCustomer.roNumber}
+                  {activeCustomer.status && ` · ${activeCustomer.status.replace(/_/g, " ")}`}
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.3, color: selectedCustomerId ? COLORS.accent : COLORS.textMuted }}>
+              {selectedCustomerId ? "SELECTED" : "MOST RECENT"}
+            </div>
+          </div>
+        )}
 
         {/* ── Goal editor ────────────────────────────────────────────────────── */}
         {showGoals && goals && (

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
+import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 import { fetchStoryRO, updateStoryRO } from "../services/repairOrderService";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
@@ -34,6 +35,7 @@ function buildTalkTrack(name, vehicleStr, mileage) {
 
 export default function Job3UpsellScreen() {
   const { smsName, primaryCustomer, activeShopId } = useDemo();
+  const { activeCustomer } = useSelectedCustomer();
   const [showResult, setShowResult] = useState(false);
   const [roData, setRoData] = useState(null);
   const [storyRO, setStoryRO] = useState(null);
@@ -52,15 +54,16 @@ export default function Job3UpsellScreen() {
   }, []);
 
   // Load story RO from MongoDB (primary — Agentic Moment 2)
+  // Data Feed Model: shared selection first, legacy map fallback
   useEffect(() => {
-    const roId = JOB3_RO_MAP[activeShopId] || JOB3_RO_MAP.cornerstone;
+    const roId = activeCustomer?.roNumber || JOB3_RO_MAP[activeShopId] || JOB3_RO_MAP.cornerstone;
     fetchStoryRO(roId).then(ro => {
       if (ro) {
         setStoryRO(ro);
         setTextStatus(ro.agenticTextStatus || "staged");
       }
     }).catch(() => {});
-  }, [activeShopId]);
+  }, [activeCustomer?.roNumber, activeShopId]);
 
   // Prefer story RO data when available
   const activeRO = storyRO || roData;

@@ -9,6 +9,7 @@ import {
   Stethoscope, TrendingUp, ShoppingCart, LineChart, Zap, ArrowLeftRight,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import CustomerSelector from "./CustomerSelector";
 import { SHOP } from "../data/demoData";
 import WrenchIQAgent from "./WrenchIQAgent";
 import BrandWordmark from "./BrandWordmark";
@@ -293,6 +294,9 @@ export default function PersonaShell({
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Customer Selector — Data Feed Model override (not for tech) */}
+            {persona !== "tech" && <CustomerSelector />}
+
             {/* Search (not for tech) */}
             {persona !== "tech" && (
               <div style={{

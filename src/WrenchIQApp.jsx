@@ -10,7 +10,9 @@ import { COLORS } from "./theme/colors";
 import { SHOP } from "./data/demoData";
 import BrandWordmark from "./components/BrandWordmark";
 import { RecommendationsProvider } from "./context/RecommendationsContext";
+import { SelectedCustomerProvider } from "./context/SelectedCustomerContext";
 import { useShopObjectives } from "./context/ShopObjectivesContext";
+import { useDemo } from "./context/DemoContext";
 
 
 // ── Screens ──────────────────────────────────────────────────
@@ -224,6 +226,7 @@ const AM_PERSONAS_LABELS = {
 export default function WrenchIQApp() {
   const appVersion = useAppVersion();
   const { refresh: refreshObjectives } = useShopObjectives();
+  const { activeShopId } = useDemo();
   const _session = loadSession();
   const [authenticated, setAuthenticated] = useState(_isEmbedded || !!_session);
   const [authRole, setAuthRole] = useState(_isEmbedded ? "user" : _session?.role || null);
@@ -279,13 +282,15 @@ export default function WrenchIQApp() {
   if (_agentOnlyMode) {
     return (
       <RecommendationsProvider shopId="shop-001" edition="am" persona={agentPersona}>
-        <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
-          <WrenchIQAgent
-            activeScreen={agentScreen}
-            persona={agentPersona}
-            standalone={true}
-          />
-        </div>
+        <SelectedCustomerProvider shopId="shop-001" edition="am">
+          <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
+            <WrenchIQAgent
+              activeScreen={agentScreen}
+              persona={agentPersona}
+              standalone={true}
+            />
+          </div>
+        </SelectedCustomerProvider>
       </RecommendationsProvider>
     );
   }
@@ -419,40 +424,42 @@ export default function WrenchIQApp() {
 
     return (
       <RecommendationsProvider shopId="shop-001" edition="am" persona={activePersona}>
-        <>
-          <PersonaShell
-            persona={activePersona}
-            activeScreen={effectiveScreen}
-            selectedRO={advisorSelectedRO}
-            embedded={_isEmbedded}
-            embeddedScreens={_embeddedScreens}
-            onNavigate={(id) => {
-              setTechDVIData(null);
-              setActiveScreen(id);
-            }}
-            onExitPersona={() => {
-              if (_isEmbedded) return; // no exit in embedded mode
-              setActivePersona(null);
-              setTechDVIData(null);
-              setActiveScreen("dashboard");
-              setAdvisorSelectedRO(null);
-            }}
-            onSwitchEdition={_isEmbedded ? null : (() => {
-              const OEM = ["fixedOps", "oemAdvisor", "oemTech"];
-              const targetTab = OEM.includes(activePersona) ? "AM" : "OEM";
-              setGatewayTab(targetTab);
-              setActivePersona(null);
-              setTechDVIData(null);
-              setActiveScreen("dashboard");
-              setAdvisorSelectedRO(null);
-            })}
-            onLogout={_isEmbedded ? null : handleLogout}
-            onOpenSpecs={() => setSpecsOpen(true)}
-          >
-            {resolvePersonaScreen(activePersona, effectiveScreen, extraProps)}
-          </PersonaShell>
-          {specsOpen && <SpecificationsPanel onClose={() => setSpecsOpen(false)} />}
-        </>
+        <SelectedCustomerProvider shopId={activeShopId} edition="am">
+          <>
+            <PersonaShell
+              persona={activePersona}
+              activeScreen={effectiveScreen}
+              selectedRO={advisorSelectedRO}
+              embedded={_isEmbedded}
+              embeddedScreens={_embeddedScreens}
+              onNavigate={(id) => {
+                setTechDVIData(null);
+                setActiveScreen(id);
+              }}
+              onExitPersona={() => {
+                if (_isEmbedded) return; // no exit in embedded mode
+                setActivePersona(null);
+                setTechDVIData(null);
+                setActiveScreen("dashboard");
+                setAdvisorSelectedRO(null);
+              }}
+              onSwitchEdition={_isEmbedded ? null : (() => {
+                const OEM = ["fixedOps", "oemAdvisor", "oemTech"];
+                const targetTab = OEM.includes(activePersona) ? "AM" : "OEM";
+                setGatewayTab(targetTab);
+                setActivePersona(null);
+                setTechDVIData(null);
+                setActiveScreen("dashboard");
+                setAdvisorSelectedRO(null);
+              })}
+              onLogout={_isEmbedded ? null : handleLogout}
+              onOpenSpecs={() => setSpecsOpen(true)}
+            >
+              {resolvePersonaScreen(activePersona, effectiveScreen, extraProps)}
+            </PersonaShell>
+            {specsOpen && <SpecificationsPanel onClose={() => setSpecsOpen(false)} />}
+          </>
+        </SelectedCustomerProvider>
       </RecommendationsProvider>
     );
   }
@@ -463,6 +470,7 @@ export default function WrenchIQApp() {
 
   return (
     <RecommendationsProvider shopId="shop-001" edition="am" persona="admin">
+    <SelectedCustomerProvider shopId="shop-001" edition="am">
     <div style={{ display: "flex", height: "100vh", background: COLORS.bg, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       {specsOpen && <SpecificationsPanel onClose={() => setSpecsOpen(false)} />}
 
@@ -608,6 +616,7 @@ export default function WrenchIQApp() {
         />
       )}
     </div>
+    </SelectedCustomerProvider>
     </RecommendationsProvider>
   );
 }

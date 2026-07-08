@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { customers, vehicles } from "../data/demoData";
+import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 
 // ── Queue ─────────────────────────────────────────────────────
 const QUEUE = [
@@ -342,6 +343,7 @@ function AgentFeed({ messages }) {
 
 // ── Main screen ───────────────────────────────────────────────
 export default function IntelligentROScreen({ initialCust = null, initialStep = 1 }) {
+  const { activeCustomer, selectedCustomerId } = useSelectedCustomer();
   const [selectedCust, setSelectedCust]   = useState(initialCust);
   const [complaint,    setComplaint]      = useState("");
   const [diagnosis,    setDiagnosis]      = useState(null);
@@ -351,6 +353,19 @@ export default function IntelligentROScreen({ initialCust = null, initialStep = 
   const [roOpened,     setRoOpened]       = useState(false);
   const [queueOpen,    setQueueOpen]      = useState(!initialCust);
   const diagTimerRef = useRef(null);
+
+  // Data Feed Model: default (or Customer Selector override) to the shared
+  // selection when it resolves to a known demo customer. Falls through to the
+  // manual "select from queue" flow when the live feed customer isn't one of
+  // the fixture customers this screen's diagnosis engine is built around.
+  useEffect(() => {
+    if (initialCust || !activeCustomer) return;
+    const match = customers.find(c => c.id === activeCustomer.customerId);
+    if (match) {
+      setSelectedCust(match);
+      setQueueOpen(false);
+    }
+  }, [selectedCustomerId, activeCustomer?.customerId]);
 
   const now = () => new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
+import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 import { fetchStoryRO, updateStoryRO } from "../services/repairOrderService";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
@@ -104,6 +105,7 @@ function GapRow({ text, passed }) {
 
 export default function Job2ThreeCScreen() {
   const { smsName, activeShopId } = useDemo();
+  const { activeCustomer } = useSelectedCustomer();
   const [showResult, setShowResult] = useState(false);
   const [copied, setCopied] = useState(false);
   const [roData, setRoData] = useState(null);
@@ -118,11 +120,11 @@ export default function Job2ThreeCScreen() {
       .catch(() => {});
   }, []);
 
-  // Load story RO (primary)
+  // Load story RO (primary) — Data Feed Model: shared selection first, legacy map fallback
   useEffect(() => {
-    const roId = JOB2_RO_MAP[activeShopId] || JOB2_RO_MAP.cornerstone;
+    const roId = activeCustomer?.roNumber || JOB2_RO_MAP[activeShopId] || JOB2_RO_MAP.cornerstone;
     fetchStoryRO(roId).then(ro => { if (ro) setStoryRO(ro); }).catch(() => {});
-  }, [activeShopId]);
+  }, [activeCustomer?.roNumber, activeShopId]);
 
   const ro = roData;
   const s  = storyRO;

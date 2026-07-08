@@ -25,6 +25,7 @@ class ErrorBoundary extends Component {
   }
 }
 import { RecommendationsProvider } from "./context/RecommendationsContext";
+import { SelectedCustomerProvider } from "./context/SelectedCustomerContext";
 import OEMGatewayScreen from "./screens/OEMGatewayScreen";
 import PersonaShell from "./components/PersonaShell";
 import ROStoryWriterScreen from "./screens/ROStoryWriterScreen";
@@ -89,17 +90,19 @@ export default function WrenchIQOEMApp() {
   return (
     <ErrorBoundary>
       <RecommendationsProvider shopId="shop-001" edition="oem" persona={activePersona}>
-        <PersonaShell
-          persona={activePersona}
-          activeScreen={activeScreen}
-          onNavigate={(id) => setActiveScreen(id)}
-          onExitPersona={() => {
-            setActivePersona(null);
-            setActiveScreen("roWriter");
-          }}
-        >
-          {resolveOEMScreen(activePersona, activeScreen)}
-        </PersonaShell>
+        <SelectedCustomerProvider shopId="shop-001" edition="oem">
+          <PersonaShell
+            persona={activePersona}
+            activeScreen={activeScreen}
+            onNavigate={(id) => setActiveScreen(id)}
+            onExitPersona={() => {
+              setActivePersona(null);
+              setActiveScreen("roWriter");
+            }}
+          >
+            {resolveOEMScreen(activePersona, activeScreen)}
+          </PersonaShell>
+        </SelectedCustomerProvider>
       </RecommendationsProvider>
     </ErrorBoundary>
   );

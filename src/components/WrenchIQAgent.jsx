@@ -5,6 +5,7 @@ import {
 import { COLORS } from "../theme/colors";
 import { repairOrders, customers, vehicles, getCustomer, getVehicle } from "../data/demoData";
 import { useRecommendations } from "../context/RecommendationsContext";
+import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 import { useShopObjectives } from "../context/ShopObjectivesContext";
 import { filterIngsByRO } from "../services/ingEntityExtractor";
 import RecommendationCard from "./RecommendationCard";
@@ -556,6 +557,9 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
   // Recommendations from context (null = provider not mounted)
   const recCtx = useRecommendations();
 
+  // Data Feed Model: shared customer selection (most-recent, or Customer Selector override)
+  const { activeCustomer } = useSelectedCustomer();
+
   // Persona-specific context override
   let ctx;
   if (persona === "owner") {
@@ -596,8 +600,29 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
       })),
     };
   } else {
-    // Use screen-specific context if available, otherwise fall back to persona defaults
+    // Screen-specific context wins when defined. Otherwise, for advisor,
+    // fall back to the Data Feed Model's shared selection (most-recently-
+    // updated customer, or Customer Selector override) before the static default.
+    let sharedSelectionCtx = null;
+    if (persona === "advisor" && activeCustomer) {
+      const vehicle = activeCustomer.vehicle
+        ? `${activeCustomer.vehicle.year || ""} ${activeCustomer.vehicle.make || ""} ${activeCustomer.vehicle.model || ""}`.trim()
+        : "Vehicle";
+      sharedSelectionCtx = {
+        label: `Focused: ${activeCustomer.customerName} · ${vehicle}`,
+        customerFocus: {
+          name: activeCustomer.customerName,
+          vehicle,
+          roId: activeCustomer.roNumber,
+          status: activeCustomer.status ? activeCustomer.status.replace(/_/g, " ") : null,
+          statusColor: COLORS.warning,
+        },
+        suggestions: ADVISOR_CONTEXT.suggestions || [],
+      };
+    }
+
     ctx = SCREEN_CONTEXT[activeScreen]
+      || sharedSelectionCtx
       || (persona === "advisor" ? ADVISOR_CONTEXT : null)
       || SCREEN_CONTEXT.dashboard;
   }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
+import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 import {
   Search,
   FileText,
@@ -191,6 +192,7 @@ function IntelRow({ icon: Icon, iconColor, label, value, sub }) {
 
 export default function Job1IntakeScreen({ onNavigate }) {
   const { smsName, activeShopId } = useDemo();
+  const { activeCustomer } = useSelectedCustomer();
   const [showResult, setShowResult] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [copyLabel, setCopyLabel] = useState(null);
@@ -206,10 +208,12 @@ export default function Job1IntakeScreen({ onNavigate }) {
   }, []);
 
   // Load story RO (primary — Agentic Moment 1)
+  // Data Feed Model: defaults to the shared selection's RO (most-recently-updated
+  // customer, or the Customer Selector override); falls back to the legacy map.
   useEffect(() => {
-    const roId = JOB1_RO_MAP[activeShopId] || JOB1_RO_MAP.cornerstone;
+    const roId = activeCustomer?.roNumber || JOB1_RO_MAP[activeShopId] || JOB1_RO_MAP.cornerstone;
     fetchStoryRO(roId).then(ro => { if (ro) setStoryRO(ro); }).catch(() => {});
-  }, [activeShopId]);
+  }, [activeCustomer?.roNumber, activeShopId]);
 
   const ro = roData;
   const s  = storyRO;
