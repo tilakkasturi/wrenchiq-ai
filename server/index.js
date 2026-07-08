@@ -7,10 +7,12 @@
  *   -- or configure in .env.local --
  */
 
+import './loadEnv.js'; // must be first — see loadEnv.js for why
+
 import express from 'express';
 import cors    from 'cors';
 import { MongoClient } from 'mongodb';
-import { readFileSync, existsSync } from 'fs';
+import { existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -30,24 +32,8 @@ import customersRouter        from './routes/customers.js';
 import authLogRouter          from './routes/authLog.js';
 import llmLogRouter           from './routes/llmLog.js';
 import roAdvisorRouter        from './routes/roAdvisor.js';
+import dataFeedRouter         from './routes/dataFeed.js';
 import { ensureRecommendationIndexes } from './models/Recommendation.js';
-
-// ── Load .env.local ──────────────────────────────────────────────────────────
-for (const envFile of ['.env.local', '.env']) {
-  if (existsSync(envFile)) {
-    const lines = readFileSync(envFile, 'utf8').split('\n');
-    for (const line of lines) {
-      const t = line.trim();
-      if (!t || t.startsWith('#')) continue;
-      const eq = t.indexOf('=');
-      if (eq < 0) continue;
-      const k = t.slice(0, eq).trim();
-      const v = t.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
-      if (!process.env[k]) process.env[k] = v;
-    }
-    break;
-  }
-}
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const DB_NAME     = process.env.MONGODB_DB  || 'wrenchiq';
@@ -121,6 +107,7 @@ app.use('/api/tribal-notes',    tribalNotesRouter);
 app.use('/api/customers',       customersRouter);
 app.use('/api/auth',            authLogRouter);
 app.use('/api/llm-log',         llmLogRouter);
+app.use('/api/data-feed',       dataFeedRouter);
 app.use('/api',                 recommendationsRouter);
 
 app.get('/api/health', (_req, res) => {
