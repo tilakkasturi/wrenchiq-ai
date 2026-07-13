@@ -32,48 +32,48 @@ async function ensureNoteIndexes(db) {
 const DEMO_NOTES = [
   // ── Objectives ─────────────────────────────────────────────
   {
-    shopId: 'shop-001', locationId: 'all', noteType: 'objective',
+    shopId: 'cornerstone', locationId: 'all', noteType: 'objective',
     note: 'Push cabin air filter on all vehicles — shop is overstocked 40 units',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'shop-001', locationId: 'all', noteType: 'objective',
+    shopId: 'cornerstone', locationId: 'all', noteType: 'objective',
     note: 'Offer brake fluid flush on any vehicle over 50k miles',
     active: true, expiresAt: null, triggerType: 'mileage_range:50000-999999',
   },
   {
-    shopId: 'shop-001', locationId: 'all', noteType: 'objective',
+    shopId: 'cornerstone', locationId: 'all', noteType: 'objective',
     note: 'Check for timing belt service on Japanese vehicles 80k–100k miles',
     active: true, expiresAt: null, triggerType: 'vehicle_type:japanese',
   },
   // ── ings (per-RO advisor reminders) ────────────────────────
   {
-    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
     note: 'Add shop supply fee ($29.95) to every RO before closing',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
     note: 'Offer alignment check on every tire rotation — alignment revenue is up 18% when presented',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
     note: 'Check cabin air filter on vehicles over 25K miles — we have 40 units in stock',
     active: true, expiresAt: null, triggerType: 'mileage_range:25000-999999',
   },
   {
-    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
     note: 'Present Predii protection plan to first-time customers before checkout',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
     note: 'Remind customer about wiper blade replacement — offer both front + rear while vehicle is in',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'shop-001', locationId: 'all', noteType: 'ing',
+    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
     note: 'Ford F-150: offer 10% off brake job — mention the promotion before presenting the estimate',
     active: true, expiresAt: null, triggerType: 'vehicle_make:ford',
   },
@@ -123,13 +123,29 @@ router.get('/:shopId', async (req, res) => {
 
     const count = await col.countDocuments({ shopId });
 
-    // Auto-seed demo notes for shop-001 if empty
-    if (count === 0 && shopId === 'shop-001') {
+    // Auto-seed demo notes for the cornerstone demo shop if empty
+    if (count === 0 && shopId === 'cornerstone') {
       const now = new Date().toISOString();
       await col.insertMany(DEMO_NOTES.map(n => ({ ...n, createdAt: now, updatedAt: now })));
     }
 
-    const filter = { shopId };
+    // Include notes scoped to this shop's district/region ancestors, so a
+    // priority authored at district/region level (see /api/hierarchy) stays
+    // visible from any descendant shop's Settings screen, matching what
+    // get_shop_objectives resolves for the Sidecar (roAdvisorService.js).
+    let scopeIds = [shopId];
+    try {
+      const hierCol = db.collection('location_hierarchy');
+      const node = await hierCol.findOne({ id: shopId });
+      let parentId = node?.parentId;
+      while (parentId && !scopeIds.includes(parentId)) {
+        scopeIds.push(parentId);
+        const parent = await hierCol.findOne({ id: parentId });
+        parentId = parent?.parentId;
+      }
+    } catch { /* fall back to exact shopId only */ }
+
+    const filter = { shopId: { $in: scopeIds } };
 
     if (noteType) filter.noteType = noteType;
 

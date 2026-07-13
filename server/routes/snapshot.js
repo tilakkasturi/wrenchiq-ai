@@ -26,7 +26,7 @@ const DEMO_SNAPSHOT = {
     byHour:  { '08': 12, '09': 28, '10': 31, '11': 24, '12': 18, '13': 22, '14': 29, '15': 26, '16': 19, '17': 11 },
     byLocation: { 'loc-001': 72, 'loc-002': 51, 'loc-003': 64, 'loc-004': 69 },
   },
-  upsell: {
+  serviceRecommendations: {
     opportunities: 312, conversions: 121, rate: 38.8,
     topMissed: ['Cabin air filter', 'Wiper blades', 'Brake fluid flush'],
   },

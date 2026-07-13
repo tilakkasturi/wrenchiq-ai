@@ -310,10 +310,10 @@ export async function buildSnapshot90d(shopId, locationId, db) {
     byLocation: byLocUtil,
   };
 
-  // ── upsell ───────────────────────────────────────────────────────────────────
+  // ── service recommendations ───────────────────────────────────────────────────
   const opportunities = ros.filter(r => r.upsellFlag || r.declinedTotal > 0).length;
   const conversions   = ros.filter(r => r.upsellConverted).length;
-  const upsellRate    = opportunities > 0 ? Math.round((conversions / opportunities) * 1000) / 10 : 0;
+  const serviceRecommendationRate = opportunities > 0 ? Math.round((conversions / opportunities) * 1000) / 10 : 0;
 
   // Top missed: count frequency of declined service names
   const declinedFreq = {};
@@ -328,7 +328,7 @@ export async function buildSnapshot90d(shopId, locationId, db) {
     .slice(0, 3)
     .map(([name]) => name);
 
-  const upsell = { opportunities, conversions, rate: upsellRate, topMissed };
+  const serviceRecommendations = { opportunities, conversions, rate: serviceRecommendationRate, topMissed };
 
   // ── elr ──────────────────────────────────────────────────────────────────────
   const totalLaborRev = ros.reduce((s, r) => s + r.laborRevenue, 0);
@@ -376,7 +376,7 @@ export async function buildSnapshot90d(shopId, locationId, db) {
       advisorName,
       roCount:    group.length,
       avgRO:      Math.round(mean(group.map(r => r.totalRevenue))),
-      upsellRate: advOpp > 0 ? Math.round((advConv / advOpp) * 1000) / 10 : 0,
+      serviceRecommendationRate: advOpp > 0 ? Math.round((advConv / advOpp) * 1000) / 10 : 0,
     };
   });
 
@@ -405,7 +405,7 @@ export async function buildSnapshot90d(shopId, locationId, db) {
     roCount:      ros.length,
     avgRO,
     bayUtilization,
-    upsell,
+    serviceRecommendations,
     elr,
     partsMargin,
     advisorPerformance,

@@ -3,7 +3,8 @@
  *
  * Tool-calling agent that briefs a human service advisor on a specific RO.
  * Consults customer history, shop ings/objectives, and mileage-appropriate
- * services, then produces concrete upsell recommendations with advisor talk tracks.
+ * services, then produces concrete, evidence-based service recommendations
+ * (canned jobs and maintenance recommendations) with advisor talk tracks.
  *
  * Called every time an advisor selects an RO in the queue.
  *
@@ -13,7 +14,7 @@
  *   get_mileage_services(make, model, mileage) — standard interval services due at this mileage
  *
  * Returns:
- *   { advisorBrief, upsells[], ings[], alerts[], confidence, generatedAt }
+ *   { advisorBrief, serviceRecommendations[], ings[], alerts[], confidence, generatedAt }
  */
 
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
@@ -75,11 +76,32 @@ async function fetchCustomerHistory(customerId, db) {
   }
 }
 
+// Walk the location_hierarchy tree upward from shopId to collect ancestor
+// district/region ids, so a note scoped to a district or region (stored with
+// that node's id as its shopId) is also picked up for any descendant shop.
+async function fetchAncestorScopeIds(shopId, db) {
+  try {
+    const col  = db.collection('location_hierarchy');
+    const node = await col.findOne({ id: shopId });
+    const ids  = [shopId];
+    let parentId = node?.parentId;
+    while (parentId && !ids.includes(parentId)) {
+      ids.push(parentId);
+      const parent = await col.findOne({ id: parentId });
+      parentId = parent?.parentId;
+    }
+    return ids;
+  } catch {
+    return [shopId];
+  }
+}
+
 async function fetchShopObjectives(shopId, db) {
   if (!db) return DEMO_NOTES_FALLBACK;
   try {
+    const scopeIds = await fetchAncestorScopeIds(shopId, db);
     const col  = db.collection('tribal_notes');
-    const docs = await col.find({ shopId, active: true }).toArray();
+    const docs = await col.find({ shopId: { $in: scopeIds }, active: true }).toArray();
     return docs.length > 0 ? docs : DEMO_NOTES_FALLBACK;
   } catch {
     return DEMO_NOTES_FALLBACK;
@@ -188,16 +210,16 @@ Your job:
 4. Cross-reference all three sources to produce a prioritized, non-redundant recommendation set.
 
 Rules:
-- If the customer declined a service in the last 12 months, flag it as an alert — don't recommend it as a fresh upsell.
+- If the customer declined a service in the last 12 months, flag it as an alert — don't recommend it as a fresh service recommendation.
 - Only surface ings that apply to this specific vehicle (honor triggerType filters: vehicle_make, mileage_range, any_ro).
 - Talk tracks must sound natural — written in first-person for the advisor to say to the customer.
 - Confidence = high if backed by specific data (declined service, exact mileage overdue), medium if mileage-based estimate.
-- Keep upsells to the 3 most impactful. Do not recommend more than 3.
+- Service recommendations must be evidence-based — backed by the RO, customer history, or mileage interval — covering both canned jobs and maintenance recommendations, not just incremental upsell. Keep to the 3 most impactful. Do not recommend more than 3.
 
 Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
 {
   "advisorBrief": string,          // one punchy sentence the advisor reads before walking out
-  "upsells": [
+  "serviceRecommendations": [
     {
       "service":       string,     // service name, 3-6 words
       "reason":        string,     // why this applies — specific data point
@@ -313,7 +335,7 @@ Now produce the JSON recommendation object.`;
  * @param {object} vehicle   - Vehicle record
  * @param {string} shopId
  * @param {object} db        - MongoDB db handle (may be null if not connected)
- * @returns {Promise<{ advisorBrief, upsells, ings, alerts, generatedAt }>}
+ * @returns {Promise<{ advisorBrief, serviceRecommendations, ings, alerts, generatedAt }>}
  */
 export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-001', db }) {
   const customerId = customer?.id || customer?.customerId || ro?.customerId;
