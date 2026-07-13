@@ -19,6 +19,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.86.1",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-notification": "^2.3.3",
+    "@tauri-apps/plugin-opener": "^2.5.4",
     "concurrently": "^10.0.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",

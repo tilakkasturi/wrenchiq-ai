@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capabilities for the WrenchIQ sidecar window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "notification:default",
+    "opener:default"
+  ]
+}
