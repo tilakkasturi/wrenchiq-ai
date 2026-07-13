@@ -8,6 +8,7 @@
 import { useState, useEffect } from "react";
 import { MessageCircle, Phone, Instagram, Facebook, Zap, ChevronDown, ChevronUp, Loader } from "lucide-react";
 import { COLORS } from "../theme/colors";
+import { useDemo } from "../context/DemoContext";
 
 // Demo inbound leads — in production these come from webhook ingestion
 const DEMO_LEADS = [
@@ -69,6 +70,7 @@ const URGENCY_STYLE = {
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 export default function ROAgentPanel({ onDraftRO, ro }) {
+  const { activeShopId } = useDemo();
   const [expanded, setExpanded]   = useState(true);
   const [drafting, setDrafting]   = useState(null);   // lead id being drafted
   const [dismissed, setDismissed] = useState(new Set());
@@ -77,7 +79,7 @@ export default function ROAgentPanel({ onDraftRO, ro }) {
   const [dismissedNudges, setDismissedNudges] = useState(new Set());
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/tribal-notes/shop-001`)
+    fetch(`${API_BASE}/api/tribal-notes/${activeShopId}`)
       .then(r => r.ok ? r.json() : [])
       .then(notes => {
         if (!Array.isArray(notes)) return;
@@ -85,7 +87,7 @@ export default function ROAgentPanel({ onDraftRO, ro }) {
         setTribalNudges(matched);
       })
       .catch(() => {});
-  }, [ro]);
+  }, [ro, activeShopId]);
 
   function matchesRO(note, ro) {
     if (!ro) return note.triggerType === 'any_ro' || !note.triggerType;

@@ -4,6 +4,7 @@
 
 import { useState, useEffect, Component } from "react";
 import { useBranding } from "./context/BrandingContext";
+import { useDemo } from "./context/DemoContext";
 import BrandToggle from "./components/BrandToggle";
 
 class ErrorBoundary extends Component {
@@ -64,6 +65,7 @@ export default function WrenchIQOEMApp() {
   const [activePersona, setActivePersona] = useState(null);
   const [activeScreen, setActiveScreen]   = useState("roWriter");
   const { brand } = useBranding();
+  const { activeShopId } = useDemo();
 
   useEffect(() => {
     document.title = brand === "WrenchIQ"
@@ -89,8 +91,8 @@ export default function WrenchIQOEMApp() {
 
   return (
     <ErrorBoundary>
-      <RecommendationsProvider shopId="shop-001" edition="oem" persona={activePersona}>
-        <SelectedCustomerProvider shopId="shop-001" edition="oem">
+      <RecommendationsProvider shopId={activeShopId} edition="oem" persona={activePersona}>
+        <SelectedCustomerProvider shopId={activeShopId} edition="oem">
           <PersonaShell
             persona={activePersona}
             activeScreen={activeScreen}

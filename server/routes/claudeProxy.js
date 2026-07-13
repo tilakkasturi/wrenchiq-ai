@@ -18,13 +18,13 @@
 
 import { Router } from 'express';
 import { callAzureOpenAI, getTextFromResponse } from '../services/azureOpenAI.js';
-import { AZURE_OPENAI_API_KEY } from '../config.js';
+import { LLM_BASE_URL } from '../config.js';
 
 const router = Router();
 
 router.post('/messages', async (req, res) => {
-  if (!AZURE_OPENAI_API_KEY) {
-    return res.status(503).json({ error: 'AZURE_OPENAI_API_KEY not configured on server' });
+  if (!LLM_BASE_URL) {
+    return res.status(503).json({ error: 'LLM_BASE_URL not configured on server' });
   }
 
   try {
