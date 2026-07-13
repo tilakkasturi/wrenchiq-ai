@@ -49,7 +49,7 @@ const LIVE_SIGNALS = {
     gwgCorporate: "3C compliance Off-Track — 36 locations",
   },
   ridgeline: {
-    advisor: "2 upsells staged · $803 opportunity",
+    advisor: "2 service recommendations staged · $803 opportunity",
     owner:   "Luis — 3 comebacks this month",
   },
 };

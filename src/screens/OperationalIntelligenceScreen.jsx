@@ -37,7 +37,7 @@ const KPI_CARDS = [
   },
   {
     job: "JOB 3",
-    label: "ARO Upsell Lift",
+    label: "ARO Recommendation Lift",
     value: "+$42",
     target: "+$75",
     status: "In Progress",

@@ -4,9 +4,9 @@ import { useAppVersion, useAppBuilt } from "../hooks/useAppVersion";
 import {
   Wrench, ClipboardList, ClipboardCheck, Package, Shield, Calendar,
   BarChart3, Settings, Building2, Sparkles, Bell, Search,
-  LogOut, Hammer, CheckSquare, BarChart, Users, Truck,
-  Home, Smartphone, Menu, FileText, Brain, Activity, SlidersHorizontal,
-  Stethoscope, TrendingUp, ShoppingCart, LineChart, Zap, ArrowLeftRight,
+  LogOut, Hammer, BarChart, Users, Truck,
+  Home, Smartphone, Menu, Brain, Activity, SlidersHorizontal,
+  TrendingUp, LineChart, Zap, ArrowLeftRight,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import CustomerSelector from "./CustomerSelector";
@@ -24,11 +24,7 @@ import DemoConfigPanel from "./DemoConfigPanel";
 
 const PERSONA_NAV = {
   advisor: [
-    { id: "advisorHome",  label: "RO Queue & Board",   icon: ClipboardList, moduleId: "repairOrders", external: "/sms-representative.html" },
-    { id: "job1Intake",   label: "Intake & Diagnosis",  icon: Stethoscope,   moduleId: "repairOrders" },
-    { id: "job2ThreeC",   label: "3C Compliance",       icon: FileText,      moduleId: "storyWriter"  },
-    { id: "job3Upsell",   label: "Smart Upsell",        icon: ShoppingCart,  moduleId: "roAdvisor"    },
-    { id: "am3cWriter",   label: "3C Story Writer",     icon: CheckSquare,   moduleId: "storyWriter"  },
+    { id: "advisorHome",  label: "Shop System (SMS/DMS)", icon: ClipboardList, moduleId: "repairOrders", external: "/sms-representative.html" },
   ],
   advisorLite: [],
   tech: [
@@ -40,19 +36,19 @@ const PERSONA_NAV = {
     { id: "opIntel",         label: "Operational Intelligence",  icon: Zap,      moduleId: "dashboard" },
     { id: "impactDash",      label: "Impact Dashboard",          icon: TrendingUp, moduleId: "analytics" },
     { id: "analytics",       label: "Reports",                   icon: BarChart3,  moduleId: "analytics" },
-    { id: "settings",        label: "Settings",                  icon: Settings,   moduleId: "settings", external: "/admin.html"  },
+    { id: "settings",        label: "Settings",                  icon: Settings,   moduleId: "settings", external: "/admin.html?section=settings"  },
   ],
   // OEM personas
   fixedOps: [
     { id: "fixedOpsHome",      label: "Warranty Dashboard", icon: BarChart3,  moduleId: "dashboard"      },
     { id: "warrantyAnalytics", label: "Analytics",          icon: BarChart,   moduleId: "analytics"      },
     { id: "oemNetwork",        label: "Dealer Group",       icon: Building2,  moduleId: "multiLocation"  },
-    { id: "oemSettings",       label: "Settings",           icon: Settings,   moduleId: "settings", external: "/admin.html"       },
+    { id: "oemSettings",       label: "Settings",           icon: Settings,   moduleId: "settings", external: "/admin.html?section=oemSettings"       },
   ],
   oemAdvisor: [
     { id: "roWriter",          label: "RO Story Writer",    icon: ClipboardList, moduleId: "storyWriter" },
     { id: "oemParts",          label: "OEM Parts Lane",     icon: Package,       moduleId: "parts"       },
-    { id: "oemSettings",       label: "Settings",           icon: Settings,      moduleId: "settings", external: "/admin.html"    },
+    { id: "oemSettings",       label: "Settings",           icon: Settings,      moduleId: "settings", external: "/admin.html?section=oemSettings"    },
   ],
   oemTech: [
     { id: "oemTechHome",       label: "My Jobs",            icon: Hammer,        moduleId: "techMobile"  },

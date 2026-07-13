@@ -789,7 +789,7 @@ function DoTheseToday() {
     },
     {
       icon: "✅",
-      title: "Approve Monica's serpentine belt upsell",
+      title: "Approve Monica's serpentine belt service recommendation",
       detail: "$185 additional revenue — Bay 1 waiting",
       source: "RO-2024-1187",
       color: COLORS.success,

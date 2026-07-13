@@ -246,7 +246,7 @@ function AISuggestionCard({ suggestion, itemId, accepted, onAccept, onSkip }) {
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <CheckCircle size={15} color={COLORS.success} />
           <span style={{ fontSize: 13, color: COLORS.success, fontWeight: 600 }}>
-            Sent to advisor upsell queue
+            Sent to advisor service recommendation queue
           </span>
         </div>
       )}
@@ -663,7 +663,7 @@ export default function TechDVIScreen({ roData = DEFAULT_RO, onComplete, onBack 
 
   const handleAccept = (itemId) => {
     setAcceptedSuggestions((prev) => ({ ...prev, [itemId]: true }));
-    setToast("Sent to advisor upsell queue");
+    setToast("Sent to advisor service recommendation queue");
   };
 
   const handleSkip = (itemId) => {

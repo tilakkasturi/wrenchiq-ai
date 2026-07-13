@@ -7,6 +7,7 @@ import { repairOrders, customers, vehicles, getCustomer, getVehicle } from "../d
 import { useRecommendations } from "../context/RecommendationsContext";
 import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 import { useShopObjectives } from "../context/ShopObjectivesContext";
+import { useDemo } from "../context/DemoContext";
 import { filterIngsByRO } from "../services/ingEntityExtractor";
 import RecommendationCard from "./RecommendationCard";
 
@@ -20,19 +21,19 @@ const SCREEN_CONTEXT = {
     customerFocus: null,
     suggestions: [
       { type: "revenue", icon: "💰", text: "David's estimate pending 2h 15m — send a nudge text", action: "Text David", value: "+$2,190", color: COLORS.warning },
-      { type: "upsell", icon: "🔧", text: "Angela's Outback hasn't been in since May — head gasket check is overdue", action: "Schedule", value: "+$165", color: COLORS.accent },
+      { type: "serviceRecommendation", icon: "🔧", text: "Angela's Outback hasn't been in since May — head gasket check is overdue", action: "Schedule", value: "+$165", color: COLORS.accent },
       { type: "alert", icon: "🔴", text: "Bay 3 idle 40 min — move Tom's Tucson forward to fill the gap", action: "Reschedule", value: "Free bay", color: COLORS.danger },
-      { type: "upsell", icon: "📊", text: "Today's RO total $6,842 — need $658 more to hit daily target", action: "View ROs", value: "$658 gap", color: "#7C3AED" },
+      { type: "serviceRecommendation", icon: "📊", text: "Today's RO total $6,842 — need $658 more to hit daily target", action: "View ROs", value: "$658 gap", color: "#7C3AED" },
     ],
   },
   orders: {
     label: "Watching: Repair Orders",
     customerFocus: null,
     suggestions: [
-      { type: "upsell", icon: "🔧", text: "Monica hasn't approved cabin filter ($81) — follow up before she leaves", action: "Text Monica", value: "+$81", color: COLORS.accent },
+      { type: "serviceRecommendation", icon: "🔧", text: "Monica hasn't approved cabin filter ($81) — follow up before she leaves", action: "Text Monica", value: "+$81", color: COLORS.accent },
       { type: "alert", icon: "⚠️", text: "David's P0420 diagnostic — TSB-19-052 applies. Mention Honda goodwill claim.", action: "Add TSB note", value: "Save $450", color: COLORS.warning },
       { type: "revenue", icon: "💡", text: "Robert's F-150: add wiper blades to oil service — easy add-on at check-in", action: "Add to RO", value: "+$45", color: "#2563EB" },
-      { type: "upsell", icon: "🔩", text: "James Park's BMW — brake fluid flush due at 64K, add to estimate", action: "Add service", value: "+$185", color: COLORS.accent },
+      { type: "serviceRecommendation", icon: "🔩", text: "James Park's BMW — brake fluid flush due at 64K, add to estimate", action: "Add service", value: "+$185", color: COLORS.accent },
     ],
   },
   analytics: {
@@ -42,7 +43,7 @@ const SCREEN_CONTEXT = {
       { type: "alert", icon: "📉", text: "Parts margin at 48.2% — below your 53% target. BMW X3 brake job used OEM at low markup.", action: "Review parts", value: "-$420 margin", color: COLORS.danger },
       { type: "alert", icon: "🏦", text: "Worldpac Net-30 bill ($743) due Thursday — 2 days. O'Reilly ($1,104) due Friday. Both in Xero AP aging.", action: "Pay now", value: "$1,847 due", color: COLORS.warning },
       { type: "alert", icon: "📦", text: "3 parts ordered but not yet delivered: Walker 16468 (CR-V), BMW brake rotors (x2), Subaru head gasket set. Jobber ETA overdue on rotors.", action: "Track orders", value: "3 pending", color: COLORS.danger },
-      { type: "upsell", icon: "🎯", text: "Mike Reeves efficiency dropped to 85% — assign him lighter jobs this PM", action: "Reassign", value: "Recover 1.2 hrs", color: "#7C3AED" },
+      { type: "serviceRecommendation", icon: "🎯", text: "Mike Reeves efficiency dropped to 85% — assign him lighter jobs this PM", action: "Reassign", value: "Recover 1.2 hrs", color: "#7C3AED" },
     ],
   },
   settings: {
@@ -61,7 +62,7 @@ const SCREEN_CONTEXT = {
     suggestions: [
       { type: "alert", icon: "⚠️", text: "Diana Moss (Facebook) — angry post, 3 hrs ago. No response yet. Google review risk HIGH.", action: "Respond Now", value: "Urgent", color: COLORS.danger },
       { type: "revenue", icon: "🔥", text: "Jasmine Torres (Instagram) — brake grinding, HOT lead. AI draft ready in 1 click.", action: "Send Draft", value: "+$280–620", color: COLORS.accent },
-      { type: "upsell", icon: "📱", text: "Marcus Webb (TikTok) — discovered via your oil change video. First-time customer opportunity.", action: "Convert", value: "New cust.", color: "#7C3AED" },
+      { type: "serviceRecommendation", icon: "📱", text: "Marcus Webb (TikTok) — discovered via your oil change video. First-time customer opportunity.", action: "Convert", value: "New cust.", color: "#7C3AED" },
       { type: "revenue", icon: "📅", text: "Robert Chen (Google) — booked AC service for Tuesday. Prep: RAV4 R-134a refrigerant, no open TSBs.", action: "Prep Job", value: "$129 booked", color: COLORS.success },
     ],
   },
@@ -71,7 +72,7 @@ const SCREEN_CONTEXT = {
     suggestions: [
       { type: "alert", icon: "🔴", text: "2 locations in alert status — Phoenix 7 and Dallas 4. Combined Google drop: 3.6★ avg.", action: "Review Locations", value: "Action needed", color: COLORS.danger },
       { type: "revenue", icon: "💰", text: "Network hit $2.1M this week — top 10 locations drove 34% of revenue. Houston 3 is #1.", action: "See Top 10", value: "$2.1M", color: COLORS.success },
-      { type: "upsell", icon: "📦", text: "Cross-location parts transfer approved — $12,400 in excess inventory redistributed.", action: "Track Transfer", value: "$12,400 saved", color: "#3B82F6" },
+      { type: "serviceRecommendation", icon: "📦", text: "Cross-location parts transfer approved — $12,400 in excess inventory redistributed.", action: "Track Transfer", value: "$12,400 saved", color: "#3B82F6" },
       { type: "alert", icon: "🎯", text: "59 locations haven't enabled pre-arrival AI message. Enable all to increase approval rate by 23%.", action: "Enable All", value: "+23% ARO", color: COLORS.warning },
     ],
   },
@@ -80,7 +81,7 @@ const SCREEN_CONTEXT = {
     customerFocus: null,
     suggestions: [
       { type: "alert", icon: "⚡", text: "James Park estimate pending 2 hrs — HIGH LTV ($12,450). Send TSB reference text NOW.", action: "Text James", value: "$1,847 at risk", color: COLORS.danger },
-      { type: "upsell", icon: "⭐", text: "David Kim hasn't left a review in 9 visits. Post-job approval rate 4★ — ideal time to ask.", action: "Send Review Request", value: "5★ potential", color: "#F59E0B" },
+      { type: "serviceRecommendation", icon: "⭐", text: "David Kim hasn't left a review in 9 visits. Post-job approval rate 4★ — ideal time to ask.", action: "Send Review Request", value: "5★ potential", color: "#F59E0B" },
       { type: "alert", icon: "📉", text: "Maria Santos trust score dropped 12 pts — 2 declined items. Call her personally before she goes to a dealer.", action: "Call Maria", value: "At-Risk", color: COLORS.warning },
       { type: "revenue", icon: "❤️", text: "Sarah Chen referred 3 customers = $6,840 in additional revenue. Send thank-you gift card.", action: "Send Gift", value: "Champion", color: COLORS.success },
     ],
@@ -90,7 +91,7 @@ const SCREEN_CONTEXT = {
     customerFocus: null,
     suggestions: [
       { type: "alert", icon: "⏳", text: "Sarah opened the health report 2× but hasn't approved. She uses text — send 1-tap approve link.", action: "Send Approve Link", value: "+$287–420", color: COLORS.warning },
-      { type: "upsell", icon: "🎥", text: "DeShawn's inspection video for front brakes is 47s. Customers who watch approve 31% more often.", action: "Resend with Video", value: "+31% approval", color: "#3B82F6" },
+      { type: "serviceRecommendation", icon: "🎥", text: "DeShawn's inspection video for front brakes is 47s. Customers who watch approve 31% more often.", action: "Resend with Video", value: "+31% approval", color: "#3B82F6" },
       { type: "revenue", icon: "💡", text: "Dealer comparison showing $333 savings is visible on her report. This is your strongest close.", action: "View Report", value: "Save $333", color: COLORS.success },
     ],
   },
@@ -101,7 +102,7 @@ const SCREEN_CONTEXT = {
       { type: "alert", icon: "🕐", text: "Bay 5 & 6 empty after 1 PM — $890 in AI-suggested revenue ready to book in 2 taps.", action: "Book AI Slots", value: "+$890", color: COLORS.accent },
       { type: "revenue", icon: "📊", text: "Today's schedule 71% utilization. Top days are 88%+. 3 AI suggestions can close the gap.", action: "Fill Schedule", value: "+17% util", color: COLORS.success },
       { type: "alert", icon: "⚠️", text: "James Park's BMW rotors delayed 1 day (Worldpac Oakland). His 2 PM slot may need reshuffling.", action: "Reschedule", value: "Parts delayed", color: COLORS.warning },
-      { type: "upsell", icon: "🔄", text: "Angela Martinez hasn't been in 8 months — send recall/service reminder for pre-failure Outback check.", action: "Send Reminder", value: "+$165", color: "#7C3AED" },
+      { type: "serviceRecommendation", icon: "🔄", text: "Angela Martinez hasn't been in 8 months — send recall/service reminder for pre-failure Outback check.", action: "Send Reminder", value: "+$165", color: "#7C3AED" },
     ],
   },
   parts: {
@@ -111,7 +112,7 @@ const SCREEN_CONTEXT = {
       { type: "alert", icon: "🚚", text: "BMW X3 brake rotors — 1 day late from Worldpac. James Park's job blocked. Call Worldpac rep.", action: "Track Order", value: "Parts late", color: COLORS.danger },
       { type: "revenue", icon: "💰", text: "WrenchIQ pick for David's CR-V cat converter: Akebono via Worldpac — saves $44 vs O'Reilly and ships same day.", action: "Order Now", value: "Save $44", color: COLORS.success },
       { type: "alert", icon: "📦", text: "3 inventory items below minimum — cabin filter, brake pads, wiper blades (0 in stock).", action: "Auto-Reorder", value: "3 items low", color: COLORS.warning },
-      { type: "upsell", icon: "📈", text: "Parts margin this month: 48.2% — below your 53% target. Switch 2 jobs to Worldpac to recover $420.", action: "Optimize Margin", value: "-$420 margin", color: "#7C3AED" },
+      { type: "serviceRecommendation", icon: "📈", text: "Parts margin this month: 48.2% — below your 53% target. Switch 2 jobs to Worldpac to recover $420.", action: "Optimize Margin", value: "-$420 margin", color: "#7C3AED" },
     ],
   },
   techview: {
@@ -136,7 +137,7 @@ const SCREEN_CONTEXT = {
     suggestions: [
       { type: "ok", icon: "✅", text: "18 of 18 configured integrations healthy. Last sync 4 min ago.", action: null, value: "All green", color: COLORS.success },
       { type: "revenue", icon: "💰", text: "Social integrations (Instagram + TikTok) attributed $8,240 in revenue this month. 47 leads.", action: "View Attribution", value: "$8,240", color: COLORS.accent },
-      { type: "upsell", icon: "🚗", text: "Sunbit BNPL not yet connected — 90% approval rate could increase avg ticket on large jobs by 28%.", action: "Connect Sunbit", value: "+28% ticket", color: "#F59E0B" },
+      { type: "serviceRecommendation", icon: "🚗", text: "Sunbit BNPL not yet connected — 90% approval rate could increase avg ticket on large jobs by 28%.", action: "Connect Sunbit", value: "+28% ticket", color: "#F59E0B" },
       { type: "ok", icon: "📦", text: "PartsTech saved $847 this month searching 31 vendors vs single-source ordering.", action: "View Savings", value: "$847 saved", color: COLORS.success },
     ],
   },
@@ -149,7 +150,7 @@ const SCREEN_CONTEXT = {
     suggestions: [
       { type: "revenue", icon: "⏳", text: "David's estimate pending 2h 15m — send a nudge text before end of day.", action: "Text David", value: "+$2,190", color: COLORS.warning },
       { type: "alert",   icon: "🔴", text: "Bay 3 idle 40 min — move Tom's Tucson forward to fill the gap.", action: "Reschedule", value: "Free bay", color: COLORS.danger },
-      { type: "upsell",  icon: "💡", text: "Monica: 3 items pending $294 — 100% lifetime approval rate. Call now.", action: "Call Monica", value: "+$294", color: COLORS.accent },
+      { type: "serviceRecommendation",  icon: "💡", text: "Monica: 3 items pending $294 — 100% lifetime approval rate. Call now.", action: "Call Monica", value: "+$294", color: COLORS.accent },
       { type: "revenue", icon: "📊", text: "RO board: $5,842 today — need $658 more to hit daily target.", action: "View Board", value: "$658 gap", color: "#2563EB" },
     ],
   },
@@ -176,7 +177,7 @@ const SCREEN_CONTEXT = {
     suggestions: [
       { type: "alert",   icon: "🏁", text: "Revenue at $5,840 — need $1,660 more to hit daily target. 3 pending approvals can close the gap.", action: "View ROs", value: "$1,660 gap", color: COLORS.warning },
       { type: "alert",   icon: "🔴", text: "Bay 3 idle 45 min — move Tom's Tucson forward to recover $280 in labor.", action: "Reschedule", value: "Recover $280", color: COLORS.danger },
-      { type: "upsell",  icon: "📊", text: "Mike Reeves efficiency at 85% this week — assign lighter jobs this afternoon.", action: "Reassign", value: "+1.2 hrs", color: "#7C3AED" },
+      { type: "serviceRecommendation",  icon: "📊", text: "Mike Reeves efficiency at 85% this week — assign lighter jobs this afternoon.", action: "Reassign", value: "+1.2 hrs", color: "#7C3AED" },
       { type: "alert",   icon: "💰", text: "Worldpac Net-30 ($743) due Thursday · O'Reilly ($1,104) due Friday. Both in Xero.", action: "Pay Now", value: "$1,847 due", color: COLORS.danger },
     ],
   },
@@ -202,7 +203,7 @@ const SCREEN_CONTEXT = {
     },
     suggestions: [
       { type: "alert",   icon: "📸", text: "Front brake finding — add photo to increase customer approval rate by 34% (shop avg).", action: "Take Photo", value: "+34% approval", color: COLORS.warning },
-      { type: "upsell",  icon: "🔋", text: "Tesla HVAC cabin filter due at 24K — Sarah is at 22K. Add proactive recommendation.", action: "Add Finding", value: "+$68", color: COLORS.accent },
+      { type: "serviceRecommendation",  icon: "🔋", text: "Tesla HVAC cabin filter due at 24K — Sarah is at 22K. Add proactive recommendation.", action: "Add Finding", value: "+$68", color: COLORS.accent },
       { type: "ok",      icon: "✅", text: "VIN decoded — no open recalls for this Tesla. Items cross-referenced with TSB database.", action: null, value: "No recalls", color: COLORS.success },
     ],
   },
@@ -213,7 +214,7 @@ const SCREEN_CONTEXT = {
     suggestions: [
       { type: "alert",   icon: "📉", text: "ARO is $108 below goal — 3 declined services account for $620 in recoverable revenue.", action: "Run Agent", value: "-$108 gap", color: COLORS.danger },
       { type: "revenue", icon: "💡", text: "Brake flush declined by 4 customers this week. Advisors converting at 38% — goal is 60%.", action: "View Details", value: "+$356 opp", color: COLORS.accent },
-      { type: "upsell",  icon: "⚡", text: "Tech productivity: Marcus at 82% efficiency, goal 90%. 3 ROs flagged for review.", action: "Tech Report", value: "Efficiency gap", color: COLORS.warning },
+      { type: "serviceRecommendation",  icon: "⚡", text: "Tech productivity: Marcus at 82% efficiency, goal 90%. 3 ROs flagged for review.", action: "Tech Report", value: "Efficiency gap", color: COLORS.warning },
     ],
   },
   aiAgent: {
@@ -222,7 +223,7 @@ const SCREEN_CONTEXT = {
     suggestions: [
       { type: "revenue", icon: "🤖", text: "AI prepared 3 RO narratives this morning — $4,280 in labor written, 0 sent back for edits.", action: "View Narratives", value: "$4,280 written", color: COLORS.success },
       { type: "alert",   icon: "⚡", text: "David Kim RO pending advisor sign-off — AI flagged P0420 with TSB match. Review now.", action: "Review RO", value: "Flagged", color: COLORS.warning },
-      { type: "upsell",  icon: "💬", text: "AI spotted 4 upsell opportunities in today's queue worth $920. 1-tap to add.", action: "Review Opps", value: "+$920", color: COLORS.accent },
+      { type: "serviceRecommendation",  icon: "💬", text: "AI spotted 4 service recommendations in today's queue worth $920. 1-tap to add.", action: "Review Opps", value: "+$920", color: COLORS.accent },
     ],
   },
 
@@ -231,7 +232,7 @@ const SCREEN_CONTEXT = {
     customerFocus: null,
     suggestions: [
       { type: "alert",   icon: "🔍", text: "VIN decode complete — check for open NHTSA recalls before finalizing the estimate.", action: "Check Recalls", value: "Safety check", color: COLORS.warning },
-      { type: "upsell",  icon: "📋", text: "Mileage-based services due: brake fluid (60K), cabin air filter (15K), and tire rotation. Add to MPI.", action: "Add to MPI", value: "Upsell ready", color: COLORS.accent },
+      { type: "serviceRecommendation",  icon: "📋", text: "Mileage-based services due: brake fluid (60K), cabin air filter (15K), and tire rotation. Add to MPI.", action: "Add to MPI", value: "Recommendation ready", color: COLORS.accent },
       { type: "revenue", icon: "⏱️", text: "Average intake takes 8 min — customers who get a same-day estimate approve 2× faster.", action: "Send Estimate", value: "+2× approval", color: "#2563EB" },
     ],
   },
@@ -241,18 +242,18 @@ const SCREEN_CONTEXT = {
     customerFocus: null,
     suggestions: [
       { type: "alert",   icon: "✍️", text: "Cause section needs a DTC and measured value — vague causes get rejected by service managers.", action: "Enhance Cause", value: "Compliance risk", color: COLORS.warning },
-      { type: "upsell",  icon: "📎", text: "Add TSB reference number to the correction section — increases customer approval rate by 40%.", action: "Add TSB", value: "+40% approval", color: COLORS.accent },
+      { type: "serviceRecommendation",  icon: "📎", text: "Add TSB reference number to the correction section — increases customer approval rate by 40%.", action: "Add TSB", value: "+40% approval", color: COLORS.accent },
       { type: "ok",      icon: "✅", text: "Shop 3C compliance score: 91% — top 10% of WrenchIQ shops. Keep narratives specific.", action: null, value: "91% score", color: COLORS.success },
     ],
   },
 
   job3Upsell: {
-    label: "Watching: Smart Upsell",
+    label: "Watching: Service Recommendations",
     customerFocus: null,
     suggestions: [
       { type: "revenue", icon: "💡", text: "Present declined services as a prioritized list — customers approve 28% more when ranked by urgency.", action: "Rank by Urgency", value: "+28% approve", color: COLORS.accent },
-      { type: "upsell",  icon: "🔧", text: "Mileage milestone services convert best when paired with a photo from the DVI — attach one now.", action: "Attach Photo", value: "Converts 2×", color: "#2563EB" },
-      { type: "ok",      icon: "📊", text: "This shop's upsell approval rate: 64% — above the 53% network average. Keep presenting.", action: null, value: "64% rate", color: COLORS.success },
+      { type: "serviceRecommendation",  icon: "🔧", text: "Mileage milestone services convert best when paired with a photo from the DVI — attach one now.", action: "Attach Photo", value: "Converts 2×", color: "#2563EB" },
+      { type: "ok",      icon: "📊", text: "This shop's service recommendation approval rate: 64% — above the 53% network average. Keep presenting.", action: null, value: "64% rate", color: COLORS.success },
     ],
   },
 
@@ -262,7 +263,7 @@ const SCREEN_CONTEXT = {
     suggestions: [
       { type: "alert",   icon: "🏁", text: "Revenue at $5,840 — need $1,660 more to hit daily target. 3 pending approvals can close the gap.", action: "View Pending", value: "$1,660 gap", color: COLORS.warning },
       { type: "alert",   icon: "🔴", text: "Bay 3 idle 45 min — move Tom's Tucson forward to recover $280 in labor.", action: "Reschedule", value: "Recover $280", color: COLORS.danger },
-      { type: "upsell",  icon: "📊", text: "Tech efficiency today: shop avg 84% — assign heavier jobs to Marcus who is currently at 91%.", action: "Reassign", value: "+1.2 hrs", color: "#7C3AED" },
+      { type: "serviceRecommendation",  icon: "📊", text: "Tech efficiency today: shop avg 84% — assign heavier jobs to Marcus who is currently at 91%.", action: "Reassign", value: "+1.2 hrs", color: "#7C3AED" },
     ],
   },
 
@@ -271,8 +272,8 @@ const SCREEN_CONTEXT = {
     customerFocus: null,
     suggestions: [
       { type: "alert",   icon: "📉", text: "Gross profit margin this week: 48.2% — below 53% target. Two BMW jobs used OEM parts at low markup.", action: "Review Margins", value: "-4.8% margin", color: COLORS.danger },
-      { type: "revenue", icon: "📈", text: "Top revenue driver this month: oil service upsells ($8,240). Advisors presenting at 89% rate.", action: "View Breakdown", value: "$8,240", color: COLORS.success },
-      { type: "upsell",  icon: "⚡", text: "3 technicians below 85% efficiency this week — coaching on time logging can recover 4+ billable hrs.", action: "View Tech Report", value: "4 hrs recoverable", color: COLORS.warning },
+      { type: "revenue", icon: "📈", text: "Top revenue driver this month: oil service recommendations ($8,240). Advisors presenting at 89% rate.", action: "View Breakdown", value: "$8,240", color: COLORS.success },
+      { type: "serviceRecommendation",  icon: "⚡", text: "3 technicians below 85% efficiency this week — coaching on time logging can recover 4+ billable hrs.", action: "View Tech Report", value: "4 hrs recoverable", color: COLORS.warning },
     ],
   },
 
@@ -280,9 +281,9 @@ const SCREEN_CONTEXT = {
     label: "Watching: Impact Dashboard",
     customerFocus: null,
     suggestions: [
-      { type: "revenue", icon: "💰", text: "WrenchIQ AI generated $42,800 in incremental revenue this quarter via upsell and recall prompts.", action: "View Breakdown", value: "$42,800 impact", color: COLORS.success },
-      { type: "upsell",  icon: "⭐", text: "Trust score improvement: shop average up 11 pts this quarter. Google rating trending to 4.9★.", action: "View Trust", value: "+11 pts", color: COLORS.accent },
-      { type: "alert",   icon: "📊", text: "2 locations in the group haven't enabled AI upsell prompts — they're leaving $18K/mo on the table.", action: "Enable Locations", value: "$18K gap", color: COLORS.warning },
+      { type: "revenue", icon: "💰", text: "WrenchIQ AI generated $42,800 in incremental revenue this quarter via service recommendations and recall prompts.", action: "View Breakdown", value: "$42,800 impact", color: COLORS.success },
+      { type: "serviceRecommendation",  icon: "⭐", text: "Trust score improvement: shop average up 11 pts this quarter. Google rating trending to 4.9★.", action: "View Trust", value: "+11 pts", color: COLORS.accent },
+      { type: "alert",   icon: "📊", text: "2 locations in the group haven't enabled AI service recommendation prompts — they're leaving $18K/mo on the table.", action: "Enable Locations", value: "$18K gap", color: COLORS.warning },
     ],
   },
 };
@@ -321,7 +322,7 @@ const DEMO_SNAPSHOT_90D = {
     byDay: { Mon:71, Tue:78, Wed:68, Thu:74, Fri:82, Sat:41, Sun:0 },
     byLocation: { 'loc-001':72, 'loc-002':51, 'loc-003':64, 'loc-004':69 },
   },
-  upsell: { opportunities:312, conversions:121, rate:38.8,
+  serviceRecommendations: { opportunities:312, conversions:121, rate:38.8,
     topMissed:['Cabin air filter','Wiper blades','Brake fluid flush'] },
   elr: {
     overall: 178,
@@ -348,7 +349,7 @@ const LOCATION_NAMES = {
 const DRIFT_DATA = {
   avg_ro: { label:'Avg RO', drift:'down $22 today', suggestion:'3 ROs closed below target today', value:'$397', metric:'avg_ro' },
   bay_utilization: { label:'Bay utilization', drift:'below target (58%)', suggestion:'Bay 4 idle 80+ min', value:'58%', metric:'bay_utilization' },
-  upsell_conversion: { label:'Upsell rate', drift:'below 40% benchmark', suggestion:'2 cabin filters declined this morning', value:'34%', metric:'upsell_conversion' },
+  service_recommendation_rate: { label:'Service recommendation rate', drift:'below 40% benchmark', suggestion:'2 cabin filters declined this morning', value:'34%', metric:'service_recommendation_rate' },
   elr: { label:'ELR', drift:'down $12 from target', suggestion:'2 jobs ran over on actual hours', value:'$166', metric:'elr' },
 };
 
@@ -357,7 +358,7 @@ const DRIFT_DATA = {
 function SuggestionCard({ item }) {
   const borderMap = {
     revenue: COLORS.success,
-    upsell: COLORS.warning,
+    serviceRecommendation: COLORS.warning,
     alert: COLORS.danger,
     ok: COLORS.success,
   };
@@ -474,9 +475,9 @@ const ADVISOR_CONTEXT = {
   customerFocus: null,
   suggestions: [
     { type: "alert",   icon: "⏳", text: "Monica Rodriguez estimate pending 35 min — 100% approval history. Send 1-tap approve link.", action: "Send SMS", value: "+$265", color: COLORS.warning },
-    { type: "upsell",  icon: "🔧", text: "David Kim's CR-V: AI detected TSB-19-052 applies. Mention Honda goodwill claim opportunity.", action: "Add TSB note", value: "Save $450", color: COLORS.accent },
+    { type: "serviceRecommendation",  icon: "🔧", text: "David Kim's CR-V: AI detected TSB-19-052 applies. Mention Honda goodwill claim opportunity.", action: "Add TSB note", value: "Save $450", color: COLORS.accent },
     { type: "revenue", icon: "💡", text: "3 customers in queue — average wait 12 min. Sarah Chen next. Estimated RO: $420.", action: "Start Intake", value: "+$420", color: "#2563EB" },
-    { type: "upsell",  icon: "📋", text: "Robert Taylor (22 visits, $15.8K LTV) — brake fluid due at 64K. Add to estimate.", action: "Add to RO", value: "+$185", color: COLORS.accent },
+    { type: "serviceRecommendation",  icon: "📋", text: "Robert Taylor (22 visits, $15.8K LTV) — brake fluid due at 64K. Add to estimate.", action: "Add to RO", value: "+$185", color: COLORS.accent },
   ],
 };
 
@@ -500,7 +501,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
 
   // Retrospective / conversation mode
   const [convMode, setConvMode] = useState(null); // null | 'retro'
-  const [retroStep, setRetroStep] = useState(null); // null | 'topic-select' | 'revenue' | 'utilization' | 'upsell' | 'qa' | 'confirm'
+  const [retroStep, setRetroStep] = useState(null); // null | 'topic-select' | 'revenue' | 'utilization' | 'serviceRecommendations' | 'qa' | 'confirm'
   const [pendingGoals, setPendingGoals] = useState([]);
   const [snapshot90d, setSnapshot90d] = useState(null);
 
@@ -510,6 +511,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
   const [expandedOpp, setExpandedOpp] = useState(null);
 
   // Tribal notes from shared context
+  const { activeShopId } = useDemo();
   const { objectives: tribalNotes, ings, loaded: tribalNotesLoaded, addObjective } = useShopObjectives();
   const [checkedIngs, setCheckedIngs] = useState(new Set());
   const [awaitingNoteExpiry, setAwaitingNoteExpiry] = useState(null);
@@ -582,7 +584,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
         statusColor: COLORS.warning,
       },
       suggestions: insights.map((text, i) => ({
-        type: i === 0 ? "alert" : i === (insights.length - 1) ? "revenue" : "upsell",
+        type: i === 0 ? "alert" : i === (insights.length - 1) ? "revenue" : "serviceRecommendation",
         icon: i === 0 ? "⚡" : i % 2 === 0 ? "🔧" : "💡",
         text,
         action: null,
@@ -649,8 +651,8 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
           What do you want to dig into first?
         </div>
         <div style={{display:'flex', flexDirection:'column', gap:6}}>
-          {['Revenue', 'Bay Utilization', 'Upsell Performance'].map(topic => (
-            <button key={topic} onClick={() => handleRetroTopic(topic.toLowerCase().replace(' ','-'))}
+          {['Revenue', 'Bay Utilization', 'Service Recommendations Performance'].map(topic => (
+            <button key={topic} onClick={() => handleRetroTopic(topic.toLowerCase().replace(/\s+/g, '-'))}
               style={{background:'#0D3B45', color:'#fff', border:'none', borderRadius:6,
                 padding:'8px 14px', fontSize:13, fontWeight:600, cursor:'pointer', textAlign:'left'}}>
               {topic} →
@@ -743,12 +745,12 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
     );
   }
 
-  function upsellModuleContent() {
+  function serviceRecommendationsModuleContent() {
     const s = snap;
-    const u = s.upsell || {};
+    const u = s.serviceRecommendations || {};
     return (
       <div>
-        <div style={{fontWeight:700, fontSize:14, marginBottom:10}}>Upsell Performance — Last 90 Days</div>
+        <div style={{fontWeight:700, fontSize:14, marginBottom:10}}>Service Recommendations Performance — Last 90 Days</div>
         <div style={{background:'#F8FAFC', borderRadius:6, padding:10, marginBottom:10}}>
           <div style={{display:'flex', justifyContent:'space-between', padding:'4px 0', fontSize:13}}>
             <span>Opportunities</span><span style={{fontWeight:700}}>{u.opportunities || 312}</span>
@@ -790,7 +792,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                 padding:'8px 10px', marginBottom:6, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <div>
                   <div style={{fontSize:12, fontWeight:700, color:'#15803D'}}>{g.metric.replace(/_/g,' ').toUpperCase()}</div>
-                  <div style={{fontSize:13}}>{g.locationId === 'all' ? 'All locations' : LOCATION_NAMES[g.locationId] || g.locationId}: target <strong>{typeof g.target === 'number' && g.metric === 'avg_ro' ? `$${g.target}` : `${g.target}${g.metric === 'bay_utilization' || g.metric === 'upsell_conversion' ? '%' : ''}`}</strong> by {g.targetDate}</div>
+                  <div style={{fontSize:13}}>{g.locationId === 'all' ? 'All locations' : LOCATION_NAMES[g.locationId] || g.locationId}: target <strong>{typeof g.target === 'number' && g.metric === 'avg_ro' ? `$${g.target}` : `${g.target}${g.metric === 'bay_utilization' || g.metric === 'service_recommendation_rate' ? '%' : ''}`}</strong> by {g.targetDate}</div>
                 </div>
                 <button onClick={() => setPendingGoals(prev => prev.filter((_,j)=>j!==i))}
                   style={{background:'none', border:'none', color:'#DC2626', cursor:'pointer', fontSize:16}}>✕</button>
@@ -854,11 +856,11 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
         impact: '~2.8 extra ROs/week = ~$950/week',
       },
       {
-        title: `Lift upsell rate`,
-        current: `${(s.upsell?.rate||38.8).toFixed(1)}% conversion`,
+        title: `Lift service recommendation rate`,
+        current: `${(s.serviceRecommendations?.rate||38.8).toFixed(1)}% conversion`,
         target: '50%',
         action: '"Did you know?" card on advisor pre-close checklist',
-        impact: `~$${Math.round((50 - (s.upsell?.rate||38.8)) * (s.upsell?.opportunities||312) * (s.avgRO?.overall||419) * 0.12 / 100 / 12)*100}/month`,
+        impact: `~$${Math.round((50 - (s.serviceRecommendations?.rate||38.8)) * (s.serviceRecommendations?.opportunities||312) * (s.avgRO?.overall||419) * 0.12 / 100 / 12)*100}/month`,
       },
     ];
     return (
@@ -904,7 +906,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
     const recommended = [
       { metric:'avg_ro', label:'Daily avg RO', value:`$${Math.round(snap.avgRO?.overall||419)}` },
       { metric:'bay_utilization', label:'Bay utilization', value:`${snap.bayUtilization?.overall||64}%` },
-      { metric:'upsell_conversion', label:'Upsell conversion', value:`${(snap.upsell?.rate||38.8).toFixed(1)}%` },
+      { metric:'service_recommendation_rate', label:'Service recommendation conversion', value:`${(snap.serviceRecommendations?.rate||38.8).toFixed(1)}%` },
     ];
     return (
       <div>
@@ -954,7 +956,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
     setRetroStep(topic === 'bay-utilization' ? 'utilization' : topic);
     const content = topic === 'revenue' ? '__revenue__'
       : topic === 'bay-utilization' ? '__utilization__'
-      : topic === 'upsell-performance' ? '__upsell__' : '__qa__';
+      : topic === 'service-recommendations-performance' ? '__serviceRecommendations__' : '__qa__';
     setMessages(prev => [...prev, { role:'assistant', content, id:`retro-topic-${Date.now()}` }]);
   }
 
@@ -981,8 +983,8 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
     if (currentStep === 'utilization' && percentMatch) {
       return { metric:'bay_utilization', target:parseInt(percentMatch[1]), baseline:snap.bayUtilization?.overall||64, locationId, targetDate };
     }
-    if (currentStep === 'upsell' && percentMatch) {
-      return { metric:'upsell_conversion', target:parseInt(percentMatch[1]), baseline:Math.round(snap.upsell?.rate||38.8), locationId:'all', targetDate };
+    if (currentStep === 'serviceRecommendations' && percentMatch) {
+      return { metric:'service_recommendation_rate', target:parseInt(percentMatch[1]), baseline:Math.round(snap.serviceRecommendations?.rate||38.8), locationId:'all', targetDate };
     }
     return null;
   }
@@ -995,7 +997,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
     if (c === '__retro_intro__') return retroIntroContent();
     if (c === '__revenue__') return revenueModuleContent();
     if (c === '__utilization__') return utilizationModuleContent();
-    if (c === '__upsell__') return upsellModuleContent();
+    if (c === '__serviceRecommendations__') return serviceRecommendationsModuleContent();
     if (c === '__confirm__') return goalConfirmContent();
     if (c === '__opportunities__') return opportunitiesContent();
     if (c === '__kpi_select__') return kpiSelectContent();
@@ -1054,7 +1056,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
       fetch(`${API_BASE_AGENT}/api/tribal-notes`, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          shopId:'shop-001', locationId:'all',
+          shopId: activeShopId, locationId:'all',
           note: noteText, active:true,
           expiresAt, triggerType:'any_ro',
           createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
@@ -1100,18 +1102,18 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
     if (convMode === 'retro') {
       const lower = trimmed.toLowerCase();
 
-      if (retroStep === 'revenue' || retroStep === 'utilization' || retroStep === 'upsell') {
+      if (retroStep === 'revenue' || retroStep === 'utilization' || retroStep === 'serviceRecommendations') {
         const goal = parseGoalFromMessage(trimmed, retroStep);
         if (goal) {
           setPendingGoals(prev => {
             const filtered = prev.filter(g => g.metric !== goal.metric);
             return [...filtered, goal];
           });
-          const metricLabels = {avg_ro:'average RO',bay_utilization:'bay utilization',upsell_conversion:'upsell conversion'};
+          const metricLabels = {avg_ro:'average RO',bay_utilization:'bay utilization',service_recommendation_rate:'service recommendation rate'};
           const targetStr = goal.metric === 'avg_ro' ? `$${goal.target}` : `${goal.target}%`;
           setMessages(prev => [...prev, {
             role:'assistant',
-            content:`Done. Goal set: ${metricLabels[goal.metric] || goal.metric} → ${targetStr} by ${new Date(goal.targetDate).toLocaleDateString('en-US',{month:'long',day:'numeric'})}. Want to review utilization or upsell next, or confirm your goals?`,
+            content:`Done. Goal set: ${metricLabels[goal.metric] || goal.metric} → ${targetStr} by ${new Date(goal.targetDate).toLocaleDateString('en-US',{month:'long',day:'numeric'})}. Want to review utilization or service recommendations next, or confirm your goals?`,
             id: `goal-set-${Date.now()}`,
           }]);
           return;
@@ -1121,7 +1123,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
       // Navigation keywords
       if (lower.includes('revenue')) { handleRetroTopic('revenue'); return; }
       if (lower.includes('utilization') || lower.includes('bay')) { handleRetroTopic('bay-utilization'); return; }
-      if (lower.includes('upsell') || lower.includes('conversion')) { handleRetroTopic('upsell-performance'); return; }
+      if (lower.includes('upsell') || lower.includes('service recommendation') || lower.includes('conversion')) { handleRetroTopic('service-recommendations-performance'); return; }
       if (lower.includes('confirm') || lower.includes('goals') || lower.includes('lock') || lower.includes('done')) {
         setRetroStep('confirm');
         setMessages(prev => [...prev, {role:'assistant', content:'__confirm__', id:`confirm-${Date.now()}`}]);
@@ -1142,7 +1144,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
       } else if (lower.includes('palo alto') || lower.includes('loc-001')) {
         answer = `Palo Alto: avg RO $${s.avgRO?.byLocation?.['loc-001']||487} — highest in the group. Utilization ${s.bayUtilization?.byLocation?.['loc-001']||72}%.`;
       } else {
-        answer = `I can answer questions about revenue, bay utilization, upsell performance, ELR, or specific locations. Or type "confirm" to review the goals you've set.`;
+        answer = `I can answer questions about revenue, bay utilization, service recommendation performance, ELR, or specific locations. Or type "confirm" to review the goals you've set.`;
       }
       setMessages(prev => [...prev, {role:'assistant', content: answer, id:`qa-${Date.now()}`}]);
       return;
@@ -1285,7 +1287,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
           return (
             <div style={{ marginBottom: 10, background: "rgba(255,107,53,0.07)", border: "1px solid rgba(255,107,53,0.25)", borderRadius: 8, padding: "8px 10px" }}>
               <div style={{ fontSize: 9, fontWeight: 800, color: COLORS.accent, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 7, display: "flex", alignItems: "center", gap: 5 }}>
-                <Target size={10} color={COLORS.accent} /> Shop Objectives
+                <Target size={10} color={COLORS.accent} /> Strategic Priorities
               </div>
               {activeNotes.map((note, i) => {
                 const expiringSoon = note.expiresAt && (new Date(note.expiresAt) - nowDate) < 3 * 24 * 60 * 60 * 1000;
@@ -1311,7 +1313,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
             <div style={{ marginBottom: 10, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
               <div style={{ background: "rgba(255,255,255,0.06)", padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.5)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  ings — Don't Forget
+                  Strategic Priorities — Don't Forget
                 </div>
                 {unchecked.length === 0
                   ? <div style={{ fontSize: 10, color: "#10B981", fontWeight: 700 }}>All done</div>
@@ -1575,7 +1577,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                 <div style={{borderTop:'1px solid #2D4A52', paddingTop:12, marginTop:8}}>
                   <div style={{fontSize:11, fontWeight:700, color:COLORS.intelMuted, letterSpacing:'0.08em',
                     textTransform:'uppercase', marginBottom:8}}>
-                    Shop Objectives ({activeNotes.length})
+                    Strategic Priorities ({activeNotes.length})
                   </div>
                   {displayed.map(note => {
                     const expiringSoon = note.expiresAt && (new Date(note.expiresAt) - nowDate) < threeDays;

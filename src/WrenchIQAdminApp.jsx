@@ -3,28 +3,31 @@
 // only the admin/configuration screens, separate from the main AI-assistant app.
 
 import { useState } from "react";
-import { Settings, Zap, FileText, Database, Building2, Users } from "lucide-react";
+import { Settings, FileText, Database, Building2, Map } from "lucide-react";
 import { COLORS } from "./theme/colors";
 import BrandWordmark from "./components/BrandWordmark";
 
 import SettingsScreen from "./screens/SettingsScreen";
-import IntegrationsScreen from "./screens/IntegrationsScreen";
 import AM3CAdminScreen, { DEFAULT_SETTINGS as AM3C_DEFAULT_SETTINGS } from "./screens/AM3CAdminScreen";
 import AMAdminScreen from "./screens/AMAdminScreen";
 import OEMSettingsScreen from "./screens/OEMSettingsScreen";
-import GWGCorporateScreen from "./screens/GWGCorporateScreen";
+import HierarchyAdminScreen from "./screens/HierarchyAdminScreen";
 
 const NAV_SCREENS = [
   { id: "settings",     label: "Settings",           icon: Settings,  component: SettingsScreen },
-  { id: "integrations", label: "Integrations",       icon: Zap,       component: IntegrationsScreen },
   { id: "am3cAdmin",    label: "3C Story Writer",     icon: FileText,  component: AM3CAdminScreen },
   { id: "amAdmin",      label: "AM Admin",            icon: Database,  component: AMAdminScreen },
   { id: "oemSettings",  label: "OEM Settings",        icon: Building2, component: OEMSettingsScreen },
-  { id: "gwgCorporate", label: "GWG Corporate",       icon: Users,     component: GWGCorporateScreen },
+  { id: "hierarchy",    label: "Location Hierarchy",  icon: Map,       component: HierarchyAdminScreen },
 ];
 
+function initialScreenFromQuery() {
+  const section = new URLSearchParams(window.location.search).get("section");
+  return NAV_SCREENS.some((s) => s.id === section) ? section : "settings";
+}
+
 export default function WrenchIQAdminApp() {
-  const [activeScreen, setActiveScreen] = useState("settings");
+  const [activeScreen, setActiveScreen] = useState(initialScreenFromQuery);
   const [am3cSettings, setAm3cSettings] = useState(AM3C_DEFAULT_SETTINGS);
 
   const active = NAV_SCREENS.find((s) => s.id === activeScreen) || NAV_SCREENS[0];
@@ -35,9 +38,6 @@ export default function WrenchIQAdminApp() {
     }
     if (activeScreen === "am3cAdmin") {
       return <AM3CAdminScreen settings={am3cSettings} onSave={setAm3cSettings} />;
-    }
-    if (activeScreen === "gwgCorporate") {
-      return <GWGCorporateScreen onExitPersona={() => setActiveScreen("settings")} />;
     }
     const ActiveComponent = active.component;
     return <ActiveComponent />;

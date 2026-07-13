@@ -34,7 +34,7 @@ const CATEGORIES = [
     ],
   },
   {
-    id: "upsell", label: "Upsell & Bundling", icon: Package, color: COLORS.accent,
+    id: "upsell", label: "Service Recommendations & Bundling", icon: Package, color: COLORS.accent,
     questions: [
       "What else usually gets done during an oil change visit?",
       "What should I recommend alongside a brake job?",

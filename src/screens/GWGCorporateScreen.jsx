@@ -87,15 +87,15 @@ const OBJECTIVES = [
   {
     job: "JOB 3",
     jobColor: "#3B82F6",
-    type: "Smart Upsell",
-    objective: "Increase oil change ARO by $75. Prioritize Brand X oil. Target 30% upsell acceptance.",
+    type: "Service Recommendations",
+    objective: "Increase oil change ARO by $75. Prioritize Brand X oil. Target 30% service recommendation acceptance.",
     metric: "+$42",
     metricLabel: "avg ARO increase",
     status: "In Progress",
     statusKey: "blue",
     statusIcon: Clock,
     borderColor: "#3B82F6",
-    detail: "$33 gap to target — 22% upsell acceptance",
+    detail: "$33 gap to target — 22% service recommendation acceptance",
   },
   {
     job: "JOB 4",

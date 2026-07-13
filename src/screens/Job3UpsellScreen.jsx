@@ -33,7 +33,7 @@ function buildTalkTrack(name, vehicleStr, mileage) {
   return `"${name}, your ${make} is coming up on ${miles} miles — that's when ${make} recommends a transmission fluid exchange. We see 82% of ${make} owners at this mileage get this done. Your cabin filter hasn't been replaced recently either — we can knock both out while we've got it up on the lift. Want me to add those?"`;
 }
 
-export default function Job3UpsellScreen() {
+export default function Job3UpsellScreen({ showIntelligencePanel = true }) {
   const { smsName, primaryCustomer, activeShopId } = useDemo();
   const { activeCustomer } = useSelectedCustomer();
   const [showResult, setShowResult] = useState(false);
@@ -159,13 +159,13 @@ export default function Job3UpsellScreen() {
         background: COLORS.bg,
       }}
     >
-      {/* ── LEFT PANEL: SMS mock ── */}
+      {/* ── LEFT PANEL: SMS mock (full width when the WrenchIQ panel is hidden) ── */}
       <div
         style={{
-          flex: "0 0 65%",
+          flex: showIntelligencePanel ? "0 0 65%" : "1 1 100%",
           display: "flex",
           flexDirection: "column",
-          borderRight: `1px solid ${COLORS.border}`,
+          borderRight: showIntelligencePanel ? `1px solid ${COLORS.border}` : "none",
           background: "#F9FAFB",
           overflow: "auto",
         }}
@@ -183,7 +183,7 @@ export default function Job3UpsellScreen() {
           }}
         >
           <span style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
-            {smsName} &nbsp;&middot;&nbsp; RO #{roNumber} &nbsp;&middot;&nbsp; {primaryCustomer} &nbsp;&middot;&nbsp; {vehicleStr}
+            {smsName} &nbsp;&middot;&nbsp; RO #{roNumber} &nbsp;&middot;&nbsp; {customerName} &nbsp;&middot;&nbsp; {vehicleStr}
           </span>
           {showResult && (
             <button
@@ -219,7 +219,7 @@ export default function Job3UpsellScreen() {
           }}
         >
           {[
-            ["Customer", primaryCustomer],
+            ["Customer", customerName],
             ["Vehicle", vehicleStr],
             ["Mileage", mileageStr],
             ["Appointment", ro?.jobs?.[0]?.name || "Oil Change"],
@@ -518,7 +518,8 @@ export default function Job3UpsellScreen() {
         </div>
       </div>
 
-      {/* ── RIGHT PANEL: WrenchIQ Agent ── */}
+      {/* ── RIGHT PANEL: WrenchIQ Agent — hidden on Surface C ── */}
+      {showIntelligencePanel && (
       <div
         style={{
           flex: "0 0 35%",
@@ -542,13 +543,13 @@ export default function Job3UpsellScreen() {
               WrenchIQ
             </span>
             <span style={{ fontSize: 12, color: COLORS.intelMuted, marginLeft: 2 }}>
-              · Job 3: Smart Upsell
+              · Job 3: Service Recommendations
             </span>
           </div>
         </div>
 
         <div style={{ flex: 1, padding: "18px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Smart Upsell card */}
+          {/* Service Recommendations card */}
           <div
             style={{
               background: COLORS.navyMid,
@@ -573,7 +574,7 @@ export default function Job3UpsellScreen() {
                 JOB 3
               </div>
               <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
-                Upsell Opportunities
+                Service Recommendations
               </span>
             </div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 14 }}>
@@ -739,7 +740,7 @@ export default function Job3UpsellScreen() {
               </span>
             </div>
             <p style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: "rgba(255,255,255,0.6)" }}>
-              GWG target: +$75 ARO on oil change visits. This upsell delivers +$240. At 50 oil changes/month, lifting 25% acceptance = <strong style={{ color: "rgba(255,255,255,0.85)" }}>+$3,000/month incremental.</strong>
+              GWG target: +$75 ARO on oil change visits. This service recommendation delivers +$240. At 50 oil changes/month, lifting 25% acceptance = <strong style={{ color: "rgba(255,255,255,0.85)" }}>+$3,000/month incremental.</strong>
             </p>
           </div>
 
@@ -811,6 +812,7 @@ export default function Job3UpsellScreen() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

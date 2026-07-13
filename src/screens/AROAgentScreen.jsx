@@ -426,7 +426,7 @@ export default function AROAgentScreen() {
         setTimeout(() => setAgentLog(l => [...l, "Tool: get_aro_trend — building 12-month history"]), 3800),
         setTimeout(() => setAgentLog(l => [...l, "Tool: get_customer_patterns — analyzing repeat visits"]), 5200),
         setTimeout(() => setAgentLog(l => [...l, "Tool: get_vehicle_segments — segmenting by origin"]), 6400),
-        setTimeout(() => setAgentLog(l => [...l, "Tool: get_service_opportunities — identifying upsell gaps"]), 7600),
+        setTimeout(() => setAgentLog(l => [...l, "Tool: get_service_opportunities — identifying service recommendation gaps"]), 7600),
         setTimeout(() => setAgentLog(l => [...l, "Synthesizing recommendations..."]), 9000),
       ];
 
@@ -718,7 +718,7 @@ export default function AROAgentScreen() {
                 )}
                 {analysis?.declined_revenue_opportunity > 0 && (
                   <KPICard
-                    label="Upsell Opp."
+                    label="Svc. Rec. Opp."
                     value={revStr(analysis.declined_revenue_opportunity)}
                     sub="recoverable revenue"
                     color={COLORS.accent}

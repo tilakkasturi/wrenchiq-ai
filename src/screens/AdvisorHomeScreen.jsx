@@ -41,7 +41,7 @@ export const STATIC_BOARD_ROS = [
         "Loyal customer (9 visits, $6,840 LTV) — prioritize throughput and a smooth pickup experience.",
         "BMW X3 brakes: verify brake fluid condition. Flush ($189) has 78% acceptance at this mileage.",
         "65K inspection may surface cabin filter (last 20K ago) and DSC sensor — flag before customer waits.",
-        "High approval rate (88%) — present upsells confidently; James rarely declines aligned recommendations.",
+        "High approval rate (88%) — present service recommendations confidently; James rarely declines aligned recommendations.",
       ],
     },
   },
@@ -243,7 +243,7 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
     setSelectedRoNum(next?.roNum || null);
 
     if (next) {
-      const veh = vehicles.find(v => v.customerId === next.custId);
+      const veh = next._liveVehicle || vehicles.find(v => v.customerId === next.custId);
       onRoSelect?.({ ...next, shopId: "cornerstone", _vehicle: veh || null });
     } else {
       onRoSelect?.(null);
@@ -253,15 +253,16 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
   // Derived stats (KPI strip)
   const totalRevenue = BOARD_ROS.reduce((s, r) => s + (r._liveRO?.totalEstimate || 0), 0);
   const avgOpenTime  = Math.round(BOARD_ROS.reduce((s, r) => s + r.minAgo, 0) / BOARD_ROS.length);
-  const avgApproval  = Math.round(
-    BOARD_ROS.reduce((s, r) => s + (r._liveRO?.customerApprovalRate || 0), 0) / BOARD_ROS.length * 100
-  );
+  const approvalRates = BOARD_ROS.map(r => r._liveRO?.customerApprovalRate).filter(v => v != null);
+  const avgApproval  = approvalRates.length
+    ? Math.round(approvalRates.reduce((s, v) => s + v, 0) / approvalRates.length * 100)
+    : null;
 
   // ── RO card (inside kanban column) ──────────────────────────────────────────
 
   function ROCard({ ro }) {
-    const cust    = customers.find(c => c.id === ro.custId);
-    const veh     = vehicles.find(v => v.customerId === ro.custId);
+    const cust    = ro._liveCustomerName ? null : customers.find(c => c.id === ro.custId);
+    const veh     = ro._liveVehicle || vehicles.find(v => v.customerId === ro.custId);
     const colCfg  = BOARD_COLUMNS.find(c => c.id === ro.column);
     const loyalty = LOYALTY_CONFIG[ro._liveRO?.loyaltyTier] || LOYALTY_CONFIG.regular;
     const isSelected = selectedRoNum === ro.roNum;
@@ -295,7 +296,7 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
 
         {/* Customer name */}
         <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 2 }}>
-          {cust ? `${cust.firstName} ${cust.lastName}` : "Unknown"}
+          {ro._liveCustomerName || (cust ? `${cust.firstName} ${cust.lastName}` : "Unknown")}
         </div>
 
         {/* Vehicle */}
@@ -393,7 +394,7 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
           {[
             { label: `${BOARD_ROS.length} ROs Today`,          color: COLORS.textSecondary },
             { label: `${avgOpenTime} min Avg Open Time`,        color: COLORS.textSecondary },
-            { label: `${avgApproval}% Approval Rate`,           color: COLORS.textSecondary },
+            { label: avgApproval != null ? `${avgApproval}% Approval Rate` : "Approval Rate — n/a", color: COLORS.textSecondary },
             { label: `${fmtMoney(totalRevenue)} Today's Revenue`, color: COLORS.textSecondary },
           ].map((k, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>

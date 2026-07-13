@@ -16,15 +16,15 @@ import AIInsightsStrip from "../components/AIInsightsStrip";
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 const INITIAL_BRIEF =
-  "As a service advisor starting my day, briefly tell me the most important repair patterns, upsell opportunities, and anything unusual in the recent repair history I should know about. Be specific with numbers and actionable.";
+  "As a service advisor starting my day, briefly tell me the most important repair patterns, service recommendation opportunities, and anything unusual in the recent repair history I should know about. Be specific with numbers and actionable.";
 
 const QUICK_ACTIONS = [
   { label: "Today's trends",      q: "What repair patterns are trending and what should I watch for today?" },
-  { label: "Bundle opportunities", q: "What are the best upsell and bundling opportunities I should pitch to customers?" },
+  { label: "Bundle opportunities", q: "What are the best service recommendation and bundling opportunities I should pitch to customers?" },
   { label: "By make",             q: "Which vehicle makes are coming in most and what do they typically need?" },
   { label: "Brake insights",      q: "What should I know about brake jobs — what else comes up at the same visit?" },
   { label: "Top revenue jobs",    q: "What are the highest value repair jobs and which customers tend to need them?" },
-  { label: "Oil change upsells",  q: "When a customer comes in for an oil change, what should I recommend alongside it?" },
+  { label: "Oil change recommendations",  q: "When a customer comes in for an oil change, what should I recommend alongside it?" },
 ];
 
 const LOADING_STEPS = [
@@ -227,7 +227,7 @@ export default function AIAgentScreen() {
       <AIInsightsStrip insights={[
         { icon: "🤖", text: "AI wrote 3 RO narratives this morning — $4,280 in labor documented, 0 sent back for edits", value: "$4,280 written", color: "#22C55E" },
         { icon: "⚡", text: "David Kim RO: AI flagged P0420 with TSB match — pending advisor sign-off", action: "Review RO", value: "Flagged", color: "#F59E0B" },
-        { icon: "💬", text: "4 upsell opportunities in today's queue totaling $920 — 1-tap to add to estimates", action: "Review Opps", value: "+$920", color: "#FF6B35" },
+        { icon: "💬", text: "4 service recommendations in today's queue totaling $920 — 1-tap to add to estimates", action: "Review Opps", value: "+$920", color: "#FF6B35" },
         { icon: "📊", text: "Knowledge Graph queried 14 times today — avg response 1.2s", value: "14 queries", color: "#3B82F6" },
       ]} />
 

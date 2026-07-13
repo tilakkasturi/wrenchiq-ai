@@ -5,31 +5,50 @@
  * live Data Feed (CustomerSelector + SelectedCustomerContext, already
  * polling GET /api/data-feed/*), then automatically load WrenchIQ
  * intelligence for that RO (GET /api/repair-orders/story-ro/:roId for full
- * RO detail, then POST /api/ro-advisor for the advisor brief / upsells /
- * alerts). This is intentionally narrow — no Kanban, no shop-wide Knowledge
- * Graph panel, no tribal-knowledge checklist. Just: pick a customer, get
- * WrenchIQ intelligence.
+ * RO detail, then POST /api/ro-advisor for the advisor brief / service
+ * recommendations / alerts). This is intentionally narrow — no Kanban, no
+ * shop-wide Knowledge Graph panel. Just: pick a customer, get WrenchIQ
+ * intelligence.
  */
 
 import { useState, useEffect } from "react";
-import { Sparkles, AlertTriangle, Search } from "lucide-react";
+import { Sparkles, AlertTriangle, Search, Settings } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 import { fetchStoryRO } from "../services/repairOrderService";
+import { useInsightNotifier } from "../services/insightNotifier";
 import CustomerSelector from "../components/CustomerSelector";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
+const WEB_APP_BASE_URL = import.meta.env.VITE_WEB_APP_BASE_URL || "http://localhost:5173";
 
 function fmtMoney(n) {
   if (n == null) return "$0";
   return `$${Math.round(n).toLocaleString()}`;
 }
 
+// Opens Surface A (the web admin app) at the settings section most relevant
+// to the Sidecar. Tauri's webview can't open external URLs via plain
+// window.open, so we route through the opener plugin when running inside
+// the desktop shell, falling back to window.open for browser-based dev.
+async function openSurfaceASettings() {
+  const url = `${WEB_APP_BASE_URL}/admin.html?section=settings&edition=am`;
+  const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+  if (isTauri) {
+    const { openUrl } = await import("@tauri-apps/plugin-opener");
+    openUrl(url);
+  } else {
+    window.open(url, "_blank");
+  }
+}
+
 export default function WrenchIQSidecarScreen() {
-  const { activeCustomer } = useSelectedCustomer();
+  const { activeCustomer, customers, selectCustomer } = useSelectedCustomer();
   const [storyRO, setStoryRO] = useState(null);
   const [agentData, setAgentData] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useInsightNotifier(customers, selectCustomer);
 
   useEffect(() => {
     const roId = activeCustomer?.roNumber;
@@ -90,6 +109,18 @@ export default function WrenchIQSidecarScreen() {
           <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
             WrenchIQ Intelligence
           </span>
+          <button
+            onClick={openSurfaceASettings}
+            title="Open WrenchIQ settings"
+            style={{
+              marginLeft: "auto", background: "transparent", border: "none",
+              cursor: "pointer", padding: 4, borderRadius: 6,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "rgba(255,255,255,0.4)",
+            }}
+          >
+            <Settings size={15} />
+          </button>
         </div>
         <CustomerSelector />
       </div>
@@ -270,13 +301,44 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
           </div>
         )}
 
-        {(agentData?.upsells || []).length > 0 && (
+        {agentData?.marginCheck?.status && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 7,
+            padding: "7px 10px", marginBottom: 10, borderRadius: 6,
+            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+          }}>
+            <span style={{
+              fontSize: 9, fontWeight: 700, borderRadius: 3, padding: "1px 6px",
+              letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0,
+              background: agentData.marginCheck.status === "on-target" ? "rgba(74,222,128,0.15)"
+                : agentData.marginCheck.status === "at-risk" ? "rgba(250,204,21,0.12)" : "rgba(248,113,113,0.15)",
+              color: agentData.marginCheck.status === "on-target" ? "#4ADE80"
+                : agentData.marginCheck.status === "at-risk" ? "#FBBF24" : "#F87171",
+            }}>
+              Margin {agentData.marginCheck.status.replace("-", " ")}
+            </span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+              {agentData.marginCheck.marginPct}% vs {agentData.marginCheck.target}% target
+            </span>
+          </div>
+        )}
+
+        {agentData?.aroGap?.gapAmount > 0 && (
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginBottom: 10, lineHeight: 1.45 }}>
+            <strong style={{ color: COLORS.accent }}>{fmtMoney(agentData.aroGap.gapAmount)}</strong> below ARO target
+            {agentData.aroGap.recommendationsCoverAmount > 0 && (
+              <> — these recommendations would close <strong style={{ color: COLORS.accent }}>{fmtMoney(agentData.aroGap.recommendationsCoverAmount)}</strong> of it</>
+            )}
+          </div>
+        )}
+
+        {(agentData?.serviceRecommendations || []).length > 0 && (
           <div style={{ marginBottom: 10 }}>
             <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(134,239,172,0.5)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-              Upsell Opportunities
+              Service Recommendations
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {agentData.upsells.map((u, i) => (
+              {agentData.serviceRecommendations.map((u, i) => (
                 <div key={i} style={{
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.08)",
@@ -319,7 +381,7 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
         )}
 
         {(agentData?.alerts || []).length > 0 && (
-          <div>
+          <div style={{ marginBottom: 10 }}>
             <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(252,211,77,0.6)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
               Alerts
             </div>
@@ -336,7 +398,42 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
           </div>
         )}
 
-        {!agentLoading && !agentData?.advisorBrief && (agentData?.upsells || []).length === 0 && (agentData?.alerts || []).length === 0 && (
+        {(agentData?.ings || []).length > 0 && (
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(134,239,172,0.5)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+              Strategic Priorities
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {agentData.ings.map((ing, i) => (
+                <div key={i} style={{
+                  display: "flex", gap: 7, alignItems: "flex-start",
+                  padding: "5px 0",
+                  borderBottom: i < agentData.ings.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                }}>
+                  <span style={{
+                    fontSize: 8, fontWeight: 700, borderRadius: 3, padding: "1px 5px", flexShrink: 0, marginTop: 2,
+                    letterSpacing: "0.04em", textTransform: "uppercase",
+                    background: ing.applies ? "rgba(74,222,128,0.15)" : "rgba(255,255,255,0.06)",
+                    color: ing.applies ? "#4ADE80" : "rgba(255,255,255,0.35)",
+                  }}>
+                    {ing.applies ? "Applies" : "N/A"}
+                  </span>
+                  <div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>{ing.note}</div>
+                    {ing.reason && (
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2, lineHeight: 1.4 }}>{ing.reason}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!agentLoading && !agentData?.advisorBrief
+          && (agentData?.serviceRecommendations || []).length === 0
+          && (agentData?.alerts || []).length === 0
+          && (agentData?.ings || []).length === 0 && (
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
             No intelligence signals for this RO right now.
           </div>

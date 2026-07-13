@@ -442,10 +442,10 @@ export default function ImpactDashboardScreen() {
               />
             </JobCard>
 
-            {/* JOB 3 — Smart Upsell */}
+            {/* JOB 3 — Service Recommendations */}
             <JobCard
               jobNum={3}
-              title="Smart Upsell"
+              title="Service Recommendations"
               borderColor={COLORS.accent}
               callout="+$8,400 incremental rev"
               calloutColor={COLORS.accent}
@@ -458,7 +458,7 @@ export default function ImpactDashboardScreen() {
                 noteColor={COLORS.success}
                 bold
               />
-              <MetricRow icon={Tag} label="Top upsell" value="Cabin filter + brake insp." />
+              <MetricRow icon={Tag} label="Top recommendation" value="Cabin filter + brake insp." />
               <div style={{ paddingTop: 4 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 13, color: COLORS.textSecondary }}>ARO lift</span>

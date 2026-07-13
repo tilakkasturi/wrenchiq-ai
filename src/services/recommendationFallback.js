@@ -148,7 +148,7 @@ function ruleElrBelowThreshold(metrics, edition) {
         },
         advisor: {
           headline: 'Labor rate opportunity',
-          explanation: `Shop ELR is below target (${actual} vs ${target}). Upselling declined services would improve the rate.`,
+          explanation: `Shop ELR is below target (${actual} vs ${target}). Presenting evidence-based service recommendations for declined services would improve the rate.`,
           metrics: { actualELR, targetELR },
         },
         tech: {

@@ -16,7 +16,7 @@ const AGENTS = [
     bg: "rgba(37,99,235,0.1)",
     title: "WrenchIQ Advisor Agent",
     sub: "Front Desk Intelligence",
-    desc: "Watches every open RO in real time. Surfaces approvals pending, upsell opportunities, customer context, and TSB flags before the advisor even asks.",
+    desc: "Watches every open RO in real time. Surfaces approvals pending, service recommendations, customer context, and TSB flags before the advisor even asks.",
   },
   {
     icon: Wrench,
@@ -24,7 +24,7 @@ const AGENTS = [
     bg: "rgba(22,163,74,0.1)",
     title: "WrenchIQ Tech Agent",
     sub: "Bay-Level Intelligence",
-    desc: "Guides technicians through DVI, pre-loads TSBs by VIN, recommends labor codes, and phrases upsell opportunities to the service advisor with labor overlap math built in.",
+    desc: "Guides technicians through DVI, pre-loads TSBs by VIN, recommends labor codes, and phrases service recommendations to the service advisor with labor overlap math built in.",
   },
   {
     icon: BarChart3,
@@ -161,7 +161,7 @@ export default function SplashScreen({ onEnter }) {
           textAlign: "center", maxWidth: 600,
           lineHeight: 1.65, margin: "0 0 16px",
         }}>
-          WrenchIQ watches every RO, surfaces every upsell, and follows up on every approval — so you don't have to.
+          WrenchIQ watches every RO, surfaces every service recommendation, and follows up on every approval — so you don't have to.
         </p>
 
         <p style={{

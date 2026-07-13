@@ -965,7 +965,7 @@ const TECHS = [
     completed: 1,
     billedHrs: 2.4,
     efficiency: 89,
-    upsell: 67,
+    serviceRecommendationRate: 67,
     low: false,
     bays: [1, 5],
   },
@@ -976,7 +976,7 @@ const TECHS = [
     completed: 0,
     billedHrs: 0.8,
     efficiency: 94,
-    upsell: 72,
+    serviceRecommendationRate: 72,
     low: false,
     bays: [2],
   },
@@ -987,7 +987,7 @@ const TECHS = [
     completed: 0,
     billedHrs: 2.8,
     efficiency: 71,
-    upsell: 45,
+    serviceRecommendationRate: 45,
     low: true,
     bays: [4],
   },
@@ -1010,7 +1010,7 @@ function TeamTab() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: COLORS.borderLight }}>
-                {["Tech", "Jobs Today", "Completed", "Billed Hrs", "Efficiency", "Upsell Conv."].map(
+                {["Tech", "Jobs Today", "Completed", "Billed Hrs", "Efficiency", "Svc. Rec. Conv."].map(
                   (h) => (
                     <th
                       key={h}
@@ -1091,7 +1091,7 @@ function TeamTab() {
                     </span>
                   </td>
                   <td style={{ padding: "12px 14px", fontSize: 13, color: COLORS.textPrimary }}>
-                    {t.upsell}%
+                    {t.serviceRecommendationRate}%
                   </td>
                 </tr>
               ))}

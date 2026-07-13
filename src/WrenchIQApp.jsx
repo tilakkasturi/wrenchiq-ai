@@ -26,7 +26,6 @@ import SocialInboxScreen from "./screens/SocialInboxScreen";
 import MultiLocationScreen from "./screens/MultiLocationScreen";
 import TrustEngineScreen from "./screens/TrustEngineScreen";
 import HealthReportScreen from "./screens/HealthReportScreen";
-import IntegrationsScreen from "./screens/IntegrationsScreen";
 import SmartSchedulingScreen from "./screens/SmartSchedulingScreen";
 import PartsIntelligenceScreen from "./screens/PartsIntelligenceScreen";
 import TechMobileScreen from "./screens/TechMobileScreen";
@@ -57,9 +56,6 @@ import OEMTechScreen from "./screens/OEMTechScreen";
 import OEMPartsScreen from "./screens/OEMPartsScreen";
 import OEMSettingsScreen from "./screens/OEMSettingsScreen";
 import GWGCorporateScreen            from "./screens/GWGCorporateScreen";
-import Job1IntakeScreen              from "./screens/Job1IntakeScreen";
-import Job2ThreeCScreen              from "./screens/Job2ThreeCScreen";
-import Job3UpsellScreen              from "./screens/Job3UpsellScreen";
 import OperationalIntelligenceScreen from "./screens/OperationalIntelligenceScreen";
 import ImpactDashboardScreen         from "./screens/ImpactDashboardScreen";
 
@@ -91,14 +87,10 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
   if (persona === "advisor") {
     if (screenId === "aiAgent")     return <AIAgentScreen />;
     if (screenId === "aroAgent")    return <AROAgentScreen />;
-    if (screenId === "am3cWriter")  return <AM3CStoryWriterScreen />;
     if (screenId === "orders")     return <RepairOrderScreen onNavigate={extraProps.onNavigate} onRoSelect={extraProps.onRoSelect} />;
     if (screenId === "parts")      return <PartsIntelligenceScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "scheduling") return <SmartSchedulingScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "trust")      return <TrustEngineScreen onNavigate={extraProps.onNavigate} />;
-    if (screenId === "job1Intake") return <Job1IntakeScreen />;
-    if (screenId === "job2ThreeC") return <Job2ThreeCScreen />;
-    if (screenId === "job3Upsell") return <Job3UpsellScreen />;
   }
 
   // Tech persona screens
@@ -114,7 +106,6 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
     if (screenId === "analytics")  return <AnalyticsScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "network")    return <MultiLocationScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "trust")      return <TrustEngineScreen onNavigate={extraProps.onNavigate} />;
-    if (screenId === "settings")      return <SettingsScreen onNavigate={extraProps.onNavigate} />;
     if (screenId === "opIntel")       return <OperationalIntelligenceScreen />;
     if (screenId === "impactDash")    return <ImpactDashboardScreen />;
   }
@@ -155,7 +146,6 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
 // ── Default screen per persona ───────────────────────────────
 
 const PERSONA_DEFAULT_SCREEN = {
-  advisor:      "job1Intake",
   advisorLite:  "intelligentRO",
   tech:         "techHome",
   owner:        "ownerHome",
@@ -270,8 +260,8 @@ export default function WrenchIQApp() {
 
   if (_agentOnlyMode) {
     return (
-      <RecommendationsProvider shopId="shop-001" edition="am" persona={agentPersona}>
-        <SelectedCustomerProvider shopId="shop-001" edition="am">
+      <RecommendationsProvider shopId={activeShopId} edition="am" persona={agentPersona}>
+        <SelectedCustomerProvider shopId={activeShopId} edition="am">
           <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
             <WrenchIQAgent
               activeScreen={agentScreen}
@@ -412,7 +402,7 @@ export default function WrenchIQApp() {
     }
 
     return (
-      <RecommendationsProvider shopId="shop-001" edition="am" persona={activePersona}>
+      <RecommendationsProvider shopId={activeShopId} edition="am" persona={activePersona}>
         <SelectedCustomerProvider shopId={activeShopId} edition="am">
           <>
             <PersonaShell
@@ -458,8 +448,8 @@ export default function WrenchIQApp() {
   let lastGroup = null;
 
   return (
-    <RecommendationsProvider shopId="shop-001" edition="am" persona="admin">
-    <SelectedCustomerProvider shopId="shop-001" edition="am">
+    <RecommendationsProvider shopId={activeShopId} edition="am" persona="admin">
+    <SelectedCustomerProvider shopId={activeShopId} edition="am">
     <div style={{ display: "flex", height: "100vh", background: COLORS.bg, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       {specsOpen && <SpecificationsPanel onClose={() => setSpecsOpen(false)} />}
 
