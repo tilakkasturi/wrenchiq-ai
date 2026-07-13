@@ -124,6 +124,8 @@ function AuditTab() {
 function SystemTab() {
   const { brand, setBrand } = useBranding();
   const isPredii = brand === "PrediiPowered";
+  const amName  = useEditionName("AM");
+  const oemName = useEditionName("OEM");
   return (
     <div style={{ maxWidth: 700 }}>
       <div style={{ marginBottom: 20 }}>
