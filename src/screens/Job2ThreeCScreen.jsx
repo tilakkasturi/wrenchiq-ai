@@ -103,7 +103,7 @@ function GapRow({ text, passed }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function Job2ThreeCScreen() {
+export default function Job2ThreeCScreen({ showIntelligencePanel = true }) {
   const { smsName, activeShopId } = useDemo();
   const { activeCustomer } = useSelectedCustomer();
   const [showResult, setShowResult] = useState(false);
@@ -189,13 +189,13 @@ export default function Job2ThreeCScreen() {
         background: COLORS.bg,
       }}
     >
-      {/* ── LEFT PANEL: SMS ──────────────────────────────────────────────── */}
+      {/* ── LEFT PANEL: SMS (full width when the WrenchIQ panel is hidden) ── */}
       <div
         style={{
-          flex: "0 0 65%",
+          flex: showIntelligencePanel ? "0 0 65%" : "1 1 100%",
           display: "flex",
           flexDirection: "column",
-          borderRight: `1px solid ${COLORS.border}`,
+          borderRight: showIntelligencePanel ? `1px solid ${COLORS.border}` : "none",
           overflow: "hidden",
         }}
       >
@@ -499,7 +499,8 @@ export default function Job2ThreeCScreen() {
         </div>
       </div>
 
-      {/* ── RIGHT PANEL: WrenchIQ Agent ──────────────────────────────────── */}
+      {/* ── RIGHT PANEL: WrenchIQ Agent — hidden on Surface C ──────────────── */}
+      {showIntelligencePanel && (
       <div
         style={{
           flex: "0 0 35%",
@@ -896,6 +897,7 @@ export default function Job2ThreeCScreen() {
           Powered by Predii
         </div>
       </div>
+      )}
     </div>
   );
 }

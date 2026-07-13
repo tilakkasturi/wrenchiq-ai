@@ -48,7 +48,8 @@ const STATUS_LABEL = {
   complete:       "Complete",
 };
 
-const DEMO_ROS = repairOrders.map(ro => {
+// Fallback when no live RO list is supplied (standalone am-3c.html, admin shell)
+const FALLBACK_DEMO_ROS = repairOrders.map(ro => {
   const customer = customers.find(c => c.id === ro.customerId) || {};
   const vehicle  = vehicles.find(v => v.id === ro.vehicleId) || {};
   return {
@@ -300,7 +301,8 @@ function InlineStagePipeline({ roContext }) {
 
 // ── Main Screen ───────────────────────────────────────────────
 
-export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
+export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin, showIntelligencePanel = true, liveROs }) {
+  const DEMO_ROS = liveROs && liveROs.length ? liveROs : FALLBACK_DEMO_ROS;
   const [selectedROId, setSelectedROId]     = useState(DEMO_ROS[0]?.id || null);
   const [complaint, setComplaint]           = useState("");
   const [cause, setCause]                   = useState("");
@@ -532,12 +534,14 @@ export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       minWidth: 0,
     }}>
+      {showIntelligencePanel && (
       <AIInsightsStrip insights={[
         { icon: "📝", text: "David Kim's CR-V: P0420 narrative ready — TSB-19-052 reference improves approval rate 40%", action: "Insert TSB", value: "+40% approval", color: "#2563EB" },
         { icon: "⚠️", text: "Monica's Camry cause section vague — add torque spec and part number for compliance", action: "Enhance Cause", value: "Compliance risk", color: "#F59E0B" },
         { icon: "✅", text: "Last 5 narratives accepted by service manager without edits — AI quality score 96%", value: "96% quality", color: "#22C55E" },
         { icon: "🔍", text: "James Park's BMW: 3 open TSBs match current complaint — review before finalizing", action: "Review TSBs", value: "3 TSB matches", color: "#7C3AED" },
       ]} />
+      )}
       <div style={{ display: "flex", flex: 1, minWidth: 0, overflow: "hidden" }}>
 
       {/* ── Left: RO Queue ── */}
@@ -871,7 +875,8 @@ export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
         </div>
       </div>
 
-      {/* ── Right: ROActivePanel ── */}
+      {/* ── Right: ROActivePanel — hidden on Surface C ── */}
+      {showIntelligencePanel && (
       <ROActivePanel
         roContext={roContext}
         prediiScore={prediiScore}
@@ -887,6 +892,7 @@ export default function AM3CStoryWriterScreen({ onOpenReview, onOpenAdmin }) {
         collapsed={panelCollapsed}
         onToggleCollapse={() => setPanelCollapsed(!panelCollapsed)}
       />
+      )}
       </div>
 
       {/* ── Recall Detail Modal ── */}

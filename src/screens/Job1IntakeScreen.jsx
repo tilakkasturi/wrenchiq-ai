@@ -190,7 +190,7 @@ function IntelRow({ icon: Icon, iconColor, label, value, sub }) {
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
-export default function Job1IntakeScreen({ onNavigate }) {
+export default function Job1IntakeScreen({ onNavigate, showIntelligencePanel = true }) {
   const { smsName, activeShopId } = useDemo();
   const { activeCustomer } = useSelectedCustomer();
   const [showResult, setShowResult] = useState(false);
@@ -256,13 +256,13 @@ export default function Job1IntakeScreen({ onNavigate }) {
         overflow: "hidden",
       }}
     >
-      {/* ── LEFT: SMS panel (65%) ── */}
+      {/* ── LEFT: SMS panel (65%, or 100% when the WrenchIQ panel is hidden) ── */}
       <div
         style={{
-          width: "65%",
+          width: showIntelligencePanel ? "65%" : "100%",
           display: "flex",
           flexDirection: "column",
-          borderRight: `1px solid ${COLORS.border}`,
+          borderRight: showIntelligencePanel ? `1px solid ${COLORS.border}` : "none",
           overflow: "hidden",
         }}
       >
@@ -462,7 +462,8 @@ export default function Job1IntakeScreen({ onNavigate }) {
         </div>
       </div>
 
-      {/* ── RIGHT: WrenchIQ Agent panel (35%) ── */}
+      {/* ── RIGHT: WrenchIQ Agent panel (35%) — hidden on Surface C, where intelligence is surfaced by the separate Surface B sidecar ── */}
+      {showIntelligencePanel && (
       <div
         style={{
           width: "35%",
@@ -728,6 +729,7 @@ export default function Job1IntakeScreen({ onNavigate }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

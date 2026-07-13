@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft, Shield, CheckCircle, X, ChevronDown, ChevronUp,
-  Save, Wifi, WifiOff, Settings,
+  Save, Settings,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 
@@ -15,11 +15,6 @@ export const DEFAULT_SETTINGS = {
     senderName: "Peninsula Precision Auto",
     documentExpiryDays: 90,
     minScoreToSend: 60,
-  },
-  smsIntegration: {
-    target: "tekmetric",
-    apiKey: "",
-    enabled: false,
   },
 };
 
@@ -81,13 +76,6 @@ const FACTUALITY_RULES = [
     compliant:     "Original tech notes preserved in audit trail.",
     noncompliant:  "Edited section without audit record.",
   },
-];
-
-const SMS_TARGETS = [
-  { value: "tekmetric",   label: "Tekmetric" },
-  { value: "shop_ware",   label: "Shop-Ware" },
-  { value: "shopmonkey",  label: "Shopmonkey" },
-  { value: "autoleap",    label: "AutoLeap" },
 ];
 
 // ── Sub-components ─────────────────────────────────────────────────────────
@@ -274,48 +262,14 @@ function FormRow({ label, hint, children }) {
   );
 }
 
-function Toggle({ checked, onChange }) {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      style={{
-        width: 44,
-        height: 24,
-        borderRadius: 12,
-        border: "none",
-        background: checked ? COLORS.primary : COLORS.border,
-        cursor: "pointer",
-        position: "relative",
-        transition: "background 0.2s",
-        flexShrink: 0,
-      }}
-    >
-      <div style={{
-        position: "absolute",
-        top: 2,
-        left: checked ? 22 : 2,
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        background: "#fff",
-        transition: "left 0.2s",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-      }} />
-    </button>
-  );
-}
-
 // ── Main component ─────────────────────────────────────────────────────────
 
 export default function AM3CAdminScreen({ settings = DEFAULT_SETTINGS, onSave }) {
   const [local, setLocal] = useState(() => ({
     delivery: { ...DEFAULT_SETTINGS.delivery, ...(settings?.delivery || {}) },
-    smsIntegration: { ...DEFAULT_SETTINGS.smsIntegration, ...(settings?.smsIntegration || {}) },
   }));
 
   const [expandedExplainer, setExpandedExplainer] = useState(false);
-  const [testingConnection, setTestingConnection] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState(""); // "" | "connected" | "error"
   const [saveIndicator, setSaveIndicator] = useState("saved"); // "saved" | "saving" | "unsaved"
 
   const debounceRef = useRef(null);
@@ -344,19 +298,6 @@ export default function AM3CAdminScreen({ settings = DEFAULT_SETTINGS, onSave })
 
   function updateDelivery(patch) {
     setLocal(prev => ({ ...prev, delivery: { ...prev.delivery, ...patch } }));
-  }
-
-  function updateSms(patch) {
-    setLocal(prev => ({ ...prev, smsIntegration: { ...prev.smsIntegration, ...patch } }));
-  }
-
-  function handleTestConnection() {
-    setTestingConnection(true);
-    setConnectionStatus("");
-    setTimeout(() => {
-      setTestingConnection(false);
-      setConnectionStatus("connected");
-    }, 1000);
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -754,152 +695,6 @@ export default function AM3CAdminScreen({ settings = DEFAULT_SETTINGS, onSave })
               {local.delivery.minScoreToSend < 60 && "Low threshold — most documents will be sent without review"}
             </div>
           </FormRow>
-
-          {/* SMS Integration divider */}
-          <div style={{
-            padding: "12px 20px",
-            background: COLORS.borderLight,
-            borderTop: `1px solid ${COLORS.border}`,
-            borderBottom: `1px solid ${COLORS.border}`,
-            fontSize: 12,
-            fontWeight: 700,
-            color: COLORS.textSecondary,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            display: "flex",
-            alignItems: "center",
-            gap: 7,
-          }}>
-            <Wifi size={13} />
-            SMS Integration
-          </div>
-
-          {/* Target SMS system */}
-          <FormRow label="Target SMS System" hint="Your shop management system">
-            <select
-              value={local.smsIntegration.target}
-              onChange={e => updateSms({ target: e.target.value })}
-              style={{
-                padding: "8px 10px",
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 6,
-                fontSize: 13,
-                color: COLORS.textPrimary,
-                fontFamily: "inherit",
-                background: "#fff",
-                cursor: "pointer",
-                outline: "none",
-                minWidth: 180,
-              }}
-            >
-              {SMS_TARGETS.map(t => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
-          </FormRow>
-
-          {/* API Key */}
-          <FormRow label="API Key" hint="Provided by your SMS system vendor">
-            <input
-              type="password"
-              value={local.smsIntegration.apiKey}
-              onChange={e => updateSms({ apiKey: e.target.value })}
-              placeholder="••••••••••••••••"
-              style={{
-                width: "100%",
-                padding: "8px 10px",
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 6,
-                fontSize: 13,
-                color: COLORS.textPrimary,
-                fontFamily: "inherit",
-                boxSizing: "border-box",
-                outline: "none",
-                letterSpacing: local.smsIntegration.apiKey ? "0.12em" : "normal",
-              }}
-            />
-          </FormRow>
-
-          {/* Enable toggle + Test Connection */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "200px 1fr",
-            gap: 16,
-            alignItems: "center",
-            padding: "14px 20px",
-          }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary }}>Enable Integration</div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>Activate outbound SMS via selected system</div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <Toggle
-                checked={local.smsIntegration.enabled}
-                onChange={val => updateSms({ enabled: val })}
-              />
-              <span style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: local.smsIntegration.enabled ? COLORS.success : COLORS.textMuted,
-              }}>
-                {local.smsIntegration.enabled ? "Enabled" : "Disabled"}
-              </span>
-
-              {/* Test Connection button */}
-              <button
-                onClick={handleTestConnection}
-                disabled={testingConnection}
-                style={{
-                  marginLeft: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "7px 14px",
-                  background: testingConnection ? "#F3F4F6" : COLORS.primary,
-                  color: testingConnection ? COLORS.textMuted : "#fff",
-                  border: "none",
-                  borderRadius: 6,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: testingConnection ? "not-allowed" : "pointer",
-                  transition: "background 0.2s",
-                }}
-              >
-                {testingConnection
-                  ? <><WifiOff size={13} /> Testing…</>
-                  : <><Wifi size={13} /> Test Connection</>
-                }
-              </button>
-
-              {/* Connection status */}
-              {connectionStatus === "connected" && (
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: COLORS.success,
-                }}>
-                  <CheckCircle size={14} />
-                  Connected
-                </div>
-              )}
-              {connectionStatus === "error" && (
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: COLORS.danger,
-                }}>
-                  <X size={14} />
-                  Connection failed
-                </div>
-              )}
-            </div>
-          </div>
 
         </SectionCard>
 
