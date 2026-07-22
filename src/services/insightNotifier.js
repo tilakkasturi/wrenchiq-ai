@@ -1,18 +1,14 @@
 /**
- * insightNotifier — fires native OS notifications (tauri-plugin-notification)
- * for simulated shop activity / WrenchIQ insights, so Surface B stays useful
- * while minimized. Also rotates SelectedCustomerContext's active customer in
- * lockstep, so whichever RO a notification calls out is already on screen by
- * the time the window is restored — the desktop notification plugin has no
- * click-through callback on macOS/Windows/Linux (only mobile emits an
- * actionPerformed event), so we can't deep-link a specific click, but this
- * keeps the sidecar's state consistent with the toast either way.
+ * insightNotifier — simulates shop activity / WrenchIQ insight events.
  *
- * No-ops outside a Tauri webview (e.g. sidecar.html opened in a plain browser tab).
+ * Never changes the selected customer — a live demo relies on staying on
+ * whichever customer the presenter picked. Events are exposed as state so
+ * the Sidecar can render them as an in-app banner at the bottom of the
+ * screen — no native OS notification, so nothing pops up outside the app
+ * (and no OS notification permission is ever requested).
  */
 
-import { useEffect, useRef } from "react";
-import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
+import { useEffect, useState } from "react";
 
 const INSIGHT_TEMPLATES = [
   (name) => ({ title: "Shop activity", body: `${name}'s RO just moved to the next stage.` }),
@@ -21,45 +17,31 @@ const INSIGHT_TEMPLATES = [
   (name) => ({ title: "WrenchIQ insight", body: `New DTC/TSB match found for ${name}'s vehicle.` }),
 ];
 
-function isTauri() {
-  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-}
-
 /**
  * @param {Array<{customerId: string, customerName: string}>} customers
- * @param {(customerId: string) => void} selectCustomer
  * @param {number} intervalMs
+ * @returns {{ notifications: Array<{id: string, title: string, body: string, at: number, customerId: string}> }}
  */
-export function useInsightNotifier(customers, selectCustomer, intervalMs = 30000) {
-  const permissionRef = useRef(false);
+export function useInsightNotifier(customers, intervalMs = 30000) {
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    if (!isTauri()) return;
-    let cancelled = false;
-
-    (async () => {
-      let granted = await isPermissionGranted();
-      if (!granted) granted = (await requestPermission()) === "granted";
-      if (!cancelled) permissionRef.current = granted;
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    if (!isTauri()) return;
     if (!customers || customers.length === 0) return;
 
     const id = setInterval(() => {
       const customer = customers[Math.floor(Math.random() * customers.length)];
-      selectCustomer(customer.customerId);
-
-      if (!permissionRef.current || document.hasFocus()) return; // only interrupt when minimized/backgrounded
-
       const template = INSIGHT_TEMPLATES[Math.floor(Math.random() * INSIGHT_TEMPLATES.length)];
-      sendNotification(template(customer.customerName || "A customer"));
+      const event = template(customer.customerName || "A customer");
+
+      // In-app bottom banner only — cap at the 3 most recent.
+      setNotifications((prev) => [
+        { id: `${Date.now()}-${Math.random()}`, at: Date.now(), customerId: customer.customerId, ...event },
+        ...prev,
+      ].slice(0, 3));
     }, intervalMs);
 
     return () => clearInterval(id);
-  }, [customers, selectCustomer, intervalMs]);
+  }, [customers, intervalMs]);
+
+  return { notifications };
 }

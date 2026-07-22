@@ -131,6 +131,7 @@ router.patch('/story-ro/:roId', async (req, res) => {
     const ALLOWED_FIELDS = [
       'agenticTextStatus', 'threeCConcern', 'threeCDiagnosis',
       'threeCCorrection', 'threeCScore', 'kanbanStatus',
+      'repairJobs', 'invoice',
     ];
     const update = {};
     for (const f of ALLOWED_FIELDS) {
@@ -358,6 +359,7 @@ function normalizeStoryRO(doc) {
     laborHrs:  j.laborHours || 0,
     actualHrs: j.actualLaborHours || 0,
     partsCost: (j.parts || []).reduce((s, p) => s + (p.lineCost || 0), 0),
+    parts:     (j.parts || []).map(p => ({ description: p.description || '', cost: p.lineCost || 0, quantity: p.quantity || 1 })),
     laborCost: j.lineCost || 0,
     status:    j.status || 'pending',
     clockIn:   j.clockIn || null,

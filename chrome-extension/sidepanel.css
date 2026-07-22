@@ -1,0 +1,412 @@
+/* ── WrenchIQ Extension Side Panel ──────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --teal:    #0D3B45;
+  --orange:  #FF6B35;
+  --bg:      #F8F9FA;
+  --surface: #FFFFFF;
+  --border:  #E2E8EC;
+  --text:    #1A2B32;
+  --muted:   #6B7E87;
+  --radius:  8px;
+  --font:    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--teal);
+  flex-shrink: 0;
+}
+
+.logo { display: flex; align-items: center; gap: 8px; }
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--orange);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.logo-ai { color: var(--orange); }
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background 0.3s;
+}
+.status-dot.idle    { background: rgba(255,255,255,0.3); }
+.status-dot.active  { background: #4CAF50; box-shadow: 0 0 6px #4CAF50; }
+.status-dot.loading { background: var(--orange); animation: pulse 1s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── Detection bar ────────────────────────────────────────── */
+.detection-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #E8F4F6;
+  border-bottom: 1px solid #C8DEE3;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.detection-label { color: var(--muted); font-weight: 500; }
+.detected-phone  { color: var(--teal);  font-weight: 700; font-family: monospace; }
+
+/* ── App body: flex column, fills remaining height ────────── */
+#app-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Main scrollable area ─────────────────────────────────── */
+main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+/* ── State panels ─────────────────────────────────────────── */
+.state-panel { width: 100%; }
+.hidden      { display: none !important; }
+
+/* Idle */
+.idle-icon  { text-align: center; margin: 32px 0 12px; }
+.idle-text  { text-align: center; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+
+/* Manual input */
+.input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.phone-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.phone-input:focus { border-color: var(--teal); }
+
+/* Loading */
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 32px auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { text-align: center; color: var(--muted); }
+
+/* Not found */
+.not-found-text { text-align: center; color: var(--muted); margin: 24px 0 12px; }
+
+/* ── Customer card ─────────────────────────────────────────── */
+.customer-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.customer-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.customer-info { flex: 1; min-width: 0; }
+.customer-name { font-weight: 700; font-size: 14px; }
+.customer-meta { color: var(--muted); font-size: 11px; margin-top: 1px; }
+
+.loyalty-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: var(--teal);
+  color: #fff;
+  flex-shrink: 0;
+}
+.loyalty-badge.gold     { background: #B8860B; }
+.loyalty-badge.platinum { background: #5A4A6E; }
+.loyalty-badge.silver   { background: #607D8B; }
+.loyalty-badge.bronze   { background: #8D6E63; }
+
+/* ── Section label ─────────────────────────────────────────── */
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin: 10px 0 5px;
+}
+
+/* ── Vehicle card ──────────────────────────────────────────── */
+.vehicle-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+.next-service { color: var(--orange); font-size: 11px; font-weight: 600; }
+
+/* ── Insights ──────────────────────────────────────────────── */
+.insights-list { display: flex; flex-direction: column; gap: 6px; }
+
+.insight-item {
+  background: #FFF8F5;
+  border: 1.5px solid #FFD4C2;
+  border-left: 3px solid var(--orange);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+/* ── RO list ───────────────────────────────────────────────── */
+.ros-list { display: flex; flex-direction: column; gap: 6px; }
+
+.ro-item {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: 11.5px;
+}
+
+.ro-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+.ro-id     { font-weight: 700; color: var(--teal); font-family: monospace; font-size: 11px; }
+.ro-status {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.ro-status.checked_in  { background: #E3F2FD; color: #1565C0; }
+.ro-status.in_progress { background: #FFF3E0; color: #E65100; }
+.ro-status.ready       { background: #E8F5E9; color: #2E7D32; }
+.ro-status.approved    { background: #EDE7F6; color: #4527A0; }
+
+.ro-service { color: var(--muted); font-size: 11px; }
+.ro-estimate { font-weight: 700; color: var(--teal); float: right; }
+
+/* ── Chat area ─────────────────────────────────────────────── */
+.chat-area {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.chat-messages {
+  min-height: 60px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-msg {
+  max-width: 88%;
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.chat-msg.user      { background: var(--teal); color: #fff; align-self: flex-end; border-bottom-right-radius: 3px; }
+.chat-msg.assistant { background: #F1F3F4; color: var(--text); align-self: flex-start; border-bottom-left-radius: 3px; }
+.chat-msg.streaming { opacity: 0.7; }
+
+.chat-input-row {
+  display: flex;
+  border-top: 1px solid var(--border);
+}
+
+.chat-input {
+  flex: 1;
+  padding: 9px 12px;
+  border: none;
+  outline: none;
+  font-size: 12.5px;
+  background: transparent;
+}
+
+.btn-send {
+  padding: 8px 12px;
+  background: var(--orange);
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+.btn-send:hover { background: #e85d28; }
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.btn-primary {
+  padding: 8px 16px;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: #0a2e37; }
+
+.btn-secondary {
+  display: block;
+  width: 100%;
+  padding: 9px;
+  background: var(--surface);
+  color: var(--teal);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: border-color 0.15s;
+}
+.btn-secondary:hover { border-color: var(--teal); }
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  text-decoration: underline;
+  padding: 4px 0;
+  display: block;
+  text-align: center;
+}
+
+/* ── Persona panes (iframes) ───────────────────────────────── */
+.persona-pane {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.persona-pane:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+}
+
+.persona-pane iframe {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: none;
+  display: block;
+}
+
+/* ── Tab bar ───────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  height: 48px;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  padding: 6px 0;
+  border-top: 2px solid transparent;
+  font-family: var(--font);
+}
+
+.tab:hover { color: var(--teal); background: #F8FAFB; }
+
+.tab.active {
+  color: var(--teal);
+  border-top-color: var(--orange);
+  background: #F0F6F7;
+}

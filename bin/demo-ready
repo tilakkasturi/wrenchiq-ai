@@ -68,8 +68,9 @@ verify_shop() {
   local LABEL="$2"
   local RESPONSE COUNT
 
-  RESPONSE=$(curl -sf "${API_BASE}/api/repair-orders/demo?shopId=${SHOP_ID}" 2>/dev/null || echo "[]")
-  COUNT=$(echo "$RESPONSE" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); try { console.log(JSON.parse(d).length) } catch(e) { console.log(0) }" 2>/dev/null || echo "0")
+  RESPONSE=$(curl -sf "${API_BASE}/api/repair-orders/demo?shopId=${SHOP_ID}" 2>/dev/null || echo '{"data":[]}')
+  # Endpoint returns {count, data: [...]}, not a bare array — index into .data.
+  COUNT=$(echo "$RESPONSE" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); try { console.log((JSON.parse(d).data||[]).length) } catch(e) { console.log(0) }" 2>/dev/null || echo "0")
 
   if [ "$COUNT" -ge 3 ]; then
     pass "${LABEL}: ${COUNT} story ROs returned"
@@ -81,7 +82,7 @@ verify_shop() {
   local FIRST_ID
   FIRST_ID=$(echo "$RESPONSE" | node -e "
     const d=require('fs').readFileSync('/dev/stdin','utf8');
-    try { const arr=JSON.parse(d); console.log(arr[0]?.roId||arr[0]?._id||'') } catch(e) { console.log('') }
+    try { const arr=JSON.parse(d).data||[]; console.log(arr[0]?.roNumber||arr[0]?.id||'') } catch(e) { console.log('') }
   " 2>/dev/null || echo "")
 
   if [ -n "$FIRST_ID" ]; then
@@ -109,6 +110,8 @@ header "Smoke testing agentic moments"
 smoke_ro() {
   local RO_ID="$1"
   local LABEL="$2"
+  local EXPECT_TEXT="$3"   # 1 = this journey's story expects agenticCustomerText populated
+  local EXPECT_3C="$4"     # 1 = this journey's story expects threeCRewriteSuggestion populated
   local RO
   RO=$(curl -sf "${API_BASE}/api/repair-orders/story-ro/${RO_ID}" 2>/dev/null || echo "{}")
 
@@ -118,20 +121,32 @@ smoke_ro() {
   HAS_3C=$(echo "$RO"       | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); try{const r=JSON.parse(d);console.log(r.threeCRewriteSuggestion?'yes':'no')}catch(e){console.log('no')}" 2>/dev/null || echo "no")
 
   [ "$HAS_INSIGHTS" = "yes" ] && pass "${LABEL}: Moment 1 — aiInsights present" || fail "${LABEL}: Moment 1 — aiInsights missing"
-  [ "$HAS_TEXT"     = "yes" ] && pass "${LABEL}: Moment 2 — agenticCustomerText present" || fail "${LABEL}: Moment 2 — agenticCustomerText missing"
-  [ "$HAS_3C"       = "yes" ] && pass "${LABEL}: Moment 3 — threeCRewriteSuggestion present" || fail "${LABEL}: Moment 3 — threeCRewriteSuggestion missing"
+
+  if [ "$EXPECT_TEXT" -eq 1 ]; then
+    [ "$HAS_TEXT" = "yes" ] && pass "${LABEL}: Moment 2 — agenticCustomerText present" || fail "${LABEL}: Moment 2 — agenticCustomerText missing"
+  else
+    [ "$HAS_TEXT" = "no" ] && pass "${LABEL}: Moment 2 — agenticCustomerText correctly not used in this story" || fail "${LABEL}: Moment 2 — unexpected agenticCustomerText"
+  fi
+
+  if [ "$EXPECT_3C" -eq 1 ]; then
+    [ "$HAS_3C" = "yes" ] && pass "${LABEL}: Moment 3 — threeCRewriteSuggestion present" || fail "${LABEL}: Moment 3 — threeCRewriteSuggestion missing"
+  else
+    [ "$HAS_3C" = "no" ] && pass "${LABEL}: Moment 3 — threeCRewriteSuggestion correctly not used in this story" || fail "${LABEL}: Moment 3 — unexpected threeCRewriteSuggestion"
+  fi
 }
 
+# Each story RO is scripted to surface a specific subset of agentic moments —
+# Moment 1 (aiInsights) always fires; Moments 2/3 are per-journey, not universal.
 if [ "$SHOP" = "both" ] || [ "$SHOP" = "cornerstone" ]; then
-  smoke_ro "RO-2026-0401" "Taylor J1 Elena Vasquez "
-  smoke_ro "RO-2026-0402" "Taylor J3 Frank Delgado "
-  smoke_ro "RO-2026-0403" "Taylor J2 Brenda Okafor "
+  smoke_ro "RO-2026-0401" "Taylor J1 Elena Vasquez " 0 0
+  smoke_ro "RO-2026-0402" "Taylor J3 Frank Delgado " 1 0
+  smoke_ro "RO-2026-0403" "Taylor J2 Brenda Okafor " 0 1
 fi
 
 if [ "$SHOP" = "both" ] || [ "$SHOP" = "ridgeline" ]; then
-  smoke_ro "RO-2026-0501" "Brad   J1 Dan Whitfield  "
-  smoke_ro "RO-2026-0502" "Brad   J2 Karen Tso      "
-  smoke_ro "RO-2026-0503" "Brad   J3 Marco Esposito "
+  smoke_ro "RO-2026-0501" "Brad   J1 Dan Whitfield  " 1 0
+  smoke_ro "RO-2026-0502" "Brad   J2 Karen Tso      " 0 1
+  smoke_ro "RO-2026-0503" "Brad   J3 Marco Esposito " 0 0
 fi
 
 # ── Summary ───────────────────────────────────────────────────────

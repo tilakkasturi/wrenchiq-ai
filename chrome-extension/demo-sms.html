@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Protractor SMS — Cornerstone Auto Group</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --nav-bg:     #0F1923;
+      --nav-hover:  #1A2733;
+      --nav-active: #1E3A4A;
+      --header-bg:  #1C2B38;
+      --surface:    #FFFFFF;
+      --bg:         #F1F4F7;
+      --border:     #DDE3EA;
+      --text:       #1A2733;
+      --muted:      #6B7E8A;
+      --blue:       #2563EB;
+      --orange:     #F59E0B;
+      --green:      #16A34A;
+      --red:        #DC2626;
+      --purple:     #7C3AED;
+      --teal:       #0D3B45;
+      --wrenchiq:   #FF6B35;
+      --font:       -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── macOS Window Chrome ───────────────────────── */
+    .window-chrome {
+      height: 38px;
+      background: #2C3E4A;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 8px;
+      flex-shrink: 0;
+      -webkit-app-region: drag;
+    }
+    .traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .tl-red    { background: #FF5F56; }
+    .tl-yellow { background: #FFBD2E; }
+    .tl-green  { background: #27C93F; }
+    .window-title {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      font-weight: 500;
+      pointer-events: none;
+    }
+
+    /* ── App shell ─────────────────────────────────── */
+    .app { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Left Nav ──────────────────────────────────── */
+    .left-nav {
+      width: 52px;
+      background: var(--nav-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .nav-logo {
+      width: 36px;
+      height: 36px;
+      background: #1E88E5;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -1px;
+    }
+
+    .nav-divider {
+      width: 28px;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 4px 0;
+    }
+
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.35);
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+    }
+    .nav-btn:hover { background: var(--nav-hover); color: rgba(255,255,255,0.7); }
+    .nav-btn.active { background: var(--nav-active); color: #fff; }
+    .nav-btn .badge {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 14px; height: 14px;
+      background: #EF4444;
+      border-radius: 7px;
+      font-size: 8px;
+      font-weight: 800;
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .nav-spacer { flex: 1; }
+
+    /* ── Main area ─────────────────────────────────── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+    /* ── Top bar ───────────────────────────────────── */
+    .top-bar {
+      height: 48px;
+      background: var(--header-bg);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .top-bar-app {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .top-bar-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.12); }
+
+    .top-bar-screen {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .top-bar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wrenchiq-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 13px;
+      background: #FF6B35;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      font-family: var(--font);
+      letter-spacing: 0.2px;
+      transition: background 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+    }
+    .wrenchiq-btn:hover {
+      background: #e85d28;
+      box-shadow: 0 0 0 3px rgba(255,107,53,0.25);
+    }
+    .wrenchiq-btn .wq-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      animation: wqpulse 1.8s infinite;
+    }
+    @keyframes wqpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .top-search {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 5px 10px;
+      width: 200px;
+    }
+    .top-search input {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 11.5px;
+      color: rgba(255,255,255,0.7);
+      flex: 1;
+    }
+    .top-search input::placeholder { color: rgba(255,255,255,0.3); }
+
+    .top-bar-user {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+    }
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: #2563EB;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .user-info { line-height: 1.3; }
+    .user-name  { font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,0.9); }
+    .user-shop  { font-size: 10px; color: rgba(255,255,255,0.4); }
+
+    /* ── Screens ───────────────────────────────────── */
+    .screen { flex: 1; overflow-y: auto; display: none; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ── RO Board ──────────────────────────────────── */
+    .board-header {
+      background: var(--header-bg);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .board-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+    }
+    .board-shop { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+    .board-stats {
+      display: flex;
+      gap: 0;
+      background: var(--header-bg);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .stat-item {
+      padding: 8px 20px;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      font-size: 11.5px;
+      color: rgba(255,255,255,0.6);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stat-item strong { color: rgba(255,255,255,0.9); font-size: 12.5px; }
+
+    .kanban {
+      flex: 1;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      padding: 16px;
+      gap: 12px;
+    }
+
+    .kanban-col {
+      min-width: 220px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .col-header {
+      padding: 8px 10px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+    .col-header.blue   { background: #EFF6FF; color: #1D4ED8; }
+    .col-header.orange { background: #FFFBEB; color: #D97706; }
+    .col-header.green  { background: #F0FDF4; color: #15803D; }
+    .col-header.purple { background: #F5F3FF; color: #6D28D9; }
+
+    .col-header .col-count {
+      width: 20px; height: 20px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .col-header.blue   .col-count { background: #DBEAFE; color: #1E40AF; }
+    .col-header.orange .col-count { background: #FEF3C7; color: #B45309; }
+    .col-header.green  .col-count { background: #DCFCE7; color: #166534; }
+    .col-header.purple .col-count { background: #EDE9FE; color: #5B21B6; }
+
+    .col-est { font-size: 10px; font-weight: 500; color: var(--muted); }
+
+    .col-body {
+      background: rgba(0,0,0,0.03);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-height: 100px;
+    }
+
+    .col-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-style: italic;
+      padding: 24px 0;
+    }
+
+    .ro-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-left: 3px solid transparent;
+      border-radius: 7px;
+      padding: 10px 11px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+    .ro-card:hover {
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      border-color: #CBD5E1;
+    }
+    .ro-card.selected {
+      border-left-color: #FF6B35;
+      box-shadow: 0 0 0 1.5px rgba(255,107,53,0.3);
+    }
+
+    .ro-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    .ro-num  { font-size: 10px; color: var(--muted); font-family: monospace; font-weight: 600; }
+
+    .tier-badge {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+    .tier-vip      { background: #EDE9FE; color: #5B21B6; }
+    .tier-loyal    { background: #FEF3C7; color: #92400E; }
+    .tier-regular  { background: #F1F5F9; color: #475569; }
+    .tier-platinum { background: #F5F3FF; color: #4C1D95; }
+    .tier-gold     { background: #FFFBEB; color: #92400E; }
+    .tier-silver   { background: #F0F9FF; color: #0369A1; }
+    .tier-bronze   { background: #FEF9EE; color: #78350F; }
+
+    .ro-name    { font-weight: 700; font-size: 13px; margin-bottom: 1px; }
+    .ro-vehicle { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+    .ro-service { font-size: 11.5px; color: var(--text); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .ro-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+    .ro-time  { display: flex; align-items: center; gap: 3px; color: var(--muted); }
+    .ro-time.warn { color: #D97706; }
+    .ro-time.over { color: #DC2626; }
+    .ro-amount { font-weight: 700; font-size: 12px; color: var(--text); }
+
+    /* ── Bay Management ────────────────────────────── */
+    .screen-header {
+      background: var(--header-bg);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .screen-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); }
+    .screen-sub   { font-size: 10.5px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+
+    .bay-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .bay-card {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    .bay-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+
+    .bay-header {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+    .bay-header.occupied { background: #FFF7ED; color: #C2410C; }
+    .bay-header.diagnosing { background: #FFF3E0; color: #B45309; }
+    .bay-header.ready { background: #F0FDF4; color: #166534; }
+    .bay-header.empty { background: #F8FAFC; color: #94A3B8; }
+    .bay-header.waiting { background: #EFF6FF; color: #1D4ED8; }
+
+    .bay-num { font-size: 16px; font-weight: 900; color: rgba(0,0,0,0.15); }
+
+    .bay-body { padding: 10px 12px 12px; }
+    .bay-customer { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+    .bay-vehicle  { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .bay-tech     { font-size: 11px; display: flex; align-items: center; gap: 5px; color: #475569; }
+    .tech-dot { width: 6px; height: 6px; border-radius: 3px; background: var(--green); }
+    .bay-time { font-size: 10.5px; color: var(--muted); margin-top: 5px; }
+
+    .bay-empty-body { padding: 20px 12px; text-align: center; color: var(--muted); font-size: 11.5px; font-style: italic; }
+
+    /* ── Parts ─────────────────────────────────────── */
+    .parts-toolbar {
+      padding: 10px 16px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .parts-search {
+      flex: 1;
+      max-width: 320px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: #F8FAFC;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      padding: 7px 10px;
+    }
+    .parts-search input { background: transparent; border: none; outline: none; font-size: 12.5px; flex: 1; }
+    .filter-btn { padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 7px; background: #fff; font-size: 11.5px; cursor: pointer; font-weight: 600; color: #475569; }
+    .filter-btn.active { border-color: var(--teal); color: var(--teal); background: #E8F4F6; }
+
+    .parts-table { width: 100%; border-collapse: collapse; }
+    .parts-table th {
+      background: #F8FAFC;
+      padding: 9px 14px;
+      text-align: left;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      color: var(--muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+    }
+    .parts-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12.5px;
+      vertical-align: middle;
+    }
+    .parts-table tr:hover td { background: #FAFBFC; }
+
+    .part-num { font-family: monospace; font-size: 11px; color: var(--muted); }
+    .part-name { font-weight: 600; }
+    .part-for  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .vendor-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 4px;
+    }
+    .vendor-worldpac  { background: #EFF6FF; color: #1D4ED8; }
+    .vendor-oreilly   { background: #FFF7ED; color: #C2410C; }
+    .vendor-napa      { background: #F0FDF4; color: #166534; }
+    .vendor-autozone  { background: #FFF1F2; color: #BE123C; }
+
+    .status-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .status-ordered  { background: #EFF6FF; color: #1D4ED8; }
+    .status-received { background: #F0FDF4; color: #166534; }
+    .status-delayed  { background: #FFF1F2; color: #BE123C; }
+    .status-pending  { background: #FFFBEB; color: #92400E; }
+
+    /* ── Messages ──────────────────────────────────── */
+    .msg-layout { display: flex; flex: 1; overflow: hidden; }
+
+    .thread-list {
+      width: 260px;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .thread-list-header {
+      padding: 10px 14px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      background: #F8FAFC;
+    }
+
+    .thread-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      transition: background 0.1s;
+    }
+    .thread-item:hover   { background: #F8FAFC; }
+    .thread-item.active  { background: #E8F4F6; }
+
+    .t-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+
+    .t-body { flex: 1; min-width: 0; }
+    .t-name { font-weight: 600; font-size: 12.5px; display: flex; justify-content: space-between; }
+    .t-time { font-size: 10px; color: var(--muted); font-weight: 400; }
+    .t-phone { font-size: 10px; color: var(--teal); font-family: monospace; font-weight: 600; }
+    .t-preview { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+
+    .unread-dot { width: 7px; height: 7px; background: #EF4444; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+
+    /* Thread view */
+    .thread-view { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #F8FAFC; }
+
+    .thread-view-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .th-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .th-info {}
+    .th-name  { font-weight: 700; font-size: 14px; }
+    .th-phone { font-size: 11.5px; color: var(--muted); font-family: monospace; }
+    .th-actions { margin-left: auto; display: flex; gap: 7px; }
+    .th-btn { padding: 6px 12px; border-radius: 6px; border: 1.5px solid var(--border); background: #fff; font-size: 11.5px; cursor: pointer; font-weight: 600; color: var(--text); transition: border-color 0.15s; }
+    .th-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .th-btn.primary { background: var(--teal); color: #fff; border-color: var(--teal); }
+    .th-btn.primary:hover { background: #0a2e37; }
+
+    .messages-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+
+    .msg-date { text-align: center; font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin: 4px 0; }
+
+    .msg-row { display: flex; }
+    .msg-row.out { justify-content: flex-end; }
+    .msg-row.in  { justify-content: flex-start; }
+
+    .msg-bubble { max-width: 62%; padding: 8px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.5; }
+    .msg-row.in  .msg-bubble { background: #fff; border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+    .msg-row.out .msg-bubble { background: var(--teal); color: #fff; border-bottom-right-radius: 3px; }
+
+    .msg-time { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .msg-row.out .msg-time { text-align: right; }
+
+    .compose-bar { padding: 10px 14px; border-top: 1px solid var(--border); background: #fff; display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0; }
+    .compose-input { flex: 1; min-height: 36px; max-height: 100px; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 18px; font-size: 12.5px; resize: none; outline: none; font-family: var(--font); transition: border-color 0.2s; }
+    .compose-input:focus { border-color: var(--teal); }
+    .compose-send { width: 34px; height: 34px; background: #FF6B35; border: none; border-radius: 50%; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .compose-send:hover { background: #e85d28; }
+
+    /* ── Utilities ─────────────────────────────────── */
+    .p-16 { padding: 16px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- macOS window chrome -->
+<div class="window-chrome">
+  <div class="traffic-light tl-red"></div>
+  <div class="traffic-light tl-yellow"></div>
+  <div class="traffic-light tl-green"></div>
+  <div class="window-title">Protractor — Cornerstone Auto Group</div>
+</div>
+
+<div class="app">
+
+  <!-- Left nav -->
+  <nav class="left-nav">
+    <!-- Protractor "P" logo -->
+    <div class="nav-logo">P</div>
+
+    <!-- RO Board -->
+    <button class="nav-btn active" data-screen="roboard" title="RO Queue & Board">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+    </button>
+
+    <!-- Bay Management -->
+    <button class="nav-btn" data-screen="bays" title="Bay Management">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </button>
+
+    <!-- Parts -->
+    <button class="nav-btn" data-screen="parts" title="Parts">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      </svg>
+    </button>
+
+    <!-- Scheduling -->
+    <button class="nav-btn" data-screen="scheduling" title="Scheduling">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </button>
+
+    <div class="nav-divider"></div>
+
+    <!-- Messages -->
+    <button class="nav-btn" data-screen="messages" title="Customer Messages">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <div class="badge">4</div>
+    </button>
+
+    <!-- Customers -->
+    <button class="nav-btn" data-screen="customers" title="Customers">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    </button>
+
+    <div class="nav-spacer"></div>
+
+    <!-- Reports -->
+    <button class="nav-btn" title="Reports">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+    </button>
+
+    <!-- Settings -->
+    <button class="nav-btn" title="Settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M21 12h-1M4 12H3M12 21v-1M12 4V3"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Main area -->
+  <div class="main">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="top-bar-app">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E88E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span id="top-bar-title">Protractor — RO Board</span>
+      </div>
+      <div class="top-bar-divider"></div>
+      <span class="top-bar-screen">Cornerstone Auto Group</span>
+
+      <div class="top-bar-right">
+        <div class="top-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input placeholder="Search ROs, customers, VINs…" />
+        </div>
+
+        <!-- WrenchIQ open-panel button -->
+        <button class="wrenchiq-btn" onclick="openWrenchIQ()" title="Open WrenchIQ Agent">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-45deg);flex-shrink:0">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          WrenchIQ
+          <div class="wq-dot"></div>
+        </button>
+
+        <div class="top-bar-user">
+          <div class="user-avatar">JK</div>
+          <div class="user-info">
+            <div class="user-name">James K.</div>
+            <div class="user-shop">Service Advisor</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SCREEN 1: RO Board
+    ══════════════════════════════════════════════ -->
+    <div class="screen active" id="screen-roboard">
+
+      <div class="board-header">
+        <div>
+          <div class="board-title">Protractor — RO Board</div>
+          <div class="board-shop">Apr 16, 2026 &nbsp;·&nbsp; 8 active ROs</div>
+        </div>
+        <button style="padding:6px 12px;border:1.5px solid rgba(255,255,255,0.15);border-radius:7px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.7);font-size:11.5px;cursor:pointer;font-weight:600">
+          + New RO
+        </button>
+      </div>
+
+      <div class="board-stats">
+        <div class="stat-item"><strong>8</strong> ROs Today</div>
+        <div class="stat-item"><strong>80 min</strong> Avg Open Time</div>
+        <div class="stat-item"><strong>86%</strong> Approval Rate</div>
+        <div class="stat-item"><strong>$7,431.95</strong> Today's Revenue</div>
+      </div>
+
+      <div class="kanban">
+
+        <!-- IN QUEUE -->
+        <div class="kanban-col">
+          <div class="col-header blue">
+            IN QUEUE <span class="col-count">4</span>
+            <div class="col-est">$3,967.45 est.</div>
+          </div>
+          <div class="col-body">
+
+            <div class="ro-card" data-phone="(817) 555-0204" data-ro="1187" onclick="selectRO(this)">
+              <div class="ro-card-top">
+                <span class="ro-num">1187</span>
+                <span class="tier-badge tier-loyal">LOYAL</span>
+              </div>
+              <div class="ro-name">Gary Strickland</div>
+              <div class="ro-vehicle">2020 BMW X3</div>
+              <div class="ro-service">Brake service + 65K ins…</div>
+              <div class="ro-footer">
+                <span class="ro-time">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  4m
+                </span>
+                <span class="ro-amount">$892.5</span>
+              </div>
+            </div>
+
+            <div class="ro-card" data-phone="(817) 555-0206" data-ro="1188" onclick="selectRO(this)">
+              <div class="ro-card-top">
+                <span class="ro-num">1188</span>
+                <span class="tier-badge tier-regular">REGULAR</span>
+              </div>
+              <div class="ro-name">Ray Bosworth</div>
+              <div class="ro-vehicle">2019 Chevy Silverado</div>
+              <div class="ro-service">Oil change + tire rotation</div>
+              <div class="ro-footer">
+                <span class="ro-time">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  9m
+                </span>
+                <span class="ro-amount">$189.95</span>
+              </div>
+            </div>
+
+            <div class="ro-card" data-phone="(817) 555-0203" data-ro="1189" onclick="selectRO(this)">
+              <div class="ro-card-top">
+                <span class="ro-num">1189</span>
+                <span class="tier-badge tier-vip">VIP</span>
+              </div>
+              <div class="ro-name">Brenda Okafor</div>
+              <div class="ro-vehicle">2021 Ford F-150</div>
+              <div class="ro-service">Check engine — P0420…</div>
+              <div class="ro-footer">
+                <span class="ro-time warn">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  19m
+                </span>
+                <span class="ro-amount">$1,640</span>
+              </div>
+            </div>
+
+            <div class="ro-card" data-phone="(408) 555-0344" data-ro="1190" onclick="selectRO(this)">
+              <div class="ro-card-top">
+                <span class="ro-num">1190</span>
+                <span class="tier-badge tier-regular">REGULAR</span>
+              </div>
+              <div class="ro-name">Priya Sharma</div>
+              <div class="ro-vehicle">2020 Toyota RAV4</div>
+              <div class="ro-service">60K major service + ali…</div>
+              <div class="ro-footer">
+                <span class="ro-time">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  2m
+                </span>
+                <span class="ro-amount">$1,245</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- DIAGNOSING -->
+        <div class="kanban-col">
+          <div class="col-header orange">
+            DIAGNOSING <span class="col-count">0</span>
+          </div>
+          <div class="col-body">
+            <div class="col-empty">Empty</div>
+          </div>
+        </div>
+
+        <!-- AWAITING APPROVAL -->
+        <div class="kanban-col">
+          <div class="col-header orange">
+            AWAITING APPROVAL <span class="col-count">2</span>
+            <div class="col-est">$1,192.5 est.</div>
+          </div>
+          <div class="col-body">
+
+            <div class="ro-card" data-phone="(817) 555-0202" data-ro="1192" onclick="selectRO(this)">
+              <div class="ro-card-top">
+                <span class="ro-num">1192</span>
+                <span class="tier-badge tier-vip">VIP</span>
+              </div>
+              <div class="ro-name">Frank Delgado</div>
+              <div class="ro-vehicle">2018 Honda CR-V</div>
+              <div class="ro-service">A/C recharge + cabin fil…</div>
+              <div class="ro-footer">
+                <span class="ro-time warn">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  58m
+                </span>
+                <span class="ro-amount">$468</span>
+              </div>
+            </div>
+
+            <div class="ro-card" data-phone="(650) 555-0177" data-ro="1183" onclick="selectRO(this)">
+              <div class="ro-card-top">
+                <span class="ro-num">1183</span>
+                <span class="tier-badge tier-loyal">LOYAL</span>
+              </div>
+              <div class="ro-name">Tom Wallace</div>
+              <div class="ro-vehicle">2023 Hyundai Tucson</div>
+              <div class="ro-service">Transmission fluid + sp…</div>
+              <div class="ro-footer">
+                <span class="ro-time over">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  1h 14m
+                </span>
+                <span class="ro-amount">$724.5</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- READY FOR PICKUP -->
+        <div class="kanban-col">
+          <div class="col-header green">
+            READY FOR PICKUP <span class="col-count">2</span>
+          </div>
+          <div class="col-body">
+
+            <div class="ro-card" data-phone="(817) 555-0201" data-ro="1191" onclick="selectRO(this)">
+              <div class="ro-card-top">
+                <span class="ro-num">1191</span>
+                <span class="tier-badge tier-silver">SILVER</span>
+              </div>
+              <div class="ro-name">Elena Vasquez</div>
+              <div class="ro-vehicle">2020 Toyota Highlander</div>
+              <div class="ro-service">Strut replacement + wheel alignment</div>
+              <div class="ro-footer">
+                <span class="ro-time">Done</span>
+                <span class="ro-amount">$1,380</span>
+              </div>
+            </div>
+
+            <div class="ro-card" data-phone="(817) 555-0205" data-ro="1186" onclick="selectRO(this)">
+              <div class="ro-card-top">
+                <span class="ro-num">1186</span>
+                <span class="tier-badge tier-silver">SILVER</span>
+              </div>
+              <div class="ro-name">Denise Howell</div>
+              <div class="ro-vehicle">2018 Subaru Outback</div>
+              <div class="ro-service">Brake pad + rotor replacement</div>
+              <div class="ro-footer">
+                <span class="ro-time">Done</span>
+                <span class="ro-amount">$892</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SCREEN 2: Bay Management
+    ══════════════════════════════════════════════ -->
+    <div class="screen" id="screen-bays">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">Bay Management</div>
+          <div class="screen-sub">8 bays · 5 occupied · 3 available</div>
+        </div>
+      </div>
+
+      <div class="bay-grid p-16">
+
+        <div class="bay-card" onclick="selectBayCustomer('(817) 555-0202')">
+          <div class="bay-header occupied">
+            <span>BAY 1 — IN PROGRESS</span>
+            <span class="bay-num">1</span>
+          </div>
+          <div class="bay-body">
+            <div class="bay-customer">Frank Delgado</div>
+            <div class="bay-vehicle">2018 Honda CR-V · 68,200 mi</div>
+            <div class="bay-tech">
+              <span class="tech-dot"></span>
+              Marcus Williams (Tech-1)
+            </div>
+            <div class="bay-time">In bay 58m · Est. done: 11:30 AM</div>
+          </div>
+        </div>
+
+        <div class="bay-card" onclick="selectBayCustomer('(817) 555-0203')">
+          <div class="bay-header diagnosing">
+            <span>BAY 2 — DIAGNOSING</span>
+            <span class="bay-num">2</span>
+          </div>
+          <div class="bay-body">
+            <div class="bay-customer">Brenda Okafor</div>
+            <div class="bay-vehicle">2021 Ford F-150 · 41,000 mi</div>
+            <div class="bay-tech">
+              <span class="tech-dot" style="background:#F59E0B"></span>
+              Carlos Rivera (Tech-2)
+            </div>
+            <div class="bay-time">In bay 19m · DTC scan in progress</div>
+          </div>
+        </div>
+
+        <div class="bay-card">
+          <div class="bay-header empty">
+            <span>BAY 3 — AVAILABLE</span>
+            <span class="bay-num">3</span>
+          </div>
+          <div class="bay-empty-body">Available</div>
+        </div>
+
+        <div class="bay-card" onclick="selectBayCustomer('(817) 555-0204')">
+          <div class="bay-header occupied">
+            <span>BAY 4 — IN PROGRESS</span>
+            <span class="bay-num">4</span>
+          </div>
+          <div class="bay-body">
+            <div class="bay-customer">Gary Strickland</div>
+            <div class="bay-vehicle">2020 BMW X3 · 64,100 mi</div>
+            <div class="bay-tech">
+              <span class="tech-dot"></span>
+              Sam Kim (Tech-3)
+            </div>
+            <div class="bay-time">In bay 4m · Brake inspection started</div>
+          </div>
+        </div>
+
+        <div class="bay-card" onclick="selectBayCustomer('(408) 555-0344')">
+          <div class="bay-header waiting">
+            <span>BAY 5 — WAITING</span>
+            <span class="bay-num">5</span>
+          </div>
+          <div class="bay-body">
+            <div class="bay-customer">Priya Sharma</div>
+            <div class="bay-vehicle">2020 Toyota RAV4 · 59,800 mi</div>
+            <div class="bay-tech" style="color:#94A3B8">
+              Unassigned
+            </div>
+            <div class="bay-time">Arrived 2m ago · Waiting for tech</div>
+          </div>
+        </div>
+
+        <div class="bay-card">
+          <div class="bay-header empty">
+            <span>BAY 6 — AVAILABLE</span>
+            <span class="bay-num">6</span>
+          </div>
+          <div class="bay-empty-body">Available</div>
+        </div>
+
+        <div class="bay-card" onclick="selectBayCustomer('(817) 555-0201')">
+          <div class="bay-header ready">
+            <span>BAY 7 — COMPLETE</span>
+            <span class="bay-num">7</span>
+          </div>
+          <div class="bay-body">
+            <div class="bay-customer">Elena Vasquez</div>
+            <div class="bay-vehicle">2020 Toyota Highlander</div>
+            <div class="bay-tech">
+              <span class="tech-dot"></span>
+              Marcus Williams (Tech-1)
+            </div>
+            <div class="bay-time">Complete · Ready for pickup</div>
+          </div>
+        </div>
+
+        <div class="bay-card" onclick="selectBayCustomer('(817) 555-0205')">
+          <div class="bay-header ready">
+            <span>BAY 8 — COMPLETE</span>
+            <span class="bay-num">8</span>
+          </div>
+          <div class="bay-body">
+            <div class="bay-customer">Denise Howell</div>
+            <div class="bay-vehicle">2018 Subaru Outback</div>
+            <div class="bay-tech">
+              <span class="tech-dot"></span>
+              Carlos Rivera (Tech-2)
+            </div>
+            <div class="bay-time">Complete · Notified customer</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SCREEN 3: Parts
+    ══════════════════════════════════════════════ -->
+    <div class="screen" id="screen-parts">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">Parts Intelligence</div>
+          <div class="screen-sub">12 active orders · 2 delayed · 3 vendors</div>
+        </div>
+      </div>
+
+      <div class="parts-toolbar">
+        <div class="parts-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input placeholder="Search part number, name, RO…" />
+        </div>
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">Ordered</button>
+        <button class="filter-btn">Delayed</button>
+        <button class="filter-btn">Received</button>
+      </div>
+
+      <div style="flex:1;overflow-y:auto">
+        <table class="parts-table" style="width:100%">
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>RO / Customer</th>
+              <th>Vendor</th>
+              <th>Qty</th>
+              <th>Unit Cost</th>
+              <th>Status</th>
+              <th>ETA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr onclick="selectPartsCustomer('(817) 555-0202')" style="cursor:pointer">
+              <td>
+                <div class="part-num">WB-4921-A</div>
+                <div class="part-name">Front Brake Pads — Honda CR-V</div>
+                <div class="part-for">RO 1192 · Frank Delgado</div>
+              </td>
+              <td>RO-1192</td>
+              <td><span class="vendor-badge vendor-worldpac">Worldpac</span></td>
+              <td>2 sets</td>
+              <td>$84.50</td>
+              <td><span class="status-badge status-ordered">Ordered</span></td>
+              <td>Today 2 PM</td>
+            </tr>
+            <tr onclick="selectPartsCustomer('(817) 555-0202')" style="cursor:pointer">
+              <td>
+                <div class="part-num">CF-8816-B</div>
+                <div class="part-name">Cabin Air Filter — Honda CR-V</div>
+                <div class="part-for">RO 1192 · Frank Delgado</div>
+              </td>
+              <td>RO-1192</td>
+              <td><span class="vendor-badge vendor-oreilly">O'Reilly</span></td>
+              <td>1</td>
+              <td>$22.99</td>
+              <td><span class="status-badge status-received">Received</span></td>
+              <td>—</td>
+            </tr>
+            <tr onclick="selectPartsCustomer('(817) 555-0203')" style="cursor:pointer">
+              <td>
+                <div class="part-num">O2-F150-UP</div>
+                <div class="part-name">Upstream O2 Sensor — Ford F-150 5.0L</div>
+                <div class="part-for">RO 1189 · Brenda Okafor</div>
+              </td>
+              <td>RO-1189</td>
+              <td><span class="vendor-badge vendor-worldpac">Worldpac</span></td>
+              <td>1</td>
+              <td>$118.00</td>
+              <td><span class="status-badge status-delayed">Delayed</span></td>
+              <td>Tomorrow</td>
+            </tr>
+            <tr onclick="selectPartsCustomer('(817) 555-0204')" style="cursor:pointer">
+              <td>
+                <div class="part-num">BR-BMW-X3-F</div>
+                <div class="part-name">Front Brake Rotors — BMW X3</div>
+                <div class="part-for">RO 1187 · Gary Strickland</div>
+              </td>
+              <td>RO-1187</td>
+              <td><span class="vendor-badge vendor-napa">NAPA</span></td>
+              <td>2</td>
+              <td>$164.00</td>
+              <td><span class="status-badge status-received">Received</span></td>
+              <td>—</td>
+            </tr>
+            <tr onclick="selectPartsCustomer('(650) 555-0177')" style="cursor:pointer">
+              <td>
+                <div class="part-num">ATF-HYU-6SPD</div>
+                <div class="part-name">Transmission Fluid — Hyundai Tucson</div>
+                <div class="part-for">RO 1183 · Tom Wallace</div>
+              </td>
+              <td>RO-1183</td>
+              <td><span class="vendor-badge vendor-oreilly">O'Reilly</span></td>
+              <td>6 qts</td>
+              <td>$12.49</td>
+              <td><span class="status-badge status-ordered">Ordered</span></td>
+              <td>Today 11 AM</td>
+            </tr>
+            <tr onclick="selectPartsCustomer('(408) 555-0344')" style="cursor:pointer">
+              <td>
+                <div class="part-num">SPK-TYT-4CYL</div>
+                <div class="part-name">Spark Plug Set (4) — Toyota RAV4</div>
+                <div class="part-for">RO 1190 · Priya Sharma</div>
+              </td>
+              <td>RO-1190</td>
+              <td><span class="vendor-badge vendor-napa">NAPA</span></td>
+              <td>4</td>
+              <td>$18.75</td>
+              <td><span class="status-badge status-pending">Pending</span></td>
+              <td>—</td>
+            </tr>
+            <tr onclick="selectPartsCustomer('(817) 555-0205')" style="cursor:pointer">
+              <td>
+                <div class="part-num">BR-SUB-OUT-F</div>
+                <div class="part-name">Front Brake Rotors — Subaru Outback</div>
+                <div class="part-for">RO 1186 · Denise Howell</div>
+              </td>
+              <td>RO-1186</td>
+              <td><span class="vendor-badge vendor-worldpac">Worldpac</span></td>
+              <td>2</td>
+              <td>$94.00</td>
+              <td><span class="status-badge status-received">Received</span></td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SCREEN 4: Scheduling (placeholder)
+    ══════════════════════════════════════════════ -->
+    <div class="screen" id="screen-scheduling">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">Scheduling</div>
+          <div class="screen-sub">Today — Apr 16, 2026 · 8 appointments</div>
+        </div>
+      </div>
+      <div style="padding:32px;text-align:center;color:var(--muted);">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 12px;display:block">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Calendar view — click an RO card on the board to surface WrenchIQ context
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         SCREEN 5: Messages
+    ══════════════════════════════════════════════ -->
+    <div class="screen" id="screen-messages">
+      <div class="msg-layout">
+
+        <aside class="thread-list">
+          <div class="thread-list-header">Inbox (4 unread)</div>
+
+          <div class="thread-item active" onclick="switchThread('elena')" id="t-elena">
+            <div class="t-avatar" style="background:#0D3B45">EV</div>
+            <div class="t-body">
+              <div class="t-name">Elena Vasquez <span class="t-time">9:14 AM</span></div>
+              <div class="t-phone">(817) 555-0201</div>
+              <div class="t-preview">Is my car ready?</div>
+            </div>
+            <div class="unread-dot"></div>
+          </div>
+
+          <div class="thread-item" onclick="switchThread('frank')" id="t-frank">
+            <div class="t-avatar" style="background:#607D8B">FD</div>
+            <div class="t-body">
+              <div class="t-name">Frank Delgado <span class="t-time">8:52 AM</span></div>
+              <div class="t-phone">(817) 555-0202</div>
+              <div class="t-preview">The brakes feel way better!</div>
+            </div>
+          </div>
+
+          <div class="thread-item" onclick="switchThread('brenda')" id="t-brenda">
+            <div class="t-avatar" style="background:#8D6E63">BO</div>
+            <div class="t-body">
+              <div class="t-name">Brenda Okafor <span class="t-time">Yesterday</span></div>
+              <div class="t-phone">(817) 555-0203</div>
+              <div class="t-preview">Can I drop off tomorrow?</div>
+            </div>
+            <div class="unread-dot"></div>
+          </div>
+
+          <div class="thread-item" onclick="switchThread('gary')" id="t-gary">
+            <div class="t-avatar" style="background:#5A4A6E">GS</div>
+            <div class="t-body">
+              <div class="t-name">Gary Strickland <span class="t-time">Mon</span></div>
+              <div class="t-phone">(817) 555-0204</div>
+              <div class="t-preview">Great service as always.</div>
+            </div>
+          </div>
+
+          <div class="thread-item" onclick="switchThread('denise')" id="t-denise">
+            <div class="t-avatar" style="background:#4CAF50">DH</div>
+            <div class="t-body">
+              <div class="t-name">Denise Howell <span class="t-time">Mon</span></div>
+              <div class="t-phone">(817) 555-0205</div>
+              <div class="t-preview">Can I pick up after 4 PM?</div>
+            </div>
+            <div class="unread-dot"></div>
+          </div>
+        </aside>
+
+        <div class="thread-view">
+          <div class="thread-view-header">
+            <div class="th-avatar" id="msg-avatar" style="background:#0D3B45">EV</div>
+            <div class="th-info">
+              <div class="th-name" id="msg-name">Elena Vasquez</div>
+              <div class="th-phone" id="msg-phone" data-phone="(817) 555-0201">(817) 555-0201</div>
+            </div>
+            <div class="th-actions">
+              <button class="th-btn" onclick="openRO()">View RO</button>
+              <button class="th-btn primary" onclick="openWrenchIQ()">WrenchIQ</button>
+            </div>
+          </div>
+
+          <div class="messages-area" id="msg-area">
+            <div class="msg-date">Today — Apr 16, 2026</div>
+            <div class="msg-row in">
+              <div>
+                <div class="msg-bubble">Hi! Just dropping off my Highlander for the oil change. Check engine light came on again last week too.</div>
+                <div class="msg-time">9:02 AM</div>
+              </div>
+            </div>
+            <div class="msg-row out">
+              <div>
+                <div class="msg-bubble">Hi Elena! We got you checked in. Our tech is pulling up your vehicle history now.</div>
+                <div class="msg-time">9:08 AM</div>
+              </div>
+            </div>
+            <div class="msg-row in">
+              <div>
+                <div class="msg-bubble">Is my car ready?</div>
+                <div class="msg-time">9:14 AM</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="compose-bar">
+            <textarea class="compose-input" id="compose-input" placeholder="Reply to Elena…" rows="1"
+              oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'"></textarea>
+            <button class="compose-send" onclick="sendReply()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SCREEN: Customers (placeholder) -->
+    <div class="screen" id="screen-customers">
+      <div class="screen-header">
+        <div><div class="screen-title">Customers</div><div class="screen-sub">Click a customer from any screen to see WrenchIQ context</div></div>
+      </div>
+      <div style="padding:32px;text-align:center;color:var(--muted)">Click any RO card, bay, or message thread to surface WrenchIQ context in the side panel.</div>
+    </div>
+
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<script>
+  // ── Thread data ────────────────────────────────────────────
+  const THREADS = {
+    elena:  { avatar:'EV', color:'#0D3B45', name:'Elena Vasquez',  phone:'(817) 555-0201', msgs:[
+      { dir:'in',  time:'9:02 AM',  text:"Hi! Just dropping off my Highlander for the oil change. Check engine light came on again last week too." },
+      { dir:'out', time:'9:08 AM',  text:"Hi Elena! We got you checked in. Our tech is pulling up your vehicle history now." },
+      { dir:'in',  time:'9:14 AM',  text:"Is my car ready?" },
+    ]},
+    frank:  { avatar:'FD', color:'#607D8B', name:'Frank Delgado',  phone:'(817) 555-0202', msgs:[
+      { dir:'out', time:'8:40 AM',  text:"Frank, your CR-V is ready. Brake service done + cabin filter replaced." },
+      { dir:'in',  time:'8:52 AM',  text:"The brakes feel way better! Thanks guys." },
+    ]},
+    brenda: { avatar:'BO', color:'#8D6E63', name:'Brenda Okafor',  phone:'(817) 555-0203', msgs:[
+      { dir:'in',  time:'Yesterday 4:30 PM', text:"Hi, I need to bring in my F-150 for that engine noise. Can I drop off tomorrow?" },
+    ]},
+    gary:   { avatar:'GS', color:'#5A4A6E', name:'Gary Strickland', phone:'(817) 555-0204', msgs:[
+      { dir:'out', time:'Mon 2:15 PM', text:"Gary, your X3 is all set — brake service and full inspection done." },
+      { dir:'in',  time:'Mon 3:02 PM', text:"Great service as always, Dave." },
+    ]},
+    denise: { avatar:'DH', color:'#4CAF50', name:'Denise Howell',   phone:'(817) 555-0205', msgs:[
+      { dir:'out', time:'Mon 4:00 PM', text:"Denise, your Outback is ready for pickup!" },
+      { dir:'in',  time:'Mon 4:12 PM', text:"Can I pick up after 4 PM?" },
+    ]},
+  };
+
+  // ── Screen navigation ──────────────────────────────────────
+  const SCREEN_TITLES = {
+    roboard:    'Protractor — RO Board',
+    bays:       'Protractor — Bay Management',
+    parts:      'Protractor — Parts',
+    scheduling: 'Protractor — Scheduling',
+    messages:   'Protractor — Messages',
+    customers:  'Protractor — Customers',
+  };
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(`screen-${id}`)?.classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-screen="${id}"]`)?.classList.add('active');
+    document.getElementById('top-bar-title').textContent = SCREEN_TITLES[id] || 'Protractor';
+  }
+
+  document.querySelectorAll('[data-screen]').forEach(btn => {
+    btn.addEventListener('click', () => showScreen(btn.dataset.screen));
+  });
+
+  // ── RO card selection ──────────────────────────────────────
+  function selectRO(card) {
+    document.querySelectorAll('.ro-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    const phone = card.dataset.phone;
+    if (phone) firePhoneEvent(phone);
+  }
+
+  // ── Bay click ──────────────────────────────────────────────
+  function selectBayCustomer(phone) {
+    if (phone) firePhoneEvent(phone);
+  }
+
+  // ── Parts row click ────────────────────────────────────────
+  function selectPartsCustomer(phone) {
+    if (phone) firePhoneEvent(phone);
+  }
+
+  // ── Message thread switch ──────────────────────────────────
+  function switchThread(id) {
+    const t = THREADS[id];
+    if (!t) return;
+
+    document.querySelectorAll('.thread-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(`t-${id}`)?.classList.add('active');
+
+    document.getElementById('msg-avatar').textContent  = t.avatar;
+    document.getElementById('msg-avatar').style.background = t.color;
+    document.getElementById('msg-name').textContent    = t.name;
+    const phoneEl = document.getElementById('msg-phone');
+    phoneEl.textContent = t.phone;
+    phoneEl.setAttribute('data-phone', t.phone);
+
+    const area = document.getElementById('msg-area');
+    area.innerHTML = '<div class="msg-date">Today — Apr 16, 2026</div>';
+    t.msgs.forEach(m => {
+      const el = document.createElement('div');
+      el.className = `msg-row ${m.dir === 'in' ? 'in' : 'out'}`;
+      el.innerHTML = `<div><div class="msg-bubble">${m.text}</div><div class="msg-time">${m.time}</div></div>`;
+      area.appendChild(el);
+    });
+    area.scrollTop = area.scrollHeight;
+
+    firePhoneEvent(t.phone);
+  }
+
+  function sendReply() {
+    const input = document.getElementById('compose-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const area = document.getElementById('msg-area');
+    const el = document.createElement('div');
+    el.className = 'msg-row out';
+    el.innerHTML = `<div><div class="msg-bubble">${text}</div><div class="msg-time">Just now</div></div>`;
+    area.appendChild(el);
+    area.scrollTop = area.scrollHeight;
+    input.value = '';
+    input.style.height = 'auto';
+  }
+
+  function openRO()       { showScreen('roboard'); }
+  function openWrenchIQ() { window.dispatchEvent(new CustomEvent('wrenchiq:open-panel')); }
+
+  // ── Phone event ────────────────────────────────────────────
+  function firePhoneEvent(phone) {
+    window.dispatchEvent(new CustomEvent('wrenchiq:phone', { detail: { phone } }));
+  }
+
+  // ── Init: fire Elena's phone on load ──────────────────────
+  window.addEventListener('load', () => firePhoneEvent('(817) 555-0201'));
+</script>
+</body>
+</html>

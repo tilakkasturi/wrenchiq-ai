@@ -113,7 +113,7 @@ const STORY_ROS = [
         status: 'pending',
       },
     ],
-    invoice: 257,
+    invoice: 233,
     progress: 0,
     laborTimeTracking: { totalFlatHrs: 1.0, totalActualHrs: 0, elr: 0, postedRate: 175 },
 
@@ -187,7 +187,7 @@ const STORY_ROS = [
         status: 'pending',
       },
     ],
-    invoice: 480,
+    invoice: 398,
     progress: 0,
     laborTimeTracking: { totalFlatHrs: 1.7, totalActualHrs: 0, elr: 0, postedRate: 175 },
 
@@ -284,7 +284,7 @@ const STORY_ROS = [
         status: 'pending',
       },
     ],
-    invoice: 380,
+    invoice: 351,
     progress: 40,
     laborTimeTracking: { totalFlatHrs: 1.5, totalActualHrs: 1.72, elr: 152.91, postedRate: 175 },
 
@@ -376,7 +376,7 @@ const STORY_ROS = [
         status: 'pending',
       },
     ],
-    invoice: 912,
+    invoice: 834,
     progress: 0,
     laborTimeTracking: { totalFlatHrs: 4.1, totalActualHrs: 0, elr: 0, postedRate: 175 },
     aiInsights: [
@@ -487,7 +487,7 @@ const STORY_ROS = [
         status: 'pending',
       },
     ],
-    invoice: 855,
+    invoice: 805,
     progress: 35,
     laborTimeTracking: { totalFlatHrs: 2.8, totalActualHrs: 1.42, elr: 154.23, postedRate: 175 },
     aiInsights: [
@@ -577,7 +577,7 @@ const STORY_ROS = [
         status: 'pending',
       },
     ],
-    invoice: 1148,
+    invoice: 1123,
     progress: 0,
     laborTimeTracking: { totalFlatHrs: 4.8, totalActualHrs: 0, elr: 0, postedRate: 175 },
     aiInsights: [
@@ -708,7 +708,7 @@ const STORY_ROS = [
         status: 'pending',
       },
     ],
-    invoice: 1380,
+    invoice: 1313,
     progress: 15,
     laborTimeTracking: { totalFlatHrs: 4.9, totalActualHrs: 0.3, elr: 0, postedRate: 175 },
     aiInsights: [
@@ -815,7 +815,7 @@ const STORY_ROS = [
         status: 'pending',
       },
     ],
-    invoice: 2480,
+    invoice: 2413,
     progress: 10,
     laborTimeTracking: { totalFlatHrs: 9.5, totalActualHrs: 1.1, elr: 159.09, postedRate: 175 },
     aiInsights: [
@@ -825,7 +825,7 @@ const STORY_ROS = [
       "Estimate sent yesterday at 4:30 PM. No response yet. Suggest follow-up call this morning — Ray likes to talk shop with Dave directly.",
     ],
     agenticUpsells: [],
-    agenticCustomerText: "Hi Ray, wanted to check in on the Silverado estimate I sent yesterday. We confirmed the timing chain is stretched past spec — that's what's triggering the P0016/P0017 codes and the hesitation. It's a $2,480 job but it's the right fix. DeShawn's standing by. Give me a call if you want to talk through it. — Dave @ Cornerstone",
+    agenticCustomerText: "Hi Ray, wanted to check in on the Silverado estimate I sent yesterday. We confirmed the timing chain is stretched past spec — that's what's triggering the P0016/P0017 codes and the hesitation. It's a $2,413 job but it's the right fix. DeShawn's standing by. Give me a call if you want to talk through it. — Dave @ Cornerstone",
     agenticTextStatus: 'staged',
     tsbMatches: [
       {
@@ -893,7 +893,7 @@ const STORY_ROS = [
         status: 'pending',
       },
     ],
-    invoice: 228,
+    invoice: 167,
     progress: 0,
     laborTimeTracking: { totalFlatHrs: 0.5, totalActualHrs: 0, elr: 0, postedRate: 185 },
 
@@ -1055,15 +1055,15 @@ const STORY_ROS = [
         status: 'approved',
       },
     ],
-    invoice: 1847,
-    totalEstimate: 1847,
+    invoice: 2356,
+    totalEstimate: 2356,
     progress: 15,
     laborTimeTracking: { totalFlatHrs: 8.5, totalActualHrs: 1.2, elr: 185, postedRate: 185 },
 
     aiInsights: [
       'TSB-17-0144: 3.5L EcoBoost timing chain stretch at 75–90K mi — cold-start rattle confirms pattern.',
       'Repair: timing chain set + guides + tensioners. Labor: 8.5hr. Parts: ~$620–$780. Total: ~$1,760–$1,965 estimate.',
-      'High-value job (~$1,847 estimate). Marco\'s approval rate on prior high-value estimates: 83%. High probability.',
+      'High-value job (~$2,356 estimate). Marco\'s approval rate on prior high-value estimates: 83%. High probability.',
       'Authorization required before teardown — get written approval. Cite TSB-17-0144 for customer confidence.',
     ],
     agenticUpsells: [

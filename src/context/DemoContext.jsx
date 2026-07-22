@@ -9,8 +9,7 @@
  *   const { setDemo } = useDemo();
  */
 
-import { createContext, useContext, useState, useCallback } from "react";
-import { SHOP } from "../data/demoData";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 
 const STORAGE_KEY = "wrenchiq_demo_config";
 
@@ -104,15 +103,15 @@ function defaultModuleConfig() {
 }
 
 const DEFAULTS = {
-  smsName:         "Protractor",
-  corporateName:   "GWG Auto Group",
-  shopName:        SHOP.name,
-  ownerName:       SHOP.owner,
-  ownerInitials:   SHOP.ownerInitials,
-  primaryCustomer: "Robert Taylor",
-  activeShopId:    "cornerstone",
-  smsProvider:     "protractor",
-  advisorName:     "James Kowalski",
+  smsName:         DEMO_SHOPS.cornerstone.smsName,
+  corporateName:   DEMO_SHOPS.cornerstone.corporateName,
+  shopName:        DEMO_SHOPS.cornerstone.shopName,
+  ownerName:       DEMO_SHOPS.cornerstone.ownerName,
+  ownerInitials:   DEMO_SHOPS.cornerstone.ownerInitials,
+  primaryCustomer: DEMO_SHOPS.cornerstone.primaryCustomer,
+  activeShopId:    DEMO_SHOPS.cornerstone.id,
+  smsProvider:     DEMO_SHOPS.cornerstone.smsProvider,
+  advisorName:     DEMO_SHOPS.cornerstone.advisorName,
   moduleConfig:    defaultModuleConfig(),
 };
 
@@ -144,6 +143,31 @@ function save(cfg) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); } catch {}
 }
 
+// ?demo=cornerstone / ?demo=ridgeline — deep-link straight to a demo shop,
+// equivalent to clicking its pill on the persona gateway (PersonaGatewayScreen.jsx).
+function applyDemoQueryParam(cfg) {
+  try {
+    const shop = DEMO_SHOPS[new URLSearchParams(window.location.search).get("demo")];
+    if (!shop) return cfg;
+    const next = {
+      ...cfg,
+      activeShopId:    shop.id,
+      shopName:        shop.shopName,
+      ownerName:       shop.ownerName,
+      ownerInitials:   shop.ownerInitials,
+      smsName:         shop.smsName,
+      corporateName:   shop.corporateName,
+      primaryCustomer: shop.primaryCustomer,
+      smsProvider:     shop.smsProvider,
+      advisorName:     shop.advisorName,
+    };
+    save(next);
+    return next;
+  } catch {
+    return cfg;
+  }
+}
+
 const DemoContext = createContext(null);
 
 // smsProvider → header color mapping (G task: SMS skin swap)
@@ -153,7 +177,20 @@ export const SMS_PROVIDER_COLORS = {
 };
 
 export function DemoProvider({ children }) {
-  const [config, setConfig] = useState(load);
+  const [config, setConfig] = useState(() => applyDemoQueryParam(load()));
+
+  // Cross-window sync: another window/tab (e.g. the sidecar) changing the
+  // active demo shop writes to the shared localStorage key. The "storage"
+  // event only fires in *other* windows, not the one that made the change,
+  // so this can't loop with setDemo/reset below.
+  useEffect(() => {
+    function handleStorage(e) {
+      if (e.key !== STORAGE_KEY) return;
+      setConfig(load());
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   const setDemo = useCallback((updates) => {
     setConfig(prev => {

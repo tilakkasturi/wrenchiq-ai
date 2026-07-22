@@ -341,6 +341,12 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
   const customerId = customer?.id || customer?.customerId || ro?.customerId;
   const shopName   = 'Cornerstone Auto Group';
 
+  // Story ROs store the odometer reading as `vehicle.odometer`; only the
+  // Kanban-normalized `_vehicle` shape uses `mileage`. Normalize here so
+  // every downstream read (system prompt, get_mileage_services) sees a
+  // real number instead of silently defaulting to 0.
+  vehicle = vehicle ? { ...vehicle, mileage: vehicle.mileage ?? vehicle.odometer ?? 0 } : vehicle;
+
   // Pre-fetch data in parallel — each is tolerant of failure
   const [history, objectives] = await Promise.all([
     fetchCustomerHistory(customerId, db),

@@ -14,24 +14,28 @@
  * Data parity with Surface B: the RO Kanban and 3C Story Writer sections poll
  * the same live Data Feed (useLiveBoardROs → /api/data-feed/customers +
  * /api/repair-orders/story-ro/:roId) that Surface B's CustomerSelector reads,
- * so both surfaces show the same repair orders. Each falls back to its own
- * static/simulated dataset only if the live feed is unavailable.
+ * so both surfaces show the same repair orders. If the live feed is
+ * unavailable, this surface shows a "feed unavailable" state rather than
+ * silently substituting a static/simulated dataset — matching how Surface B
+ * (WrenchIQSidecarScreen) fails visibly instead of showing fabricated data.
  */
 
-import { useState } from "react";
-import { ClipboardList, Stethoscope, FileText, ShoppingCart, CheckSquare } from "lucide-react";
-import AdvisorHomeScreen, { STATIC_BOARD_ROS } from "./screens/AdvisorHomeScreen";
+import { useState, useRef, useEffect } from "react";
+import { ClipboardList, Stethoscope, FileText, ShoppingCart, CheckSquare, AlertTriangle, ChevronDown, FileSearch } from "lucide-react";
+import AdvisorHomeScreen from "./screens/AdvisorHomeScreen";
 import Job1IntakeScreen from "./screens/Job1IntakeScreen";
 import Job2ThreeCScreen from "./screens/Job2ThreeCScreen";
 import Job3UpsellScreen from "./screens/Job3UpsellScreen";
 import AM3CStoryWriterScreen from "./screens/AM3CStoryWriterScreen";
-import { useDemo } from "./context/DemoContext";
+import RepairOrderViewerScreen from "./screens/RepairOrderViewerScreen";
+import { useDemo, DEMO_SHOPS } from "./context/DemoContext";
 import { SelectedCustomerProvider } from "./context/SelectedCustomerContext";
-import { useDataFeedSimulator } from "./services/dataFeedSimulator";
 import { useLiveBoardROs } from "./services/liveBoardFeed";
+import { COLORS } from "./theme/colors";
 
 const NAV_SECTIONS = [
   { id: "advisorHome", label: "RO Kanban / Queue",  icon: ClipboardList },
+  { id: "roViewer",    label: "Repair Order Viewer", icon: FileSearch },
   { id: "job1Intake",  label: "Intake & Diagnosis", icon: Stethoscope },
   { id: "job2ThreeC",  label: "3C Compliance",      icon: FileText },
   { id: "job3Upsell",  label: "Service Recommendations", icon: ShoppingCart },
@@ -64,12 +68,18 @@ function syntheticMinAgo(index) {
 function toKanbanCards(fullROs) {
   return fullROs.map((ro, i) => ({
     roNum: ro.roNumber,
+    shopId: ro.shopId,
     column: KANBAN_STATUS_TO_COLUMN[ro.kanbanStatus || ro.status] || "queue",
     minAgo: syntheticMinAgo(i),
     job: ro.services?.[0]?.name || "Repair Order",
     _liveCustomerName: ro._customer ? `${ro._customer.firstName} ${ro._customer.lastName}` : null,
     _liveVehicle: ro._vehicle || null,
-    _liveRO: { totalEstimate: ro.totalEstimate },
+    _liveRO: {
+      totalEstimate: ro.totalEstimate,
+      customerConcern: ro.customerConcern,
+      services: ro.services || [],
+      status: ro.kanbanStatus || ro.status,
+    },
   }));
 }
 
@@ -87,7 +97,7 @@ function toStoryWriterROs(fullROs) {
 }
 
 export default function SMSRepresentativeApp() {
-  const { smsName, shopName, smsHeaderColor, activeShopId } = useDemo();
+  const { smsName, shopName, smsHeaderColor, activeShopId, setDemo } = useDemo();
 
   return (
     <SelectedCustomerProvider shopId={activeShopId || "cornerstone"} edition="am">
@@ -96,21 +106,111 @@ export default function SMSRepresentativeApp() {
         shopName={shopName}
         smsHeaderColor={smsHeaderColor}
         activeShopId={activeShopId}
+        setDemo={setDemo}
       />
     </SelectedCustomerProvider>
   );
 }
 
-function SMSRepresentativeShell({ smsName, shopName, smsHeaderColor, activeShopId }) {
-  const [activeSection, setActiveSection] = useState(NAV_SECTIONS[0].id);
-  const [simRos] = useDataFeedSimulator(STATIC_BOARD_ROS);
-  const { ros: liveFullROs } = useLiveBoardROs({ shopId: activeShopId || "cornerstone" });
+// Clicking the shop name switches the active demo shop — same field mapping
+// DemoContext's ?demo= query param applies, but triggered from the UI so it
+// works without a page reload. Other windows/tabs on the same origin (e.g.
+// the WrenchIQ sidecar) pick up the change via DemoContext's storage listener.
+function ShopSwitcher({ shopName, activeShopId, setDemo }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
 
-  const kanbanRos       = liveFullROs?.length ? toKanbanCards(liveFullROs) : simRos;
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  function selectShop(shop) {
+    setDemo({
+      activeShopId:    shop.id,
+      shopName:        shop.shopName,
+      ownerName:       shop.ownerName,
+      ownerInitials:   shop.ownerInitials,
+      smsName:         shop.smsName,
+      corporateName:   shop.corporateName,
+      primaryCustomer: shop.primaryCustomer,
+      smsProvider:     shop.smsProvider,
+      advisorName:     shop.advisorName,
+    });
+    setOpen(false);
+  }
+
+  return (
+    <div ref={rootRef} style={{ position: "relative", display: "inline-block" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        title="Switch the active demo shop"
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 4,
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+          color: "inherit", font: "inherit", letterSpacing: "inherit",
+        }}
+      >
+        {shopName || "Repair Shop"}
+        <ChevronDown size={12} strokeWidth={2.5} />
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: "50%", transform: "translateX(-50%)",
+          minWidth: 220,
+          background: "#fff",
+          border: "1px solid rgba(0,0,0,0.1)",
+          borderRadius: 8,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+          zIndex: 1000,
+          overflow: "hidden",
+          textAlign: "left",
+        }}>
+          {Object.values(DEMO_SHOPS).map(shop => (
+            <div
+              key={shop.id}
+              onClick={() => selectShop(shop)}
+              style={{
+                padding: "9px 12px",
+                cursor: "pointer",
+                fontSize: 12, fontWeight: 600, letterSpacing: 0,
+                color: shop.id === activeShopId ? "#1F6FEB" : "#1F2937",
+                background: shop.id === activeShopId ? "rgba(31,111,235,0.08)" : "transparent",
+              }}
+              onMouseEnter={e => { if (shop.id !== activeShopId) e.currentTarget.style.background = "rgba(0,0,0,0.04)"; }}
+              onMouseLeave={e => { if (shop.id !== activeShopId) e.currentTarget.style.background = "transparent"; }}
+            >
+              {shop.shopName}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SMSRepresentativeShell({ smsName, shopName, smsHeaderColor, activeShopId, setDemo }) {
+  const [activeSection, setActiveSection] = useState(NAV_SECTIONS[0].id);
+  const { ros: liveFullROs, loading: feedLoading } = useLiveBoardROs({ shopId: activeShopId || "cornerstone" });
+
+  const feedUnavailable = !feedLoading && !liveFullROs?.length;
+  const kanbanRos       = liveFullROs?.length ? toKanbanCards(liveFullROs) : [];
   const storyWriterROs  = liveFullROs?.length ? toStoryWriterROs(liveFullROs) : undefined;
 
   function renderActiveSection() {
-    if (activeSection === "advisorHome") return <AdvisorHomeScreen ros={kanbanRos} />;
+    if (activeSection === "advisorHome") {
+      if (feedLoading) return <FeedStatus text="Loading repair orders from the data feed…" />;
+      if (feedUnavailable) return <FeedStatus icon={<AlertTriangle size={18} color={COLORS.textMuted} />} text="Data feed unavailable — no live repair orders to display." />;
+      return <AdvisorHomeScreen ros={kanbanRos} />;
+    }
+    if (activeSection === "roViewer") {
+      if (feedLoading) return <FeedStatus text="Loading repair orders from the data feed…" />;
+      return <RepairOrderViewerScreen ros={liveFullROs || []} />;
+    }
     if (activeSection === "job1Intake")  return <Job1IntakeScreen showIntelligencePanel={false} />;
     if (activeSection === "job2ThreeC")  return <Job2ThreeCScreen showIntelligencePanel={false} />;
     if (activeSection === "job3Upsell")  return <Job3UpsellScreen showIntelligencePanel={false} />;
@@ -129,7 +229,7 @@ function SMSRepresentativeShell({ smsName, shopName, smsHeaderColor, activeShopI
         fontFamily: "'Inter', system-ui, sans-serif",
         fontSize: 12, fontWeight: 700, letterSpacing: "0.04em",
       }}>
-        {smsName || "Shop Management System"} · {shopName || "Repair Shop"} (Representative — read-only feed to WrenchIQ)
+        {smsName || "Shop Management System"} · <ShopSwitcher shopName={shopName} activeShopId={activeShopId} setDemo={setDemo} /> (Representative — read-only feed to WrenchIQ)
       </div>
 
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
@@ -173,6 +273,18 @@ function SMSRepresentativeShell({ smsName, shopName, smsHeaderColor, activeShopI
           {renderActiveSection()}
         </div>
       </div>
+    </div>
+  );
+}
+
+function FeedStatus({ icon, text }) {
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      height: "100%", gap: 10, padding: "48px 16px", textAlign: "center",
+    }}>
+      {icon}
+      <span style={{ fontSize: 13, color: COLORS.textMuted, lineHeight: 1.5 }}>{text}</span>
     </div>
   );
 }

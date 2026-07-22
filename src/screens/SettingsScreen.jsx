@@ -435,9 +435,10 @@ function ShopProfileTab() {
 // ── Data Feed endpoints (SMS integration detail) ────────────
 const DATA_FEED_ENDPOINTS = [
   {
+    title: "Most recently updated customer",
     method: "GET",
     path: "/api/data-feed/most-recent-customer?shopId=&edition=",
-    description: "Most recently updated active customer/RO — drives the Customer Selector's default selection.",
+    description: "The customer/RO with the newest activity — this is what WrenchIQ shows by default.",
     sample: {
       found: true,
       data: {
@@ -455,9 +456,10 @@ const DATA_FEED_ENDPOINTS = [
     },
   },
   {
+    title: "Active customer / RO list",
     method: "GET",
     path: "/api/data-feed/customers?shopId=&edition=&limit=",
-    description: "Active customer/RO list (most-recent first, capped at 100) — powers the Customer Selector's search/override list.",
+    description: "Up to 100 active customers and their ROs, most-recent first — lets an advisor search for or switch to any of them.",
     sample: {
       count: 2,
       data: [
@@ -515,7 +517,7 @@ function SmsLogo() {
 
 // ── SMS integration card (with Data Feed endpoint detail) ────
 function SmsIntegrationCard() {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <div
@@ -526,92 +528,125 @@ function SmsIntegrationCard() {
         padding: 20,
         display: "flex",
         flexDirection: "column",
-        gap: 14,
+        gap: 16,
       }}
     >
+      {/* Identity + status */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
         <SmsLogo />
         <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
             <span style={{ fontSize: 15, fontWeight: 700, color: COLORS.textPrimary }}>
               SMS / DMS Data Feed
             </span>
             <StatusBadge status="connected" />
           </div>
-          <div style={{ fontSize: 13, color: COLORS.textSecondary }}>
-            Which SMS/DMS adapter WrenchIQ polls for the read-only Data Feed (Work-in-Progress Queue,
-            Customer Visit History) — target: Protractor SMS, 60s refresh
+          <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.5 }}>
+            SMS/DMS adapter — read-only feed of the Work-in-Progress Queue and up to 1 year of
+            historical repair orders. WrenchIQ never writes back to your system.
           </div>
         </div>
       </div>
 
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        style={{
-          background: expanded ? COLORS.primary : "#F3F4F6",
-          color: expanded ? "#fff" : COLORS.textSecondary,
-          border: "none",
-          borderRadius: 8,
-          padding: "8px 16px",
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: "pointer",
-          alignSelf: "flex-start",
-        }}
-      >
-        {expanded ? "Hide" : "Show"} data feed endpoints
-      </button>
+      {/* At-a-glance meta */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {[
+          { label: "Adapter", value: "Protractor SMS" },
+          { label: "Access", value: "Read-only" },
+          { label: "Refreshes every", value: "60 seconds" },
+        ].map((m) => (
+          <div
+            key={m.label}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: COLORS.bg, border: `1px solid ${COLORS.border}`,
+              borderRadius: 8, padding: "6px 10px",
+            }}
+          >
+            <span style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 600 }}>{m.label}</span>
+            <span style={{ fontSize: 12, color: COLORS.textPrimary, fontWeight: 700 }}>{m.value}</span>
+          </div>
+        ))}
+      </div>
 
-      {expanded && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {DATA_FEED_ENDPOINTS.map((ep) => (
-            <div
-              key={ep.path}
-              style={{
-                background: COLORS.bg,
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 10,
-                padding: 14,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 800,
-                    color: "#15803D",
-                    background: "#DCFCE7",
-                    padding: "2px 8px",
-                    borderRadius: 6,
-                  }}
-                >
-                  {ep.method}
-                </span>
-                <code style={{ fontSize: 12, fontWeight: 600, color: COLORS.textPrimary }}>
-                  {ep.path}
-                </code>
-              </div>
-              <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 10 }}>
-                {ep.description}
-              </div>
-              <pre
+      {/* Sample data feeds */}
+      <div>
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: "none", border: "none", cursor: "pointer",
+            padding: 0, marginBottom: expanded ? 12 : 0,
+            fontSize: 13, fontWeight: 700, color: COLORS.primary,
+          }}
+        >
+          <ChevronRight
+            size={14}
+            style={{ transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}
+          />
+          Sample data feeds
+          <span style={{ fontSize: 12, fontWeight: 500, color: COLORS.textMuted }}>
+            — exactly what WrenchIQ reads, nothing it doesn't
+          </span>
+        </button>
+
+        {expanded && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {DATA_FEED_ENDPOINTS.map((ep) => (
+              <div
+                key={ep.path}
                 style={{
-                  margin: 0,
-                  fontSize: 11,
-                  lineHeight: 1.5,
-                  background: "#0D1117",
-                  color: "#C9D1D9",
-                  borderRadius: 8,
-                  padding: 12,
-                  overflowX: "auto",
+                  background: COLORS.bg,
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: 10,
+                  padding: 14,
                 }}
               >
-                {JSON.stringify(ep.sample, null, 2)}
-              </pre>
-            </div>
-          ))}
-        </div>
-      )}
+                <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 2 }}>
+                  {ep.title}
+                </div>
+                <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 8 }}>
+                  {ep.description}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: "#15803D",
+                      background: "#DCFCE7",
+                      padding: "2px 7px",
+                      borderRadius: 6,
+                    }}
+                  >
+                    {ep.method}
+                  </span>
+                  <code style={{ fontSize: 11, color: COLORS.textMuted }}>
+                    {ep.path}
+                  </code>
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+                  Sample response
+                </div>
+                <pre
+                  style={{
+                    margin: 0,
+                    fontSize: 11,
+                    lineHeight: 1.5,
+                    background: "#0D1117",
+                    color: "#C9D1D9",
+                    borderRadius: 8,
+                    padding: 12,
+                    overflowX: "auto",
+                  }}
+                >
+                  {JSON.stringify(ep.sample, null, 2)}
+                </pre>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -622,51 +657,10 @@ function IntegrationsTab() {
     <div>
       <SectionHeader
         title="Integrations"
-        subtitle="Connected services powering PrediiAgent"
+        subtitle="How WrenchIQ connects to your shop's system"
       />
 
-      {/* Summary bar */}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          marginBottom: 24,
-        }}
-      >
-        {[
-          { label: "Connected", count: 1, color: COLORS.success, bg: "#DCFCE7" },
-          { label: "Active", count: 0, color: "#6D28D9", bg: "#EDE9FE" },
-          { label: "Available", count: 0, color: COLORS.textSecondary, bg: "#F3F4F6" },
-        ].map((item) => (
-          <div
-            key={item.label}
-            style={{
-              background: item.bg,
-              borderRadius: 10,
-              padding: "10px 18px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <span style={{ fontSize: 20, fontWeight: 800, color: item.color }}>
-              {item.count}
-            </span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: item.color }}>
-              {item.label}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: 16,
-        }}
-      >
+      <div style={{ maxWidth: 640 }}>
         <SmsIntegrationCard />
       </div>
     </div>
@@ -1249,9 +1243,10 @@ function TribalKnowledgePanel() {
   const now = new Date();
   const threeDays = 3 * 24 * 60 * 60 * 1000;
 
-  const isIng = n => n.noteType === 'ing';
+  const isIngNote = n => n.noteType === 'ing';
   const isObj = n => !n.noteType || n.noteType === 'objective';
-  const typeFilter = activeSubTab === 'ings' ? isIng : isObj;
+  const typeFilter = activeSubTab === 'ings' ? isIngNote : isObj;
+  const isIng = activeSubTab === 'ings';
 
   const activeNotes   = notes.filter(n => typeFilter(n) && n.active && (!n.expiresAt || new Date(n.expiresAt) > now));
   const inactiveNotes = notes.filter(n => typeFilter(n) && !n.active);

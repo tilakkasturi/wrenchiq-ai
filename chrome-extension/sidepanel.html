@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WrenchIQ Agent</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="panel-header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(-45deg)">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <span class="logo-text">WrenchIQ<span class="logo-ai">.ai</span></span>
+      </div>
+      <div id="status-dot" class="status-dot idle" title="No customer detected"></div>
+    </header>
+
+    <!-- Phone detection bar -->
+    <div id="detection-bar" class="detection-bar hidden">
+      <span class="detection-label">Detected:</span>
+      <span id="detected-phone" class="detected-phone"></span>
+    </div>
+
+    <!-- Body: flex column fills remaining height; only one child visible at a time -->
+    <div id="app-body">
+
+    <!-- Main content -->
+    <main id="main-content">
+
+      <!-- Idle state -->
+      <div id="state-idle" class="state-panel">
+        <div class="idle-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0D3B45" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3; transform: rotate(-45deg)">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <p class="idle-text">Open a customer SMS thread to surface WrenchIQ context</p>
+        <button id="btn-manual" class="btn-secondary">Enter phone manually</button>
+      </div>
+
+      <!-- Manual input -->
+      <div id="state-manual" class="state-panel hidden">
+        <div class="input-row">
+          <input id="manual-phone-input" type="tel" placeholder="(817) 555-0201" class="phone-input" />
+          <button id="btn-lookup" class="btn-primary">Look up</button>
+        </div>
+        <button id="btn-cancel-manual" class="btn-link">Cancel</button>
+      </div>
+
+      <!-- Loading -->
+      <div id="state-loading" class="state-panel hidden">
+        <div class="spinner"></div>
+        <p class="loading-text">Looking up customer...</p>
+      </div>
+
+      <!-- Not found -->
+      <div id="state-not-found" class="state-panel hidden">
+        <p class="not-found-text">No customer found for this number.</p>
+        <button id="btn-try-again" class="btn-secondary">Try another number</button>
+      </div>
+
+      <!-- Customer found -->
+      <div id="state-customer" class="state-panel hidden">
+
+        <!-- Customer card -->
+        <div class="customer-card">
+          <div class="customer-avatar" id="customer-avatar">EV</div>
+          <div class="customer-info">
+            <div class="customer-name" id="customer-name">Elena Vasquez</div>
+            <div class="customer-meta" id="customer-meta">Silver · 9 visits · $4,180 LTV</div>
+          </div>
+          <div class="loyalty-badge" id="loyalty-badge">SILVER</div>
+        </div>
+
+        <!-- Vehicle -->
+        <div class="section-label">Vehicle</div>
+        <div class="vehicle-card" id="vehicle-card">
+          <span id="vehicle-info">2020 Toyota Highlander XLE · 52,400 mi</span>
+          <span id="next-service" class="next-service"></span>
+        </div>
+
+        <!-- AI Insights -->
+        <div id="insights-section" class="hidden">
+          <div class="section-label">AI Insights</div>
+          <div id="insights-list" class="insights-list"></div>
+        </div>
+
+        <!-- Recent ROs -->
+        <div id="ros-section" class="hidden">
+          <div class="section-label">Recent ROs</div>
+          <div id="ros-list" class="ros-list"></div>
+        </div>
+
+        <!-- Agent chat -->
+        <div class="section-label">Ask WrenchIQ</div>
+        <div class="chat-area">
+          <div id="chat-messages" class="chat-messages"></div>
+          <div class="chat-input-row">
+            <input id="chat-input" type="text" placeholder="Ask about this customer..." class="chat-input" />
+            <button id="btn-send" class="btn-send">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button id="btn-reset" class="btn-link" style="margin-top:8px">Clear / new customer</button>
+      </div>
+
+    </main>
+
+    <!-- Advisor tab: WrenchIQAgent fullscreen — pure intelligence, no SMS chrome -->
+    <div id="pane-advisor" class="persona-pane hidden">
+      <iframe
+        id="iframe-advisor"
+        src="http://localhost:3001?mode=agent&persona=advisor"
+        allow="same-origin"
+        title="WrenchIQ Advisor Agent"
+      ></iframe>
+    </div>
+
+    <!-- Owner tab: WrenchIQAgent fullscreen — shop introspection, tribal notes, KPIs -->
+    <div id="pane-owner" class="persona-pane hidden">
+      <iframe
+        id="iframe-owner"
+        src="http://localhost:3001?mode=agent&persona=owner"
+        allow="same-origin"
+        title="WrenchIQ Owner Agent"
+      ></iframe>
+    </div>
+
+    </div><!-- /#app-body -->
+
+    <!-- Tab bar -->
+    <nav class="tab-bar">
+      <button class="tab active" data-tab="customer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Customer
+      </button>
+      <button class="tab" data-tab="advisor">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Advisor
+      </button>
+      <button class="tab" data-tab="owner">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Owner
+      </button>
+    </nav>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

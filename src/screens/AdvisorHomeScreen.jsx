@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { Clock } from "lucide-react";
+import { Clock, X } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
 import { customers, vehicles } from "../data/demoData";
@@ -33,8 +33,15 @@ export const STATIC_BOARD_ROS = [
       grossMarginDollars: 318.75, grossMarginPct: 36,
       effectiveLaborRate: 198, declinedTotal: 0,
       services: [
-        { name: "Front Brake Pad & Rotor Replacement", laborHrs: 1.4, laborCost: 273, partsCost: 178.50 },
-        { name: "Rear Brake Pad Replacement",          laborHrs: 0.6, laborCost: 117, partsCost: 89.00  },
+        { name: "Front Brake Pad & Rotor Replacement", laborHrs: 1.4, laborCost: 273, partsCost: 178.50,
+          parts: [
+            { description: "Front Brake Pads — OE-spec", cost: 68.50 },
+            { description: "Front Brake Rotors (pair)",   cost: 110.00 },
+          ] },
+        { name: "Rear Brake Pad Replacement",          laborHrs: 0.6, laborCost: 117, partsCost: 89.00,
+          parts: [
+            { description: "Rear Brake Pads — OE-spec", cost: 89.00 },
+          ] },
         { name: "65K Multi-Point Inspection",          laborHrs: 0.3, laborCost: 58.50, partsCost: 0   },
       ],
       aiInsights: [
@@ -59,8 +66,17 @@ export const STATIC_BOARD_ROS = [
       dtcs: ["P0016", "P0017"],
       services: [
         { name: "Engine Diagnostic & DTC Analysis",                    laborHrs: 1.0, laborCost: 175,    partsCost: 0   },
-        { name: "Timing Chain Kit Replacement (TSB PIP5765G)",         laborHrs: 8.0, laborCost: 1400,   partsCost: 638 },
-        { name: "Engine Oil & Filter Change — Post-Timing (0W-20 8qt)",laborHrs: 0.5, laborCost: 87.50,  partsCost: 52  },
+        { name: "Timing Chain Kit Replacement (TSB PIP5765G)",         laborHrs: 8.0, laborCost: 1400,   partsCost: 638,
+          parts: [
+            { description: "Timing Chain Kit — Melling TK-015 (Primary + Secondary Chains + Guides)", cost: 485.00 },
+            { description: "VVT Solenoid — Intake (ACDelco 12655421)",  cost: 52.00 },
+            { description: "VVT Solenoid — Exhaust (ACDelco 12655430)", cost: 52.00 },
+            { description: "Timing Cover Gasket & Seal Kit",            cost: 49.00 },
+          ] },
+        { name: "Engine Oil & Filter Change — Post-Timing (0W-20 8qt)",laborHrs: 0.5, laborCost: 87.50,  partsCost: 52,
+          parts: [
+            { description: "Mobil 1 0W-20 Full Synthetic (8 qt) + ACDelco Oil Filter PF63E", cost: 52.00 },
+          ] },
       ],
       aiInsights: [
         "TSB PIP5765G: GM Gen V EcoTec3 5.3L/6.2L timing chain stretch — P0016+P0017 at 80-100K mi. Ray's Silverado at 88.4K. Stretch confirmed on inspection.",
@@ -83,8 +99,14 @@ export const STATIC_BOARD_ROS = [
       effectiveLaborRate: 204, declinedTotal: 0,
       dtcs: ["P0420"],
       services: [
-        { name: "Catalytic Converter Replacement (OEM-equiv)", laborHrs: 2.2, laborCost: 429, partsCost: 785.00 },
-        { name: "O2 Sensor Upstream (verify)",                 laborHrs: 0.4, laborCost: 78,  partsCost: 98.00  },
+        { name: "Catalytic Converter Replacement (OEM-equiv)", laborHrs: 2.2, laborCost: 429, partsCost: 785.00,
+          parts: [
+            { description: "Catalytic Converter — Walker OEM-equiv 16468", cost: 785.00 },
+          ] },
+        { name: "O2 Sensor Upstream (verify)",                 laborHrs: 0.4, laborCost: 78,  partsCost: 98.00,
+          parts: [
+            { description: "Upstream O2 Sensor — Denso OE-spec", cost: 98.00 },
+          ] },
         { name: "Exhaust Inspection",                          laborHrs: 0.2, laborCost: 39,  partsCost: 0      },
       ],
       aiInsights: [
@@ -107,7 +129,15 @@ export const STATIC_BOARD_ROS = [
       grossMarginDollars: 460.65, grossMarginPct: 37,
       effectiveLaborRate: 193, declinedTotal: 280,
       services: [
-        { name: "60K Major Service (oil, filters, plugs, fluids)", laborHrs: 2.5, laborCost: 487.50, partsCost: 312.00 },
+        { name: "60K Major Service (oil, filters, plugs, fluids)", laborHrs: 2.5, laborCost: 487.50, partsCost: 312.00,
+          parts: [
+            { description: "Full Synthetic Oil & Filter Kit (5 qt)", cost: 58.00 },
+            { description: "NGK Iridium Spark Plugs (×4)",           cost: 76.00 },
+            { description: "Engine Air Filter",                      cost: 34.00 },
+            { description: "Cabin Air Filter",                       cost: 32.00 },
+            { description: "Coolant (1 gal)",                        cost: 38.00 },
+            { description: "CVT Transmission Fluid (4 qt)",          cost: 74.00 },
+          ] },
         { name: "4-Wheel Alignment",                               laborHrs: 0.7, laborCost: 136.50, partsCost: 0      },
         { name: "Tire Balance (4 wheels)",                         laborHrs: 0.4, laborCost: 78,     partsCost: 0      },
       ],
@@ -131,9 +161,20 @@ export const STATIC_BOARD_ROS = [
       grossMarginDollars: 178.60, grossMarginPct: 38,
       effectiveLaborRate: 201, declinedTotal: 195,
       services: [
-        { name: "A/C Evac & Recharge (R-134a)",  laborHrs: 0.8, laborCost: 156,   partsCost: 88.00  },
-        { name: "Cabin Air Filter Replacement",   laborHrs: 0.2, laborCost: 39,    partsCost: 48.00  },
-        { name: "A/C Leak Check & Dye Test",      laborHrs: 0.5, laborCost: 97.50, partsCost: 82.00  },
+        { name: "A/C Evac & Recharge (R-134a)",  laborHrs: 0.8, laborCost: 156,   partsCost: 88.00,
+          parts: [
+            { description: "R-134a Refrigerant (2 lbs)",   cost: 58.00 },
+            { description: "A/C System Dye & UV Kit",       cost: 30.00 },
+          ] },
+        { name: "Cabin Air Filter Replacement",   laborHrs: 0.2, laborCost: 39,    partsCost: 48.00,
+          parts: [
+            { description: "Cabin Air Filter — OEM", cost: 48.00 },
+          ] },
+        { name: "A/C Leak Check & Dye Test",      laborHrs: 0.5, laborCost: 97.50, partsCost: 82.00,
+          parts: [
+            { description: "A/C Leak Detection Dye & UV Kit", cost: 32.00 },
+            { description: "Schrader Valve Cores (set)",      cost: 50.00 },
+          ] },
       ],
       aiInsights: [
         "VIP (14 visits, $11,250 LTV) — David's approval is pending. Send a personal text update with the estimate link now.",
@@ -155,8 +196,15 @@ export const STATIC_BOARD_ROS = [
       grossMarginDollars: 261.00, grossMarginPct: 36,
       effectiveLaborRate: 196, declinedTotal: 340,
       services: [
-        { name: "Transmission Fluid Service (CVT)", laborHrs: 1.2, laborCost: 234, partsCost: 118.50 },
-        { name: "Spark Plug Replacement (4 cyl)",    laborHrs: 0.8, laborCost: 156, partsCost: 68.00  },
+        { name: "Transmission Fluid Service (CVT)", laborHrs: 1.2, laborCost: 234, partsCost: 118.50,
+          parts: [
+            { description: "CVT Transmission Fluid (4 qt)", cost: 98.50 },
+            { description: "Transmission Filter",           cost: 20.00 },
+          ] },
+        { name: "Spark Plug Replacement (4 cyl)",    laborHrs: 0.8, laborCost: 156, partsCost: 68.00,
+          parts: [
+            { description: "NGK Iridium Spark Plugs (×4)", cost: 68.00 },
+          ] },
         { name: "90K Multi-Point Inspection",        laborHrs: 0.3, laborCost: 58.50, partsCost: 0   },
       ],
       aiInsights: [
@@ -179,9 +227,17 @@ export const STATIC_BOARD_ROS = [
       grossMarginDollars: 524.40, grossMarginPct: 38,
       effectiveLaborRate: 205, declinedTotal: 0,
       services: [
-        { name: "Front Strut Assembly Replacement (pair)", laborHrs: 2.8, laborCost: 546,    partsCost: 392.00 },
+        { name: "Front Strut Assembly Replacement (pair)", laborHrs: 2.8, laborCost: 546,    partsCost: 392.00,
+          parts: [
+            { description: "Front Strut Assembly LH — Monroe Quick-Strut", cost: 196.00 },
+            { description: "Front Strut Assembly RH — Monroe Quick-Strut", cost: 196.00 },
+          ] },
         { name: "4-Wheel Alignment Post-Strut",            laborHrs: 0.7, laborCost: 136.50, partsCost: 0     },
-        { name: "Sway Bar End Link Inspection",            laborHrs: 0.2, laborCost: 39,     partsCost: 88.00 },
+        { name: "Sway Bar End Link Inspection",            laborHrs: 0.2, laborCost: 39,     partsCost: 88.00,
+          parts: [
+            { description: "Sway Bar End Link — LH", cost: 44.00 },
+            { description: "Sway Bar End Link — RH", cost: 44.00 },
+          ] },
       ],
       aiInsights: [
         "Highest-LTV customer ($18,940, 21 visits) — send pickup notification text immediately.",
@@ -203,9 +259,19 @@ export const STATIC_BOARD_ROS = [
       grossMarginDollars: 320.40, grossMarginPct: 36,
       effectiveLaborRate: 197, declinedTotal: 185,
       services: [
-        { name: "Front & Rear Brake Pad Replacement", laborHrs: 1.6, laborCost: 312,   partsCost: 218.00 },
-        { name: "Front Rotor Resurfacing",             laborHrs: 0.8, laborCost: 156,   partsCost: 110.00 },
-        { name: "Brake Fluid Flush",                   laborHrs: 0.3, laborCost: 58.50, partsCost: 38.00  },
+        { name: "Front & Rear Brake Pad Replacement", laborHrs: 1.6, laborCost: 312,   partsCost: 218.00,
+          parts: [
+            { description: "Front Brake Pad Set — OE-spec", cost: 110.00 },
+            { description: "Rear Brake Pad Set — OE-spec",  cost: 108.00 },
+          ] },
+        { name: "Front Rotor Resurfacing",             laborHrs: 0.8, laborCost: 156,   partsCost: 110.00,
+          parts: [
+            { description: "Front Brake Rotors (pair) — resurfaced, new hardware kit", cost: 110.00 },
+          ] },
+        { name: "Brake Fluid Flush",                   laborHrs: 0.3, laborCost: 58.50, partsCost: 38.00,
+          parts: [
+            { description: "DOT 3 Brake Fluid (1 qt)", cost: 38.00 },
+          ] },
       ],
       aiInsights: [
         "Angela's Outback has been waiting 4+ hours — notify her now to avoid dissatisfaction.",
@@ -225,7 +291,8 @@ const LOYALTY_CONFIG = {
   regular: { label: "Regular", color: "#6B7280", bg: "rgba(107,114,128,0.15)" },
 };
 
-function fmtMoney(n) { return n != null ? `$${Number(n).toLocaleString()}` : "—"; }
+function fmtMoney(n) { return n != null ? `$${Number(n).toFixed(2)}` : "—"; }
+function fmtHrs(n) { return n != null ? `${Number(n).toFixed(1)} hrs` : "—"; }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
@@ -244,7 +311,7 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
 
     if (next) {
       const veh = next._liveVehicle || vehicles.find(v => v.customerId === next.custId);
-      onRoSelect?.({ ...next, shopId: "cornerstone", _vehicle: veh || null });
+      onRoSelect?.({ ...next, shopId: next.shopId || "cornerstone", _vehicle: veh || null });
     } else {
       onRoSelect?.(null);
     }
@@ -338,6 +405,8 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
     );
   }
 
+  const selectedRO = BOARD_ROS.find(r => r.roNum === selectedRoNum) || null;
+
   // ── Layout ──────────────────────────────────────────────────────────────────
 
   return (
@@ -348,10 +417,11 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
       overflow: "hidden",
     }}>
 
-      {/* SMS kanban board — full width; this screen has no WrenchIQ intelligence
-          panel of its own (see WrenchIQSidecarScreen.jsx, Surface B, for that) ── */}
+      {/* SMS kanban board — this screen has no WrenchIQ intelligence panel of
+          its own (see WrenchIQSidecarScreen.jsx, Surface B, for that); the
+          RO details panel below is plain shop data, not AI intelligence ── */}
       <div style={{
-        width: "100%", display: "flex", flexDirection: "column",
+        flex: 1, minWidth: 0, display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
 
@@ -472,6 +542,143 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
         </div>
       </div>
 
+      {selectedRO && <RODetailsPanel ro={selectedRO} onClose={() => selectRO(null)} />}
+
+    </div>
+  );
+}
+
+// ── RO details panel (plain shop data — no WrenchIQ intelligence) ───────────
+// Just what's on the RO itself: customer, vehicle, concern, services/estimate.
+// No advisorBrief/serviceRecommendations/marginCheck/aroGap/Strategic
+// Priorities — that's WrenchIQ intelligence, surfaced exclusively by the
+// Sidecar (Surface B), never inline here.
+function RODetailsPanel({ ro, onClose }) {
+  const veh      = ro._liveVehicle || vehicles.find(v => v.customerId === ro.custId);
+  const cust     = ro._liveCustomerName ? null : customers.find(c => c.id === ro.custId);
+  const custName = ro._liveCustomerName || (cust ? `${cust.firstName} ${cust.lastName}` : "Unknown customer");
+  const services = ro._liveRO?.services || [];
+
+  return (
+    <div style={{
+      width: 340, flexShrink: 0,
+      borderLeft: `1px solid ${COLORS.border}`,
+      background: COLORS.bgCard,
+      display: "flex", flexDirection: "column", overflow: "hidden",
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`,
+        display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
+      }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 10, fontFamily: "monospace", color: COLORS.textMuted, fontWeight: 600 }}>
+            {ro.roNum}
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.textPrimary }}>
+            {custName}
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            background: "none", border: "none", cursor: "pointer", padding: 4,
+            borderRadius: 6, display: "flex", color: COLORS.textMuted, flexShrink: 0,
+          }}
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+        {veh && (
+          <div style={{ fontSize: 12, color: COLORS.textSecondary }}>
+            {veh.year} {veh.make} {veh.model}
+          </div>
+        )}
+
+        {ro._liveRO?.customerConcern && (
+          <div style={{
+            background: COLORS.bg, border: `1px solid ${COLORS.border}`,
+            borderRadius: 8, padding: "10px 12px",
+          }}>
+            <p style={{ margin: 0, fontSize: 12, color: COLORS.textSecondary, fontStyle: "italic", lineHeight: 1.5 }}>
+              "{ro._liveRO.customerConcern}"
+            </p>
+          </div>
+        )}
+
+        {/* Services — itemized labor + parts lines, like a real RO */}
+        {services.length > 0 && (() => {
+          const laborRate  = ro._liveRO?.effectiveLaborRate;
+          const laborTotal = services.reduce((s, svc) => s + (svc.laborCost || 0), 0);
+          const partsTotal = services.reduce((s, svc) => s + (svc.partsCost || 0), 0);
+          const grandTotal = ro._liveRO?.totalEstimate ?? (laborTotal + partsTotal);
+
+          return (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                Repair Order Lines
+              </div>
+              <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, overflow: "hidden" }}>
+                {services.map((svc, i) => (
+                  <div key={i} style={{
+                    padding: "10px 12px",
+                    borderBottom: i < services.length - 1 ? `1px solid ${COLORS.border}` : "none",
+                  }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.textPrimary, marginBottom: 6 }}>
+                      {svc.name}
+                    </div>
+
+                    {svc.laborHrs > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: COLORS.textSecondary, padding: "2px 0" }}>
+                        <span>Labor — {fmtHrs(svc.laborHrs)}{laborRate ? ` @ $${laborRate}/hr` : ""}</span>
+                        <span style={{ fontWeight: 600 }}>{fmtMoney(svc.laborCost)}</span>
+                      </div>
+                    )}
+
+                    {svc.parts?.length > 0 ? (
+                      svc.parts.map((p, pi) => (
+                        <div key={pi} style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: COLORS.textSecondary, padding: "2px 0" }}>
+                          <span style={{ flex: 1, marginRight: 8 }}>{p.description}</span>
+                          <span style={{ fontWeight: 600, flexShrink: 0 }}>{fmtMoney(p.cost)}</span>
+                        </div>
+                      ))
+                    ) : svc.partsCost > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: COLORS.textSecondary, padding: "2px 0" }}>
+                        <span>Parts</span>
+                        <span style={{ fontWeight: 600 }}>{fmtMoney(svc.partsCost)}</span>
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: COLORS.textPrimary, padding: "4px 0 0", marginTop: 4, borderTop: `1px dashed ${COLORS.border}` }}>
+                      <span style={{ fontWeight: 600 }}>Line Total</span>
+                      <span style={{ fontWeight: 700 }}>{fmtMoney((svc.laborCost || 0) + (svc.partsCost || 0))}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Totals summary */}
+              <div style={{ marginTop: 10, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: COLORS.textSecondary }}>
+                  <span>Labor Total</span>
+                  <span>{fmtMoney(laborTotal)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: COLORS.textSecondary }}>
+                  <span>Parts Total</span>
+                  <span>{fmtMoney(partsTotal)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: COLORS.textPrimary, fontWeight: 700, paddingTop: 6, marginTop: 2, borderTop: `1px solid ${COLORS.border}` }}>
+                  <span>Total</span>
+                  <span>{fmtMoney(grandTotal)}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
     </div>
   );
 }

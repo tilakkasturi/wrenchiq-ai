@@ -29,51 +29,55 @@ async function ensureNoteIndexes(db) {
   }
 }
 
-const DEMO_NOTES = [
+// Default Strategic Priorities every shop starts with — seeded into Mongo
+// (not just held in this array) the first time a given shop's notes are
+// fetched with zero results, so Surface A always shows a real baseline
+// rather than an empty state for any shop, not just the original demo one.
+const DEFAULT_NOTES_TEMPLATE = [
   // ── Objectives ─────────────────────────────────────────────
   {
-    shopId: 'cornerstone', locationId: 'all', noteType: 'objective',
+    locationId: 'all', noteType: 'objective',
     note: 'Push cabin air filter on all vehicles — shop is overstocked 40 units',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'cornerstone', locationId: 'all', noteType: 'objective',
+    locationId: 'all', noteType: 'objective',
     note: 'Offer brake fluid flush on any vehicle over 50k miles',
     active: true, expiresAt: null, triggerType: 'mileage_range:50000-999999',
   },
   {
-    shopId: 'cornerstone', locationId: 'all', noteType: 'objective',
+    locationId: 'all', noteType: 'objective',
     note: 'Check for timing belt service on Japanese vehicles 80k–100k miles',
     active: true, expiresAt: null, triggerType: 'vehicle_type:japanese',
   },
   // ── ings (per-RO advisor reminders) ────────────────────────
   {
-    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
+    locationId: 'all', noteType: 'ing',
     note: 'Add shop supply fee ($29.95) to every RO before closing',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
+    locationId: 'all', noteType: 'ing',
     note: 'Offer alignment check on every tire rotation — alignment revenue is up 18% when presented',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
+    locationId: 'all', noteType: 'ing',
     note: 'Check cabin air filter on vehicles over 25K miles — we have 40 units in stock',
     active: true, expiresAt: null, triggerType: 'mileage_range:25000-999999',
   },
   {
-    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
+    locationId: 'all', noteType: 'ing',
     note: 'Present Predii protection plan to first-time customers before checkout',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
+    locationId: 'all', noteType: 'ing',
     note: 'Remind customer about wiper blade replacement — offer both front + rear while vehicle is in',
     active: true, expiresAt: null, triggerType: 'any_ro',
   },
   {
-    shopId: 'cornerstone', locationId: 'all', noteType: 'ing',
+    locationId: 'all', noteType: 'ing',
     note: 'Ford F-150: offer 10% off brake job — mention the promotion before presenting the estimate',
     active: true, expiresAt: null, triggerType: 'vehicle_make:ford',
   },
@@ -123,10 +127,18 @@ router.get('/:shopId', async (req, res) => {
 
     const count = await col.countDocuments({ shopId });
 
-    // Auto-seed demo notes for the cornerstone demo shop if empty
-    if (count === 0 && shopId === 'cornerstone') {
-      const now = new Date().toISOString();
-      await col.insertMany(DEMO_NOTES.map(n => ({ ...n, createdAt: now, updatedAt: now })));
+    // Auto-seed default Strategic Priorities for ANY shop with zero notes —
+    // not just the original cornerstone demo shop — so Surface A always
+    // shows a real Mongo-backed baseline for whichever shop it launches
+    // against. Skip hierarchy scoping nodes (region/district ids) — those
+    // aren't real shops and shouldn't get a shop-level baseline.
+    if (count === 0) {
+      const hierNode = await db.collection('location_hierarchy').findOne({ id: shopId }).catch(() => null);
+      const isScopeNode = hierNode && hierNode.type !== 'shop';
+      if (!isScopeNode) {
+        const now = new Date().toISOString();
+        await col.insertMany(DEFAULT_NOTES_TEMPLATE.map(n => ({ ...n, shopId, createdAt: now, updatedAt: now })));
+      }
     }
 
     // Include notes scoped to this shop's district/region ancestors, so a

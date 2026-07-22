@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { Sparkles, AlertTriangle, Search, Settings } from "lucide-react";
+import { Sparkles, AlertTriangle, Search, Settings, ExternalLink, Bell, BellOff } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 import { fetchStoryRO } from "../services/repairOrderService";
@@ -27,12 +27,17 @@ function fmtMoney(n) {
   return `$${Math.round(n).toLocaleString()}`;
 }
 
-// Opens Surface A (the web admin app) at the settings section most relevant
-// to the Sidecar. Tauri's webview can't open external URLs via plain
+function timeAgo(ts) {
+  const s = Math.round((Date.now() - ts) / 1000);
+  if (s < 5) return "just now";
+  if (s < 60) return `${s}s ago`;
+  return `${Math.round(s / 60)}m ago`;
+}
+
+// Opens an external URL. Tauri's webview can't open external URLs via plain
 // window.open, so we route through the opener plugin when running inside
 // the desktop shell, falling back to window.open for browser-based dev.
-async function openSurfaceASettings() {
-  const url = `${WEB_APP_BASE_URL}/admin.html?section=settings&edition=am`;
+async function openExternalUrl(url) {
   const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
   if (isTauri) {
     const { openUrl } = await import("@tauri-apps/plugin-opener");
@@ -42,13 +47,17 @@ async function openSurfaceASettings() {
   }
 }
 
+const openSurfaceASettings = () => openExternalUrl(`${WEB_APP_BASE_URL}/admin.html?section=settings&edition=am`);
+const openSurfaceC = () => openExternalUrl(`${WEB_APP_BASE_URL}/sms-representative.html`);
+
 export default function WrenchIQSidecarScreen() {
   const { activeCustomer, customers, selectCustomer } = useSelectedCustomer();
   const [storyRO, setStoryRO] = useState(null);
   const [agentData, setAgentData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [notificationsVisible, setNotificationsVisible] = useState(true);
 
-  useInsightNotifier(customers, selectCustomer);
+  const { notifications } = useInsightNotifier(customers);
 
   useEffect(() => {
     const roId = activeCustomer?.roNumber;
@@ -109,18 +118,44 @@ export default function WrenchIQSidecarScreen() {
           <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
             WrenchIQ Intelligence
           </span>
-          <button
-            onClick={openSurfaceASettings}
-            title="Open WrenchIQ settings"
-            style={{
-              marginLeft: "auto", background: "transparent", border: "none",
-              cursor: "pointer", padding: 4, borderRadius: 6,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "rgba(255,255,255,0.4)",
-            }}
-          >
-            <Settings size={15} />
-          </button>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 2 }}>
+            <button
+              onClick={() => setNotificationsVisible((v) => !v)}
+              title={notificationsVisible ? "Hide notifications" : "Show notifications"}
+              style={{
+                background: "transparent", border: "none",
+                cursor: "pointer", padding: 4, borderRadius: 6,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: notificationsVisible ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)",
+              }}
+            >
+              {notificationsVisible ? <Bell size={15} /> : <BellOff size={15} />}
+            </button>
+            <button
+              onClick={openSurfaceC}
+              title="Open SMS/DMS Representative (Surface C)"
+              style={{
+                background: "transparent", border: "none",
+                cursor: "pointer", padding: 4, borderRadius: 6,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "rgba(255,255,255,0.4)",
+              }}
+            >
+              <ExternalLink size={15} />
+            </button>
+            <button
+              onClick={openSurfaceASettings}
+              title="Open WrenchIQ settings"
+              style={{
+                background: "transparent", border: "none",
+                cursor: "pointer", padding: 4, borderRadius: 6,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "rgba(255,255,255,0.4)",
+              }}
+            >
+              <Settings size={15} />
+            </button>
+          </div>
         </div>
         <CustomerSelector />
       </div>
@@ -143,6 +178,36 @@ export default function WrenchIQSidecarScreen() {
           <IntelligencePanel ro={storyRO} agentData={agentData} agentLoading={loading} />
         )}
       </div>
+
+      {/* Notifications — shop activity while you keep working the selected customer.
+          Clicking one loads that customer's RO; toggled via the bell icon above. */}
+      {notificationsVisible && notifications.length > 0 && (
+        <div style={{ padding: "0 18px 8px", flexShrink: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+          {notifications.map((n) => (
+            <div
+              key={n.id}
+              onClick={n.customerId ? () => selectCustomer(n.customerId) : undefined}
+              style={{
+                display: "flex", alignItems: "flex-start", gap: 8,
+                background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.18)",
+                borderRadius: 8, padding: "7px 10px",
+                cursor: n.customerId ? "pointer" : "default",
+              }}
+              onMouseEnter={(e) => { if (n.customerId) e.currentTarget.style.background = "rgba(34,197,94,0.12)"; }}
+              onMouseLeave={(e) => { if (n.customerId) e.currentTarget.style.background = "rgba(34,197,94,0.06)"; }}
+            >
+              <Sparkles size={11} color="#4ADE80" style={{ flexShrink: 0, marginTop: 2 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#86EFAC" }}>{n.title}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.35 }}>{n.body}</div>
+              </div>
+              <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", flexShrink: 0, whiteSpace: "nowrap" }}>
+                {timeAgo(n.at)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Footer */}
       <div style={{
@@ -404,7 +469,7 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
               Strategic Priorities
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {agentData.ings.map((ing, i) => (
+              {[...agentData.ings].sort((a, b) => (b.applies ? 1 : 0) - (a.applies ? 1 : 0)).map((ing, i) => (
                 <div key={i} style={{
                   display: "flex", gap: 7, alignItems: "flex-start",
                   padding: "5px 0",
