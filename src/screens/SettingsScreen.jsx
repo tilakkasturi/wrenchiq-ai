@@ -25,22 +25,38 @@ import {
   Link,
   Unlink,
   Target,
+  History,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { SHOP, technicians, advisors } from "../data/demoData";
 import { extractIngEntities } from "../services/ingEntityExtractor";
 import { useDemo } from "../context/DemoContext";
+import AdminShell from "../components/AdminShell";
+import HistoricalROsScreen from "./HistoricalROsScreen";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
-// ── Nav items ──────────────────────────────────────────────
-const NAV_ITEMS = [
-  { id: "shop", label: "Shop Profile", icon: Building2 },
-  { id: "integrations", label: "Integrations", icon: Link },
-  { id: "team", label: "Team", icon: Users },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "aroMargin", label: "ARO & Margin", icon: Target },
-  { id: "tribal", label: "Strategic Priorities", icon: MessageSquare },
+// ── Nav sections ───────────────────────────────────────────
+export const SETTINGS_SECTIONS = [
+  {
+    id: "learn",
+    label: "Learn",
+    items: [
+      { id: "integrations", label: "Integrations", icon: Link },
+      { id: "historicalROs", label: "Historical ROs", icon: History },
+    ],
+  },
+  {
+    id: "configure",
+    label: "Configure",
+    items: [
+      { id: "shop", label: "Shop Profile", icon: Building2 },
+      { id: "team", label: "Team", icon: Users },
+      { id: "notifications", label: "Notifications", icon: Bell },
+      { id: "aroMargin", label: "ARO & Margin", icon: Target },
+      { id: "tribal", label: "Strategic Priorities", icon: MessageSquare },
+    ],
+  },
 ];
 
 // ── Badge components ────────────────────────────────────────
@@ -348,7 +364,7 @@ function TechAvatar({ initials, role }) {
 }
 
 // ── Shop Profile tab ────────────────────────────────────────
-function ShopProfileTab() {
+export function ShopProfileTab() {
   return (
     <div>
       <SectionHeader
@@ -652,7 +668,7 @@ function SmsIntegrationCard() {
 }
 
 // ── Integrations tab ────────────────────────────────────────
-function IntegrationsTab() {
+export function IntegrationsTab() {
   return (
     <div>
       <SectionHeader
@@ -668,7 +684,7 @@ function IntegrationsTab() {
 }
 
 // ── Team tab ────────────────────────────────────────────────
-function TeamTab() {
+export function TeamTab() {
   return (
     <div>
       <SectionHeader
@@ -874,7 +890,7 @@ function TeamTab() {
 }
 
 // ── Notifications tab ───────────────────────────────────────
-function NotificationsTab() {
+export function NotificationsTab() {
   const [notifs, setNotifs] = useState({
     dailySummary: true,
     aiInsights: true,
@@ -919,7 +935,7 @@ function NotificationsTab() {
 // ── ARO & Margin Tab ─────────────────────────────────────────
 const PREFERRED_SUPPLIER_OPTIONS = ["Worldpac", "O'Reilly", "NAPA", "eBay Motors", "RockAuto"];
 
-function AROMarginTab() {
+export function AROMarginTab() {
   const { activeShopId } = useDemo();
   // ARO Target reuses the network-wide "avg_ro" goal (shop_goals collection),
   // shared with the ARO Agent dashboard's aggregate-across-locations view —
@@ -1172,7 +1188,7 @@ function AROMarginTab() {
 }
 
 // ── Tribal Knowledge Panel ──────────────────────────────────
-function TribalKnowledgePanel() {
+export function TribalKnowledgePanel() {
   const { activeShopId } = useDemo();
   const SHOP_ID = activeShopId;
   const LOCAL_STORAGE_KEY = `wrenchiq_tribal_${SHOP_ID}`;
@@ -1561,6 +1577,7 @@ export default function SettingsScreen() {
   const tabContent = {
     shop: <ShopProfileTab />,
     integrations: <IntegrationsTab />,
+    historicalROs: <HistoricalROsScreen />,
     team: <TeamTab />,
     notifications: <NotificationsTab />,
     aroMargin: <AROMarginTab />,
@@ -1568,83 +1585,11 @@ export default function SettingsScreen() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100%",
-        background: COLORS.bg,
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      }}
-    >
-      {/* Left sidebar nav */}
-      <div
-        style={{
-          width: 200,
-          flexShrink: 0,
-          background: "#fff",
-          borderRight: `1px solid ${COLORS.border}`,
-          padding: "24px 12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: COLORS.textMuted,
-            textTransform: "uppercase",
-            letterSpacing: "0.6px",
-            padding: "0 8px",
-            marginBottom: 10,
-          }}
-        >
-          Settings
-        </div>
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "9px 10px",
-                borderRadius: 8,
-                border: "none",
-                background: isActive ? COLORS.primary : "transparent",
-                color: isActive ? "#fff" : COLORS.textSecondary,
-                cursor: "pointer",
-                fontSize: 13,
-                fontWeight: isActive ? 600 : 500,
-                textAlign: "left",
-                width: "100%",
-                transition: "all 0.12s",
-              }}
-            >
-              <Icon size={16} />
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Main content */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: 32,
-        }}
-      >
-        <div style={{ maxWidth: 800 }}>
-          {tabContent[activeTab]}
-        </div>
-      </div>
-    </div>
+    <AdminShell
+      sections={SETTINGS_SECTIONS}
+      activeId={activeTab}
+      onSelect={setActiveTab}
+      content={tabContent[activeTab]}
+    />
   );
 }

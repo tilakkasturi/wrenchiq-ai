@@ -63,3 +63,6 @@ releases/
 
 # Vite cache
 .vite/deps/
+
+# start.sh/stop.sh process tracking + logs
+.run/

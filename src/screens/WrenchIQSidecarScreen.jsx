@@ -12,12 +12,13 @@
  */
 
 import { useState, useEffect } from "react";
-import { Sparkles, AlertTriangle, Search, Settings, ExternalLink, Bell, BellOff } from "lucide-react";
+import { Sparkles, AlertTriangle, Search, Settings, ExternalLink, Bell, BellOff, Clipboard, Send, Check } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useSelectedCustomer } from "../context/SelectedCustomerContext";
-import { fetchStoryRO } from "../services/repairOrderService";
+import { fetchStoryRO, updateStoryRO } from "../services/repairOrderService";
 import { useInsightNotifier } from "../services/insightNotifier";
 import CustomerSelector from "../components/CustomerSelector";
+import { openExternalUrl } from "../services/externalLink";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 const WEB_APP_BASE_URL = import.meta.env.VITE_WEB_APP_BASE_URL || "http://localhost:5173";
@@ -32,19 +33,6 @@ function timeAgo(ts) {
   if (s < 5) return "just now";
   if (s < 60) return `${s}s ago`;
   return `${Math.round(s / 60)}m ago`;
-}
-
-// Opens an external URL. Tauri's webview can't open external URLs via plain
-// window.open, so we route through the opener plugin when running inside
-// the desktop shell, falling back to window.open for browser-based dev.
-async function openExternalUrl(url) {
-  const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-  if (isTauri) {
-    const { openUrl } = await import("@tauri-apps/plugin-opener");
-    openUrl(url);
-  } else {
-    window.open(url, "_blank");
-  }
 }
 
 const openSurfaceASettings = () => openExternalUrl(`${WEB_APP_BASE_URL}/admin.html?section=settings&edition=am`);
@@ -175,7 +163,7 @@ export default function WrenchIQSidecarScreen() {
         )}
 
         {storyRO && (
-          <IntelligencePanel ro={storyRO} agentData={agentData} agentLoading={loading} />
+          <IntelligencePanel key={storyRO.roNumber} ro={storyRO} agentData={agentData} agentLoading={loading} />
         )}
       </div>
 
@@ -252,90 +240,193 @@ function LoadingSkeleton() {
   );
 }
 
+function StagedCustomerText({ ro }) {
+  const [status, setStatus] = useState(ro.agenticTextStatus || "staged");
+  const [sending, setSending] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  if (!ro.agenticCustomerText) return null;
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(ro.agenticCustomerText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  }
+
+  async function handleSend() {
+    setSending(true);
+    try {
+      await updateStoryRO(ro.roNumber, { agenticTextStatus: "sent" });
+      setStatus("sent");
+    } catch {
+      // best-effort — leave status as-is so the advisor can retry
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const sent = status === "sent";
+
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: 8, padding: "11px 13px", marginBottom: 10,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
+        <span style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          Customer Text
+        </span>
+        <span style={{
+          fontSize: 9, fontWeight: 700, borderRadius: 3, padding: "1px 6px",
+          textTransform: "uppercase", letterSpacing: "0.04em",
+          background: sent ? "rgba(74,222,128,0.15)" : "rgba(250,204,21,0.12)",
+          color: sent ? "#4ADE80" : "#FBBF24",
+        }}>
+          {sent ? "Sent" : "Staged"}
+        </span>
+      </div>
+
+      <p style={{ margin: "0 0 9px", fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>
+        {ro.agenticCustomerText}
+      </p>
+
+      <div style={{ display: "flex", gap: 6 }}>
+        <button
+          onClick={handleCopy}
+          style={{
+            display: "flex", alignItems: "center", gap: 5,
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 6, padding: "5px 10px", cursor: "pointer",
+            fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.7)",
+          }}
+        >
+          {copied ? <Check size={12} color="#4ADE80" /> : <Clipboard size={12} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+        <button
+          onClick={handleSend}
+          disabled={sent || sending}
+          style={{
+            display: "flex", alignItems: "center", gap: 5,
+            background: sent ? "rgba(74,222,128,0.12)" : COLORS.accent,
+            border: "none", borderRadius: 6, padding: "5px 10px",
+            cursor: sent || sending ? "default" : "pointer",
+            fontSize: 11, fontWeight: 600, color: sent ? "#4ADE80" : "#fff",
+            opacity: sending ? 0.6 : 1,
+          }}
+        >
+          {sent ? <Check size={12} /> : <Send size={12} />}
+          {sent ? "Sent to Customer" : sending ? "Sending…" : "Send via SMS"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function IntelligencePanel({ ro, agentData, agentLoading }) {
   const cust = ro._customer;
   const veh = ro._vehicle;
 
+  const hasNothing = !agentLoading && !agentData?.advisorBrief
+    && (agentData?.serviceRecommendations || []).length === 0
+    && (agentData?.alerts || []).length === 0
+    && (agentData?.ings || []).length === 0;
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-      {/* Customer / RO card */}
-      <div style={{
-        background: "rgba(255,255,255,0.05)",
-        borderRadius: 10,
-        borderLeft: `3px solid ${COLORS.accent}`,
-        padding: "14px 16px",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <span style={{
-            fontSize: 10, fontWeight: 800, color: COLORS.accent,
-            background: "rgba(255,255,255,0.07)", borderRadius: 4,
-            padding: "2px 7px", letterSpacing: "0.06em",
-          }}>
-            {(ro.status || "").replace(/_/g, " ").toUpperCase()}
-          </span>
-          <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>
-            {ro.roNumber}
-          </span>
-        </div>
-
-        <div style={{ fontSize: 15, fontWeight: 800, color: "#F1F5F9", marginBottom: 4 }}>
-          {cust?.firstName ? `${cust.firstName} ${cust.lastName}` : "Unknown customer"}
-        </div>
-
-        {veh?.make && (
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-            {veh.year} {veh.make} {veh.model}
-          </div>
-        )}
-      </div>
-
-      {/* Concern */}
-      {ro.customerConcern && (
+      {/* ── Customer Repair Order — Name, Concern, Services ───────────── */}
+      <div>
         <div style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 8, padding: "11px 13px",
+          fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+          letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8,
         }}>
-          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.5, fontStyle: "italic" }}>
-            "{ro.customerConcern}"
-          </p>
+          Customer Repair Order · {fmtMoney(ro.totalEstimate)}
         </div>
-      )}
 
-      {/* Services */}
-      {(ro.services || []).length > 0 && (
-        <div style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 8, overflow: "hidden",
-        }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Customer / RO card */}
           <div style={{
-            padding: "8px 13px",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
-            fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
-            textTransform: "uppercase", letterSpacing: "0.1em",
+            background: "rgba(255,255,255,0.05)",
+            borderRadius: 10,
+            borderLeft: `3px solid ${COLORS.accent}`,
+            padding: "14px 16px",
           }}>
-            Services · {fmtMoney(ro.totalEstimate)}
-          </div>
-          {ro.services.map((svc, i) => (
-            <div key={i} style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "8px 13px",
-              borderBottom: i < ro.services.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-            }}>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", flex: 1, marginRight: 8 }}>
-                {svc.name}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{
+                fontSize: 10, fontWeight: 800, color: COLORS.accent,
+                background: "rgba(255,255,255,0.07)", borderRadius: 4,
+                padding: "2px 7px", letterSpacing: "0.06em",
+              }}>
+                {(ro.status || "").replace(/_/g, " ").toUpperCase()}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", flexShrink: 0 }}>
-                {fmtMoney((svc.laborCost || 0) + (svc.partsCost || 0))}
+              <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>
+                {ro.roNumber}
               </span>
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* WrenchIQ Intelligence — live agent output */}
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#F1F5F9", marginBottom: 4 }}>
+              {cust?.firstName ? `${cust.firstName} ${cust.lastName}` : "Unknown customer"}
+            </div>
+
+            {veh?.make && (
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+                {veh.year} {veh.make} {veh.model}
+              </div>
+            )}
+          </div>
+
+          {/* Concern */}
+          {ro.customerConcern && (
+            <div style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 8, padding: "11px 13px",
+            }}>
+              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.5, fontStyle: "italic" }}>
+                "{ro.customerConcern}"
+              </p>
+            </div>
+          )}
+
+          {/* Services */}
+          {(ro.services || []).length > 0 && (
+            <div style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 8, overflow: "hidden",
+            }}>
+              <div style={{
+                padding: "8px 13px",
+                borderBottom: "1px solid rgba(255,255,255,0.07)",
+                fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)",
+                textTransform: "uppercase", letterSpacing: "0.1em",
+              }}>
+                Services · {fmtMoney(ro.totalEstimate)}
+              </div>
+              {ro.services.map((svc, i) => (
+                <div key={i} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "8px 13px",
+                  borderBottom: i < ro.services.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                }}>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", flex: 1, marginRight: 8 }}>
+                    {svc.name}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", flexShrink: 0 }}>
+                    {fmtMoney((svc.laborCost || 0) + (svc.partsCost || 0))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── WrenchIQ Intelligence — live agent output ──────────────────── */}
       <div style={{
         background: "rgba(34,197,94,0.06)",
         border: `1px solid ${agentLoading ? "rgba(34,197,94,0.3)" : "rgba(34,197,94,0.18)"}`,
@@ -355,6 +446,8 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
         </div>
 
         {agentLoading && !agentData && <LoadingSkeleton />}
+
+        <StagedCustomerText ro={ro} />
 
         {agentData?.advisorBrief && (
           <div style={{
@@ -397,56 +490,8 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
           </div>
         )}
 
-        {(agentData?.serviceRecommendations || []).length > 0 && (
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(134,239,172,0.5)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-              Service Recommendations
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {agentData.serviceRecommendations.map((u, i) => (
-                <div key={i} style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 6, padding: "9px 11px",
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#F1F5F9", flex: 1, marginRight: 8 }}>
-                      {u.service}
-                    </span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.accent }}>
-                        ~${u.estimatedCost}
-                      </span>
-                      <span style={{
-                        fontSize: 9, fontWeight: 700, borderRadius: 3, padding: "1px 5px",
-                        background: u.confidence === "high" ? "rgba(74,222,128,0.15)" : "rgba(250,204,21,0.12)",
-                        color: u.confidence === "high" ? "#4ADE80" : "#FBBF24",
-                      }}>
-                        {u.confidence}
-                      </span>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6, lineHeight: 1.4 }}>
-                    {u.reason}
-                  </div>
-                  {u.talkTrack && (
-                    <div style={{
-                      fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.5,
-                      fontStyle: "italic",
-                      borderLeft: "2px solid rgba(255,107,53,0.4)",
-                      paddingLeft: 8,
-                    }}>
-                      "{u.talkTrack}"
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {(agentData?.alerts || []).length > 0 && (
-          <div style={{ marginBottom: 10 }}>
+          <div>
             <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(252,211,77,0.6)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
               Alerts
             </div>
@@ -463,47 +508,102 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
           </div>
         )}
 
-        {(agentData?.ings || []).length > 0 && (
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(134,239,172,0.5)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-              Strategic Priorities
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {[...agentData.ings].sort((a, b) => (b.applies ? 1 : 0) - (a.applies ? 1 : 0)).map((ing, i) => (
-                <div key={i} style={{
-                  display: "flex", gap: 7, alignItems: "flex-start",
-                  padding: "5px 0",
-                  borderBottom: i < agentData.ings.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                }}>
-                  <span style={{
-                    fontSize: 8, fontWeight: 700, borderRadius: 3, padding: "1px 5px", flexShrink: 0, marginTop: 2,
-                    letterSpacing: "0.04em", textTransform: "uppercase",
-                    background: ing.applies ? "rgba(74,222,128,0.15)" : "rgba(255,255,255,0.06)",
-                    color: ing.applies ? "#4ADE80" : "rgba(255,255,255,0.35)",
-                  }}>
-                    {ing.applies ? "Applies" : "N/A"}
-                  </span>
-                  <div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>{ing.note}</div>
-                    {ing.reason && (
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2, lineHeight: 1.4 }}>{ing.reason}</div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!agentLoading && !agentData?.advisorBrief
-          && (agentData?.serviceRecommendations || []).length === 0
-          && (agentData?.alerts || []).length === 0
-          && (agentData?.ings || []).length === 0 && (
+        {hasNothing && (
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
             No intelligence signals for this RO right now.
           </div>
         )}
       </div>
+
+      {/* ── Service Recommendations — distinct blue panel ──────────────── */}
+      {(agentData?.serviceRecommendations || []).length > 0 && (
+        <div style={{
+          background: "rgba(59,130,246,0.08)",
+          border: "1px solid rgba(59,130,246,0.22)",
+          borderRadius: 8, padding: "12px 14px",
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#93C5FD", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>
+            Service Recommendations
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {agentData.serviceRecommendations.map((u, i) => (
+              <div key={i} style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 6, padding: "9px 11px",
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#F1F5F9", flex: 1, marginRight: 8 }}>
+                    {u.service}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#93C5FD" }}>
+                      ~${u.estimatedCost}
+                    </span>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, borderRadius: 3, padding: "1px 5px",
+                      background: u.confidence === "high" ? "rgba(74,222,128,0.15)" : "rgba(250,204,21,0.12)",
+                      color: u.confidence === "high" ? "#4ADE80" : "#FBBF24",
+                    }}>
+                      {u.confidence}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6, lineHeight: 1.4 }}>
+                  {u.reason}
+                </div>
+                {u.talkTrack && (
+                  <div style={{
+                    fontSize: 11, color: "rgba(255,255,255,0.7)", lineHeight: 1.5,
+                    fontStyle: "italic",
+                    borderLeft: "2px solid rgba(59,130,246,0.4)",
+                    paddingLeft: 8,
+                  }}>
+                    "{u.talkTrack}"
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Strategic Priorities — distinct purple panel ────────────────── */}
+      {(agentData?.ings || []).length > 0 && (
+        <div style={{
+          background: "rgba(168,85,247,0.08)",
+          border: "1px solid rgba(168,85,247,0.22)",
+          borderRadius: 8, padding: "12px 14px",
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#D8B4FE", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 6 }}>
+            Strategic Priorities
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {[...agentData.ings].sort((a, b) => (b.applies ? 1 : 0) - (a.applies ? 1 : 0)).map((ing, i) => (
+              <div key={i} style={{
+                display: "flex", gap: 7, alignItems: "flex-start",
+                padding: "5px 0",
+                borderBottom: i < agentData.ings.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+              }}>
+                <span style={{
+                  fontSize: 8, fontWeight: 700, borderRadius: 3, padding: "1px 5px", flexShrink: 0, marginTop: 2,
+                  letterSpacing: "0.04em", textTransform: "uppercase",
+                  background: ing.applies ? "rgba(216,180,254,0.18)" : "rgba(255,255,255,0.06)",
+                  color: ing.applies ? "#D8B4FE" : "rgba(255,255,255,0.35)",
+                }}>
+                  {ing.applies ? "Applies" : "N/A"}
+                </span>
+                <div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>{ing.note}</div>
+                  {ing.reason && (
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2, lineHeight: 1.4 }}>{ing.reason}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
