@@ -13,6 +13,13 @@ const CAMEL_COLL = 'RepairOrder';
 const SNAKE_COLL = 'wrenchiq_ro';
 const TARGET_ELR = 195; // posted labor rate for shop-001
 
+// ROs imported without per-job cost breakdown (confirmed: every wrenchiq_ro RO
+// dated Apr 2025 onward) carry no repair_jobs[].line_cost / parts[].unit_price at
+// all — only a lump-sum `invoice` total. When line-item data is absent, labor
+// revenue is approximated as this share of `invoice`, per industry-typical
+// labor/parts revenue split (labor ~50-65% of RO revenue).
+const LABOR_SHARE_FALLBACK = 0.6;
+
 /**
  * Normalize a camelCase RepairOrder document into unified snapshot shape.
  */
@@ -71,11 +78,19 @@ function normalizeCalmelRO(ro) {
  */
 function normalizeSnakeRO(ro) {
   const jobs = (ro.repair_jobs || []);
-  const laborRevenue  = jobs.reduce((s, j) => s + (j.labor_cost || 0), 0);
+  const lineItemLaborRevenue = jobs.reduce((s, j) => s + (j.line_cost || 0), 0);
   const partsRevenue  = jobs.reduce((s, j) =>
     s + (j.parts || []).reduce((ps, p) => ps + ((p.unit_price || 0) * (p.quantity || 1)), 0), 0);
-  const totalRevenue  = laborRevenue + partsRevenue;
+  const hasLineItemData = lineItemLaborRevenue > 0 || partsRevenue > 0;
+  const laborRevenue = hasLineItemData
+    ? lineItemLaborRevenue
+    : (ro.invoice || 0) * LABOR_SHARE_FALLBACK;
+  const totalRevenue = hasLineItemData
+    ? laborRevenue + partsRevenue
+    : (ro.invoice || 0);
   const ltt = ro.labor_time_tracking || {};
+  const actualHrsForFallback = ltt.totalActualHrs || jobs.reduce((s, j) => s + (j.actual_labor_hours || 0), 0);
+  const effectiveLaborRate = ltt.elr || (actualHrsForFallback > 0 ? Math.round(laborRevenue / actualHrsForFallback) : 0);
 
   return {
     roNumber:          ro.ro_number || ro.id || '',
@@ -90,7 +105,7 @@ function normalizeSnakeRO(ro) {
     loyaltyTier:       ro.customer?.loyaltyTier || null,
     customerVisitCount: ro.customer?.visitCount || null,
     vehicleOrigin:     ro.vehicle_origin || null,
-    effectiveLaborRate: ltt.elr || 0,
+    effectiveLaborRate: effectiveLaborRate,
     totalActualHrs:    ltt.totalActualHrs || jobs.reduce((s, j) => s + (j.actual_labor_hours || 0), 0),
     totalFlaggedHrs:   ltt.totalFlatHrs   || jobs.reduce((s, j) => s + (j.labor_hours || 0), 0),
     laborRevenue,
@@ -102,7 +117,7 @@ function normalizeSnakeRO(ro) {
       description: j.repair_job || j.description || '',
       laborHrs:    j.labor_hours || 0,
       actualHrs:   j.actual_labor_hours || 0,
-      laborCost:   j.labor_cost || 0,
+      laborCost:   j.line_cost || 0,
       partsCost:   (j.parts || []).reduce((s, p) => s + ((p.unit_price || 0) * (p.quantity || 1)), 0),
       status:      j.status || '',
     })),
