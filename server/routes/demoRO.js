@@ -20,7 +20,7 @@ const COLL   = 'wrenchiq_ro';
 // ── Revenue helper ────────────────────────────────────────────────────────────
 function calcRevenue(repair_jobs = []) {
   return repair_jobs.reduce((sum, job) => {
-    const laborCost  = job.labor_cost || (job.labor_hours || 0) * 175;
+    const laborCost  = job.line_cost || (job.labor_hours || 0) * 175;
     const partsCost  = (job.parts || []).reduce((s, p) =>
       s + (p.unit_price || 0) * (p.quantity || 1), 0);
     return sum + laborCost + partsCost;
@@ -35,14 +35,14 @@ function normalize(doc, role) {
     name:      j.repair_job || j.description || 'Service',
     desc:      j.description || '',
     laborHrs:  j.labor_hours || 0,
-    laborCost: Math.round((j.labor_cost || (j.labor_hours || 0) * (doc.shop?.labor_rate || 175)) * 100) / 100,
+    laborCost: Math.round((j.line_cost || (j.labor_hours || 0) * (doc.shop?.labor_rate || 175)) * 100) / 100,
     parts:     (j.parts || []).map(p => ({
       name:  p.description || p.repair_parts || 'Part',
       price: p.unit_price || 0,
       qty:   p.quantity || 1,
     })),
     totalCost: Math.round((
-      (j.labor_cost || (j.labor_hours || 0) * (doc.shop?.labor_rate || 175)) +
+      (j.line_cost || (j.labor_hours || 0) * (doc.shop?.labor_rate || 175)) +
       (j.parts || []).reduce((s, p) => s + (p.unit_price || 0) * (p.quantity || 1), 0)
     ) * 100) / 100,
   }));
