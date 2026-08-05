@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# bin/tauri-app — Start/stop the WrenchIQ Tauri Sidecar app for local development.
+#
+# Usage:
+#   bin/tauri-app          Start: Vite dev server + API server + the Sidecar window
+#   bin/tauri-app stop     Stop all of the above
+#
+# Start is one command, nothing to remember: puts Rust (cargo) and Node on
+# PATH, then runs `tauri dev`, which itself starts the Vite dev server + API
+# server (tauri.conf.json's beforeDevCommand: `npm run dev:full`) and waits
+# for localhost:5173 to come up before opening the Sidecar window.
+#
+# Requires Rust — if `cargo` isn't found, install it from https://rustup.rs.
+
+set -euo pipefail
+export PATH="$HOME/.cargo/bin:/opt/homebrew/opt/node@24/bin:$PATH"
+cd "$(dirname "$0")/.."
+
+stop() {
+  echo "Stopping WrenchIQ Tauri app + dev servers..."
+  local repo pattern pid cwd killed=0
+  repo="$(pwd)"
+  # Candidate patterns are intentionally loose (vite/tauri/server can show up
+  # as relative or absolute paths depending on who spawned them) — safety
+  # comes from checking each match's actual cwd equals this repo, not from
+  # the pattern being narrow, so this never touches another project's
+  # vite/node process running elsewhere on the machine.
+  for pattern in "target/debug/wrenchiq" "node_modules/.bin/tauri" "node_modules/.bin/vite" "npm run tauri:dev" "node server/index.js"; do
+    for pid in $(pgrep -f "$pattern" 2>/dev/null || true); do
+      cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' || true)
+      # cwd is this repo itself, or a subdirectory of it (e.g. src-tauri/,
+      # which is where `cargo run` executes the compiled app from).
+      if [[ "$cwd" == "$repo" || "$cwd" == "$repo"/* ]]; then
+        kill "$pid" 2>/dev/null && killed=$((killed + 1))
+      fi
+    done
+  done
+  echo "Done ($killed process(es) stopped)."
+}
+
+if [[ "${1:-}" == "stop" ]]; then
+  stop
+  exit 0
+fi
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "error: cargo not found — install Rust first: https://rustup.rs" >&2
+  exit 1
+fi
+
+exec npm run tauri:dev

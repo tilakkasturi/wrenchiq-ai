@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# bin/start-demo — Start the WrenchIQ demo (backend + Tauri Sidecar app)
+#
+# Usage:
+#   bin/start-demo
+#
+# Requires the Predii VPN to be connected — MongoDB is only reachable at
+# 172.16.80.7 (dst) / 172.16.80.16 (src) over the VPN.
+#
+# This just wraps bin/tauri-app, which already starts the API server and
+# Vite dev server (via `tauri dev`'s beforeDevCommand) before opening the
+# Sidecar window — no separate backend process needed here.
+
+set -euo pipefail
+cd "$(dirname "$0")"
+
+if ! ifconfig | grep -q "172\.16\."; then
+  echo "warning: Predii VPN does not appear to be connected." >&2
+  echo "         MongoDB (172.16.80.7 / 172.16.80.16) will be unreachable without it." >&2
+fi
+
+exec ./tauri-app

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# bin/stop-demo — Stop the WrenchIQ demo (backend + Tauri Sidecar app)
+#
+# Usage:
+#   bin/stop-demo
+
+set -euo pipefail
+cd "$(dirname "$0")"
+
+exec ./tauri-app stop
