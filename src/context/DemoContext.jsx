@@ -14,10 +14,10 @@ import { createContext, useContext, useState, useCallback, useEffect } from "rea
 const STORAGE_KEY = "wrenchiq_demo_config";
 
 const SMS_OPTIONS = [
+  "Mitchell1 ShopManager SE",
   "Protractor",
   "Tekmetric",
   "Shop-Ware",
-  "Mitchell1",
   "AutoLeap",
   "Shopmonkey",
   "Other",
@@ -25,8 +25,8 @@ const SMS_OPTIONS = [
 
 // Per-vendor Predii co-branding config
 export const SMS_VENDOR_CONFIG = {
+  mitchell1:   { displayName: "Mitchell1 ShopManager SE", poweredByPredii: true },
   protractor:  { displayName: "Protractor",  poweredByPredii: true },
-  mitchell1:   { displayName: "Mitchell1",   poweredByPredii: true },
   tekmetric:   { displayName: "Tekmetric",   poweredByPredii: true },
   shopware:    { displayName: "Shop-Ware",   poweredByPredii: true },
   autoleap:    { displayName: "AutoLeap",    poweredByPredii: true },
@@ -64,7 +64,7 @@ export const DEMO_SHOPS = {
     shopName: "Ridgeline Auto Service",
     ownerName: "Carmen Reyes",
     ownerInitials: "CR",
-    smsName: "Mitchell1",
+    smsName: "Mitchell1 ShopManager SE",
     corporateName: null,
     primaryCustomer: "Dan Whitfield",
     smsProvider: "mitchell1",
@@ -103,14 +103,22 @@ function defaultModuleConfig() {
 }
 
 const DEFAULTS = {
-  smsName:         DEMO_SHOPS.cornerstone.smsName,
+  // Shop Management System selection defaults to Mitchell1 ShopManager SE
+  // regardless of which demo shop is active — set independently under
+  // Settings -> Learn -> Integrations and remembered via localStorage
+  // (below) across every surface that reads useDemo()'s smsName/smsProvider.
+  smsName:         "Mitchell1 ShopManager SE",
+  smsProvider:     "mitchell1",
+  // V5 feedback (C1): Read-only (default, included) vs Read+Write (premium
+  // tier) SMS/DMS integration — gates write-back actions client-side; see
+  // src/services/am3cSMSWritebackService.js call sites.
+  smsWriteTier:    "read", // "read" | "readwrite"
   corporateName:   DEMO_SHOPS.cornerstone.corporateName,
   shopName:        DEMO_SHOPS.cornerstone.shopName,
   ownerName:       DEMO_SHOPS.cornerstone.ownerName,
   ownerInitials:   DEMO_SHOPS.cornerstone.ownerInitials,
   primaryCustomer: DEMO_SHOPS.cornerstone.primaryCustomer,
   activeShopId:    DEMO_SHOPS.cornerstone.id,
-  smsProvider:     DEMO_SHOPS.cornerstone.smsProvider,
   advisorName:     DEMO_SHOPS.cornerstone.advisorName,
   moduleConfig:    defaultModuleConfig(),
 };

@@ -30,6 +30,12 @@ export function SelectedCustomerProvider({ shopId, edition, children }) {
     const params = new URLSearchParams();
     if (shopId) params.set("shopId", shopId);
     if (edition) params.set("edition", edition);
+    // Every consumer of this context (ARO, Job Flow, Copilot, the Sidecar's
+    // RO Queue) eventually resolves the pick via /story-ro/:roId, which
+    // 404s on anything without isStoryRO:true — restrict to the resolvable
+    // set so this stays in parity with the SMS-representative surface's
+    // live feed (see liveBoardFeed.js).
+    params.set("storyOnly", "true");
 
     try {
       const [mostRecentRes, customersRes] = await Promise.all([

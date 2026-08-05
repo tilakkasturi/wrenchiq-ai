@@ -59,9 +59,30 @@ export function RecommendationsProvider({ shopId, edition, persona, children }) 
     };
   }, [shopId, edition, persona]);
 
+  // V5 feedback (C2): closed-loop tracking — "shown" is logged server-side
+  // (see server/routes/recommendations.js), accepted/dismissed are only
+  // known client-side so they're logged here, fire-and-forget.
+  const logEvent = useCallback((id, eventType) => {
+    const rec = allRecommendations.find(r => r.id === id);
+    fetch(`${API_BASE}/api/recommendations/event`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        shopId, recommendationId: id, roNumber: rec?.roNumber, domain: rec?.domain,
+        event: eventType, persona,
+      }),
+    }).catch(() => {});
+  }, [allRecommendations, shopId, persona]);
+
   const dismissRecommendation = useCallback((id) => {
     setDismissedIds(prev => new Set([...prev, id]));
-  }, []);
+    logEvent(id, "dismissed");
+  }, [logEvent]);
+
+  const acceptRecommendation = useCallback((id) => {
+    setDismissedIds(prev => new Set([...prev, id]));
+    logEvent(id, "accepted");
+  }, [logEvent]);
 
   // Filtered recommendations (dismissed items removed)
   const recommendations = allRecommendations.filter(r => !dismissedIds.has(r.id));
@@ -86,6 +107,7 @@ export function RecommendationsProvider({ shopId, edition, persona, children }) 
       error,
       generatedAt,
       dismissRecommendation,
+      acceptRecommendation,
       getForScreen,
       getForRO,
     }}>

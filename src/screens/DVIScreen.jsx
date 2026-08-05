@@ -1335,8 +1335,14 @@ function SummaryBar({ summary }) {
 }
 
 // ── DVIScreen (main export) ───────────────────────────────────
-export default function DVIScreen() {
+// Optional props let a caller (e.g. the RO Kanban board) deep-link into this
+// screen from a specific repair order: `roId` labels the RO the advisor came
+// from, and `sentToCustomer` renders the "sent" indicator for that RO's
+// inspection line item. Both are optional — standalone nav to DVIScreen
+// (e.g. from the persona nav) keeps the previous demo-only behavior.
+export default function DVIScreen({ roId, sentToCustomer } = {}) {
   const inspection = dviInspection;
+  const displayRoId = roId || inspection.roId;
   const vehicle = getVehicle(inspection.vehicleId);
   const customer = vehicle ? getCustomer(vehicle.customerId) : null;
   const tech = getTech(inspection.techId);
@@ -1513,8 +1519,29 @@ export default function DVIScreen() {
                     fontWeight: 600,
                   }}
                 >
-                  {inspection.roId}
+                  {displayRoId}
                 </span>
+                {typeof sentToCustomer === "boolean" && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      background: sentToCustomer
+                        ? "rgba(74,222,128,0.16)"
+                        : "rgba(255,255,255,0.1)",
+                      border: `1px solid ${sentToCustomer ? "rgba(74,222,128,0.4)" : "rgba(255,255,255,0.2)"}`,
+                      borderRadius: 6,
+                      padding: "3px 10px",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: sentToCustomer ? "#4ADE80" : "#E0F2FE",
+                    }}
+                  >
+                    <Send size={11} />
+                    {sentToCustomer ? "Sent to Customer" : "Not Sent Yet"}
+                  </span>
+                )}
                 {tech && (
                   <span
                     style={{

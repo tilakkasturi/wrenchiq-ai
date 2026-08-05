@@ -34,6 +34,42 @@ export const AZURE_OPENAI_API_VERSION =
   process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview';
 export const AZURE_OPENAI_MODEL = LLM_MODEL;
 
+// Raw Azure OpenAI env values, kept distinct from the LLM_BASE_URL/LLM_MODEL
+// exports above (the legacy aliases just mirror whichever provider currently
+// wins LLM_BASE_URL's priority order — not necessarily Azure). Used by
+// llmProviderConfig.js so Azure remains selectable as its own profile even
+// when LLM_BASE_URL is pointed at a different provider.
+export const RAW_AZURE_BASE_URL = process.env.AZURE_OPENAI_API_BASE || '';
+export const RAW_AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY || '';
+export const RAW_AZURE_MODEL = process.env.AZURE_OPENAI_MODEL || '';
+
+// V5 feedback (D3): optional frontier-model tier (e.g. GPT-5.5), offered as
+// a per-request toggle alongside the default "Predii LLM" model. This is a
+// genuinely separate endpoint/deployment (a shop's own Azure Foundry
+// resource), not just a different model name on whichever endpoint the
+// Settings → Integrations "AI Engine" toggle already points at — so it
+// needs its own base URL + key, not only a model override. Falls back to
+// the general AZURE_OPENAI_* vars (RAW_AZURE_*) when the frontier-specific
+// ones aren't set, since that's where a shop's real Azure resource usually
+// gets configured first. All unset means the tier is simply not configured
+// yet (see isProfileConfigured in llmProviderConfig.js) — the toggle then
+// falls back to Predii LLM rather than silently resending the same model
+// to the wrong endpoint.
+export const FRONTIER_BASE_URL = process.env.AZURE_OPENAI_FRONTIER_BASE_URL || RAW_AZURE_BASE_URL;
+export const FRONTIER_API_KEY  = process.env.AZURE_OPENAI_FRONTIER_API_KEY  || RAW_AZURE_API_KEY;
+export const FRONTIER_MODEL    =
+  process.env.AZURE_OPENAI_FRONTIER_MODEL || process.env.AZURE_OPENAI_FRONTIER_DEPLOYMENT || RAW_AZURE_MODEL;
+export const FRONTIER_API_VERSION =
+  process.env.AZURE_OPENAI_FRONTIER_API_VERSION || AZURE_OPENAI_API_VERSION;
+
+// RO Chat's completion-token budget — configurable via env since reasoning
+// models (gpt-5.x) spend part of it on hidden reasoning before writing any
+// visible reply, so a complex multi-step prompt needs more headroom than a
+// simple rewrite. The Tauri chat UI can override this per-request for
+// complex tasks (clamped server-side — see roChatService.js).
+export const RO_CHAT_MAX_TOKENS =
+  parseInt(process.env.LLM_MAX_TOKENS || '2000', 10);
+
 // Token budgets
 export const CLAUDE_MAX_TOKENS_CHAT =
   parseInt(process.env.CLAUDE_MAX_TOKENS_CHAT || '800', 10);
@@ -57,3 +93,8 @@ export const MONGODB_DB =
 // ── API Server ────────────────────────────────────────────────────────────────
 export const API_PORT =
   parseInt(process.env.API_PORT || '3001', 10);
+
+// ── Predii Learn (ro-ner-demo) ─────────────────────────────────────────────────
+// Base URL of the ro-ner-demo FastAPI service (assumed already running).
+export const RO_NER_BASE_URL =
+  process.env.RO_NER_BASE_URL || 'http://localhost:8090';

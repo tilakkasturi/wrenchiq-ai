@@ -17,6 +17,17 @@ import { Router }                  from 'express';
 import { buildSnapshot }            from '../services/snapshotBuilder.js';
 import { generateRecommendations }  from '../services/recommendationLLM.js';
 import { COLL }                     from '../models/Recommendation.js';
+import { getVoiceSettings }         from './shopVoiceSettings.js';
+import {
+  logRecommendationEventsBatch,
+  getRecommendationConversionRate,
+} from '../services/recommendationEventsService.js';
+
+function logShown(db, shopId, recommendations) {
+  logRecommendationEventsBatch(db, (recommendations || []).map(r => ({
+    shopId, recommendationId: r.id, roNumber: r.roNumber, domain: r.domain, event: 'shown',
+  })));
+}
 
 const router = Router();
 const CACHE_TTL_MINUTES = 15;
@@ -40,6 +51,7 @@ router.post('/recommendations', async (req, res) => {
     });
 
     if (cached) {
+      logShown(db, shopId, cached.recommendations);
       return res.json({
         cached:          true,
         generatedAt:     cached.generatedAt,
@@ -60,7 +72,8 @@ router.post('/recommendations', async (req, res) => {
     // ── 3. Generate recommendations via LLM ─────────────────────────────────────
     let recommendations;
     try {
-      recommendations = await generateRecommendations(snapshot, edition);
+      const voice = await getVoiceSettings(db, shopId);
+      recommendations = await generateRecommendations(snapshot, edition, voice);
     } catch (llmErr) {
       console.error('recommendations: LLM call failed:', llmErr.message);
       return res.status(503).json({ error: 'Failed to generate recommendations', detail: llmErr.message });
@@ -91,6 +104,7 @@ router.post('/recommendations', async (req, res) => {
     }
 
     // ── 5. Return result ────────────────────────────────────────────────────────
+    logShown(db, shopId, recommendations);
     return res.json({
       cached: false,
       generatedAt,
@@ -101,6 +115,26 @@ router.post('/recommendations', async (req, res) => {
   } catch (err) {
     console.error('recommendations: unexpected error:', err.message);
     return res.status(503).json({ error: 'Recommendations service unavailable', detail: err.message });
+  }
+});
+
+// ── POST /recommendations/event — log accepted/dismissed from the client ────
+router.post('/recommendations/event', async (req, res) => {
+  const { shopId, recommendationId, roNumber, domain, event, persona } = req.body || {};
+  if (!shopId || !recommendationId || !['accepted', 'dismissed'].includes(event)) {
+    return res.status(400).json({ error: 'shopId, recommendationId, and event (accepted|dismissed) are required' });
+  }
+  await logRecommendationEventsBatch(req.db, [{ shopId, recommendationId, roNumber, domain, event, persona }]);
+  res.status(204).end();
+});
+
+// ── GET /recommendations/conversion-rate — closed-loop metric ────────────────
+router.get('/recommendations/conversion-rate', async (req, res) => {
+  try {
+    const rate = await getRecommendationConversionRate(req.db, req.query.shopId);
+    res.json(rate);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

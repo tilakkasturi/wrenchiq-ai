@@ -33,7 +33,7 @@ const DEMO_NOTES_FALLBACK = [
 
 // ── Data fetchers (each tolerates MongoDB failure gracefully) ─────────────────
 
-async function fetchCustomerHistory(customerId, db) {
+export async function fetchCustomerHistory(customerId, db) {
   if (!db || !customerId) return [];
   try {
     const query   = { 'customer.id': customerId };
@@ -108,23 +108,62 @@ async function fetchShopObjectives(shopId, db) {
   }
 }
 
-// Standard automotive maintenance intervals — domain knowledge, not shop logic
+// Standard automotive maintenance intervals — domain knowledge, not shop logic.
+// `category: 'year_round'` marks items that recur on a mileage/time interval
+// year-round (e.g. oil + filter) as opposed to `'seasonal'` items tied to a
+// calendar season (e.g. AC service before summer, coolant before winter).
+// Lube/oil/filter jobs must always be 'year_round' — never 'seasonal' — per
+// WrenchIQ Product Spec v3.0 requirement S1.
 function getMileageServices(make = '', model = '', mileage = 0) {
   const services = [];
   const m = mileage;
   const mk = make.toLowerCase();
 
-  if (m >= 3000  && m % 5000   < 3000) services.push({ service: 'Engine Air Filter',        interval: 'every 15-20k mi', estimatedCost: 45  });
-  if (m >= 15000)                       services.push({ service: 'Cabin Air Filter',          interval: 'every 15-20k mi', estimatedCost: 65  });
-  if (m >= 30000)                       services.push({ service: 'Brake Fluid Flush',         interval: 'every 30k mi',    estimatedCost: 89  });
-  if (m >= 45000)                       services.push({ service: 'Transmission Fluid Service',interval: 'every 45-60k mi', estimatedCost: 175 });
-  if (m >= 50000)                       services.push({ service: 'Battery Test',              interval: '50k+ or 4 years', estimatedCost: 25  });
+  if (m >= 3000)                        services.push({ service: 'Lube, Oil & Filter',       interval: 'every 5k-7.5k mi', estimatedCost: 55,  category: 'year_round' });
+  if (m >= 3000  && m % 5000   < 3000) services.push({ service: 'Engine Air Filter',        interval: 'every 15-20k mi', estimatedCost: 45,  category: 'year_round' });
+  if (m >= 15000)                       services.push({ service: 'Cabin Air Filter',          interval: 'every 15-20k mi', estimatedCost: 65,  category: 'year_round' });
+  if (m >= 30000)                       services.push({ service: 'Brake Fluid Flush',         interval: 'every 30k mi',    estimatedCost: 89,  category: 'year_round' });
+  if (m >= 45000)                       services.push({ service: 'Transmission Fluid Service',interval: 'every 45-60k mi', estimatedCost: 175, category: 'year_round' });
+  if (m >= 50000)                       services.push({ service: 'Battery Test',              interval: '50k+ or 4 years', estimatedCost: 25,  category: 'year_round' });
   if (m >= 60000 && (mk.includes('honda') || mk.includes('acura') || mk.includes('toyota') || mk.includes('subaru')))
-                                        services.push({ service: 'Timing Belt Inspection',    interval: '60-90k mi (non-chain engines)', estimatedCost: 150 });
-  if (m >= 75000)                       services.push({ service: 'Spark Plugs (iridium)',     interval: '75-100k mi',      estimatedCost: 195 });
-  if (m >= 80000)                       services.push({ service: 'Coolant System Flush',      interval: 'every 5 years/80k mi', estimatedCost: 130 });
+                                        services.push({ service: 'Timing Belt Inspection',    interval: '60-90k mi (non-chain engines)', estimatedCost: 150, category: 'year_round' });
+  if (m >= 75000)                       services.push({ service: 'Spark Plugs (iridium)',     interval: '75-100k mi',      estimatedCost: 195, category: 'year_round' });
+  if (m >= 80000)                       services.push({ service: 'Coolant System Flush',      interval: 'every 5 years/80k mi', estimatedCost: 130, category: 'year_round' });
 
   return services;
+}
+
+// ── Existing-RO-service matching (WrenchIQ Product Spec v3.0 — requirement S3) ─
+//
+// A recommendation must never re-flag a service that's already a line item on
+// this RO. Reuses the same case-insensitive substring match convention used
+// elsewhere in this codebase (see knowledgeGraph.js) so a recommendation like
+// "Brake Fluid Flush" is excluded whether the RO line reads "Brake Fluid
+// Flush", "Brake Fluid Flush & Bleed", or just "Brake Fluid".
+
+function getExistingServiceNames(ro) {
+  const camelCase = (ro?.services || []).map(s => (typeof s === 'string' ? s : (s?.name || s?.description || s?.service || ''))).filter(Boolean);
+  const snakeCase = (ro?.repair_jobs || []).map(j => (typeof j === 'string' ? j : (j?.repair_job || j?.description || ''))).filter(Boolean);
+  const repairJobsCamel = (ro?.repairJobs || []).map(j => (typeof j === 'string' ? j : (j?.description || j?.name || j?.service || ''))).filter(Boolean);
+  return [...camelCase, ...snakeCase, ...repairJobsCamel].map(s => s.toLowerCase().trim()).filter(Boolean);
+}
+
+function isAlreadyOnRO(serviceName, existingNames) {
+  const svc = (serviceName || '').toLowerCase().trim();
+  if (!svc) return false;
+  return existingNames.some(existing => existing.includes(svc) || svc.includes(existing));
+}
+
+function filterExistingServices(result, ro) {
+  if (!result || !Array.isArray(result.serviceRecommendations)) return result;
+  const existingNames = getExistingServiceNames(ro);
+  if (existingNames.length === 0) return result;
+  return {
+    ...result,
+    serviceRecommendations: result.serviceRecommendations.filter(
+      rec => !isAlreadyOnRO(rec.service, existingNames)
+    ),
+  };
 }
 
 // ── Tool definitions (OpenAI format) ─────────────────────────────────────────
@@ -173,6 +212,8 @@ const RO_TOOLS = [
       description:
         'Return standard maintenance services that are typically due at this vehicle\'s current mileage. ' +
         'Use make and model to adjust for manufacturer-specific intervals (e.g. timing belt on non-chain engines). ' +
+        'Each result has a "category" (\'year_round\' for mileage/time-interval items like oil + filter, or \'seasonal\' ' +
+        'for calendar-season items) and an "alreadyOnRO" flag — never recommend an item where alreadyOnRO is true. ' +
         'Cross-reference with customer history to avoid recommending something just done.',
       parameters: {
         type: 'object',
@@ -194,14 +235,20 @@ function buildSystemPrompt(ro, vehicle, shopName) {
     ? `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''} — ${(vehicle.mileage || 0).toLocaleString()} miles`
     : 'vehicle details not available';
 
+  const existingServiceNames = getExistingServiceNames(ro);
+
   return `You are WrenchIQ Intelligence, an AI agent briefing a human service advisor before they walk out to greet a customer.
 
 Current RO:
   Customer: ${ro.customerName || ro.customerId || 'Unknown'}
   Vehicle:  ${vehicleStr}
-  In for:   ${ro.serviceType || ro.customerConcern || 'General service'}
+  In for:   ${ro.customerConcern || ro.serviceType || 'General service'}
   DTCs:     ${(ro.dtcs || []).join(', ') || 'none'}
   Shop:     ${shopName || 'Cornerstone Auto Group'}
+  Advisor:  ${ro.advisorName || 'not on file'}
+
+Line items already on this RO's job list (do NOT recommend any of these, or anything that describes the same work in different words — e.g. don't re-recommend "AC diagnostic" if "A/C System Diagnosis & Pressure Test" is already listed):
+${existingServiceNames.length ? existingServiceNames.map(s => `  - ${s}`).join('\n') : '  (none)'}
 
 Your job:
 1. Call get_customer_history to understand this customer's visit history and any declined services.
@@ -214,7 +261,19 @@ Rules:
 - Only surface ings that apply to this specific vehicle (honor triggerType filters: vehicle_make, mileage_range, any_ro).
 - Talk tracks must sound natural — written in first-person for the advisor to say to the customer.
 - Confidence = high if backed by specific data (declined service, exact mileage overdue), medium if mileage-based estimate.
-- Service recommendations must be evidence-based — backed by the RO, customer history, or mileage interval — covering both canned jobs and maintenance recommendations, not just incremental upsell. Keep to the 3 most impactful. Do not recommend more than 3.
+- Service recommendations must be evidence-based — backed by the RO, customer history, or mileage interval — covering both canned jobs and maintenance recommendations, not just incremental upsell. Keep to the 4 most impactful. Do not recommend more than 4.
+- NEVER recommend a service that is already a line item on the current RO (see "Line items already on this RO" above, or any due service flagged alreadyOnRO) — the recommendation engine must exclude anything already on this RO's job list, even if you'd word it differently.
+- category = "year_round" for anything that recurs on a mileage/time interval regardless of season — this always includes oil changes, lube/oil filter service, and engine oil filter jobs. Never classify these as "seasonal" and never invent a MOTOR-sourced "Oil Service" seasonal line item. category = "seasonal" only for genuinely calendar-season-driven work (e.g. AC performance check before summer, coolant/antifreeze check before winter).
+
+Gold Standard tone for suggestedCustomerMessage — this is a text/SMS the advisor sends directly to the customer, so it must read as warm and human, never salesy:
+- Warm, first-name, plain language — no jargon, no exclamation-point energy.
+- Reference every item in serviceRecommendations by name (up to the 4 you produced) — the customer should see the full picture in this one message, not a partial teaser.
+- For each one, give a timing suggestion in plain terms: today/now, worth scheduling soon, or fine to wait until the next visit — based on its confidence and how overdue it is. Don't invent urgency that isn't in the data.
+- Explain the "why" behind each item in a short clause (root cause, not just "it's due") so the customer understands, not just complies.
+- Do NOT oversell: no exclamation points, no "don't miss out," no bundling everything as equally urgent, no piling on adjectives. State each item plainly and let the customer decide. If a declined-service alert exists, do not re-push it here — that's a separate conversation.
+- Frame urgency truthfully — safety issues get real urgency, everything else gets "worth doing" or "can wait" framing, never scare tactics or artificial pressure.
+- State prices as estimates, and end with one easy, low-pressure way to say yes or no to all of it.
+- Sign off with the advisor's actual first name from "Advisor" above (e.g. "— James"). If the advisor isn't on file, sign off as "— the team at ${shopName || 'the shop'}" instead. Never write a placeholder like "[Advisor Name]" or "[Your Name]".
 
 Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
 {
@@ -225,6 +284,7 @@ Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
       "reason":        string,     // why this applies — specific data point
       "estimatedCost": number,     // integer USD
       "confidence":    "high" | "medium",
+      "category":      "year_round" | "seasonal",  // year_round for mileage/time-interval items (oil + filter, etc.); seasonal only for calendar-season work
       "talkTrack":     string      // what the advisor says to the customer, first person, 2-3 sentences
     }
   ],
@@ -240,7 +300,8 @@ Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
       "type":    "declined" | "overdue" | "pattern" | "dtc",
       "message": string            // specific alert for the advisor
     }
-  ]
+  ],
+  "suggestedCustomerMessage": string  // a ready-to-send SMS to the customer, following the Gold Standard tone rules above — references every serviceRecommendations item by name with a timing suggestion, stays plain and low-pressure, signed with the real advisor name from the RO (never a placeholder)
 }`;
 }
 
@@ -272,13 +333,18 @@ function executeTool(name, args, preloaded) {
         })),
       };
 
-    case 'get_mileage_services':
+    case 'get_mileage_services': {
+      const dueServices = getMileageServices(args.make, args.model, args.mileage);
+      const existing = getExistingServiceNames(preloaded.ro);
       return {
         make:     args.make,
         model:    args.model,
         mileage:  args.mileage,
-        dueServices: getMileageServices(args.make, args.model, args.mileage),
+        // Flag items already on this RO so the LLM never re-recommends them
+        // (WrenchIQ Product Spec v3.0 — requirement S3).
+        dueServices: dueServices.map(s => ({ ...s, alreadyOnRO: isAlreadyOnRO(s.service, existing) })),
       };
+    }
 
     default:
       return { error: `Unknown tool: ${name}` };
@@ -296,7 +362,9 @@ async function runSinglePassAgent(ro, vehicle, shopName, preloaded) {
   }));
   const objectives = preloaded.objectives.map(o => o.note);
   const mileage    = vehicle?.mileage || 0;
-  const dueServices = getMileageServices(vehicle?.make, vehicle?.model, mileage);
+  const existingServiceNames = getExistingServiceNames(ro);
+  const dueServices = getMileageServices(vehicle?.make, vehicle?.model, mileage)
+    .map(s => ({ ...s, alreadyOnRO: isAlreadyOnRO(s.service, existingServiceNames) }));
 
   const prompt = `${buildSystemPrompt(ro, vehicle, shopName)}
 
@@ -310,6 +378,9 @@ ${JSON.stringify(objectives, null, 2)}
 
 Mileage-appropriate services (vehicle at ${mileage.toLocaleString()} miles):
 ${JSON.stringify(dueServices, null, 2)}
+
+Services already on this RO (do NOT recommend any of these — see alreadyOnRO flag above and Rules):
+${JSON.stringify(existingServiceNames, null, 2)}
 
 Now produce the JSON recommendation object.`;
 
@@ -353,12 +424,12 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
     fetchShopObjectives(shopId, db),
   ]);
 
-  const preloaded = { history, objectives };
+  const preloaded = { history, objectives, ro };
 
   // If the LLM server doesn't support tool_calls, go straight to single-pass
   if (LLM_SKIP_TOOLS) {
     console.log('[roAdvisor] LLM_SKIP_TOOLS=true — using single-pass prompt');
-    const result = await runSinglePassAgent(ro, vehicle, 'Cornerstone Auto Group', preloaded);
+    const result = filterExistingServices(await runSinglePassAgent(ro, vehicle, 'Cornerstone Auto Group', preloaded), ro);
     return { ...result, generatedAt: new Date().toISOString(), dataSourced: { historyVisits: history.length, objectivesCount: objectives.length } };
   }
 
@@ -435,6 +506,8 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
   if (!result) {
     result = await runSinglePassAgent(ro, vehicle, shopName, preloaded);
   }
+
+  result = filterExistingServices(result, ro);
 
   return {
     ...result,

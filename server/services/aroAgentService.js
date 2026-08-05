@@ -21,6 +21,7 @@
 
 import {
   getCurrentARO,
+  getShopELR,
   getARОTrend,
   getTopServices,
   getCustomerReturnAnalysis,
@@ -32,6 +33,8 @@ import {
   AZURE_OPENAI_API_KEY,
 } from '../config.js';
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
+import { getVoiceSettings } from '../routes/shopVoiceSettings.js';
+import { buildVoiceDirective } from './voicePrompt.js';
 
 // ── Goal store (in-memory; extend to MongoDB for persistence) ─────────────────
 const _goals = new Map();
@@ -50,6 +53,31 @@ export function getGoals(shopId = 'shop-001') {
 export function setGoals(shopId = 'shop-001', updates) {
   _goals.set(shopId, { ...(_goals.get(shopId) || {}), ...updates });
   return getGoals(shopId);
+}
+
+// ── Standing priorities (V5 B2) ────────────────────────────────────────────
+// Shops can swap in whatever they actually care about instead of only ARO/
+// ELR/margin — read straight from tribal_notes rather than round-tripping
+// through the goals store, since Settings' TribalKnowledgePanel already owns
+// that collection (see server/routes/tribalNotes.js).
+async function getActiveStandingPriorities(db, shopId) {
+  try {
+    const now = new Date().toISOString();
+    const isObj = { $or: [{ noteType: 'objective' }, { noteType: { $exists: false } }] };
+    // Legacy notes predate priorityKind — no expiresAt reads as "standing"
+    // (mirrors the isStanding() fallback in SettingsScreen.jsx).
+    const isStanding = { $or: [{ priorityKind: 'standing' }, { priorityKind: { $exists: false }, expiresAt: null }] };
+    const notExpired = { $or: [{ expiresAt: null }, { expiresAt: { $gt: now } }] };
+    const notes = await db.collection('tribal_notes').find({
+      shopId,
+      active: true,
+      $and: [isObj, isStanding, notExpired],
+    }).toArray();
+    return notes;
+  } catch (err) {
+    console.warn('[aroAgent] failed to fetch standing priorities:', err.message);
+    return [];
+  }
 }
 
 // ── Tool definitions (OpenAI format) ─────────────────────────────────────────
@@ -254,7 +282,14 @@ function executeTool(toolName, data, goals) {
 }
 
 // ── ARO Agent system prompt ───────────────────────────────────────────────────
-function buildSystemPrompt(goals) {
+function buildSystemPrompt(goals, standingPriorities = [], voice) {
+  const customBlock = standingPriorities.length
+    ? `\n\nShop-defined standing priorities (this shop's own free-form targets — weigh these \
+alongside the numeric goals above when synthesizing recommendations):\n${
+        standingPriorities.map(p => `  - ${p.note}`).join('\n')
+      }`
+    : '';
+
   return `You are the ARO Agent for WrenchIQ — an autonomous AI agent that monitors shop \
 performance KPIs outside the core SMS workflow. You have read-only access to analytics \
 derived from the shop's full repair order database (100,000+ ROs) via tools.
@@ -263,7 +298,7 @@ Shop goals:
   - ARO (Average Repair Order): $${goals.aro}
   - Minimum ELR (Effective Labor Rate): $${goals.minELR}/hr
   - Bay Utilization target: ${goals.bayUtilization}%
-  - Max comeback rate: ${goals.comebackRate}%
+  - Max comeback rate: ${goals.comebackRate}%${customBlock}
 
 Your mission:
 1. Start with get_shop_kpis to understand current ARO vs. goal
@@ -304,7 +339,7 @@ Rules:
 - trend_detail: one sentence describing the multi-month ARO trend
 - Include 2-4 alerts, 3-5 recommendations, 0-3 tech alerts
 - All dollar amounts as integers
-- summary: one punchy sentence the service advisor sees at the top of the screen`;
+- summary: one punchy sentence the service advisor sees at the top of the screen${buildVoiceDirective(voice)}`;
 }
 
 // ── Main agent runner ─────────────────────────────────────────────────────────
@@ -324,6 +359,8 @@ export async function runAROAgent(shopId = 'shop-001', db) {
   }
 
   const goals = getGoals(shopId);
+  const standingPriorities = await getActiveStandingPriorities(db, shopId);
+  const voice = await getVoiceSettings(db, shopId);
 
   // Pre-fetch all analytics in parallel — uses aggregation, never loads 100K docs into memory
   console.log('[aroAgent] Fetching analytics from wrenchiq_ro (full dataset)…');
@@ -342,7 +379,7 @@ export async function runAROAgent(shopId = 'shop-001', db) {
 
   for (let turn = 0; turn < 10; turn++) {
     const data = await callAzureOpenAI({
-      system:     buildSystemPrompt(goals),
+      system:     buildSystemPrompt(goals, standingPriorities, voice),
       messages,
       max_tokens: 4096,
       tools:      ARO_TOOLS,
@@ -412,11 +449,16 @@ export async function runAROAgent(shopId = 'shop-001', db) {
  */
 export async function getAROStatus(shopId = 'shop-001', db) {
   const goals      = getGoals(shopId);
-  const currentARO = await getCurrentARO(db, shopId);
+  const [currentARO, shopELR] = await Promise.all([
+    getCurrentARO(db, shopId),
+    getShopELR(db, shopId),
+  ]);
 
   const aro    = currentARO.aro7d;
   const gap    = aro - goals.aro;
   const gapPct = goals.aro > 0 ? Math.round((gap / goals.aro) * 100) : 0;
+
+  const elrGap = shopELR.elr - goals.minELR;
 
   let status = 'on_track';
   if (gapPct < -20) status = 'at_risk';
@@ -437,6 +479,12 @@ export async function getAROStatus(shopId = 'shop-001', db) {
     revenue_7d:    currentARO.rev7d,
     revenue_30d:   currentARO.rev30d,
     trend:         currentARO.trend,
+    // Effective Labor Rate: Total Labor Revenue ÷ Total Actual Hours Worked
+    current_elr:      shopELR.elr,
+    goal_elr:         goals.minELR,
+    elr_gap:          elrGap,
+    elr_total_labor_revenue: shopELR.totalLaborRev,
+    elr_total_actual_hours:  shopELR.totalActualHrs,
     generatedAt:   new Date().toISOString(),
   };
 }

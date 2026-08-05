@@ -1,14 +1,103 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Shield, Star, Heart, TrendingUp, MessageSquare, CheckCircle,
   Clock, Car, DollarSign, ChevronRight, Zap, Phone, Camera,
   ThumbsUp, AlertTriangle, User, BarChart3, Award, ArrowUp,
-  FileText, Send, Bell, Repeat,
+  FileText, Send, Bell, Repeat, Users, CalendarClock,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import AIInsightsStrip from "../components/AIInsightsStrip";
+import { useDemo } from "../context/DemoContext";
 
-// ─── Customer Trust Data ──────────────────────────────────────
+const API_BASE = import.meta.env.VITE_API_BASE || "";
+
+// ─── Live data → card shape adapter (S7.4) ─────────────────────
+// /api/trust-score/customers computes trustScore, tier, and approvalRate from
+// actual wrenchiq_ro history (server/services/trustScoreService.js). This
+// screen BLENDS that live data with cosmetic/narrative fields the schema has
+// no real source for yet (NPS survey score, Google review count, referral
+// count, an ML "next predicted visit" date, star ratings on a timeline). Those
+// stay null/generic for live customers rather than being fabricated — see
+// buildAiNote/buildTimeline below, which only state facts present in the
+// aggregation response.
+const AVATAR_PALETTE = ["#6366F1", "#059669", "#DC2626", "#7C3AED", "#0891B2", "#D97706", "#DB2777"];
+
+function initials(name = "") {
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
+}
+
+function formatDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function buildTags(c) {
+  const tags = [];
+  if (c.tier === "At-Risk" && c.comebackCount > 0) tags.push(`${c.comebackCount} comeback RO${c.comebackCount > 1 ? "s" : ""}`);
+  if (c.declinedItems > 0) tags.push(`Declined $${c.declinedValue.toLocaleString()} in services`);
+  if (c.daysSinceLastVisit !== null && c.daysSinceLastVisit <= 30) tags.push("Recently active");
+  if (c.ltv >= 5000) tags.push("High LTV");
+  if (tags.length === 0) tags.push("No flags on file");
+  return tags;
+}
+
+function buildAiNote(c) {
+  // Every number here comes straight off the aggregation — no invented detail.
+  const base = `${c.name} has ${c.visits} visit${c.visits === 1 ? "" : "s"} on file (lifetime value $${c.ltv.toLocaleString()}), with a ${c.approvalRate}% service-acceptance rate computed from actual performed-vs-declined repair job history.`;
+  if (c.tier === "At-Risk") {
+    return `${base} ${c.comebackCount > 0 ? `${c.comebackCount} comeback RO(s) on file — ` : ""}${c.declinedItems > 0 ? `$${c.declinedValue.toLocaleString()} in declined services never re-presented. ` : ""}Recommend a personal follow-up before this relationship erodes further.`;
+  }
+  if (c.tier === "Champion") return `${base} One of the highest-trust relationships in the shop — protect it with proactive updates and priority scheduling.`;
+  if (c.tier === "VIP") return `${base} High lifetime value — worth white-glove treatment even between visits.`;
+  return `${base} Healthy, stable relationship.`;
+}
+
+function buildTimeline(c) {
+  // Real facts only, no fabricated line items — this is intentionally sparser
+  // than the mock's illustrative timeline because no per-visit event log
+  // (ratings, reviews, referrals) exists in wrenchiq_ro.
+  const events = [];
+  if (c.lastVisit) events.push({ date: formatDate(c.lastVisit), event: "Most recent visit on file", type: "visit" });
+  if (c.declinedValue > 0) events.push({ date: formatDate(c.lastVisit), event: `Declined services worth $${c.declinedValue.toLocaleString()} — not yet re-presented`, type: "declined" });
+  if (c.comebackCount > 0) events.push({ date: "—", event: `${c.comebackCount} comeback RO(s) flagged (repeat issue)`, type: "declined" });
+  if (c.firstVisit && c.firstVisit !== c.lastVisit) events.push({ date: formatDate(c.firstVisit), event: "First visit on file", type: "visit" });
+  return events;
+}
+
+function liveToCard(c, idx) {
+  return {
+    id: `live-${c.customerId}`,
+    name: c.name,
+    avatar: initials(c.name),
+    avatarBg: AVATAR_PALETTE[idx % AVATAR_PALETTE.length],
+    since: c.firstVisit ? String(new Date(c.firstVisit).getFullYear()) : "—",
+    visits: c.visits,
+    ltv: c.ltv,
+    trustScore: c.trustScore,
+    npsScore: null,
+    googleReviews: null,
+    referrals: null,
+    lastVisit: formatDate(c.lastVisit),
+    nextPredicted: "—",
+    vehicle: c.vehicle || "—",
+    mileage: "—",
+    approvalRate: `${c.approvalRate}%`,
+    avgTicket: c.avgTicket,
+    tier: c.tier,
+    tierColor: TIER_CONFIG[c.tier]?.color || "#3B82F6",
+    tags: buildTags(c),
+    aiNote: buildAiNote(c),
+    timeline: buildTimeline(c),
+  };
+}
+
+// ─── Customer Trust Data (STATIC FALLBACK) ─────────────────────
+// Used only while the live /api/trust-score/customers call is loading, or if
+// it errors out (e.g. Mongo unreachable). Once live data resolves, this mock
+// is replaced entirely — see the `customers` memo in the main screen.
 const CUSTOMERS_TRUST = [
   {
     id: "ct-001",
@@ -164,8 +253,15 @@ function TrustScoreRing({ score, size = 80 }) {
 }
 
 // ─── Network Trust KPIs ───────────────────────────────────────
-function TrustKPIs() {
-  const avg = Math.round(CUSTOMERS_TRUST.reduce((s, c) => s + c.trustScore, 0) / CUSTOMERS_TRUST.length);
+// Avg Trust Score is live (S7.4) — averaged over whatever customer list the
+// screen is currently showing (live API data, or the static fallback while
+// loading/on error). Google Rating / NPS / Repeat Rate / Reviews have no live
+// data source in this schema (no review or survey integration exists yet) —
+// they stay illustrative, same as before this change.
+function TrustKPIs({ customers }) {
+  const avg = customers.length > 0
+    ? Math.round(customers.reduce((s, c) => s + c.trustScore, 0) / customers.length)
+    : 0;
   const kpis = [
     { label: "Avg Trust Score", value: avg, sub: "Shop average", icon: Shield, color: "#059669" },
     { label: "Google Rating", value: "4.8★", sub: "↑ 0.2 this month", icon: Star, color: "#F59E0B" },
@@ -394,12 +490,155 @@ function CustomerDetail({ customer }) {
   );
 }
 
+// ─── S6: Customer Connection Dashboard ─────────────────────────
+// Aggregate view across the whole customer base. Per the product spec, a
+// full Customer Connection Dashboard needs a dedicated scoping session
+// (real communication-history data doesn't exist in the schema yet) — this
+// is the reasonable v1: a summary strip + a customer list, sourced from
+// GET /api/trust-score/dashboard. "Last contact" and "response rate" are
+// explicit proxies (RO recency, service-acceptance rate) — see the comment
+// block at the top of server/services/trustScoreService.js for why.
+function ConnectionDashboard({ dashboard, loading }) {
+  if (loading) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: COLORS.textMuted, fontSize: 13 }}>
+        Loading connection data…
+      </div>
+    );
+  }
+  if (!dashboard) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: COLORS.textMuted, fontSize: 13 }}>
+        Connection dashboard unavailable — API unreachable.
+      </div>
+    );
+  }
+
+  const { summary, customers } = dashboard;
+  const strip = [
+    { label: "Avg Trust Score", value: summary.avgTrustScore, icon: Shield, color: "#059669" },
+    { label: "Recent Contact", value: `${summary.pctRecentContact}%`, sub: "visited in last 90 days", icon: Phone, color: "#3B82F6" },
+    { label: "Outstanding Follow-Ups", value: summary.outstandingFollowUps, sub: "declined services never re-presented", icon: Bell, color: "#EF4444" },
+    { label: "Customers Tracked", value: summary.totalCustomers, icon: Users, color: "#8B5CF6" },
+  ];
+
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div style={{ display: "flex", gap: 14, padding: 16, borderBottom: "1px solid #F3F4F6" }}>
+        {strip.map((k, i) => (
+          <div key={i} style={{ flex: 1, background: "#FAFAF8", borderRadius: 10, border: "1px solid #E5E7EB", padding: "12px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 2 }}>{k.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.textPrimary }}>{k.value}</div>
+                {k.sub && <div style={{ fontSize: 10, color: COLORS.textMuted }}>{k.sub}</div>}
+              </div>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: k.color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <k.icon size={15} color={k.color} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr style={{ position: "sticky", top: 0, background: "#fff", borderBottom: "1px solid #E5E7EB", textAlign: "left" }}>
+              <th style={{ padding: "10px 16px", color: COLORS.textMuted, fontWeight: 600 }}>Customer</th>
+              <th style={{ padding: "10px 16px", color: COLORS.textMuted, fontWeight: 600 }}>Tier</th>
+              <th style={{ padding: "10px 16px", color: COLORS.textMuted, fontWeight: 600 }}>Trust Score</th>
+              <th style={{ padding: "10px 16px", color: COLORS.textMuted, fontWeight: 600 }}>Last Contact <span style={{ fontWeight: 400 }}>(proxy: last visit)</span></th>
+              <th style={{ padding: "10px 16px", color: COLORS.textMuted, fontWeight: 600 }}>Response Rate <span style={{ fontWeight: 400 }}>(proxy: approval rate)</span></th>
+              <th style={{ padding: "10px 16px", color: COLORS.textMuted, fontWeight: 600 }}>Follow-Up</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.map(c => {
+              const tierCfg = TIER_CONFIG[c.tier] || TIER_CONFIG.Loyal;
+              return (
+                <tr key={c.customerId} style={{ borderBottom: "1px solid #F3F4F6" }}>
+                  <td style={{ padding: "9px 16px", fontWeight: 600 }}>{c.name}</td>
+                  <td style={{ padding: "9px 16px" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: tierCfg.color, background: tierCfg.bg, borderRadius: 4, padding: "2px 7px" }}>{c.tier}</span>
+                  </td>
+                  <td style={{ padding: "9px 16px", fontWeight: 700 }}>{c.trustScore}</td>
+                  <td style={{ padding: "9px 16px", color: COLORS.textMuted }}>
+                    {formatDate(c.lastVisit)}
+                    {c.daysSinceLastVisit !== null && <span style={{ marginLeft: 6, fontSize: 11 }}>({c.daysSinceLastVisit}d ago)</span>}
+                  </td>
+                  <td style={{ padding: "9px 16px" }}>{c.approvalRate}%</td>
+                  <td style={{ padding: "9px 16px" }}>
+                    {c.hasOutstandingFollowUp
+                      ? <span style={{ display: "flex", alignItems: "center", gap: 4, color: "#EF4444", fontWeight: 600 }}><CalendarClock size={12} /> ${c.declinedValue.toLocaleString()} pending</span>
+                      : <span style={{ color: "#059669" }}>None</span>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Screen ──────────────────────────────────────────────
 export default function TrustEngineScreen() {
-  const [selectedId, setSelectedId] = useState("ct-001");
+  const { activeShopId } = useDemo();
+  const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [view, setView] = useState("profiles"); // "profiles" | "connection"
 
-  const selectedCustomer = CUSTOMERS_TRUST.find(c => c.id === selectedId);
+  // ── Live data (S7.4 + S6) ────────────────────────────────────
+  const [liveCustomers, setLiveCustomers] = useState(null); // null = not yet loaded
+  const [liveLoading, setLiveLoading] = useState(true);
+  const [dashboard, setDashboard] = useState(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  // Surfaces server/services/trustScoreService.js's DATA_CARDINALITY_NOTE —
+  // a known limitation of the current demo dataset (cornerstone has one RO
+  // per customer and no declined-service history yet). Shown, not hidden,
+  // per S7.4 guidance to flag data gaps rather than fake nicer-looking numbers.
+  const [dataNote, setDataNote] = useState(null);
+
+  const fetchTrustData = useCallback(async () => {
+    setLiveLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/trust-score/customers?shopId=${activeShopId}`);
+      const json = res.ok ? await res.json() : null;
+      setLiveCustomers(json?.data?.length ? json.data.map(liveToCard) : null);
+      setDataNote(json?.dataNote || null);
+    } catch {
+      setLiveCustomers(null);
+    } finally {
+      setLiveLoading(false);
+    }
+  }, [activeShopId]);
+
+  const fetchDashboard = useCallback(async () => {
+    setDashboardLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/trust-score/dashboard?shopId=${activeShopId}`);
+      const json = res.ok ? await res.json() : null;
+      setDashboard(json?.summary ? json : null);
+    } catch {
+      setDashboard(null);
+    } finally {
+      setDashboardLoading(false);
+    }
+  }, [activeShopId]);
+
+  useEffect(() => {
+    fetchTrustData();
+    fetchDashboard();
+  }, [fetchTrustData, fetchDashboard]);
+
+  // Live data replaces the static mock once loaded; falls back to the mock
+  // while loading or if the API is unreachable (documented at CUSTOMERS_TRUST).
+  const customers = liveCustomers || CUSTOMERS_TRUST;
+
+  const effectiveSelectedId = selectedId || customers[0]?.id;
+  const selectedCustomer = customers.find(c => c.id === effectiveSelectedId) || customers[0];
 
   const FILTERS = [
     { key: "all", label: "All Customers" },
@@ -410,8 +649,8 @@ export default function TrustEngineScreen() {
   ];
 
   const filtered = filter === "all"
-    ? CUSTOMERS_TRUST
-    : CUSTOMERS_TRUST.filter(c => c.tier === filter);
+    ? customers
+    : customers.filter(c => c.tier === filter);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -423,20 +662,46 @@ export default function TrustEngineScreen() {
       ]} />
     <div style={{ padding: "24px 28px 0", display: "flex", flexDirection: "column", flex: 1 }}>
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: COLORS.textPrimary }}>Trust Engine</h1>
-          <div style={{ background: "linear-gradient(90deg, #F59E0B, #EF4444)", borderRadius: 20, padding: "2px 12px", fontSize: 11, fontWeight: 700, color: "#fff" }}>DIFFERENTIATOR</div>
+      <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: COLORS.textPrimary }}>Trust Engine</h1>
+            <div style={{ background: "linear-gradient(90deg, #F59E0B, #EF4444)", borderRadius: 20, padding: "2px 12px", fontSize: 11, fontWeight: 700, color: "#fff" }}>DIFFERENTIATOR</div>
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: COLORS.textMuted }}>
+            Every customer relationship quantified. Build loyalty that no dealership can buy.
+          </p>
         </div>
-        <p style={{ margin: 0, fontSize: 13, color: COLORS.textMuted }}>
-          Every customer relationship quantified. Build loyalty that no dealership can buy.
-        </p>
+        <div style={{ display: "flex", gap: 4, background: "#F3F4F6", borderRadius: 8, padding: 3 }}>
+          <button
+            onClick={() => setView("profiles")}
+            style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 6, border: "none", cursor: "pointer", background: view === "profiles" ? "#fff" : "transparent", color: view === "profiles" ? COLORS.textPrimary : COLORS.textMuted, boxShadow: view === "profiles" ? "0 1px 2px rgba(0,0,0,0.08)" : "none" }}
+          >
+            Customer Profiles
+          </button>
+          <button
+            onClick={() => setView("connection")}
+            style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 6, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, background: view === "connection" ? "#fff" : "transparent", color: view === "connection" ? COLORS.textPrimary : COLORS.textMuted, boxShadow: view === "connection" ? "0 1px 2px rgba(0,0,0,0.08)" : "none" }}
+          >
+            <Users size={12} /> Connection Dashboard
+          </button>
+        </div>
       </div>
 
       {/* KPIs */}
-      <TrustKPIs />
+      <TrustKPIs customers={customers} />
 
-      {/* Main Content */}
+      {liveCustomers && dataNote && (
+        <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: -12, marginBottom: 16, fontStyle: "italic" }}>
+          {dataNote}
+        </div>
+      )}
+
+      {view === "connection" ? (
+        <div style={{ flex: 1, display: "flex", background: "#fff", borderRadius: 16, border: "1px solid #E5E7EB", overflow: "hidden", minHeight: 0 }}>
+          <ConnectionDashboard dashboard={dashboard} loading={dashboardLoading} />
+        </div>
+      ) : (
       <div style={{ flex: 1, display: "flex", gap: 0, background: "#fff", borderRadius: 16, border: "1px solid #E5E7EB", overflow: "hidden", minHeight: 0 }}>
         {/* Customer List */}
         <div style={{ width: 340, flexShrink: 0, display: "flex", flexDirection: "column", borderRight: "1px solid #E5E7EB" }}>
@@ -462,7 +727,7 @@ export default function TrustEngineScreen() {
               <CustomerTrustCard
                 key={c.id}
                 customer={c}
-                selected={selectedId === c.id}
+                selected={effectiveSelectedId === c.id}
                 onClick={() => setSelectedId(c.id)}
               />
             ))}
@@ -472,8 +737,12 @@ export default function TrustEngineScreen() {
         {/* Detail View */}
         <div style={{ flex: 1, overflowY: "auto", padding: "20px", background: "#FAFAF8" }}>
           {selectedCustomer && <CustomerDetail customer={selectedCustomer} />}
+          {liveLoading && !liveCustomers && (
+            <div style={{ marginTop: 12, fontSize: 11, color: COLORS.textMuted }}>Loading live trust data…</div>
+          )}
         </div>
       </div>
+      )}
     </div>
     </div>
   );

@@ -5,8 +5,8 @@
  * Data Feed Model (no live SMS trigger; default-to-most-recent-customer with
  * manual override via the Customer Selector).
  *
- * GET /api/data-feed/most-recent-customer?shopId=&edition=
- * GET /api/data-feed/customers?shopId=&edition=&limit=
+ * GET /api/data-feed/most-recent-customer?shopId=&edition=&storyOnly=
+ * GET /api/data-feed/customers?shopId=&edition=&limit=&storyOnly=
  */
 
 import { Router } from 'express';
@@ -17,7 +17,8 @@ const router = Router();
 router.get('/most-recent-customer', async (req, res) => {
   try {
     const { shopId, edition } = req.query;
-    const record = await getMostRecentCustomer(req.db, { shopId, edition });
+    const storyOnly = req.query.storyOnly === 'true';
+    const record = await getMostRecentCustomer(req.db, { shopId, edition, storyOnly });
 
     if (!record) {
       return res.status(404).json({ found: false, message: 'No active customer found in the configured datasource' });
@@ -34,7 +35,8 @@ router.get('/customers', async (req, res) => {
   try {
     const { shopId, edition } = req.query;
     const limit = Math.min(parseInt(req.query.limit, 10) || 25, 100);
-    const data = await listActiveCustomers(req.db, { shopId, edition, limit });
+    const storyOnly = req.query.storyOnly === 'true';
+    const data = await listActiveCustomers(req.db, { shopId, edition, limit, storyOnly });
 
     res.json({ count: data.length, data });
   } catch (err) {

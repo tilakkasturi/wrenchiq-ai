@@ -15,6 +15,7 @@
  */
 
 import { Router } from 'express';
+import { logImplementedIfUntracked } from '../services/recommendationEventsService.js';
 
 const router = Router();
 const COLL = 'wrenchiq_ro';
@@ -129,7 +130,8 @@ router.get('/story-ro/:roId', async (req, res) => {
 router.patch('/story-ro/:roId', async (req, res) => {
   try {
     const ALLOWED_FIELDS = [
-      'agenticTextStatus', 'threeCConcern', 'threeCDiagnosis',
+      'agenticTextStatus', 'agenticCustomerText', 'talkTrackOverrides',
+      'threeCConcern', 'threeCDiagnosis',
       'threeCCorrection', 'threeCScore', 'kanbanStatus',
       'repairJobs', 'invoice',
     ];
@@ -250,6 +252,32 @@ router.get('/elr-summary', async (req, res) => {
   }
 });
 
+// ── Historical RO counts by year (Settings → Learn → Historical ROs) ─────────
+// Queries the RepairOrder collection (not wrenchiq_ro/COLL above) — cornerstone
+// and ridgeline both live there. Real counts, not the placeholder numbers this
+// screen used to hardcode.
+router.get('/history-count', async (req, res) => {
+  const db = req.db;
+  if (!db) return res.status(503).json({ error: 'Database not connected' });
+
+  const shopId = req.query.shopId || 'cornerstone';
+
+  try {
+    const rows = await db.collection('RepairOrder').aggregate([
+      { $match: { shopId } },
+      { $addFields: { _year: { $year: { $dateFromString: { dateString: '$dateIn' } } } } },
+      { $group: { _id: '$_year', count: { $sum: 1 } } },
+      { $sort: { _id: -1 } },
+      { $limit: 3 },
+    ]).toArray();
+
+    res.json(rows.map(r => ({ year: r._id, count: r.count })));
+  } catch (err) {
+    console.error('[repairOrders] history-count error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Single RO ────────────────────────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
@@ -278,6 +306,15 @@ router.patch('/:id/status', async (req, res) => {
     );
 
     if (!result) return res.status(404).json({ error: 'Not found' });
+
+    // V5 feedback (C2): estimate approval is the closest real "did the
+    // customer act on it" signal available for this demo's RO model — catch
+    // any recommendation shown against this RO that was never explicitly
+    // accepted or dismissed (see recommendationEventsService.js).
+    if (status === 'approved') {
+      logImplementedIfUntracked(req.db, { shopId: req.body.shopId, roNumber: req.params.id }).catch(() => {});
+    }
+
     res.json(normalizeRO(result));
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -363,6 +400,7 @@ function normalizeStoryRO(doc) {
     laborCost: j.lineCost || 0,
     status:    j.status || 'pending',
     clockIn:   j.clockIn || null,
+    photos:    j.photos || [],
   }));
 
   const ltt = doc.laborTimeTracking || {};
@@ -372,6 +410,7 @@ function normalizeStoryRO(doc) {
     id:        doc.roNumber,
     roNumber:  doc.roNumber,
     shopId:    doc.shopId,
+    shop:      doc.shop || null,
 
     // Status
     status:        doc.kanbanStatus || 'checked_in',
@@ -379,6 +418,7 @@ function normalizeStoryRO(doc) {
     kanbanStatus:   doc.kanbanStatus || 'checked_in',
 
     // Customer + vehicle (nested for easy access)
+    customerId: doc.customer?.id,
     _customer: {
       id:        doc.customer?.id,
       firstName: (doc.customer?.name || '').split(' ')[0],
@@ -427,12 +467,14 @@ function normalizeStoryRO(doc) {
     laborTimeTracking:  ltt,
 
     // ── Agentic fields (passed through in full) ────────────────────────────
+    repairJobs:            doc.repairJobs || [], // raw job entries, needed so the Sidecar can append a job and PATCH the full array back
     tsbMatches:            doc.tsbMatches || [],
     dtcs:                  doc.dtcs || [],
     aiInsights:            doc.aiInsights || [],
     agenticUpsells:        doc.agenticUpsells || [],
     agenticCustomerText:   doc.agenticCustomerText || null,
     agenticTextStatus:     doc.agenticTextStatus || null,
+    talkTrackOverrides:    doc.talkTrackOverrides || {},
 
     // 3C fields
     threeCScore:              doc.threeCScore || null,

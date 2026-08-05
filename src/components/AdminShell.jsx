@@ -6,7 +6,7 @@
 
 import { COLORS } from "../theme/colors";
 
-export default function AdminShell({ sections, activeId, onSelect, content }) {
+export default function AdminShell({ sections, activeId, onSelect, content, contentMaxWidth = 800 }) {
   return (
     <div
       style={{
@@ -86,7 +86,7 @@ export default function AdminShell({ sections, activeId, onSelect, content }) {
           padding: 32,
         }}
       >
-        <div style={{ maxWidth: 800 }}>{content}</div>
+        <div style={{ maxWidth: contentMaxWidth }}>{content}</div>
       </div>
     </div>
   );

@@ -54,6 +54,17 @@ function todayAt(hhmm) {
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
+// Computes a real past timestamp relative to whenever the script actually
+// runs (same "always relative to now" philosophy as todayAt()), so
+// historical ROs keep looking like genuine past visits instead of going
+// stale to a fixed calendar date.
+function daysAgo(numDays, hhmm) {
+  const d = new Date();
+  d.setDate(d.getDate() - numDays);
+  const [hh, mm] = hhmm.split(':').map(Number);
+  d.setHours(hh, mm, 0, 0);
+  return d.toISOString();
+}
 
 // ── STORY ROS ─────────────────────────────────────────────────────────────────
 
@@ -105,17 +116,22 @@ const STORY_ROS = [
         status: 'pending',
       },
       {
-        description: 'Multi-Point Safety Inspection (56-pt)',
+        description: 'Multi-Point Inspection (56-pt) — with Photos',
         laborHours: 0.5,
-        actualLaborHours: 0,
-        lineCost: 87.50,
+        actualLaborHours: 0.5,
+        lineCost: 0,
         parts: [],
-        status: 'pending',
+        status: 'completed',
+        photos: [
+          { id: 'mpi-401-1', caption: 'Front brake pads — 6mm remaining' },
+          { id: 'mpi-401-2', caption: 'Tire tread depth — all four corners' },
+          { id: 'mpi-401-3', caption: 'Battery terminal — minor corrosion' },
+        ],
       },
     ],
-    invoice: 233,
+    invoice: 145.50,
     progress: 0,
-    laborTimeTracking: { totalFlatHrs: 1.0, totalActualHrs: 0, elr: 0, postedRate: 175 },
+    laborTimeTracking: { totalFlatHrs: 1.0, totalActualHrs: 0.5, elr: 0, postedRate: 175 },
 
     // Agentic fields
     aiInsights: [
@@ -1089,6 +1105,467 @@ const STORY_ROS = [
   },
 ];
 
+// ── HISTORICAL ROS ────────────────────────────────────────────────────────────
+// Prior closed visits for a subset of the 8 cornerstone story customers, so
+// the customer base is a realistic mix of repeat and first-time customers
+// (Elena, Gary, Denise, Ray get repeat history; Frank, Brenda, Tom, Priya
+// stay single-visit) instead of everyone looking like a first-time visitor.
+// Dates are relative to "now" (via daysAgo()) so they never go stale, and are
+// NOT rebased to today by main() — see the isHistorical flag below.
+const HISTORICAL_ROS = [
+
+  // Elena Vasquez (cust-001) — 2 prior visits on the same Highlander
+  {
+    roNumber: 'RO-2026-0401-P1',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-001', name: 'Elena Vasquez', phone: '(650) 555-0201', email: 'elena.vasquez@gmail.com' },
+    vehicle: { vin: '5TDGZRBH5LS503482', year: 2020, make: 'Toyota', model: 'Highlander', trim: 'XLE 2.5L Hybrid', color: 'Midnight Black', odometer: 47600 },
+    vehicleOrigin: 'JAPANESE',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(95, '09:00'),
+    dateOut: daysAgo(95, '10:30'),
+    bay: null,
+    tech: { id: 'tech-003', name: 'Carlos Mendez' },
+    advisor: { id: 'adv-001', name: 'James Kowalski' },
+    customerConcern: 'Routine service — due for oil change per maintenance reminder.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Engine Oil & Filter Change (0W-20 Full Synthetic)', laborHours: 0.5, actualLaborHours: 0.5, lineCost: 45, parts: [{ description: 'Oil Filter + 6qt 0W-20', lineCost: 44 }], status: 'completed' },
+    ],
+    invoice: 89.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 0.5, totalActualHrs: 0.5, elr: 178, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0401-P2',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-001', name: 'Elena Vasquez', phone: '(650) 555-0201', email: 'elena.vasquez@gmail.com' },
+    vehicle: { vin: '5TDGZRBH5LS503482', year: 2020, make: 'Toyota', model: 'Highlander', trim: 'XLE 2.5L Hybrid', color: 'Midnight Black', odometer: 39200 },
+    vehicleOrigin: 'JAPANESE',
+    serviceCategory: 'repair',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(240, '13:15'),
+    dateOut: daysAgo(240, '16:00'),
+    bay: null,
+    tech: { id: 'tech-003', name: 'Carlos Mendez' },
+    advisor: { id: 'adv-001', name: 'James Kowalski' },
+    customerConcern: 'Front brakes feel soft, squealing when stopping.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Front Brake Pads & Rotor Resurface', laborHours: 1.2, actualLaborHours: 1.1, lineCost: 210, parts: [{ description: 'Front Brake Pad Set (Ceramic)', lineCost: 95 }], status: 'completed' },
+      { description: 'Tire Rotation', laborHours: 0.3, actualLaborHours: 0.3, lineCost: 0, parts: [], status: 'completed' },
+    ],
+    invoice: 305.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 1.5, totalActualHrs: 1.4, elr: 203, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0401-P3',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-001', name: 'Elena Vasquez', phone: '(650) 555-0201', email: 'elena.vasquez@gmail.com' },
+    vehicle: { vin: '5TDGZRBH5LS503482', year: 2020, make: 'Toyota', model: 'Highlander', trim: 'XLE 2.5L Hybrid', color: 'Midnight Black', odometer: 43000 },
+    vehicleOrigin: 'JAPANESE',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(175, '10:30'),
+    dateOut: daysAgo(175, '11:45'),
+    bay: null,
+    tech: { id: 'tech-003', name: 'Carlos Mendez' },
+    advisor: { id: 'adv-001', name: 'James Kowalski' },
+    customerConcern: 'Wipers streaking, tires due for rotation.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Tire Rotation & Wiper Blade Replacement', laborHours: 0.4, actualLaborHours: 0.4, lineCost: 30, parts: [{ description: 'Wiper Blade Set', lineCost: 35 }], status: 'completed' },
+    ],
+    invoice: 65.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 0.4, totalActualHrs: 0.4, elr: 175, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0401-P4',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-001', name: 'Elena Vasquez', phone: '(650) 555-0201', email: 'elena.vasquez@gmail.com' },
+    vehicle: { vin: '5TDGZRBH5LS503482', year: 2020, make: 'Toyota', model: 'Highlander', trim: 'XLE 2.5L Hybrid', color: 'Midnight Black', odometer: 33500 },
+    vehicleOrigin: 'JAPANESE',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(350, '08:45'),
+    dateOut: daysAgo(350, '10:00'),
+    bay: null,
+    tech: { id: 'tech-003', name: 'Carlos Mendez' },
+    advisor: { id: 'adv-001', name: 'James Kowalski' },
+    customerConcern: 'Routine annual inspection and cabin air filter due.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Multi-Point Inspection (56-pt) + Cabin Air Filter', laborHours: 0.6, actualLaborHours: 0.6, lineCost: 45, parts: [{ description: 'Cabin Air Filter', lineCost: 28 }], status: 'completed' },
+    ],
+    invoice: 110.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 0.6, totalActualHrs: 0.6, elr: 122, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+
+  // Gary Strickland (cust-004) — 2 prior visits on the BMW X3, one with a
+  // declined service, giving the Trust Engine a real (not 100%) approval rate.
+  {
+    roNumber: 'RO-2026-0404-P1',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-004', name: 'Gary Strickland', phone: '(650) 555-0204', email: 'gary.strickland@gmail.com' },
+    vehicle: { vin: '5UX43DP04LL839271', year: 2020, make: 'BMW', model: 'X3', trim: 'sDrive30i B48 2.0T', color: 'Phytonic Blue Metallic', odometer: 58900 },
+    vehicleOrigin: 'GERMAN',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(60, '08:30'),
+    dateOut: daysAgo(60, '13:00'),
+    bay: null,
+    tech: { id: 'tech-003', name: 'Tony Archer' },
+    advisor: { id: 'adv-001', name: 'James Kowalski' },
+    customerConcern: 'Annual service — check engine light on briefly, cleared itself.',
+    dtcs: ['P0171'],
+    repairJobs: [
+      { description: 'Annual Service — Oil, Filters, Multi-Point Inspection', laborHours: 1.5, actualLaborHours: 1.4, lineCost: 260, parts: [{ description: 'Oil Filter + 6qt 5W-30 + Cabin/Air Filters', lineCost: 130 }], status: 'completed' },
+    ],
+    // Customer declined the recommended brake fluid flush this visit —
+    // real data for the Trust Engine's approval-rate calculation.
+    declinedServices: [
+      { description: 'Brake Fluid Flush (2yr interval due)', estimatedCost: 180 },
+    ],
+    invoice: 620.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 1.5, totalActualHrs: 1.4, elr: 186, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0404-P2',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-004', name: 'Gary Strickland', phone: '(650) 555-0204', email: 'gary.strickland@gmail.com' },
+    vehicle: { vin: '5UX43DP04LL839271', year: 2020, make: 'BMW', model: 'X3', trim: 'sDrive30i B48 2.0T', color: 'Phytonic Blue Metallic', odometer: 44100 },
+    vehicleOrigin: 'GERMAN',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(300, '10:00'),
+    dateOut: daysAgo(300, '12:30'),
+    bay: null,
+    tech: { id: 'tech-003', name: 'Tony Archer' },
+    advisor: { id: 'adv-001', name: 'James Kowalski' },
+    customerConcern: 'Routine oil change and tire check before road trip.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Engine Oil & Filter Change (5W-30 Full Synthetic)', laborHours: 0.5, actualLaborHours: 0.5, lineCost: 55, parts: [{ description: 'Oil Filter + 6qt 5W-30', lineCost: 65 }], status: 'completed' },
+      { description: 'Tire Pressure & Tread Check', laborHours: 0.2, actualLaborHours: 0.2, lineCost: 0, parts: [], status: 'completed' },
+    ],
+    invoice: 210.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 0.7, totalActualHrs: 0.7, elr: 171, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0404-P3',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-004', name: 'Gary Strickland', phone: '(650) 555-0204', email: 'gary.strickland@gmail.com' },
+    vehicle: { vin: '5UX43DP04LL839271', year: 2020, make: 'BMW', model: 'X3', trim: 'sDrive30i B48 2.0T', color: 'Phytonic Blue Metallic', odometer: 51000 },
+    vehicleOrigin: 'GERMAN',
+    serviceCategory: 'repair',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(150, '09:00'),
+    dateOut: daysAgo(150, '13:30'),
+    bay: null,
+    tech: { id: 'tech-003', name: 'Tony Archer' },
+    advisor: { id: 'adv-001', name: 'James Kowalski' },
+    customerConcern: 'Front brakes squeaking on cold mornings.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Front Brake Pad Replacement', laborHours: 1.0, actualLaborHours: 1.0, lineCost: 175, parts: [{ description: 'Front Brake Pad Set (OE)', lineCost: 105 }], status: 'completed' },
+    ],
+    invoice: 280.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 1.0, totalActualHrs: 1.0, elr: 175, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0404-P4',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-004', name: 'Gary Strickland', phone: '(650) 555-0204', email: 'gary.strickland@gmail.com' },
+    vehicle: { vin: '5UX43DP04LL839271', year: 2020, make: 'BMW', model: 'X3', trim: 'sDrive30i B48 2.0T', color: 'Phytonic Blue Metallic', odometer: 38000 },
+    vehicleOrigin: 'GERMAN',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(360, '08:00'),
+    dateOut: daysAgo(360, '12:00'),
+    bay: null,
+    tech: { id: 'tech-003', name: 'Tony Archer' },
+    advisor: { id: 'adv-001', name: 'James Kowalski' },
+    customerConcern: 'Annual service; battery testing low at last inspection.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Annual Service — Oil, Filters, Multi-Point Inspection', laborHours: 1.5, actualLaborHours: 1.5, lineCost: 260, parts: [{ description: 'Oil Filter + 6qt 5W-30 + Cabin/Air Filters', lineCost: 40 }], status: 'completed' },
+      { description: 'Battery Replacement', laborHours: 0.3, actualLaborHours: 0.3, lineCost: 0, parts: [{ description: 'AGM Battery', lineCost: 40 }], status: 'completed' },
+    ],
+    invoice: 340.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 1.8, totalActualHrs: 1.8, elr: 144, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+
+  // Denise Howell (cust-005) — 1 prior visit on the Subaru Outback
+  {
+    roNumber: 'RO-2026-0405-P1',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-005', name: 'Denise Howell', phone: '(650) 555-0205', email: 'denise.howell@gmail.com' },
+    vehicle: { vin: '4S4BSACC5J3308906', year: 2018, make: 'Subaru', model: 'Outback', trim: '2.5i Premium FB25', color: 'Wilderness Green Metallic', odometer: 84700 },
+    vehicleOrigin: 'JAPANESE',
+    serviceCategory: 'repair',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(150, '11:00'),
+    dateOut: daysAgo(150, '14:30'),
+    bay: null,
+    tech: { id: 'tech-002', name: 'DeShawn Carter' },
+    advisor: { id: 'adv-002', name: 'Dave Kowalski' },
+    customerConcern: 'Grinding noise when braking at low speed.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Rear Brake Pads & Rotors', laborHours: 1.4, actualLaborHours: 1.5, lineCost: 245, parts: [{ description: 'Rear Brake Pad + Rotor Set', lineCost: 165 }], status: 'completed' },
+    ],
+    invoice: 410.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 1.4, totalActualHrs: 1.5, elr: 163, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0405-P2',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-005', name: 'Denise Howell', phone: '(650) 555-0205', email: 'denise.howell@gmail.com' },
+    vehicle: { vin: '4S4BSACC5J3308906', year: 2018, make: 'Subaru', model: 'Outback', trim: '2.5i Premium FB25', color: 'Wilderness Green Metallic', odometer: 90500 },
+    vehicleOrigin: 'JAPANESE',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(30, '13:00'),
+    dateOut: daysAgo(30, '14:00'),
+    bay: null,
+    tech: { id: 'tech-002', name: 'DeShawn Carter' },
+    advisor: { id: 'adv-002', name: 'Dave Kowalski' },
+    customerConcern: 'Due for oil change, tires feel uneven.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Oil Change + Tire Rotation', laborHours: 0.5, actualLaborHours: 0.5, lineCost: 40, parts: [{ description: 'Oil Filter + 5qt 0W-20', lineCost: 55 }], status: 'completed' },
+    ],
+    invoice: 95.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 0.5, totalActualHrs: 0.5, elr: 190, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0405-P3',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-005', name: 'Denise Howell', phone: '(650) 555-0205', email: 'denise.howell@gmail.com' },
+    vehicle: { vin: '4S4BSACC5J3308906', year: 2018, make: 'Subaru', model: 'Outback', trim: '2.5i Premium FB25', color: 'Wilderness Green Metallic', odometer: 78000 },
+    vehicleOrigin: 'JAPANESE',
+    serviceCategory: 'repair',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(270, '10:15'),
+    dateOut: daysAgo(270, '13:00'),
+    bay: null,
+    tech: { id: 'tech-002', name: 'DeShawn Carter' },
+    advisor: { id: 'adv-002', name: 'Dave Kowalski' },
+    customerConcern: 'Squealing noise from under the hood on startup.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Serpentine Belt Replacement', laborHours: 0.8, actualLaborHours: 0.8, lineCost: 140, parts: [{ description: 'Serpentine Belt', lineCost: 45 }], status: 'completed' },
+    ],
+    invoice: 220.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 0.8, totalActualHrs: 0.8, elr: 175, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0405-P4',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-005', name: 'Denise Howell', phone: '(650) 555-0205', email: 'denise.howell@gmail.com' },
+    vehicle: { vin: '4S4BSACC5J3308906', year: 2018, make: 'Subaru', model: 'Outback', trim: '2.5i Premium FB25', color: 'Wilderness Green Metallic', odometer: 72000 },
+    vehicleOrigin: 'JAPANESE',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(355, '09:30'),
+    dateOut: daysAgo(355, '11:00'),
+    bay: null,
+    tech: { id: 'tech-002', name: 'DeShawn Carter' },
+    advisor: { id: 'adv-002', name: 'Dave Kowalski' },
+    customerConcern: 'Annual inspection due, overdue for oil change.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Annual Inspection + Oil Change', laborHours: 0.7, actualLaborHours: 0.7, lineCost: 60, parts: [{ description: 'Oil Filter + 5qt 0W-20', lineCost: 55 }], status: 'completed' },
+    ],
+    invoice: 140.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 0.7, totalActualHrs: 0.7, elr: 143, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+
+  // Ray Bosworth (cust-006) — 2 prior visits on the Silverado, reinforcing his
+  // high-LTV VIP profile with real history rather than a single big invoice.
+  {
+    roNumber: 'RO-2026-0408-P1',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-006', name: 'Ray Bosworth', phone: '(650) 555-0206', email: 'ray.bosworth@gmail.com' },
+    vehicle: { vin: '3GCUKREC6KG184723', year: 2019, make: 'Chevrolet', model: 'Silverado 1500', trim: 'LTZ CrewCab 5.3L V8 EcoTec3 4WD', color: 'Silver Ice Metallic', odometer: 74200 },
+    vehicleOrigin: 'DOMESTIC_US',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(45, '07:30'),
+    dateOut: daysAgo(45, '11:00'),
+    bay: null,
+    tech: { id: 'tech-002', name: 'DeShawn Carter' },
+    advisor: { id: 'adv-002', name: 'Dave Kowalski' },
+    customerConcern: 'Transmission shifting rough under 30mph.',
+    dtcs: ['P0733'],
+    repairJobs: [
+      { description: 'Transmission Fluid & Filter Service', laborHours: 1.8, actualLaborHours: 1.9, lineCost: 315, parts: [{ description: 'ATF + Filter Kit', lineCost: 145 }], status: 'completed' },
+    ],
+    invoice: 890.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 1.8, totalActualHrs: 1.9, elr: 166, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0408-P2',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-006', name: 'Ray Bosworth', phone: '(650) 555-0206', email: 'ray.bosworth@gmail.com' },
+    vehicle: { vin: '3GCUKREC6KG184723', year: 2019, make: 'Chevrolet', model: 'Silverado 1500', trim: 'LTZ CrewCab 5.3L V8 EcoTec3 4WD', color: 'Silver Ice Metallic', odometer: 55800 },
+    vehicleOrigin: 'DOMESTIC_US',
+    serviceCategory: 'repair',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(200, '09:15'),
+    dateOut: daysAgo(200, '15:00'),
+    bay: null,
+    tech: { id: 'tech-002', name: 'DeShawn Carter' },
+    advisor: { id: 'adv-002', name: 'Dave Kowalski' },
+    customerConcern: 'Steering pulls right, uneven tire wear noticed.',
+    dtcs: [],
+    repairJobs: [
+      { description: '4-Wheel Alignment', laborHours: 1.0, actualLaborHours: 1.0, lineCost: 150, parts: [], status: 'completed' },
+      { description: 'Replace 4 Tires (LT275/60R20)', laborHours: 1.0, actualLaborHours: 1.0, lineCost: 120, parts: [{ description: 'LT275/60R20 All-Terrain Tire (x4)', lineCost: 880 }], status: 'completed' },
+    ],
+    invoice: 1150.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 2.0, totalActualHrs: 2.0, elr: 175, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0408-P3',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-006', name: 'Ray Bosworth', phone: '(650) 555-0206', email: 'ray.bosworth@gmail.com' },
+    vehicle: { vin: '3GCUKREC6KG184723', year: 2019, make: 'Chevrolet', model: 'Silverado 1500', trim: 'LTZ CrewCab 5.3L V8 EcoTec3 4WD', color: 'Silver Ice Metallic', odometer: 65000 },
+    vehicleOrigin: 'DOMESTIC_US',
+    serviceCategory: 'maintenance',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(120, '08:00'),
+    dateOut: daysAgo(120, '09:30'),
+    bay: null,
+    tech: { id: 'tech-002', name: 'DeShawn Carter' },
+    advisor: { id: 'adv-002', name: 'Dave Kowalski' },
+    customerConcern: 'Routine oil change before towing trip.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Oil Change + Multi-Point Inspection', laborHours: 0.6, actualLaborHours: 0.6, lineCost: 50, parts: [{ description: 'Oil Filter + 8qt 5W-30' , lineCost: 60 }], status: 'completed' },
+    ],
+    invoice: 110.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 0.6, totalActualHrs: 0.6, elr: 183, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+  {
+    roNumber: 'RO-2026-0408-P4',
+    shopId: 'cornerstone',
+    shop: { id: 'cornerstone', name: 'Cornerstone Auto Group', laborRate: 195 },
+    customer: { id: 'cust-006', name: 'Ray Bosworth', phone: '(650) 555-0206', email: 'ray.bosworth@gmail.com' },
+    vehicle: { vin: '3GCUKREC6KG184723', year: 2019, make: 'Chevrolet', model: 'Silverado 1500', trim: 'LTZ CrewCab 5.3L V8 EcoTec3 4WD', color: 'Silver Ice Metallic', odometer: 45000 },
+    vehicleOrigin: 'DOMESTIC_US',
+    serviceCategory: 'repair',
+    kanbanStatus: 'ready',
+    status: 'closed',
+    dateIn: daysAgo(330, '14:00'),
+    dateOut: daysAgo(330, '17:00'),
+    bay: null,
+    tech: { id: 'tech-002', name: 'DeShawn Carter' },
+    advisor: { id: 'adv-002', name: 'Dave Kowalski' },
+    customerConcern: 'Truck wouldn’t start this morning, battery light was on.',
+    dtcs: [],
+    repairJobs: [
+      { description: 'Battery Replacement + Electrical Diagnostic', laborHours: 0.8, actualLaborHours: 0.9, lineCost: 140, parts: [{ description: 'Heavy-Duty AGM Battery', lineCost: 140 }], status: 'completed' },
+    ],
+    invoice: 280.00,
+    progress: 100,
+    laborTimeTracking: { totalFlatHrs: 0.8, totalActualHrs: 0.9, elr: 156, postedRate: 175 },
+    aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
+    threeCScore: null, threeCConcern: '', threeCDiagnosis: '', threeCCorrection: '', threeCRewriteSuggestion: null,
+    isHistorical: true,
+  },
+];
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -1100,8 +1577,10 @@ async function main() {
     const db   = client.db(DB_NAME);
     const coll = db.collection(COLLECTION);
 
-    // Filter to requested shop(s)
-    const roNumbers = STORY_ROS
+    // Filter to requested shop(s) — story ROs (today's live demo scenarios)
+    // plus historical ROs (prior closed visits for repeat customers)
+    const ALL_ROS = [...STORY_ROS, ...HISTORICAL_ROS];
+    const roNumbers = ALL_ROS
       .filter(ro => !SHOP_FILTER || ro.shopId === SHOP_FILTER)
       .map(ro => ro.roNumber);
 
@@ -1112,24 +1591,28 @@ async function main() {
 
     if (RESET) {
       const result = await coll.deleteMany({ roNumber: { $in: roNumbers } });
-      console.log(`Reset: deleted ${result.deletedCount} story ROs`);
+      console.log(`Reset: deleted ${result.deletedCount} story + historical ROs`);
     }
 
     // Upsert all matching ROs
-    const rosToSeed = STORY_ROS.filter(ro => !SHOP_FILTER || ro.shopId === SHOP_FILTER);
+    const rosToSeed = ALL_ROS.filter(ro => !SHOP_FILTER || ro.shopId === SHOP_FILTER);
     let inserted = 0;
     let updated  = 0;
 
     for (const ro of rosToSeed) {
+      const isHistorical = ro.isHistorical === true;
       const doc = {
         ...ro,
         // id field required by unique index (same as roNumber for story ROs)
         id: ro.roNumber,
-        // Rebase dates to today every time we seed
-        dateIn:  todayAt(new Date(ro.dateIn).toTimeString().slice(0, 5)),
-        dateOut: todayAt(new Date(ro.dateOut).toTimeString().slice(0, 5)),
+        // Story ROs rebase to today every seed run so "checked in this
+        // morning" is always true. Historical ROs keep their already-
+        // relative-to-now daysAgo() dates untouched — rebasing them to
+        // today would erase the "N days ago" history this array exists for.
+        dateIn:  isHistorical ? ro.dateIn : todayAt(new Date(ro.dateIn).toTimeString().slice(0, 5)),
+        dateOut: isHistorical ? ro.dateOut : todayAt(new Date(ro.dateOut).toTimeString().slice(0, 5)),
         seededAt: new Date().toISOString(),
-        isStoryRO: true,  // marker so demo route can filter by this
+        isStoryRO: !isHistorical,  // marker so demo route can filter by this
       };
 
       const result = await coll.replaceOne(

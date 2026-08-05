@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   CheckCircle, AlertTriangle, XCircle, Camera, Play, ChevronRight,
   Shield, Clock, DollarSign, Zap, Car, Phone, MessageSquare,
-  Star, ArrowRight, User, FileText, Check, X,
+  Star, ArrowRight, User, FileText, Check, X, Calendar, Receipt, Ban,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import AIInsightsStrip from "../components/AIInsightsStrip";
@@ -167,8 +167,156 @@ function VideoThumb({ label }) {
   );
 }
 
+// ─── Resolution Surface (Schedule / Quote / Decline) ───────────
+const DECLINE_REASONS = [
+  "Cost — will revisit later",
+  "Getting it done elsewhere",
+  "Not needed right now",
+  "Need to check with owner/spouse",
+  "Other",
+];
+
+function ResolutionPanel({ item, resolution, onSchedule, onQuote, onDecline }) {
+  const [openAction, setOpenAction] = useState(null); // "schedule" | "quote" | "decline" | null
+  const [dateValue, setDateValue] = useState("");
+  const [declineReason, setDeclineReason] = useState(DECLINE_REASONS[0]);
+  const [declineNote, setDeclineNote] = useState("");
+
+  const toggle = (action) => setOpenAction(prev => (prev === action ? null : action));
+
+  const confirmSchedule = () => {
+    if (!dateValue) return;
+    onSchedule(item.id, dateValue);
+    setOpenAction(null);
+  };
+
+  const confirmDecline = () => {
+    onDecline(item.id, declineReason, declineNote);
+    setOpenAction(null);
+  };
+
+  const handleQuote = () => {
+    onQuote(item.id);
+    toggle("quote");
+  };
+
+  // Resolved state — show a compact status chip instead of the action row
+  if (resolution?.type) {
+    const chip = {
+      scheduled: { bg: "#EFF6FF", color: "#2563EB", icon: Calendar, text: `Scheduled for ${resolution.date}` },
+      quoted: { bg: "#F5F3FF", color: "#7C3AED", icon: Receipt, text: `Quoted: $${item.estimateLow}–${item.estimateHigh}` },
+      declined: { bg: "#F9FAFB", color: "#6B7280", icon: Ban, text: `Declined — ${resolution.reason}` },
+    }[resolution.type];
+
+    return (
+      <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between", background: chip.bg, borderRadius: 10, padding: "8px 12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <chip.icon size={14} color={chip.color} />
+          <div style={{ fontSize: 12, fontWeight: 600, color: chip.color }}>{chip.text}</div>
+        </div>
+        <button
+          onClick={() => onDecline(item.id, null, null, /* clear */ true)}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11, color: COLORS.textMuted, textDecoration: "underline" }}
+        >
+          Change
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>
+        Resolve this item
+      </div>
+      <div style={{ display: "flex", gap: 6 }}>
+        <button
+          onClick={() => toggle("schedule")}
+          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "8px", borderRadius: 8, border: `1px solid ${openAction === "schedule" ? COLORS.accent : "#E5E7EB"}`, background: openAction === "schedule" ? "#FFF7ED" : "#fff", color: COLORS.textPrimary, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+        >
+          <Calendar size={13} /> Schedule
+        </button>
+        <button
+          onClick={handleQuote}
+          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "8px", borderRadius: 8, border: `1px solid ${openAction === "quote" ? "#7C3AED" : "#E5E7EB"}`, background: openAction === "quote" ? "#F5F3FF" : "#fff", color: COLORS.textPrimary, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+        >
+          <Receipt size={13} /> Quote
+        </button>
+        <button
+          onClick={() => toggle("decline")}
+          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "8px", borderRadius: 8, border: `1px solid ${openAction === "decline" ? "#DC2626" : "#E5E7EB"}`, background: openAction === "decline" ? "#FEF2F2" : "#fff", color: COLORS.textPrimary, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+        >
+          <Ban size={13} /> Decline
+        </button>
+      </div>
+
+      {/* Schedule affordance */}
+      {openAction === "schedule" && (
+        <div style={{ marginTop: 8, background: "#F9FAFB", borderRadius: 8, padding: 10, display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            type="date"
+            value={dateValue}
+            onChange={(e) => setDateValue(e.target.value)}
+            style={{ flex: 1, padding: "7px 8px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 12 }}
+          />
+          <button
+            onClick={confirmSchedule}
+            disabled={!dateValue}
+            style={{ padding: "7px 12px", borderRadius: 6, border: "none", background: dateValue ? COLORS.accent : "#D1D5DB", color: "#fff", fontWeight: 700, fontSize: 12, cursor: dateValue ? "pointer" : "not-allowed" }}
+          >
+            Confirm
+          </button>
+        </div>
+      )}
+
+      {/* Quote breakdown */}
+      {openAction === "quote" && (
+        <div style={{ marginTop: 8, background: "#F9FAFB", borderRadius: 8, padding: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+            <span style={{ color: COLORS.textSecondary }}>Estimated range</span>
+            <strong>${item.estimateLow}–{item.estimateHigh}</strong>
+          </div>
+          {item.dealerPrice && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+              <span style={{ color: COLORS.textSecondary }}>Dealer comparison</span>
+              <span style={{ textDecoration: "line-through", color: COLORS.textMuted }}>${item.dealerPrice}</span>
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 4 }}>Quote sent to customer portal.</div>
+        </div>
+      )}
+
+      {/* Decline reason */}
+      {openAction === "decline" && (
+        <div style={{ marginTop: 8, background: "#F9FAFB", borderRadius: 8, padding: 10 }}>
+          <select
+            value={declineReason}
+            onChange={(e) => setDeclineReason(e.target.value)}
+            style={{ width: "100%", padding: "7px 8px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 12, marginBottom: 6 }}
+          >
+            {DECLINE_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <input
+            type="text"
+            placeholder="Additional note (optional)"
+            value={declineNote}
+            onChange={(e) => setDeclineNote(e.target.value)}
+            style={{ width: "100%", padding: "7px 8px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 12, marginBottom: 8, boxSizing: "border-box" }}
+          />
+          <button
+            onClick={confirmDecline}
+            style={{ width: "100%", padding: "8px", borderRadius: 6, border: "none", background: "#DC2626", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+          >
+            Confirm Decline
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Inspection Item Card ─────────────────────────────────────
-function InspectionItem({ item, onToggleApprove }) {
+function InspectionItem({ item, onToggleApprove, resolution, onSchedule, onQuote, onDecline }) {
   const sc = STATUS_CONFIG[item.status] || STATUS_CONFIG.green;
   const [expanded, setExpanded] = useState(item.status === "red");
 
@@ -253,6 +401,17 @@ function InspectionItem({ item, onToggleApprove }) {
                 Not Now
               </button>
             </div>
+          )}
+
+          {/* Resolutions surface — concrete next steps instead of a passive flag */}
+          {item.estimateLabel && item.status !== "green" && (
+            <ResolutionPanel
+              item={item}
+              resolution={resolution}
+              onSchedule={onSchedule}
+              onQuote={onQuote}
+              onDecline={onDecline}
+            />
           )}
         </div>
       )}
@@ -355,9 +514,30 @@ function ApproveAllCTA({ sections, approvals, onApproveAll }) {
 export default function HealthReportScreen() {
   const [approvals, setApprovals] = useState({});
   const [view, setView] = useState("advisor"); // "advisor" | "customer"
+  const [resolutions, setResolutions] = useState({}); // itemId -> { type: 'scheduled'|'quoted'|'declined', date?, reason?, note? }
 
   const handleToggleApprove = (id, value) => {
     setApprovals(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSchedule = (id, date) => {
+    setResolutions(prev => ({ ...prev, [id]: { type: "scheduled", date } }));
+  };
+
+  const handleQuote = () => {
+    // Quote is informational (view estimated cost) — it intentionally doesn't
+    // lock the item into a resolved state, so Schedule/Decline stay available.
+  };
+
+  const handleDecline = (id, reason, note, clear = false) => {
+    setResolutions(prev => {
+      if (clear) {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      return { ...prev, [id]: { type: "declined", reason, note } };
+    });
   };
 
   const handleApproveAll = () => {
@@ -439,6 +619,10 @@ export default function HealthReportScreen() {
                   key={item.id}
                   item={item}
                   onToggleApprove={handleToggleApprove}
+                  resolution={resolutions[item.id]}
+                  onSchedule={handleSchedule}
+                  onQuote={handleQuote}
+                  onDecline={handleDecline}
                 />
               ))}
             </div>

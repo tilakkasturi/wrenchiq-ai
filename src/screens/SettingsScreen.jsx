@@ -25,14 +25,16 @@ import {
   Link,
   Unlink,
   Target,
-  History,
+  ClipboardCheck,
+  Sparkles,
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { SHOP, technicians, advisors } from "../data/demoData";
 import { extractIngEntities } from "../services/ingEntityExtractor";
-import { useDemo } from "../context/DemoContext";
+import { useDemo, smsNameToProvider } from "../context/DemoContext";
 import AdminShell from "../components/AdminShell";
-import HistoricalROsScreen from "./HistoricalROsScreen";
+import PrediiLearnScreen from "./PrediiLearnScreen";
+import { PrediiLearnProvider } from "../context/PrediiLearnContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -43,7 +45,7 @@ export const SETTINGS_SECTIONS = [
     label: "Learn",
     items: [
       { id: "integrations", label: "Integrations", icon: Link },
-      { id: "historicalROs", label: "Historical ROs", icon: History },
+      { id: "prediiLearn", label: "Predii Learn", icon: Sparkles },
     ],
   },
   {
@@ -53,7 +55,8 @@ export const SETTINGS_SECTIONS = [
       { id: "shop", label: "Shop Profile", icon: Building2 },
       { id: "team", label: "Team", icon: Users },
       { id: "notifications", label: "Notifications", icon: Bell },
-      { id: "aroMargin", label: "ARO & Margin", icon: Target },
+      { id: "aroMargin", label: "ARO, ELR & Margin", icon: Target },
+      { id: "goldStandard", label: "Gold Standard", icon: ClipboardCheck },
       { id: "tribal", label: "Strategic Priorities", icon: MessageSquare },
     ],
   },
@@ -534,6 +537,14 @@ function SmsLogo() {
 // ── SMS integration card (with Data Feed endpoint detail) ────
 function SmsIntegrationCard() {
   const [expanded, setExpanded] = useState(true);
+  const { smsName, setDemo, SMS_OPTIONS, smsWriteTier } = useDemo();
+
+  const handleSmsChange = (e) => {
+    const name = e.target.value;
+    setDemo({ smsName: name, smsProvider: smsNameToProvider(name) });
+  };
+
+  const isReadWrite = smsWriteTier === "readwrite";
 
   return (
     <div
@@ -558,17 +569,74 @@ function SmsIntegrationCard() {
             <StatusBadge status="connected" />
           </div>
           <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.5 }}>
-            SMS/DMS adapter — read-only feed of the Work-in-Progress Queue and up to 1 year of
-            historical repair orders. WrenchIQ never writes back to your system.
+            SMS/DMS adapter — feed of the Work-in-Progress Queue and up to 1 year of
+            historical repair orders. {isReadWrite
+              ? "Write-back is enabled — WrenchIQ can push approved changes to your system."
+              : "WrenchIQ never writes back to your system on this tier."}
           </div>
         </div>
+      </div>
+
+      {/* Shop Management System selector — remembered across every surface
+          that reads useDemo()'s smsName/smsProvider (Sidecar, header skin,
+          Trust Engine, etc.), since it's persisted via DemoContext's
+          localStorage-backed config. */}
+      <div>
+        <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: COLORS.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+          Shop Management System
+        </label>
+        <select
+          value={smsName}
+          onChange={handleSmsChange}
+          style={{
+            width: "100%", maxWidth: 320, padding: "10px 12px", fontSize: 13, fontWeight: 600,
+            color: COLORS.textPrimary, background: "#fff", border: `1px solid ${COLORS.border}`,
+            borderRadius: 8, cursor: "pointer",
+          }}
+        >
+          {SMS_OPTIONS.map((name) => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Access tier — V5 feedback (C1): Read-only vs Read+Write */}
+      <div>
+        <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: COLORS.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+          Access Tier
+        </label>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {[
+            { id: "read", label: "Read-only", desc: "WrenchIQ reads your queue and history — never writes back." },
+            { id: "readwrite", label: "Read + Write", desc: "WrenchIQ can push approved estimates/services back to your SMS/DMS." },
+          ].map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => setDemo({ smsWriteTier: opt.id })}
+              style={{
+                textAlign: "left", flex: "1 1 220px", maxWidth: 280,
+                border: `1.5px solid ${smsWriteTier === opt.id ? COLORS.accent : COLORS.border}`,
+                background: smsWriteTier === opt.id ? `${COLORS.accent}0d` : "#fff",
+                borderRadius: 10, padding: "10px 12px", cursor: "pointer",
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 3 }}>{opt.label}</div>
+              <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.4 }}>{opt.desc}</div>
+            </button>
+          ))}
+        </div>
+        {isReadWrite && (
+          <div style={{ marginTop: 8, fontSize: 11, color: COLORS.textMuted, lineHeight: 1.4 }}>
+            You own this decision — WrenchIQ only writes back what you've explicitly approved on an RO, and only while this tier is active.
+          </div>
+        )}
       </div>
 
       {/* At-a-glance meta */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {[
-          { label: "Adapter", value: "Protractor SMS" },
-          { label: "Access", value: "Read-only" },
+          { label: "Adapter", value: `${smsName} SMS` },
+          { label: "Access", value: isReadWrite ? "Read + Write" : "Read-only" },
           { label: "Refreshes every", value: "60 seconds" },
         ].map((m) => (
           <div
@@ -667,6 +735,117 @@ function SmsIntegrationCard() {
   );
 }
 
+// ── LLM provider card — switch which configured LLM endpoint "Predii LLM"
+// actually calls (e.g. a self-hosted model vs. Azure OpenAI), without
+// editing .env.local or restarting the server. See
+// server/services/llmProviderConfig.js — only the choice of profile is
+// stored; no API key material is ever sent to or from this UI.
+function LLMProviderCard() {
+  const [status, setStatus] = useState(null);
+  const [switching, setSwitching] = useState(null);
+  const [error, setError] = useState(null);
+
+  const load = () => {
+    fetch(`${API_BASE}/api/llm-provider-config`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data) setStatus(data); })
+      .catch(() => {});
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const switchTo = async (profileKey) => {
+    setSwitching(profileKey);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/llm-provider-config`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activeProfile: profileKey }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setStatus(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSwitching(null);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        background: "#fff", border: `1px solid ${COLORS.border}`, borderRadius: 12,
+        padding: 20, display: "flex", flexDirection: "column", gap: 12,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 4 }}>
+          AI Engine
+        </div>
+        <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.5 }}>
+          Which configured LLM endpoint powers Predii LLM across recommendations, chat, and the ARO Agent. Switches instantly — no restart needed.
+        </div>
+      </div>
+
+      {!status ? (
+        <div style={{ fontSize: 12, color: COLORS.textMuted }}>Loading…</div>
+      ) : (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {Object.entries(status.profiles).map(([key, p]) => {
+            const active = status.activeProfile === key;
+            const disabled = !p.configured || switching !== null;
+            return (
+              <button
+                key={key}
+                disabled={disabled}
+                onClick={() => switchTo(key)}
+                title={p.configured ? p.baseUrl : `Not configured — set the ${key === "azure" ? "AZURE_OPENAI_*" : "LLM_*"} vars in .env.local`}
+                style={{
+                  textAlign: "left", flex: "1 1 220px", maxWidth: 280,
+                  border: `1.5px solid ${active ? COLORS.accent : COLORS.border}`,
+                  background: active ? `${COLORS.accent}0d` : "#fff",
+                  borderRadius: 10, padding: "10px 12px",
+                  cursor: disabled ? "not-allowed" : "pointer",
+                  opacity: p.configured ? 1 : 0.5,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>{p.label}</span>
+                  {active && <StatusBadgeDot />}
+                </div>
+                <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.4 }}>
+                  {p.model || "—"}
+                </div>
+                {!p.configured && (
+                  <div style={{ fontSize: 10, color: "#B45309", marginTop: 3, fontWeight: 600 }}>
+                    Not configured
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {error && (
+        <div style={{ fontSize: 12, color: "#B91C1C" }}>{error}</div>
+      )}
+    </div>
+  );
+}
+
+function StatusBadgeDot() {
+  return (
+    <span style={{
+      fontSize: 9, fontWeight: 800, color: "#15803D", background: "#DCFCE7",
+      padding: "1px 6px", borderRadius: 6, textTransform: "uppercase", letterSpacing: 0.3,
+    }}>
+      Active
+    </span>
+  );
+}
+
 // ── Integrations tab ────────────────────────────────────────
 export function IntegrationsTab() {
   return (
@@ -676,8 +855,9 @@ export function IntegrationsTab() {
         subtitle="How WrenchIQ connects to your shop's system"
       />
 
-      <div style={{ maxWidth: 640 }}>
+      <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 20 }}>
         <SmsIntegrationCard />
+        <LLMProviderCard />
       </div>
     </div>
   );
@@ -932,7 +1112,7 @@ export function NotificationsTab() {
   );
 }
 
-// ── ARO & Margin Tab ─────────────────────────────────────────
+// ── ARO, ELR & Margin Tab ─────────────────────────────────────────
 const PREFERRED_SUPPLIER_OPTIONS = ["Worldpac", "O'Reilly", "NAPA", "eBay Motors", "RockAuto"];
 
 export function AROMarginTab() {
@@ -954,6 +1134,12 @@ export function AROMarginTab() {
   const [marginLoading, setMarginLoading] = useState(true);
   const [marginSaving, setMarginSaving] = useState(false);
 
+  // Effective Labor Rate (ELR) target — shares the same config as the
+  // ARO Agent dashboard's minELR goal.
+  const [elrTarget, setElrTarget] = useState('');
+  const [elrLoading, setElrLoading] = useState(true);
+  const [elrSaving, setElrSaving] = useState(false);
+
   useEffect(() => {
     fetch(`${API_BASE}/api/shop-goals/${NETWORK_SHOP_ID}`)
       .then(r => r.ok ? r.json() : [])
@@ -967,6 +1153,35 @@ export function AROMarginTab() {
       })
       .catch(() => setAroLoading(false));
   }, []);
+
+  const loadElrTarget = useCallback(() => {
+    setElrLoading(true);
+    fetch(`${API_BASE}/api/aro-agent/config/${NETWORK_SHOP_ID}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(goals => {
+        if (goals) setElrTarget(String(goals.minELR ?? ''));
+        setElrLoading(false);
+      })
+      .catch(() => setElrLoading(false));
+  }, []);
+
+  useEffect(() => { loadElrTarget(); }, [loadElrTarget]);
+
+  const saveElrTarget = async () => {
+    const minELR = Number(elrTarget);
+    if (isNaN(minELR) || minELR <= 0) return;
+    setElrSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/aro-agent/config/${NETWORK_SHOP_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minELR }),
+      });
+      if (res.ok) loadElrTarget();
+    } finally {
+      setElrSaving(false);
+    }
+  };
 
   useEffect(() => {
     setMarginLoading(true);
@@ -1070,7 +1285,7 @@ export function AROMarginTab() {
   return (
     <div>
       <SectionHeader
-        title="ARO & Margin"
+        title="ARO, ELR & Margin"
         subtitle="Shop objectives for Average Repair Order, and the variables used to compute per-RO margin"
       />
 
@@ -1102,6 +1317,43 @@ export function AROMarginTab() {
               {aroSaving ? "Saving…" : "Save"}
             </button>
           </div>
+        )}
+      </div>
+
+      {/* Effective Labor Rate (ELR) target + live calculation */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: COLORS.borderLight, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <DollarSign size={15} color={COLORS.textSecondary} />
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.textPrimary }}>Effective Labor Rate (ELR)</div>
+        </div>
+        <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 16 }}>
+          The minimum ELR goal WrenchIQ tracks in the ARO Agent — flags technicians and shop-wide performance falling below target.
+        </div>
+        {elrLoading ? (
+          <div style={{ fontSize: 13, color: COLORS.textMuted }}>Loading…</div>
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 12, marginBottom: 16 }}>
+              <div style={{ maxWidth: 200 }}>
+                <label style={fieldLabelStyle}>Min ELR Target ($/hr)</label>
+                <input
+                  type="number"
+                  value={elrTarget}
+                  onChange={(e) => setElrTarget(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+              <button onClick={saveElrTarget} disabled={elrSaving} style={saveButtonStyle(elrSaving)}>
+                {elrSaving ? "Saving…" : "Save"}
+              </button>
+            </div>
+
+            <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "monospace" }}>
+              ELR = Total Labor Revenue ÷ Total Actual Hours Worked
+            </div>
+          </>
         )}
       </div>
 
@@ -1187,12 +1439,321 @@ export function AROMarginTab() {
   );
 }
 
+// ── Gold Standard Checklist ──────────────────────────────────
+function AppliesToBadge({ appliesTo }) {
+  const isRO = appliesTo === "RO";
+  return (
+    <span style={{
+      display: "inline-block",
+      fontSize: 11,
+      fontWeight: 700,
+      padding: "2px 8px",
+      borderRadius: 12,
+      background: isRO ? "#EFF6FF" : "#ECFDF5",
+      color: isRO ? "#2563EB" : "#059669",
+    }}>
+      {appliesTo}
+    </span>
+  );
+}
+
+function GoldStandardRow({ item, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [guideline, setGuideline] = useState(item.guideline);
+  const [appliesTo, setAppliesTo] = useState(item.appliesTo);
+  const [whatA5, setWhatA5] = useState(item.whatA5LooksLike);
+  const [saving, setSaving] = useState(false);
+
+  const cellStyle = { padding: "12px 14px", fontSize: 13, color: COLORS.textPrimary, verticalAlign: "top" };
+  const inputStyle = {
+    width: "100%",
+    padding: "6px 8px",
+    borderRadius: 6,
+    border: `1px solid ${COLORS.border}`,
+    fontSize: 13,
+    color: COLORS.textPrimary,
+    boxSizing: "border-box",
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await onSave(item.id, { guideline, appliesTo, whatA5LooksLike: whatA5 });
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+      <td style={{ ...cellStyle, fontWeight: 700, color: COLORS.textMuted }}>{item.id}</td>
+      <td style={cellStyle}>
+        {editing ? (
+          <input style={inputStyle} value={guideline} onChange={(e) => setGuideline(e.target.value)} />
+        ) : (
+          <span style={{ fontWeight: 600 }}>{item.guideline}</span>
+        )}
+      </td>
+      <td style={cellStyle}>
+        {editing ? (
+          <select style={inputStyle} value={appliesTo} onChange={(e) => setAppliesTo(e.target.value)}>
+            <option value="RO">RO</option>
+            <option value="Conversation">Conversation</option>
+          </select>
+        ) : (
+          <AppliesToBadge appliesTo={item.appliesTo} />
+        )}
+      </td>
+      <td style={{ ...cellStyle, maxWidth: 380 }}>
+        {editing ? (
+          <textarea
+            style={{ ...inputStyle, minHeight: 60, resize: "vertical", fontFamily: "inherit" }}
+            value={whatA5}
+            onChange={(e) => setWhatA5(e.target.value)}
+          />
+        ) : (
+          <span style={{ color: COLORS.textSecondary }}>{item.whatA5LooksLike}</span>
+        )}
+      </td>
+      <td style={{ ...cellStyle, whiteSpace: "nowrap" }}>
+        {editing ? (
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              onClick={save}
+              disabled={saving}
+              style={{ background: COLORS.primary, color: "#fff", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+            <button
+              onClick={() => { setEditing(false); setGuideline(item.guideline); setAppliesTo(item.appliesTo); setWhatA5(item.whatA5LooksLike); }}
+              style={{ background: "none", border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "5px 10px", fontSize: 12, cursor: "pointer", color: COLORS.textSecondary }}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setEditing(true)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, display: "flex", alignItems: "center", padding: 4 }}
+          >
+            <Edit2 size={14} />
+          </button>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+export function GoldStandardTab() {
+  const { activeShopId } = useDemo();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API_BASE}/api/gold-standard-checklist/${activeShopId}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => {
+        setItems(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [activeShopId]);
+
+  const saveItem = async (itemId, updates) => {
+    const res = await fetch(`${API_BASE}/api/gold-standard-checklist/${activeShopId}/${itemId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setItems(prev => prev.map(i => (i.id === itemId ? updated : i)));
+    }
+  };
+
+  return (
+    <div>
+      <SectionHeader
+        title="Gold Standard Checklist"
+        subtitle="The default rubric WrenchIQ scores every RO and customer conversation against, on a 1-5 scale."
+      />
+      <div style={{
+        background: "#fff",
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 12,
+        overflow: "hidden",
+      }}>
+        {loading ? (
+          <div style={{ padding: 20, fontSize: 13, color: COLORS.textMuted }}>Loading…</div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: COLORS.borderLight, borderBottom: `1px solid ${COLORS.border}` }}>
+                  <th style={{ textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase" }}>ID</th>
+                  <th style={{ textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase" }}>Guideline</th>
+                  <th style={{ textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase" }}>Applies To</th>
+                  <th style={{ textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 700, color: COLORS.textMuted, textTransform: "uppercase" }}>What a 5 Looks Like</th>
+                  <th style={{ padding: "10px 14px" }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map(item => (
+                  <GoldStandardRow key={item.id} item={item} onSave={saveItem} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Predii Score Logic ───────────────────────────────────────
+// Documents the two independent RO-level scores side by side: Value Based
+// (server/services/roValueScoreService.js — how likely a customer is to say
+// yes) and Quality Based (server/routes/roGoldStandardScore.js — did the
+// advisor follow the shop's hygiene checklist on this RO). Read-only —
+// mirrors the actual formulas in code, not a separate editable config.
+export function PrediiScoreLogicTab() {
+  const [activeSubTab, setActiveSubTab] = useState("value");
+
+  const Formula = ({ children }) => (
+    <div style={{
+      fontFamily: "monospace", fontSize: 12.5, color: "#111827",
+      background: "#F9FAFB", border: `1px solid ${COLORS.border}`, borderRadius: 8,
+      padding: "12px 14px", marginBottom: 16, lineHeight: 1.7, whiteSpace: "pre-wrap",
+    }}>
+      {children}
+    </div>
+  );
+
+  const Row = ({ label, points, desc }) => (
+    <div style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: `1px solid ${COLORS.borderLight || "#F3F4F6"}` }}>
+      <div style={{ width: 56, flexShrink: 0, fontSize: 12, fontWeight: 800, color: COLORS.accent }}>{points}</div>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary }}>{label}</div>
+        <div style={{ fontSize: 12, color: COLORS.textSecondary, marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
+      </div>
+    </div>
+  );
+
+  const BandRow = ({ color, label, range }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ width: 10, height: 10, borderRadius: 3, background: color, flexShrink: 0 }} />
+      <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary }}>{label}</span>
+      <span style={{ fontSize: 12, color: COLORS.textMuted }}>{range}</span>
+    </div>
+  );
+
+  return (
+    <div>
+      <SectionHeader
+        title="Predii Score Logic"
+        subtitle="How WrenchIQ scores every RO — two independent scores, shown side by side on the queue."
+      />
+
+      <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#F3F4F6", borderRadius: 8, padding: 3, width: "fit-content" }}>
+        {[
+          { id: "value", label: "Value Based" },
+          { id: "quality", label: "Quality Based" },
+        ].map(t => (
+          <button key={t.id} onClick={() => setActiveSubTab(t.id)}
+            style={{
+              padding: "6px 16px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700,
+              background: activeSubTab === t.id ? "#fff" : "transparent",
+              color: activeSubTab === t.id ? COLORS.textPrimary : "#6B7280",
+              boxShadow: activeSubTab === t.id ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+            }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {activeSubTab === "value" && (
+        <div style={{ maxWidth: 640 }}>
+          <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#1E40AF" }}>
+            <strong>Value Based</strong> answers "how likely is this customer to say yes" — a value/opportunity score shown alongside (not instead of) the Quality Based score on the RO queue.
+          </div>
+
+          <Formula>
+{`score = round((trustScore / 100) × 65)
+      + round((min(estimate, $2,000) / $2,000) × 35)
+
+clamped to 0–100`}
+          </Formula>
+
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 8 }}>
+            Two inputs
+          </div>
+          <Row points="0–65 pts" label="Customer Trust Score" desc="The customer's existing Trust Score (visit frequency, lifetime value, approval rate, recency, comeback penalty — see below), scaled to a 65-point weight. Trust carries the heavier weight — a customer's track record of saying yes predicts more than any single RO's size." />
+          <Row points="0–35 pts" label="Estimate Size" desc="This RO's dollar estimate, capped at $2,000, scaled linearly. Bigger tickets are worth more selling effort, but a single large outlier can't dominate the score." />
+
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, margin: "20px 0 8px" }}>
+            Customer Trust Score (0–100)
+          </div>
+          <Row points="+5" label="Base" desc="Every customer starts here." />
+          <Row points="+0–25" label="Visit frequency" desc="Scales with visit count, capped at 15 visits." />
+          <Row points="+0–25" label="Lifetime value" desc="Scales with total spend, capped at $10,000." />
+          <Row points="+0–30" label="Approval rate" desc="Share of presented services the customer has accepted — the single heaviest-weighted factor." />
+          <Row points="+0–10" label="Recency" desc="Full bonus within 90 days of last visit, half within 180 days, none beyond." />
+          <Row points="−0–20" label="Comeback penalty" desc="Deducted per comeback RO (same problem, repeat visit), capped at 20 points." />
+
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, margin: "20px 0 8px" }}>
+            Score bands
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <BandRow color="#16A34A" label="High" range="≥ 70" />
+            <BandRow color="#D97706" label="Medium" range="40–69" />
+            <BandRow color="#9CA3AF" label="Low" range="< 40" />
+          </div>
+        </div>
+      )}
+
+      {activeSubTab === "quality" && (
+        <div style={{ maxWidth: 640 }}>
+          <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#15803D" }}>
+            <strong>Quality Based</strong> answers "did the advisor follow the shop's Gold Standard hygiene checklist on this RO" — independent of, and unaffected by, the Value Based score.
+          </div>
+
+          <Formula>
+{`quality % = round((met / applicable) × 100)
+
+applicable = every checklist item NOT marked "N/A" for this RO
+met        = items marked "Done"`}
+          </Formula>
+
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 8 }}>
+            How an item gets marked "Done"
+          </div>
+          <Row points="1st" label="Advisor's own status wins" desc="Once an advisor manually sets an item's status on the checklist, that's authoritative — it never gets overridden." />
+          <Row points="2nd" label="WrenchIQ's AI suggestion" desc="Until the advisor reviews an item, its status falls back to WrenchIQ's own AI read of the RO/conversation — so the score reflects a real assessment instead of sitting at 0% before anyone has looked." />
+
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, margin: "20px 0 8px" }}>
+            Where the checklist comes from
+          </div>
+          <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>
+            The guideline items themselves are edited under the <strong>Gold Standard</strong> tab — this page only documents how the percentage above is computed from whatever guidelines are configured there.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Tribal Knowledge Panel ──────────────────────────────────
 export function TribalKnowledgePanel() {
   const { activeShopId } = useDemo();
   const SHOP_ID = activeShopId;
   const LOCAL_STORAGE_KEY = `wrenchiq_tribal_${SHOP_ID}`;
-  const [activeSubTab, setActiveSubTab] = useState('objectives');
+  // V5 feedback (B1): standing targets (margin/ARO/ELR-type, ongoing) and
+  // time-bound campaigns ("this week, push the brake-fluid flush") are two
+  // different kinds of thing and shouldn't be mixed in one bucket.
+  const [activeSubTab, setActiveSubTab] = useState('standing');
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiOffline, setApiOffline] = useState(false);
@@ -1203,6 +1764,28 @@ export function TribalKnowledgePanel() {
   const [editText, setEditText] = useState('');
   const [hierarchyNodes, setHierarchyNodes] = useState([]);
   const [scopeId, setScopeId] = useState(SHOP_ID);
+
+  // V5 feedback (B3): tone-of-voice settings that shape every LLM-generated
+  // recommendation/message for this shop (see server/services/voicePrompt.js).
+  const [voice, setVoice] = useState(null);
+  useEffect(() => {
+    fetch(`${API_BASE}/api/shop-voice-settings/${SHOP_ID}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(v => v && setVoice(v))
+      .catch(() => {});
+  }, [SHOP_ID]);
+
+  const patchVoice = async (updates) => {
+    const next = { ...voice, ...updates };
+    setVoice(next);
+    try {
+      const res = await fetch(`${API_BASE}/api/shop-voice-settings/${SHOP_ID}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) setVoice(await res.json());
+    } catch {}
+  };
 
   // Scope options for authoring a priority: this shop, or its district/region
   // ancestors (Strategic Priorities set above shop level — see /api/hierarchy).
@@ -1227,12 +1810,14 @@ export function TribalKnowledgePanel() {
     return opts;
   })();
 
-  // Enrich ings in a list and update state
+  // Enrich a list and update state — runs the same LLM rule/entity extraction
+  // for standing + time-bound objectives as it already did for ings (B1: both
+  // buckets are free-form text, both get rules/entities extracted from it).
   const enrichAndSet = useCallback(async (raw) => {
-    const ings   = raw.filter(n => n.noteType === 'ing');
-    const others = raw.filter(n => n.noteType !== 'ing');
-    const enriched = await extractIngEntities(ings).catch(() => ings);
-    setNotes([...others, ...enriched]);
+    const extractable = raw.filter(n => n.noteType === 'ing' || isObj(n));
+    const rest        = raw.filter(n => !(n.noteType === 'ing' || isObj(n)));
+    const enriched = await extractIngEntities(extractable).catch(() => extractable);
+    setNotes([...rest, ...enriched]);
   }, []);
 
   useEffect(() => {
@@ -1261,8 +1846,15 @@ export function TribalKnowledgePanel() {
 
   const isIngNote = n => n.noteType === 'ing';
   const isObj = n => !n.noteType || n.noteType === 'objective';
-  const typeFilter = activeSubTab === 'ings' ? isIngNote : isObj;
+  // Legacy objectives predate priorityKind — fall back to whether an expiry
+  // was ever set (no expiry read as "ongoing" == standing) so they still land
+  // in the right bucket without a data migration.
+  const isStanding   = n => isObj(n) && (n.priorityKind ? n.priorityKind === 'standing' : !n.expiresAt);
+  const isTimeBound  = n => isObj(n) && (n.priorityKind ? n.priorityKind === 'time_bound' : !!n.expiresAt);
+  const typeFilter = activeSubTab === 'ings' ? isIngNote : activeSubTab === 'timeBound' ? isTimeBound : isStanding;
   const isIng = activeSubTab === 'ings';
+  const isTimeBoundTab = activeSubTab === 'timeBound';
+  const isToneTab = activeSubTab === 'tone';
 
   const activeNotes   = notes.filter(n => typeFilter(n) && n.active && (!n.expiresAt || new Date(n.expiresAt) > now));
   const inactiveNotes = notes.filter(n => typeFilter(n) && !n.active);
@@ -1321,6 +1913,7 @@ export function TribalKnowledgePanel() {
     const body = {
       shopId: scopeId || SHOP_ID, locationId: 'all', ...newNote,
       noteType: activeSubTab === 'ings' ? 'ing' : 'objective',
+      priorityKind: activeSubTab === 'timeBound' ? 'time_bound' : activeSubTab === 'standing' ? 'standing' : undefined,
       expiresAt: newNote.expiresAt || null, active: true,
     };
 
@@ -1344,8 +1937,10 @@ export function TribalKnowledgePanel() {
     setNewNote({ note: '', triggerType: 'any_ro', expiresAt: '' });
     setShowNewForm(false);
 
-    // For ings: run entity extraction immediately so the badge appears
-    if (created.noteType === 'ing') {
+    // Run entity extraction immediately so the badge appears — for ings and
+    // for standing/time-bound objectives alike (B1: same free-form → rules
+    // pipeline for both).
+    if (created.noteType === 'ing' || isObj(created)) {
       extractIngEntities([created]).then(enriched => {
         if (enriched[0]?.entityData) {
           setNotes(prev => prev.map(n => n._id === created._id ? enriched[0] : n));
@@ -1364,12 +1959,12 @@ export function TribalKnowledgePanel() {
   };
 
   const StickyCard = ({ note }) => {
-    // For ings: use LLM-extracted entityData label; for objectives: use triggerType label
-    const isIngNote = note.noteType === 'ing';
-    const trig = isIngNote && note.entityData
+    // Prefer the LLM-extracted entityData label (now populated for standing/
+    // time-bound objectives too, not just ings) — fall back to triggerType.
+    const trig = note.entityData
       ? { label: note.entityData.displayLabel || 'Any Vehicle', color: '#7C3AED', bg: '#EDE9FE' }
       : triggerLabel(note.triggerType);
-    const disc = isIngNote && note.entityData?.discount;
+    const disc = note.entityData?.discount;
     const expiringSoon = isExpiringSoon(note);
     return (
       <div style={{
@@ -1452,15 +2047,17 @@ export function TribalKnowledgePanel() {
         <button onClick={() => setShowNewForm(!showNewForm)}
           style={{ background:'#0D3B45', color:'#fff', border:'none', borderRadius:8,
             padding:'8px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
-          + {isIng ? 'New ing' : 'New Objective'}
+          + {isIng ? 'New ing' : isTimeBoundTab ? 'New Time-Bound Priority' : 'New Standing Priority'}
         </button>
       </div>
 
-      {/* Sub-tabs */}
+      {/* Sub-tabs — B1: standing (ongoing targets) vs. time-bound (tactical campaigns) are separate buckets */}
       <div style={{ display:'flex', gap:4, marginBottom:20, background:'#F3F4F6', borderRadius:8, padding:3, width:'fit-content' }}>
         {[
-          { id:'objectives', label:'Objectives' },
-          { id:'ings',       label:'ings — Don\'t Forget' },
+          { id:'standing',  label:'Standing' },
+          { id:'timeBound', label:'Time-Bound' },
+          { id:'ings',      label:'ings — Don\'t Forget' },
+          { id:'tone',      label:'Tone of Voice' },
         ].map(t => (
           <button key={t.id} onClick={() => { setActiveSubTab(t.id); setShowNewForm(false); }}
             style={{
@@ -1474,9 +2071,23 @@ export function TribalKnowledgePanel() {
         ))}
       </div>
 
+      {isToneTab && <ToneOfVoicePanel voice={voice} onChange={patchVoice} />}
+
+      {!isToneTab && <>
       {isIng && (
         <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:8, padding:'10px 14px', marginBottom:16, fontSize:12, color:'#92400E' }}>
           <strong>ings</strong> are automatic reminders shown in the WrenchIQ overlay when an RO is open. They prompt advisors and techs to add commonly forgotten line items — fees, parts, or services.
+        </div>
+      )}
+
+      {activeSubTab === 'standing' && (
+        <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'10px 14px', marginBottom:16, fontSize:12, color:'#1E40AF' }}>
+          <strong>Standing priorities</strong> are ongoing shop targets that don't change week to week — margin, ARO, ELR, or whatever this shop actually tracks. Free-form text; no expiry.
+        </div>
+      )}
+      {isTimeBoundTab && (
+        <div style={{ background:'#FDF4FF', border:'1px solid #F0ABFC', borderRadius:8, padding:'10px 14px', marginBottom:16, fontSize:12, color:'#86198F' }}>
+          <strong>Time-bound priorities</strong> are tactical campaigns scoped to a window — e.g. "this week, offer a brake-fluid flush." Set an expiry so they fall off on their own.
         </div>
       )}
 
@@ -1486,16 +2097,16 @@ export function TribalKnowledgePanel() {
           <textarea
             placeholder={isIng
               ? 'e.g. Add waste disposal fee to every oil change'
-              : 'e.g. Push cabin air filter to all customers this month'}
+              : isTimeBoundTab
+                ? 'e.g. This week, push the brake-fluid flush to every RO'
+                : 'e.g. Keep gross margin above 55% on every RO'}
             value={newNote.note} onChange={e => setNewNote({...newNote, note: e.target.value})}
             style={{ width:'100%', border:'1px solid #D1D5DB', borderRadius:4, padding:8,
-              fontSize:13, resize:'vertical', minHeight:70, marginBottom: isIng ? 4 : 10, boxSizing:'border-box' }} />
-          {isIng && (
-            <div style={{ fontSize:11, color:'#6B7280', marginBottom:10, display:'flex', alignItems:'center', gap:4 }}>
-              <span style={{ color:'#7C3AED', fontWeight:700 }}>AI</span>
-              WrenchIQ will automatically extract conditions (vehicle make/model, mileage, promotion type) from your text.
-            </div>
-          )}
+              fontSize:13, resize:'vertical', minHeight:70, marginBottom: 4, boxSizing:'border-box' }} />
+          <div style={{ fontSize:11, color:'#6B7280', marginBottom:10, display:'flex', alignItems:'center', gap:4 }}>
+            <span style={{ color:'#7C3AED', fontWeight:700 }}>AI</span>
+            WrenchIQ will automatically extract conditions (vehicle make/model, mileage, promotion type) from your text.
+          </div>
           <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
             {scopeOptions.length > 1 && (
               <select value={scopeId} onChange={e => setScopeId(e.target.value)}
@@ -1518,13 +2129,15 @@ export function TribalKnowledgePanel() {
                 <option value="mileage_range:80000-100000">80k-100k Miles</option>
               </select>
             )}
-            <input type="date" placeholder="Expiry (leave blank = ongoing)"
-              value={newNote.expiresAt} onChange={e => setNewNote({...newNote, expiresAt: e.target.value})}
-              style={{ border:'1px solid #D1D5DB', borderRadius:4, padding:'6px 8px', fontSize:13 }} />
+            {isTimeBoundTab && (
+              <input type="date" placeholder="Expiry (when this campaign ends)"
+                value={newNote.expiresAt} onChange={e => setNewNote({...newNote, expiresAt: e.target.value})}
+                style={{ border:'1px solid #D1D5DB', borderRadius:4, padding:'6px 8px', fontSize:13 }} />
+            )}
             <button onClick={addNote}
               style={{ background:'#FF6B35', color:'#fff', border:'none', borderRadius:6,
                 padding:'6px 16px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
-              {isIng ? 'Add ing' : 'Add Objective'}
+              {isIng ? 'Add ing' : isTimeBoundTab ? 'Add Time-Bound Priority' : 'Add Standing Priority'}
             </button>
             <button onClick={() => setShowNewForm(false)}
               style={{ background:'#F3F4F6', border:'none', borderRadius:6,
@@ -1535,7 +2148,11 @@ export function TribalKnowledgePanel() {
 
       {activeNotes.length === 0 && !showNewForm && (
         <div style={{ textAlign:'center', padding:'32px 0', color:'#9CA3AF', fontSize:14 }}>
-          {isIng ? 'No ings yet. Add your first reminder above.' : 'No active objectives yet. Add your first above.'}
+          {isIng
+            ? 'No ings yet. Add your first reminder above.'
+            : isTimeBoundTab
+              ? 'No active time-bound priorities yet. Add your first campaign above.'
+              : 'No standing priorities yet. Add your first ongoing target above.'}
         </div>
       )}
 
@@ -1566,6 +2183,68 @@ export function TribalKnowledgePanel() {
           )}
         </div>
       )}
+      </>}
+    </div>
+  );
+}
+
+// V5 feedback (B3): tone-of-voice knobs shaping every LLM-generated
+// recommendation/message for this shop — register, length, evidence-sharing,
+// pressure level. See server/services/voicePrompt.js for how each maps into
+// the actual system prompts.
+function ToneOfVoicePanel({ voice, onChange }) {
+  if (!voice) {
+    return <div style={{ padding: '32px 0', textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>Loading tone settings…</div>;
+  }
+
+  const Row = ({ label, help, children }) => (
+    <div style={{ marginBottom: 22 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, marginBottom: 2 }}>{label}</div>
+      {help && <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8 }}>{help}</div>}
+      {children}
+    </div>
+  );
+
+  const RadioPill = ({ value, current, onClick, children }) => (
+    <button onClick={onClick}
+      style={{
+        padding: '6px 16px', borderRadius: 6, border: '1px solid ' + (current === value ? '#FF6B35' : '#D1D5DB'),
+        cursor: 'pointer', fontSize: 13, fontWeight: 600, marginRight: 8,
+        background: current === value ? '#FFF7ED' : '#fff',
+        color: current === value ? '#FF6B35' : COLORS.textPrimary,
+      }}>
+      {children}
+    </button>
+  );
+
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'10px 14px', marginBottom:22, fontSize:12, color:'#1E40AF' }}>
+        Shapes how WrenchIQ writes every recommendation, chat reply, and customer message for this shop — not just here, everywhere the AI generates copy.
+      </div>
+
+      <Row label="Register" help="How formal should the shop sound?">
+        <RadioPill value="professional" current={voice.register} onClick={() => onChange({ register: 'professional' })}>Professional</RadioPill>
+        <RadioPill value="neighborhood" current={voice.register} onClick={() => onChange({ register: 'neighborhood' })}>Neighborhood</RadioPill>
+      </Row>
+
+      <Row label="Length" help="How long should generated messages be?">
+        <RadioPill value="short" current={voice.length} onClick={() => onChange({ length: 'short' })}>Short</RadioPill>
+        <RadioPill value="medium" current={voice.length} onClick={() => onChange({ length: 'medium' })}>Medium</RadioPill>
+      </Row>
+
+      <Row label="Pressure level" help="How assertively should upsell opportunities be framed?">
+        <RadioPill value="low" current={voice.pressureLevel} onClick={() => onChange({ pressureLevel: 'low' })}>Low — no pressure</RadioPill>
+        <RadioPill value="medium" current={voice.pressureLevel} onClick={() => onChange({ pressureLevel: 'medium' })}>Medium</RadioPill>
+        <RadioPill value="high" current={voice.pressureLevel} onClick={() => onChange({ pressureLevel: 'high' })}>High</RadioPill>
+      </Row>
+
+      <Row label="Share evidence" help="Cite the specific data point behind a recommendation, or just state the recommendation.">
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+          <input type="checkbox" checked={!!voice.shareEvidence} onChange={e => onChange({ shareEvidence: e.target.checked })} />
+          Share the data behind each recommendation
+        </label>
+      </Row>
     </div>
   );
 }
@@ -1577,19 +2256,23 @@ export default function SettingsScreen() {
   const tabContent = {
     shop: <ShopProfileTab />,
     integrations: <IntegrationsTab />,
-    historicalROs: <HistoricalROsScreen />,
+    prediiLearn: <PrediiLearnScreen />,
     team: <TeamTab />,
     notifications: <NotificationsTab />,
     aroMargin: <AROMarginTab />,
+    goldStandard: <GoldStandardTab />,
     tribal: <TribalKnowledgePanel />,
   };
 
   return (
-    <AdminShell
-      sections={SETTINGS_SECTIONS}
-      activeId={activeTab}
-      onSelect={setActiveTab}
-      content={tabContent[activeTab]}
-    />
+    <PrediiLearnProvider>
+      <AdminShell
+        sections={SETTINGS_SECTIONS}
+        activeId={activeTab}
+        onSelect={setActiveTab}
+        content={tabContent[activeTab]}
+        contentMaxWidth={activeTab === "prediiLearn" ? "none" : 800}
+      />
+    </PrediiLearnProvider>
   );
 }

@@ -10,11 +10,12 @@ import {
   CLAUDE_MAX_TOKENS_RECOMMENDATIONS,
 } from '../config.js';
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
+import { buildVoiceDirective } from './voicePrompt.js';
 
 /**
  * Build the system prompt for the recommendations engine.
  */
-function buildSystemPrompt(edition) {
+function buildSystemPrompt(edition, voice) {
   const editionContext = edition === 'oem'
     ? `This is an OEM dealership fixed-ops edition. Emphasize:
 - Warranty capture rates and warranty labor hours
@@ -48,7 +49,7 @@ STRICT RULES:
 - If a domain has insufficient data, substitute the closest available actionable insight from another signal
 
 Compact schema (follow exactly):
-{"id":"rec-utilization-1","domain":"utilization","priority":"high","screenContext":["dashboard"],"personas":{"owner":{"headline":"short","explanation":"short","metrics":{"k":"v"}},"advisor":{"headline":"short","explanation":"short","metrics":{"k":"v"}},"tech":{"headline":"short","explanation":"short","metrics":{"k":"v"}}},"signal":{"description":"short","dataPoints":["dp1","dp2"]}}`;
+{"id":"rec-utilization-1","domain":"utilization","priority":"high","screenContext":["dashboard"],"personas":{"owner":{"headline":"short","explanation":"short","metrics":{"k":"v"}},"advisor":{"headline":"short","explanation":"short","metrics":{"k":"v"}},"tech":{"headline":"short","explanation":"short","metrics":{"k":"v"}}},"signal":{"description":"short","dataPoints":["dp1","dp2"]}}${buildVoiceDirective(voice)}`;
 }
 
 /**
@@ -173,11 +174,12 @@ function parseRecommendations(text) {
  *
  * @param {object} snapshot  - Output of buildSnapshot()
  * @param {string} edition   - 'am' | 'oem'
+ * @param {object} [voice]   - Shop tone-of-voice settings, see shopVoiceSettings.js
  * @returns {Array}          - recommendations[]
  * @throws                   - On API error or JSON parse failure (caller returns 503)
  */
-export async function generateRecommendations(snapshot, edition) {
-  const systemPrompt = buildSystemPrompt(edition);
+export async function generateRecommendations(snapshot, edition, voice) {
+  const systemPrompt = buildSystemPrompt(edition, voice);
   const userMessage  = buildSnapshotMessage(snapshot);
 
   let data;

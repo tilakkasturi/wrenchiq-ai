@@ -17,6 +17,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+import { checkLLMHealth } from './services/azureOpenAI.js';
 import repairOrderRoutes      from './routes/repairOrders.js';
 import knowledgeGraphRoutes   from './routes/knowledgeGraph.js';
 import recommendationsRouter  from './routes/recommendations.js';
@@ -28,13 +29,26 @@ import claudeProxyRouter      from './routes/claudeProxy.js';
 import snapshotRouter         from './routes/snapshot.js';
 import shopGoalsRouter        from './routes/shopGoals.js';
 import shopConfigRouter       from './routes/shopConfig.js';
+import goldStandardChecklistRouter from './routes/goldStandardChecklist.js';
+import roGoldStandardScoreRouter from './routes/roGoldStandardScore.js';
+import roValueScoreRouter        from './routes/roValueScore.js';
 import tribalNotesRouter      from './routes/tribalNotes.js';
+import shopVoiceSettingsRouter from './routes/shopVoiceSettings.js';
+import llmProviderConfigRouter from './routes/llmProviderConfig.js';
+import { hydrateActiveProfile } from './services/llmProviderConfig.js';
 import customersRouter        from './routes/customers.js';
 import authLogRouter          from './routes/authLog.js';
 import llmLogRouter           from './routes/llmLog.js';
 import roAdvisorRouter        from './routes/roAdvisor.js';
+import roChatRouter           from './routes/roChat.js';
+import trustScoreRouter       from './routes/trustScore.js';
 import dataFeedRouter         from './routes/dataFeed.js';
 import hierarchyRouter        from './routes/hierarchy.js';
+import analyticsRouter        from './routes/analytics.js';
+import prediiLearnRouter      from './routes/prediiLearn.js';
+import cannedJobsRouter       from './routes/cannedJobs.js';
+import shopProfileSnapshotRouter from './routes/shopProfileSnapshot.js';
+import shopChatRouter          from './routes/shopChat.js';
 import { ensureRecommendationIndexes } from './models/Recommendation.js';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
@@ -100,22 +114,61 @@ app.use('/api/knowledge-graph', knowledgeGraphRoutes);
 app.use('/api/agent',           agentRouter);
 app.use('/api/ro-agent',        roAgentRouter);
 app.use('/api/ro-advisor',       roAdvisorRouter);
+app.use('/api/ro-chat',          roChatRouter);
+app.use('/api/trust-score',      trustScoreRouter);
 app.use('/api/aro-agent',       aroAgentRouter);
 app.use('/api/demo',            demoRORouter);
 app.use('/api/claude',          claudeProxyRouter);
 app.use('/api/snapshot',        snapshotRouter);
 app.use('/api/shop-goals',      shopGoalsRouter);
 app.use('/api/shop-config',     shopConfigRouter);
+app.use('/api/gold-standard-checklist', goldStandardChecklistRouter);
+app.use('/api/ro-gold-standard-score', roGoldStandardScoreRouter);
+app.use('/api/ro-value-score',      roValueScoreRouter);
 app.use('/api/tribal-notes',    tribalNotesRouter);
+app.use('/api/shop-voice-settings', shopVoiceSettingsRouter);
+app.use('/api/llm-provider-config', llmProviderConfigRouter);
 app.use('/api/hierarchy',       hierarchyRouter);
 app.use('/api/customers',       customersRouter);
 app.use('/api/auth',            authLogRouter);
 app.use('/api/llm-log',         llmLogRouter);
 app.use('/api/data-feed',       dataFeedRouter);
+app.use('/api/analytics',       analyticsRouter);
+app.use('/api/predii-learn',    prediiLearnRouter);
+app.use('/api/canned-jobs',     cannedJobsRouter);
+app.use('/api/shop-profile-snapshot', shopProfileSnapshotRouter);
+app.use('/api/shop-chat',        shopChatRouter);
 app.use('/api',                 recommendationsRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', db: DB_NAME, ts: new Date().toISOString() });
+});
+
+// Detailed health for the Sidecar's startup Health Check screen (WrenchIQ
+// Product Spec v4.0 §1). "SMS" here is the MongoDB data feed WrenchIQ reads
+// today (dataFeedService.js) — it's a real, live-pingable connection, just
+// not yet pointed at a real shop's production SMS/DMS. Green means the
+// configured Mongo is actually reachable, not that a live shop is connected.
+async function checkMongoHealth(db) {
+  const t0 = Date.now();
+  try {
+    await db.command({ ping: 1 });
+    return {
+      status: 'connected',
+      latencyMs: Date.now() - t0,
+      note: `Connected to ${DB_NAME} — this is Predii's demo data feed, not yet a live shop SMS/DMS`,
+    };
+  } catch (err) {
+    return { status: 'error', latencyMs: Date.now() - t0, note: err.message };
+  }
+}
+
+app.get('/api/health/detailed', async (req, res) => {
+  const [llm, sms] = await Promise.all([
+    checkLLMHealth(),
+    checkMongoHealth(req.db),
+  ]);
+  res.json({ llm, sms, ts: new Date().toISOString() });
 });
 
 // ── Static frontend (production) ──────────────────────────────────────────────
@@ -137,6 +190,7 @@ async function startServer() {
     await ensureIndexes(db);
     await ensureRecommendationIndexes(db);
     app.locals.db = db;
+    await hydrateActiveProfile(db);
 
     app.listen(PORT, () => {
       const masked = MONGODB_URI.replace(/:\/\/.*@/, '://<credentials>@');

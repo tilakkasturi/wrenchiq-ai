@@ -140,12 +140,13 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
     return <GWGCorporateScreen />;
   }
 
-  return <DashboardScreen onNavigate={extraProps.onNavigate} />;
+  return <DashboardScreen onNavigate={extraProps.onNavigate} persona={persona} />;
 }
 
 // ── Default screen per persona ───────────────────────────────
 
 const PERSONA_DEFAULT_SCREEN = {
+  advisor:      "orders",
   advisorLite:  "intelligentRO",
   tech:         "techHome",
   owner:        "ownerHome",

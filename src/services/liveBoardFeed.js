@@ -23,6 +23,10 @@ export function useLiveBoardROs({ shopId, edition = "am", limit = 20, intervalMs
       if (shopId)  params.set("shopId", shopId);
       if (edition) params.set("edition", edition);
       params.set("limit", String(limit));
+      // Every result here gets resolved via /story-ro/:roId, which 404s on
+      // anything without isStoryRO:true — ask the feed to only hand back IDs
+      // that can actually resolve (see dataFeedService.js listActiveCustomers).
+      params.set("storyOnly", "true");
 
       const res = await fetch(`${API_BASE}/api/data-feed/customers?${params}`);
       if (!res.ok) return;

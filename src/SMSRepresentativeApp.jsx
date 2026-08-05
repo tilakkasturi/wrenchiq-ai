@@ -21,7 +21,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { ClipboardList, Stethoscope, FileText, ShoppingCart, CheckSquare, AlertTriangle, ChevronDown, FileSearch } from "lucide-react";
+import { ClipboardList, Stethoscope, FileText, ShoppingCart, CheckSquare, AlertTriangle, ChevronDown, FileSearch, Home } from "lucide-react";
 import AdvisorHomeScreen from "./screens/AdvisorHomeScreen";
 import Job1IntakeScreen from "./screens/Job1IntakeScreen";
 import Job2ThreeCScreen from "./screens/Job2ThreeCScreen";
@@ -33,14 +33,22 @@ import { SelectedCustomerProvider } from "./context/SelectedCustomerContext";
 import { useLiveBoardROs } from "./services/liveBoardFeed";
 import { COLORS } from "./theme/colors";
 
+// V5 feedback (F1): the representative SMS view should read as Kanban + auto
+// queue, full stop — the AI workflow screens (intake, 3C compliance, upsell,
+// 3C Story Writer) belong to WrenchIQ, not the third-party SMS this surface
+// simulates, and pulled attention from the core demo. Only `core: true`
+// sections render in the left nav; the rest stay mounted below (unrouted,
+// same convention as SocialInboxScreen) rather than deleted outright.
 const NAV_SECTIONS = [
-  { id: "advisorHome", label: "RO Kanban / Queue",  icon: ClipboardList },
+  { id: "advisorHome", label: "RO Kanban / Queue",  icon: ClipboardList, core: true },
   { id: "roViewer",    label: "Repair Order Viewer", icon: FileSearch },
   { id: "job1Intake",  label: "Intake & Diagnosis", icon: Stethoscope },
   { id: "job2ThreeC",  label: "3C Compliance",      icon: FileText },
   { id: "job3Upsell",  label: "Service Recommendations", icon: ShoppingCart },
   { id: "am3cWriter",  label: "3C Story Writer",     icon: CheckSquare },
 ];
+
+const CORE_NAV_SECTIONS = NAV_SECTIONS.filter((s) => s.core);
 
 const KANBAN_STATUS_TO_COLUMN = {
   checked_in:    "queue",
@@ -194,7 +202,7 @@ function ShopSwitcher({ shopName, activeShopId, setDemo }) {
 }
 
 function SMSRepresentativeShell({ smsName, shopName, smsHeaderColor, activeShopId, setDemo }) {
-  const [activeSection, setActiveSection] = useState(NAV_SECTIONS[0].id);
+  const [activeSection, setActiveSection] = useState(CORE_NAV_SECTIONS[0].id);
   const { ros: liveFullROs, loading: feedLoading } = useLiveBoardROs({ shopId: activeShopId || "cornerstone" });
 
   const feedUnavailable = !feedLoading && !liveFullROs?.length;
@@ -226,21 +234,36 @@ function SMSRepresentativeShell({ smsName, shopName, smsHeaderColor, activeShopI
         background: smsHeaderColor || "#1F2937",
         color: "rgba(255,255,255,0.85)",
         display: "flex", alignItems: "center", justifyContent: "center",
+        position: "relative",
         fontFamily: "'Inter', system-ui, sans-serif",
         fontSize: 12, fontWeight: 700, letterSpacing: "0.04em",
       }}>
+        <button
+          onClick={() => setActiveSection(CORE_NAV_SECTIONS[0].id)}
+          disabled={activeSection === CORE_NAV_SECTIONS[0].id}
+          title="Back to the RO Queue"
+          style={{
+            position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)",
+            background: "transparent", border: "none", padding: 4, borderRadius: 6,
+            cursor: activeSection === CORE_NAV_SECTIONS[0].id ? "default" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: activeSection === CORE_NAV_SECTIONS[0].id ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
+          }}
+        >
+          <Home size={14} />
+        </button>
         {smsName || "Shop Management System"} · <ShopSwitcher shopName={shopName} activeShopId={activeShopId} setDemo={setDemo} /> (Representative — read-only feed to WrenchIQ)
       </div>
 
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-        {/* Left side-nav */}
+        {/* Left side-nav — only core sections (F1: Kanban + auto queue, full stop) */}
         <div style={{
           width: 190, flexShrink: 0,
           background: "#111827",
           display: "flex", flexDirection: "column",
           padding: "10px 8px", gap: 4,
         }}>
-          {NAV_SECTIONS.map((s) => {
+          {CORE_NAV_SECTIONS.map((s) => {
             const isActive = s.id === activeSection;
             const Icon = s.icon;
             return (

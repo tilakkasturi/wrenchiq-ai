@@ -90,7 +90,7 @@ router.post('/', async (req, res) => {
     await ensureNoteIndexes(db);
     const col = db.collection(COLL);
 
-    const { shopId, locationId, note, active, expiresAt, triggerType, noteType } = req.body;
+    const { shopId, locationId, note, active, expiresAt, triggerType, noteType, priorityKind } = req.body;
 
     if (!shopId || !note) {
       return res.status(400).json({ error: 'shopId and note are required.' });
@@ -102,6 +102,7 @@ router.post('/', async (req, res) => {
       locationId: locationId || 'all',
       note,
       noteType: noteType || 'objective',
+      priorityKind: priorityKind || undefined,
       active: active !== undefined ? Boolean(active) : true,
       expiresAt: expiresAt || null,
       triggerType: triggerType || 'any_ro',
@@ -193,7 +194,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid id format.' });
     }
 
-    const ALLOWED_FIELDS = ['note', 'active', 'expiresAt', 'triggerType', 'locationId', 'noteType'];
+    const ALLOWED_FIELDS = ['note', 'active', 'expiresAt', 'triggerType', 'locationId', 'noteType', 'priorityKind'];
     const update = {};
     for (const f of ALLOWED_FIELDS) {
       if (req.body[f] !== undefined) update[f] = req.body[f];

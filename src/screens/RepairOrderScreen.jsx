@@ -18,6 +18,7 @@ import {
   SHOP,
 } from "../data/demoData";
 import { fetchActiveRepairOrders } from "../services/repairOrderService";
+import { fetchValueScores } from "../services/roValueScoreService";
 import {
   Plus,
   Clock,
@@ -30,12 +31,15 @@ import {
   Camera,
   DollarSign,
   ChevronRight,
+  ChevronDown,
   TrendingUp,
   Zap,
   Brain,
   Target,
   ArrowRight,
   RotateCcw,
+  ClipboardCheck,
+  Send,
 } from "lucide-react";
 import DVIScreen from "./DVIScreen";
 import NewROWizard from "../components/NewROWizard";
@@ -71,6 +75,27 @@ function fmtMoney(n) {
   return n != null ? `$${Number(n).toLocaleString()}` : "—";
 }
 
+// ── Inspection line item derivation ──────────────────────────────────────────
+// DVI in this app is a shop-management line item, not a separate workflow: an RO
+// "has DVI" if any of its services (or its serviceType) reads as an inspection.
+// "Complete" once the RO has moved past checked_in/inspecting; "sent to customer"
+// piggybacks on the estimate text (photos + findings go out together in this flow).
+// No dedicated dvi/sent field exists yet on the RO records in demoData.js, so this
+// is derived from existing status — not a new persisted field.
+const INSPECTION_DONE_STATUSES = ["estimate_sent", "approved", "in_progress", "ready"];
+
+function getInspectionInfo(ro) {
+  const hasInspection =
+    /inspect/i.test(ro.serviceType || "") ||
+    (ro.services || []).some(s => /inspect/i.test(s.name || ""));
+  if (!hasInspection) return { hasInspection: false };
+
+  const complete = INSPECTION_DONE_STATUSES.includes(ro.status);
+  const sentToCustomer = complete; // sent alongside the estimate in this demo flow
+
+  return { hasInspection: true, complete, sentToCustomer };
+}
+
 // ── Status dot ────────────────────────────────────────────────────────────────
 
 function StatusDot({ status }) {
@@ -102,14 +127,18 @@ function StatusBadge({ status }) {
 
 // ── Left panel: single RO row ─────────────────────────────────────────────────
 
-function RORow({ ro, selected, onSelect, onDVI, onCheckout, paidRos }) {
+const VALUE_BAND_COLOR = { high: "#16A34A", medium: "#D97706", low: "#9CA3AF" };
+
+function RORow({ ro, valueScore, selected, onSelect, onDVI, onCheckout, paidRos }) {
   const customer = ro._customer || getCustomer(ro.customerId);
   const vehicle  = ro._vehicle  || getVehicle(ro.vehicleId);
   const tech     = getTech(ro.techId);
   const [hov, setHov] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const isPaid = paidRos?.[ro.id];
   const isReady = ro.status === "ready";
   const waitHrs = ro.status === "estimate_sent" ? getWaitHours(ro.waitingSince) : 0;
+  const inspection = getInspectionInfo(ro);
 
   const custName = customer
     ? `${customer.firstName} ${customer.lastName}`
@@ -119,119 +148,220 @@ function RORow({ ro, selected, onSelect, onDVI, onCheckout, paidRos }) {
     : `${ro.year || ""} ${ro.make || ""} ${ro.model || ""}`.trim() || "—";
 
   return (
-    <div
-      onClick={() => onSelect(ro.id)}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        display: "grid",
-        gridTemplateColumns: "26px 130px 1fr 120px 80px 90px 100px",
-        alignItems: "center",
-        gap: 8,
-        padding: "10px 16px",
-        borderBottom: `1px solid ${COLORS.borderLight}`,
-        background: selected
-          ? `${STATUS_CONFIG[ro.status]?.bg || "#F9FAFB"}`
-          : hov ? COLORS.borderLight : "transparent",
-        cursor: "pointer",
-        transition: "background 0.1s",
-        borderLeft: selected ? `3px solid ${STATUS_CONFIG[ro.status]?.color || COLORS.primary}` : "3px solid transparent",
-      }}
-    >
-      {/* Status dot */}
-      <StatusDot status={ro.status} />
+    <div>
+      <div
+        onClick={() => onSelect(ro.id)}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "26px 130px 1fr 120px 80px 90px 100px",
+          alignItems: "center",
+          gap: 8,
+          padding: "10px 16px",
+          borderBottom: expanded ? "none" : `1px solid ${COLORS.borderLight}`,
+          background: selected
+            ? `${STATUS_CONFIG[ro.status]?.bg || "#F9FAFB"}`
+            : hov ? COLORS.borderLight : "transparent",
+          cursor: "pointer",
+          transition: "background 0.1s",
+          borderLeft: selected ? `3px solid ${STATUS_CONFIG[ro.status]?.color || COLORS.primary}` : "3px solid transparent",
+        }}
+      >
+        {/* Status dot */}
+        <StatusDot status={ro.status} />
 
-      {/* RO number + badges */}
-      <div>
-        <div style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: COLORS.textSecondary }}>
-          {ro.id}
-        </div>
-        {waitHrs > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 3, marginTop: 2 }}>
-            <Clock size={9} color="#D97706" />
-            <span style={{ fontSize: 10, color: "#D97706", fontWeight: 600 }}>{waitHrs}h</span>
+        {/* RO number + badges */}
+        <div>
+          <div style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: COLORS.textSecondary }}>
+            {ro.id}
           </div>
-        )}
-      </div>
-
-      {/* Customer + vehicle */}
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary, lineHeight: 1.3 }}>
-          {custName}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
-          <Car size={10} color={COLORS.textMuted} />
-          <span style={{ fontSize: 11, color: COLORS.textSecondary }}>{vehStr}</span>
-        </div>
-      </div>
-
-      {/* Service */}
-      <div style={{
-        fontSize: 11, color: COLORS.textSecondary,
-        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-      }}>
-        {ro.serviceType || "—"}
-      </div>
-
-      {/* Tech */}
-      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-        {tech ? (
-          <>
-            <div style={{
-              width: 22, height: 22, borderRadius: "50%",
-              background: STATUS_CONFIG[ro.status]?.bg || "#F3F4F6",
-              border: `1px solid ${STATUS_CONFIG[ro.status]?.color || COLORS.border}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 9, fontWeight: 700,
-              color: STATUS_CONFIG[ro.status]?.color || COLORS.textSecondary,
-              flexShrink: 0,
-            }}>
-              {tech.initials}
+          {waitHrs > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 3, marginTop: 2 }}>
+              <Clock size={9} color="#D97706" />
+              <span style={{ fontSize: 10, color: "#D97706", fontWeight: 600 }}>{waitHrs}h</span>
             </div>
-            <span style={{ fontSize: 11, color: COLORS.textSecondary }}>{tech.name.split(" ")[0]}</span>
-          </>
-        ) : (
-          <span style={{ fontSize: 11, color: COLORS.textMuted, fontStyle: "italic" }}>—</span>
-        )}
-      </div>
+          )}
+          {valueScore && (
+            <div
+              title={`Value/opportunity score: ${valueScore.score}/100 (trust ${valueScore.trustScore ?? "—"}, estimate contribution ${valueScore.components?.estimateSizeContribution ?? 0})`}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 3, marginTop: 3,
+                padding: "1px 5px", borderRadius: 4,
+                background: `${VALUE_BAND_COLOR[valueScore.band]}18`,
+                border: `1px solid ${VALUE_BAND_COLOR[valueScore.band]}40`,
+              }}
+            >
+              <span style={{ fontSize: 9, fontWeight: 700, color: VALUE_BAND_COLOR[valueScore.band] }}>
+                {valueScore.score}
+              </span>
+            </div>
+          )}
+        </div>
 
-      {/* Estimate */}
-      <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, textAlign: "right" }}>
-        {isPaid
-          ? <span style={{ fontSize: 11, color: "#16A34A", fontWeight: 700 }}>PAID</span>
-          : fmtMoney(ro.totalEstimate)}
-      </div>
+        {/* Customer + vehicle */}
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary, lineHeight: 1.3 }}>
+            {custName}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
+            <Car size={10} color={COLORS.textMuted} />
+            <span style={{ fontSize: 11, color: COLORS.textSecondary }}>{vehStr}</span>
+          </div>
+        </div>
 
-      {/* Actions */}
-      <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
-        <button
-          onClick={e => { e.stopPropagation(); onDVI(ro.id); }}
+        {/* Service */}
+        <div
+          onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
           style={{
-            padding: "4px 8px", fontSize: 10, fontWeight: 600,
-            border: "1px solid #BAE6FD", borderRadius: 5,
-            background: "#F0F9FF", color: "#0369A1", cursor: "pointer",
-            display: "flex", alignItems: "center", gap: 3,
+            display: "flex", alignItems: "center", gap: 4,
+            fontSize: 11, color: COLORS.textSecondary,
+            overflow: "hidden", cursor: "pointer",
           }}
+          title="Show line items"
         >
-          <Camera size={10} />
-          DVI
-        </button>
-        {isReady && !isPaid && (
+          {expanded ? <ChevronDown size={11} color={COLORS.textMuted} style={{ flexShrink: 0 }} /> : <ChevronRight size={11} color={COLORS.textMuted} style={{ flexShrink: 0 }} />}
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {ro.serviceType || "—"}
+          </span>
+        </div>
+
+        {/* Tech */}
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          {tech ? (
+            <>
+              <div style={{
+                width: 22, height: 22, borderRadius: "50%",
+                background: STATUS_CONFIG[ro.status]?.bg || "#F3F4F6",
+                border: `1px solid ${STATUS_CONFIG[ro.status]?.color || COLORS.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 9, fontWeight: 700,
+                color: STATUS_CONFIG[ro.status]?.color || COLORS.textSecondary,
+                flexShrink: 0,
+              }}>
+                {tech.initials}
+              </div>
+              <span style={{ fontSize: 11, color: COLORS.textSecondary }}>{tech.name.split(" ")[0]}</span>
+            </>
+          ) : (
+            <span style={{ fontSize: 11, color: COLORS.textMuted, fontStyle: "italic" }}>—</span>
+          )}
+        </div>
+
+        {/* Estimate */}
+        <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, textAlign: "right" }}>
+          {isPaid
+            ? <span style={{ fontSize: 11, color: "#16A34A", fontWeight: 700 }}>PAID</span>
+            : fmtMoney(ro.totalEstimate)}
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
           <button
-            onClick={e => { e.stopPropagation(); onCheckout(ro.id); }}
+            onClick={e => { e.stopPropagation(); onDVI(ro.id); }}
             style={{
-              padding: "4px 8px", fontSize: 10, fontWeight: 700,
-              border: "none", borderRadius: 5,
-              background: `linear-gradient(135deg, ${COLORS.accent}, #E85D26)`,
-              color: "#fff", cursor: "pointer",
+              padding: "4px 8px", fontSize: 10, fontWeight: 600,
+              border: "1px solid #BAE6FD", borderRadius: 5,
+              background: "#F0F9FF", color: "#0369A1", cursor: "pointer",
               display: "flex", alignItems: "center", gap: 3,
             }}
           >
-            <DollarSign size={10} />
-            Pay
+            <Camera size={10} />
+            DVI
           </button>
-        )}
+          {isReady && !isPaid && (
+            <button
+              onClick={e => { e.stopPropagation(); onCheckout(ro.id); }}
+              style={{
+                padding: "4px 8px", fontSize: 10, fontWeight: 700,
+                border: "none", borderRadius: 5,
+                background: `linear-gradient(135deg, ${COLORS.accent}, #E85D26)`,
+                color: "#fff", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 3,
+              }}
+            >
+              <DollarSign size={10} />
+              Pay
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Expanded line items — services + the Inspection line item */}
+      {expanded && (
+        <div style={{
+          padding: "8px 16px 12px 42px",
+          background: "#FAFBFC",
+          borderBottom: `1px solid ${COLORS.borderLight}`,
+        }}>
+          {(ro.services || []).map((svc, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "4px 0", fontSize: 11, color: COLORS.textSecondary,
+            }}>
+              <span>{svc.name}</span>
+              <span style={{ color: COLORS.textMuted }}>
+                {fmtMoney((svc.partsCost || 0) + (svc.laborCost || 0))}
+              </span>
+            </div>
+          ))}
+
+          {inspection.hasInspection && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "8px 10px", marginTop: 6,
+              background: "#F0F9FF",
+              border: "1px solid #BAE6FD",
+              borderRadius: 6,
+            }}>
+              <ClipboardCheck size={13} color="#0369A1" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: COLORS.textPrimary, flex: 1 }}>
+                Inspection
+              </span>
+
+              {/* Complete indicator */}
+              <span style={{
+                display: "flex", alignItems: "center", gap: 3,
+                fontSize: 10, fontWeight: 700,
+                color: inspection.complete ? "#16A34A" : "#D97706",
+                background: inspection.complete ? "#F0FDF4" : "#FFFBEB",
+                border: `1px solid ${inspection.complete ? "#BBF7D0" : "#FDE68A"}`,
+                borderRadius: 5, padding: "2px 7px", whiteSpace: "nowrap",
+              }}>
+                <CheckCircle size={10} />
+                {inspection.complete ? "Complete" : "In Progress"}
+              </span>
+
+              {/* Sent-to-customer indicator */}
+              <span style={{
+                display: "flex", alignItems: "center", gap: 3,
+                fontSize: 10, fontWeight: 700,
+                color: inspection.sentToCustomer ? "#4338CA" : COLORS.textMuted,
+                background: inspection.sentToCustomer ? "#EEF2FF" : "#F3F4F6",
+                border: `1px solid ${inspection.sentToCustomer ? "#C7D2FE" : COLORS.border}`,
+                borderRadius: 5, padding: "2px 7px", whiteSpace: "nowrap",
+              }}>
+                <Send size={10} />
+                {inspection.sentToCustomer ? "Sent to Customer" : "Not Sent"}
+              </span>
+
+              {/* Link out to inspection photos/findings */}
+              <button
+                onClick={e => { e.stopPropagation(); onDVI(ro.id); }}
+                style={{
+                  padding: "3px 9px", fontSize: 10, fontWeight: 700,
+                  border: "1px solid #BAE6FD", borderRadius: 5,
+                  background: "#fff", color: "#0369A1", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 3, whiteSpace: "nowrap",
+                }}
+              >
+                View Findings
+                <ChevronRight size={10} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -289,6 +419,10 @@ export default function RepairOrderScreen({ onRoSelect } = {}) {
   const [activeTab, setActiveTab]        = useState("queue");
   const [liveROs, setLiveROs]            = useState(null);
   const [dbConnected, setDbConnected]    = useState(false);
+  // V5 feedback (C3): a second, independent "value/opportunity" score
+  // alongside Gold Standard hygiene — see roValueScoreService.js.
+  const [valueScores, setValueScores]    = useState({});
+  const [sortByValue, setSortByValue]    = useState(false);
 
   useEffect(() => {
     // Pass activeShopId — fetches story ROs for demo shops (cornerstone/ridgeline)
@@ -301,6 +435,15 @@ export default function RepairOrderScreen({ onRoSelect } = {}) {
   const repairOrders  = liveROs || demoRepairOrders;
   const kanbanROs     = repairOrders.filter(ro => KANBAN_STATUSES.includes(ro.status));
   const scheduledROs  = repairOrders.filter(ro => ro.status === "scheduled");
+
+  useEffect(() => {
+    if (kanbanROs.length === 0) return;
+    const ros = kanbanROs.map(ro => ({
+      roNumber: ro.id, customerId: ro.customerId, totalEstimate: ro.totalEstimate || 0,
+    }));
+    fetchValueScores(activeShopId || "cornerstone", ros).then(setValueScores);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeShopId, liveROs]);
 
   // Search filter
   const filterROs = (ros) => {
@@ -315,7 +458,10 @@ export default function RepairOrderScreen({ onRoSelect } = {}) {
     });
   };
 
-  const displayROs = filterROs(activeTab === "queue" ? kanbanROs : scheduledROs);
+  const filteredROs = filterROs(activeTab === "queue" ? kanbanROs : scheduledROs);
+  const displayROs = sortByValue
+    ? [...filteredROs].sort((a, b) => (valueScores[b.id]?.score || 0) - (valueScores[a.id]?.score || 0))
+    : filteredROs;
 
   // ── Right panel derived stats ────────────────────────────────────────────────
 
@@ -397,9 +543,14 @@ export default function RepairOrderScreen({ onRoSelect } = {}) {
   // ── DVI overlay ───────────────────────────────────────────────────────────────
 
   if (dviRoId) {
+    const dviRo = repairOrders.find(r => r.id === dviRoId);
+    const dviInspectionInfo = dviRo ? getInspectionInfo(dviRo) : { hasInspection: false };
     return (
       <div style={{ position: "relative", height: "100%" }}>
-        <DVIScreen />
+        <DVIScreen
+          roId={dviRoId}
+          sentToCustomer={dviInspectionInfo.hasInspection ? dviInspectionInfo.sentToCustomer : undefined}
+        />
         <button
           onClick={() => setDviRoId(null)}
           style={{
@@ -531,6 +682,39 @@ export default function RepairOrderScreen({ onRoSelect } = {}) {
               />
             </div>
 
+            {/* Sort order: Queue (check-in order) vs Score (value/opportunity) — V5 feedback C3 */}
+            <div style={{ display: "flex", gap: 2, background: "#F3F4F6", border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 2, flexShrink: 0 }}>
+              <button
+                onClick={() => setSortByValue(false)}
+                title="Sort by check-in order"
+                style={{
+                  display: "flex", alignItems: "center", gap: 4, cursor: "pointer",
+                  padding: "5px 10px", borderRadius: 6, border: "none",
+                  background: !sortByValue ? "#fff" : "transparent",
+                  color: !sortByValue ? COLORS.textPrimary : COLORS.textSecondary,
+                  boxShadow: !sortByValue ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                  fontSize: 11, fontWeight: 700,
+                }}
+              >
+                Queue
+              </button>
+              <button
+                onClick={() => setSortByValue(true)}
+                title="Sort by value/opportunity score — how likely this customer is to say yes"
+                style={{
+                  display: "flex", alignItems: "center", gap: 4, cursor: "pointer",
+                  padding: "5px 10px", borderRadius: 6, border: "none",
+                  background: sortByValue ? "#EEF2FF" : "transparent",
+                  color: sortByValue ? "#6366F1" : COLORS.textSecondary,
+                  boxShadow: sortByValue ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                  fontSize: 11, fontWeight: 700,
+                }}
+              >
+                <Sparkles size={12} />
+                Score
+              </button>
+            </div>
+
             {/* New RO */}
             <button
               onClick={() => setShowNewRO(true)}
@@ -584,6 +768,7 @@ export default function RepairOrderScreen({ onRoSelect } = {}) {
                 <RORow
                   key={ro.id}
                   ro={ro}
+                  valueScore={valueScores[ro.id]}
                   selected={selectedRoId === ro.id}
                   onSelect={(id) => {
                     setSelectedRoId(id);

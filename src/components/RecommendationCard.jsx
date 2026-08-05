@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Activity, TrendingUp, AlertCircle, Zap, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Activity, TrendingUp, AlertCircle, Zap, X, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useRecommendations } from "../context/RecommendationsContext";
 
 const DOMAIN_ICONS = {
@@ -20,7 +20,7 @@ export default function RecommendationCard({ recommendation, persona }) {
   const ctx = useRecommendations();
 
   if (!ctx) return null;
-  const { dismissRecommendation } = ctx;
+  const { dismissRecommendation, acceptRecommendation } = ctx;
 
   const DomainIcon = DOMAIN_ICONS[recommendation.domain] || Zap;
   const priorityColor = PRIORITY_COLORS[recommendation.priority] || PRIORITY_COLORS.low;
@@ -87,6 +87,21 @@ export default function RecommendationCard({ recommendation, persona }) {
         {/* Expand/collapse + dismiss */}
         <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
           {expanded ? <ChevronUp size={12} color="#9CA3AF" /> : <ChevronDown size={12} color="#9CA3AF" />}
+          <button
+            onClick={(e) => { e.stopPropagation(); acceptRecommendation(recommendation.id); }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 2,
+              display: "flex",
+              alignItems: "center",
+              color: "#16A34A",
+            }}
+            title="Accept"
+          >
+            <Check size={13} />
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); dismissRecommendation(recommendation.id); }}
             style={{

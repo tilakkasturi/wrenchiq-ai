@@ -5,18 +5,20 @@
 
 import { useState } from "react";
 import {
-  FileText, Database, Building2, Map, Link, History,
-  Users, Bell, Target, MessageSquare,
+  FileText, Database, Building2, Map, Link,
+  Users, Bell, Target, MessageSquare, ClipboardCheck, BookOpen, Sparkles, Gauge,
 } from "lucide-react";
 import { COLORS } from "./theme/colors";
-import BrandWordmark from "./components/BrandWordmark";
 import AdminShell from "./components/AdminShell";
+import ResearchInsightsSection from "./components/admin/ResearchInsightsSection";
+import { PrediiLearnProvider } from "./context/PrediiLearnContext";
+import { useDemo } from "./context/DemoContext";
 
 import {
   ShopProfileTab, IntegrationsTab, TeamTab, NotificationsTab,
-  AROMarginTab, TribalKnowledgePanel,
+  AROMarginTab, TribalKnowledgePanel, GoldStandardTab, PrediiScoreLogicTab,
 } from "./screens/SettingsScreen";
-import HistoricalROsScreen from "./screens/HistoricalROsScreen";
+import PrediiLearnScreen from "./screens/PrediiLearnScreen";
 import AM3CAdminScreen, { DEFAULT_SETTINGS as AM3C_DEFAULT_SETTINGS } from "./screens/AM3CAdminScreen";
 import AMAdminScreen from "./screens/AMAdminScreen";
 import OEMSettingsScreen from "./screens/OEMSettingsScreen";
@@ -33,7 +35,7 @@ const SECTIONS = [
     label: "Learn",
     items: [
       { id: "integrations", label: "Integrations", icon: Link },
-      { id: "historicalROs", label: "Historical ROs", icon: History },
+      { id: "prediiLearn", label: "Predii Learn", icon: Sparkles },
     ],
   },
   {
@@ -43,8 +45,11 @@ const SECTIONS = [
       { id: "shop", label: "Shop Profile", icon: Building2 },
       { id: "team", label: "Team", icon: Users },
       { id: "notifications", label: "Notifications", icon: Bell },
-      { id: "aroMargin", label: "ARO & Margin", icon: Target },
+      { id: "aroMargin", label: "ARO, ELR & Margin", icon: Target },
+      { id: "goldStandard", label: "Gold Standard", icon: ClipboardCheck },
+      { id: "scoreLogic", label: "Predii Score Logic", icon: Gauge },
       { id: "tribal", label: "Strategic Priorities", icon: MessageSquare },
+      { id: "researchInsights", label: "Research & Best Practices", icon: BookOpen },
     ],
   },
   {
@@ -68,6 +73,7 @@ function initialScreenFromQuery() {
 }
 
 export default function WrenchIQAdminApp() {
+  const { shopName, smsName } = useDemo();
   const [activeScreen, setActiveScreen] = useState(initialScreenFromQuery);
   const [am3cSettings, setAm3cSettings] = useState(AM3C_DEFAULT_SETTINGS);
 
@@ -76,12 +82,15 @@ export default function WrenchIQAdminApp() {
   function renderActiveScreen() {
     switch (activeScreen) {
       case "integrations":   return <IntegrationsTab />;
-      case "historicalROs":  return <HistoricalROsScreen />;
+      case "prediiLearn":    return <PrediiLearnScreen />;
       case "shop":           return <ShopProfileTab />;
       case "team":           return <TeamTab />;
       case "notifications":  return <NotificationsTab />;
       case "aroMargin":      return <AROMarginTab />;
+      case "goldStandard":   return <GoldStandardTab />;
+      case "scoreLogic":     return <PrediiScoreLogicTab />;
       case "tribal":         return <TribalKnowledgePanel />;
+      case "researchInsights": return <ResearchInsightsSection />;
       case "am3cAdmin":      return <AM3CAdminScreen settings={am3cSettings} onSave={setAm3cSettings} />;
       case "amAdmin":        return <AMAdminScreen />;
       case "oemSettings":    return <OEMSettingsScreen />;
@@ -91,36 +100,46 @@ export default function WrenchIQAdminApp() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: COLORS.bg, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
-      {/* Top bar */}
-      <div
-        style={{
-          height: 56,
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 20px",
-          background: COLORS.bgCard,
-          borderBottom: `1px solid ${COLORS.border}`,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <BrandWordmark size="bar" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary }}>Admin</span>
+    <PrediiLearnProvider>
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: COLORS.bg, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        {/* Top bar */}
+        <div
+          style={{
+            height: 56,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 20px",
+            background: COLORS.bgCard,
+            borderBottom: `1px solid ${COLORS.border}`,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary }}>{smsName || "Shop Management System"}</span>
+            <span style={{ color: COLORS.border }}>|</span>
+            <span style={{ fontSize: 14, fontWeight: 800, letterSpacing: -0.5, color: COLORS.textPrimary }}>WrenchIQ</span>
+            <span style={{ color: COLORS.border }}>|</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.textSecondary }}>Admin</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary }}>{active.label}</span>
+            <span style={{ color: COLORS.border }}>|</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary }}>{shopName || "Repair Shop"}</span>
+          </div>
         </div>
-        <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.textPrimary }}>{active.label}</span>
-      </div>
 
-      {/* Sectioned nav + content */}
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <AdminShell
-          sections={SECTIONS}
-          activeId={activeScreen}
-          onSelect={setActiveScreen}
-          content={renderActiveScreen()}
-        />
+        {/* Sectioned nav + content */}
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <AdminShell
+            sections={SECTIONS}
+            activeId={activeScreen}
+            onSelect={setActiveScreen}
+            content={renderActiveScreen()}
+            contentMaxWidth={activeScreen === "prediiLearn" ? "none" : 800}
+          />
+        </div>
       </div>
-    </div>
+    </PrediiLearnProvider>
   );
 }

@@ -23,6 +23,12 @@ npm run dev
 # API server only
 bin/server
 
+# Tauri Sidecar app (starts Vite + API server + the Sidecar window in one command)
+bin/tauri-app
+
+# Stop the Sidecar app + its dev servers
+bin/tauri-app stop
+
 # Production build → dist/
 npm run build                      # requires Node path: PATH="/opt/homebrew/opt/node@24/bin:$PATH"
 

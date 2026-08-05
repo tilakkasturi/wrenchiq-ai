@@ -136,9 +136,13 @@ export function formatPayload(document, smsTarget) {
  * @param {Object} document - The completed 3C document
  * @param {Object} apiCredentials - API credentials for the SMS ({ apiKey, baseUrl, ... })
  * @param {boolean} [demoMode=true] - If true, simulates the API call
+ * @param {string} [writeTier='read'] - V5 feedback (C1): 'read'|'readwrite' —
+ *   the shop's chosen SMS/DMS integration tier (see DemoContext.smsWriteTier).
+ *   Defaults to 'read' (fail closed) so a caller that forgets to pass it
+ *   never accidentally writes back.
  * @returns {Promise<Object>} Updated writeback record
  */
-export async function writebackToSMS(record, document, apiCredentials, demoMode = true) {
+export async function writebackToSMS(record, document, apiCredentials, demoMode = true, writeTier = 'read') {
   const now = new Date().toISOString();
   const updatedRecord = {
     ...record,
@@ -146,6 +150,14 @@ export async function writebackToSMS(record, document, apiCredentials, demoMode 
     lastAttemptAt: now,
     status: WRITEBACK_STATUSES.RETRYING,
   };
+
+  if (writeTier !== 'readwrite') {
+    return {
+      ...updatedRecord,
+      status: WRITEBACK_STATUSES.FAILED,
+      error: 'Write-back is disabled on the Read-only SMS/DMS tier. Upgrade to Read + Write in Settings to enable this.',
+    };
+  }
 
   try {
     const target = Object.values(SMS_TARGETS).find((t) => t.id === record.smsTarget);
@@ -245,6 +257,7 @@ export async function retryWriteback(record, document, apiCredentials, maxAttemp
  * @param {Object} smsTarget - One of the SMS_TARGETS values
  * @param {Object} apiCredentials - API credentials for the SMS
  * @param {boolean} [demoMode=true] - If true, simulates the API call
+ * @param {string} [writeTier='read'] - V5 feedback (C1): 'read'|'readwrite', see writebackToSMS
  * @returns {Promise<Object>} Result object: { success, note, error }
  */
 export async function writeCustomerResponse(
@@ -253,8 +266,17 @@ export async function writeCustomerResponse(
   response,
   smsTarget,
   apiCredentials,
-  demoMode = true
+  demoMode = true,
+  writeTier = 'read'
 ) {
+  if (writeTier !== 'readwrite') {
+    return {
+      success: false,
+      note: null,
+      error: 'Write-back is disabled on the Read-only SMS/DMS tier. Upgrade to Read + Write in Settings to enable this.',
+    };
+  }
+
   const { itemId, decision, customerName, timestamp } = response;
   const ts = timestamp
     ? new Date(timestamp).toLocaleString('en-US', {

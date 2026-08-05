@@ -485,7 +485,7 @@ const ADVISOR_CONTEXT = {
 
 const TABS = [
   { id: "aiSuggest",       label: "Chat" },
-  { id: "recommendations", label: "Recommendations" },
+  { id: "recommendations", label: "AI Diagnostics" },
   { id: "revenue",         label: "Revenue" },
   { id: "liveFeed",        label: "Live Feed" },
 ];
@@ -1244,7 +1244,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
             </div>
             <div>
               <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: 0.2 }}>WrenchIQ <span style={{ color: COLORS.gold }}>AI</span></div>
-              <div style={{ fontSize: 9, color: COLORS.intelMuted, marginTop: 0.5 }}>Intelligence Ready</div>
+              <div style={{ fontSize: 9, color: COLORS.intelMuted, marginTop: 0.5 }}>Powered by AI Diagnostics</div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1470,10 +1470,16 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
         {/* ── Recommendations tab ── */}
         {activeTab === "recommendations" && (
           <>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+              <Sparkles size={10} color={COLORS.gold} />
+              <span style={{ fontSize: 9, fontWeight: 800, color: COLORS.gold, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                AI Diagnostics — Powered by AI
+              </span>
+            </div>
             {recCtx?.loading
               ? (
                 <div style={{ textAlign: "center", padding: "32px 12px", color: COLORS.intelMuted, fontSize: 12 }}>
-                  Loading recommendations…
+                  Running AI diagnostics…
                 </div>
               )
               : recCtx && recCtx.recommendations.length > 0
@@ -1487,7 +1493,7 @@ export default function WrenchIQAgent({ activeScreen, persona = "admin", selecte
                     ))
                 : (
                   <div style={{ textAlign: "center", padding: "32px 12px", color: COLORS.intelMuted, fontSize: 12 }}>
-                    No recommendations yet.
+                    No AI diagnostics yet.
                   </div>
                 )
             }

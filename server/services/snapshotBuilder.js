@@ -16,9 +16,10 @@ const TARGET_ELR = 195; // posted labor rate for shop-001
 // ROs imported without per-job cost breakdown (confirmed: every wrenchiq_ro RO
 // dated Apr 2025 onward) carry no repair_jobs[].line_cost / parts[].unit_price at
 // all — only a lump-sum `invoice` total. When line-item data is absent, labor
-// revenue is approximated as this share of `invoice`, per industry-typical
-// labor/parts revenue split (labor ~50-65% of RO revenue).
-const LABOR_SHARE_FALLBACK = 0.6;
+// revenue is approximated as this share of `invoice`. Value is measured, not
+// assumed: on the 20,000 ROs where both invoice and line_cost are populated
+// simultaneously, the observed labor share of invoice is 0.619.
+const LABOR_SHARE_FALLBACK = 0.619;
 
 /**
  * Normalize a camelCase RepairOrder document into unified snapshot shape.
@@ -97,7 +98,7 @@ function normalizeSnakeRO(ro) {
     status:            ro.status || '',
     bay:               ro.bay || null,
     dateIn:            ro.date_in || null,
-    closedDate:        ro.closed_date || null,
+    closedDate:        ro.date_out || null,
     waitingSince:      ro.waiting_since || ro.date_in || null,
     techId:            ro.tech?.id || null,
     techName:          ro.tech?.name || null,
@@ -520,9 +521,13 @@ export async function buildSnapshot(shopId, edition, db) {
       .reduce((s, ro) => s + ro.totalRevenue, 0);
   });
 
-  // Actual ELR from closed ROs
-  const totalLaborRev  = closedROs.reduce((s, ro) => s + ro.laborRevenue, 0);
-  const totalActualHrs = closedROs.reduce((s, ro) => s + ro.totalActualHrs, 0);
+  // Actual ELR from closed ROs. Exclude ROs with no tracked hours (a real data
+  // gap on ~95% of Apr 2025 - Jan 2026 ROs) — including them would divide
+  // real/estimated revenue by a near-zero hours base and inflate ELR well above
+  // the posted rate, which is not a meaningful $/hr figure.
+  const rosWithTrackedHrs = closedROs.filter(ro => ro.totalActualHrs > 0);
+  const totalLaborRev  = rosWithTrackedHrs.reduce((s, ro) => s + ro.laborRevenue, 0);
+  const totalActualHrs = rosWithTrackedHrs.reduce((s, ro) => s + ro.totalActualHrs, 0);
   const actualELR      = totalActualHrs > 0 ? Math.round(totalLaborRev / totalActualHrs) : 0;
 
   // Average wait time for open ROs (minutes)
@@ -554,7 +559,7 @@ export async function buildSnapshot(shopId, edition, db) {
     elr: t.totalActualHrs > 0
       ? Math.round(
           closedROs
-            .filter(ro => ro.techId === t.techId)
+            .filter(ro => ro.techId === t.techId && ro.totalActualHrs > 0)
             .reduce((s, ro) => s + ro.laborRevenue, 0) / t.totalActualHrs
         )
       : 0,

@@ -9,41 +9,58 @@
 
 const COLL = 'wrenchiq_ro';
 
+// ROs imported without per-job cost breakdown (confirmed: every RO dated Apr 2025
+// onward) carry no repair_jobs[].line_cost / parts[].unit_price at all — only a
+// lump-sum `invoice` total. When line-item data is absent, labor revenue is
+// approximated as this share of `invoice`. Value is measured, not assumed: on the
+// 20,000 ROs where both invoice and line_cost are populated simultaneously, the
+// observed labor share of invoice is 0.619.
+const LABOR_SHARE_FALLBACK = 0.619;
+
 // ── Shared revenue expression ─────────────────────────────────────────────────
-// Computes total RO revenue from repair_jobs (labor + parts) in aggregation.
-const REVENUE_EXPR = {
-  $add: [
-    {
-      $reduce: {
-        input:        { $ifNull: ['$repair_jobs', []] },
-        initialValue: 0,
-        in: {
-          $add: [
-            '$$value',
-            { $ifNull: ['$$this.labor_cost', 0] },
-            {
-              $reduce: {
-                input:        { $ifNull: ['$$this.parts', []] },
-                initialValue: 0,
-                in: {
-                  $add: [
-                    '$$value',
-                    {
-                      $multiply: [
-                        { $ifNull: ['$$this.unit_price', 0] },
-                        { $ifNull: ['$$this.quantity',   1] },
-                      ],
-                    },
+// Computes total RO revenue from repair_jobs (labor + parts) in aggregation,
+// falling back to the RO-level `invoice` total when no line-item data exists.
+const LINE_ITEM_REVENUE_EXPR = {
+  $reduce: {
+    input:        { $ifNull: ['$repair_jobs', []] },
+    initialValue: 0,
+    in: {
+      $add: [
+        '$$value',
+        { $ifNull: ['$$this.line_cost', 0] },
+        {
+          $reduce: {
+            input:        { $ifNull: ['$$this.parts', []] },
+            initialValue: 0,
+            in: {
+              $add: [
+                '$$value',
+                {
+                  $multiply: [
+                    { $ifNull: ['$$this.unit_price', 0] },
+                    { $ifNull: ['$$this.quantity',   1] },
                   ],
                 },
-              },
+              ],
             },
-          ],
+          },
         },
-      },
+      ],
     },
-    { $ifNull: ['$tax_amount', 0] },
-  ],
+  },
+};
+
+const REVENUE_EXPR = {
+  $let: {
+    vars: { lineItemRevenue: LINE_ITEM_REVENUE_EXPR },
+    in: {
+      $cond: [
+        { $gt: ['$$lineItemRevenue', 0] },
+        { $add: ['$$lineItemRevenue', { $ifNull: ['$tax_amount', 0] }] },
+        { $ifNull: ['$invoice', 0] },
+      ],
+    },
+  },
 };
 
 // ── 1. ARO trend — monthly averages over N months ─────────────────────────────
@@ -80,7 +97,7 @@ export async function getARОTrend(db, shopId, months = 12) {
             $reduce: {
               input:        { $ifNull: ['$repair_jobs', []] },
               initialValue: 0,
-              in: { $add: ['$$value', { $ifNull: ['$$this.labor_cost', 0] }] },
+              in: { $add: ['$$value', { $ifNull: ['$$this.line_cost', 0] }] },
             },
           },
         },
@@ -127,8 +144,8 @@ export async function getTopServices(db, shopId, limit = 15) {
       $group: {
         _id:          '$repair_jobs.repair_job',
         count:        { $sum: 1 },
-        totalRevenue: { $sum: { $ifNull: ['$repair_jobs.labor_cost', 0] } },
-        avgCost:      { $avg: { $ifNull: ['$repair_jobs.labor_cost', 0] } },
+        totalRevenue: { $sum: { $ifNull: ['$repair_jobs.line_cost', 0] } },
+        avgCost:      { $avg: { $ifNull: ['$repair_jobs.line_cost', 0] } },
         avgLaborHrs:  { $avg: { $ifNull: ['$repair_jobs.labor_hours', 0] } },
       },
     },
@@ -283,8 +300,11 @@ export async function getAdvisorPerformance(db, shopId) {
   return db.collection(COLL).aggregate(pipeline).toArray();
 }
 
-// ── 6. Tech ELR performance ───────────────────────────────────────────────────
-export async function getTechELR(db, shopId) {
+// ── 6a. Shop-wide ELR — same formula as getTechELR, grouped across all techs ──
+// ELR = Total Labor Revenue ÷ Total Actual Hours Worked (industry-standard
+// Effective Labor Rate — what the shop actually realizes per wrench-hour,
+// as opposed to the posted/flat-rate labor price).
+export async function getShopELR(db, shopId) {
   const match = shopId && shopId !== 'shop-001' ? { 'shop.id': shopId } : {};
 
   const pipeline = [
@@ -292,10 +312,23 @@ export async function getTechELR(db, shopId) {
     {
       $addFields: {
         _laborRevenue: {
-          $reduce: {
-            input:        { $ifNull: ['$repair_jobs', []] },
-            initialValue: 0,
-            in: { $add: ['$$value', { $ifNull: ['$$this.labor_cost', 0] }] },
+          $let: {
+            vars: {
+              lineItemLaborRev: {
+                $reduce: {
+                  input:        { $ifNull: ['$repair_jobs', []] },
+                  initialValue: 0,
+                  in: { $add: ['$$value', { $ifNull: ['$$this.line_cost', 0] }] },
+                },
+              },
+            },
+            in: {
+              $cond: [
+                { $gt: ['$$lineItemLaborRev', 0] },
+                '$$lineItemLaborRev',
+                { $multiply: [{ $ifNull: ['$invoice', 0] }, LABOR_SHARE_FALLBACK] },
+              ],
+            },
           },
         },
         _actualHrs: {
@@ -318,6 +351,91 @@ export async function getTechELR(db, shopId) {
         },
       },
     },
+    // Exclude ROs with no tracked hours (confirmed: ~95% of Apr 2025 - Jan 2026
+    // closed ROs have labor_time_tracking.totalActualHrs/totalFlatHrs explicitly
+    // 0 — hours were never recorded for them). Including them would divide
+    // real/estimated revenue by a near-zero hours base and inflate ELR well
+    // above the posted rate, which is not a meaningful $/hr figure.
+    { $match: { _actualHrs: { $gt: 0 } } },
+    {
+      $group: {
+        _id:            null,
+        totalLaborRev:  { $sum: '$_laborRevenue' },
+        totalActualHrs: { $sum: '$_actualHrs' },
+        totalFlatHrs:   { $sum: '$_flatHrs' },
+        avgPostedRate:  { $avg: '$shop.labor_rate' },
+      },
+    },
+  ];
+
+  const [result] = await db.collection(COLL).aggregate(pipeline).toArray();
+  if (!result) return { elr: 0, totalLaborRev: 0, totalActualHrs: 0, totalFlatHrs: 0, postedRate: 0 };
+
+  const elr = result.totalActualHrs > 0 ? result.totalLaborRev / result.totalActualHrs : 0;
+
+  return {
+    elr:            Math.round(elr),
+    totalLaborRev:  Math.round(result.totalLaborRev),
+    totalActualHrs: Math.round(result.totalActualHrs * 10) / 10,
+    totalFlatHrs:   Math.round(result.totalFlatHrs * 10) / 10,
+    postedRate:     Math.round(result.avgPostedRate || 0),
+  };
+}
+
+// ── 6. Tech ELR performance ───────────────────────────────────────────────────
+export async function getTechELR(db, shopId) {
+  const match = shopId && shopId !== 'shop-001' ? { 'shop.id': shopId } : {};
+
+  const pipeline = [
+    { $match: match },
+    {
+      $addFields: {
+        _laborRevenue: {
+          $let: {
+            vars: {
+              lineItemLaborRev: {
+                $reduce: {
+                  input:        { $ifNull: ['$repair_jobs', []] },
+                  initialValue: 0,
+                  in: { $add: ['$$value', { $ifNull: ['$$this.line_cost', 0] }] },
+                },
+              },
+            },
+            in: {
+              $cond: [
+                { $gt: ['$$lineItemLaborRev', 0] },
+                '$$lineItemLaborRev',
+                { $multiply: [{ $ifNull: ['$invoice', 0] }, LABOR_SHARE_FALLBACK] },
+              ],
+            },
+          },
+        },
+        _actualHrs: {
+          $ifNull: ['$labor_time_tracking.totalActualHrs', {
+            $reduce: {
+              input:        { $ifNull: ['$repair_jobs', []] },
+              initialValue: 0,
+              in: { $add: ['$$value', { $ifNull: ['$$this.actual_labor_hours', 0] }] },
+            },
+          }],
+        },
+        _flatHrs: {
+          $ifNull: ['$labor_time_tracking.totalFlatHrs', {
+            $reduce: {
+              input:        { $ifNull: ['$repair_jobs', []] },
+              initialValue: 0,
+              in: { $add: ['$$value', { $ifNull: ['$$this.labor_hours', 0] }] },
+            },
+          }],
+        },
+      },
+    },
+    // Exclude ROs with no tracked hours (confirmed: ~95% of Apr 2025 - Jan 2026
+    // closed ROs have labor_time_tracking.totalActualHrs/totalFlatHrs explicitly
+    // 0 — hours were never recorded for them). Including them would divide
+    // real/estimated revenue by a near-zero hours base and inflate ELR well
+    // above the posted rate, which is not a meaningful $/hr figure.
+    { $match: { _actualHrs: { $gt: 0 } } },
     {
       $group: {
         _id:          '$tech.id',
@@ -360,12 +478,26 @@ export async function getTechELR(db, shopId) {
  * Returns ARO for the last 7 and 30 days plus overall closed RO metrics.
  */
 export async function getCurrentARO(db, shopId) {
-  const now        = new Date();
-  const sevenAgo   = new Date(now.getTime() - 7  * 24 * 60 * 60 * 1000).toISOString();
-  const thirtyAgo  = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const ninetyAgo  = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString();
-
   const baseMatch = shopId && shopId !== 'shop-001' ? { 'shop.id': shopId } : {};
+
+  // Anchor the rolling windows to the most recent closed RO date in the dataset
+  // rather than wall-clock "now". The demo dataset's latest RO can predate the
+  // environment's actual current date (e.g. dataset ends Jan 2026, env clock is
+  // Aug 2026) — computing "last 7/30/90 days" off wall-clock time would then
+  // match zero ROs. This mirrors snapshotBuilder.js's approach of rebasing
+  // relative to the latest RO date rather than trusting wall-clock time.
+  const [latestDoc] = await db.collection(COLL)
+    .find({ ...baseMatch, status: 'closed', date_in: { $exists: true, $ne: null } })
+    .project({ date_in: 1 })
+    .sort({ date_in: -1 })
+    .limit(1)
+    .toArray();
+
+  const anchorNow = latestDoc?.date_in ? new Date(latestDoc.date_in) : new Date();
+
+  const sevenAgo   = new Date(anchorNow.getTime() - 7  * 24 * 60 * 60 * 1000).toISOString();
+  const thirtyAgo  = new Date(anchorNow.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const ninetyAgo  = new Date(anchorNow.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
   const pipeline = [
     { $match: { ...baseMatch, status: 'closed' } },
@@ -434,8 +566,8 @@ export async function getServiceOpportunityMatrix(db, shopId) {
       $group: {
         _id:         '$repair_jobs.repair_job',
         count:       { $sum: 1 },
-        avgRevenue:  { $avg: { $ifNull: ['$repair_jobs.labor_cost', 0] } },
-        totalRev:    { $sum: { $ifNull: ['$repair_jobs.labor_cost', 0] } },
+        avgRevenue:  { $avg: { $ifNull: ['$repair_jobs.line_cost', 0] } },
+        totalRev:    { $sum: { $ifNull: ['$repair_jobs.line_cost', 0] } },
         avgLaborHrs: { $avg: { $ifNull: ['$repair_jobs.labor_hours', 0] } },
         categories:  { $addToSet: '$service_category' },
       },

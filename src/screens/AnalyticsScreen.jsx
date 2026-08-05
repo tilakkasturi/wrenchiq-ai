@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   TrendingUp,
   AlertCircle,
@@ -25,6 +25,8 @@ import {
   Pie,
   Cell,
 } from "recharts";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 // ── Helpers ────────────────────────────────────────────────
 function fmt(n) {
@@ -153,8 +155,17 @@ function Card({ children, style }) {
 
 // ── Financial Health Banner ────────────────────────────────
 
-function FinancialHealthBanner() {
+function FinancialHealthBanner({ liveELR }) {
   const { mtd } = financials;
+  const elrTile = liveELR && liveELR.elr > 0
+    ? {
+        label: "Effective Labor Rate",
+        value: `$${liveELR.elr}/hr`,
+        sub: liveELR.postedRate > 0
+          ? `${liveELR.gapPct}% below $${liveELR.postedRate} posted`
+          : "live",
+      }
+    : null;
   return (
     <div
       style={{
@@ -188,66 +199,72 @@ function FinancialHealthBanner() {
       </div>
 
       {/* Key metrics row */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 20 }}>
-        {[
+      {(() => {
+        const tiles = [
           { label: "MTD Revenue", value: fmt(mtd.totalRevenue), sub: null },
           {
             label: "Gross Profit",
             value: fmt(mtd.grossProfit),
-            sub: pct(mtd.grossProfitPct),
+            sub: pct(mtd.grossProfitPct) + " margin",
           },
           {
             label: "Net Profit",
             value: fmt(mtd.netProfit),
-            sub: pct(mtd.netProfitPct),
+            sub: pct(mtd.netProfitPct) + " margin",
           },
-        ].map((m, i) => (
-          <div
-            key={i}
-            style={{
-              flex: 1,
-              paddingRight: i < 2 ? 16 : 0,
-              borderRight:
-                i < 2 ? "1px solid rgba(255,255,255,0.12)" : "none",
-              marginRight: i < 2 ? 16 : 0,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 11,
-                color: "rgba(255,255,255,0.6)",
-                marginBottom: 3,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
-              {m.label}
-            </div>
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 800,
-                letterSpacing: "-0.5px",
-                lineHeight: 1.1,
-              }}
-            >
-              {m.value}
-            </div>
-            {m.sub && (
+          ...(elrTile ? [{ ...elrTile, sub: elrTile.sub }] : []),
+        ];
+        return (
+          <div style={{ display: "flex", gap: 0, marginBottom: 20 }}>
+            {tiles.map((m, i) => (
               <div
+                key={i}
                 style={{
-                  fontSize: 12,
-                  color: "#86EFAC",
-                  fontWeight: 600,
-                  marginTop: 2,
+                  flex: 1,
+                  paddingRight: i < tiles.length - 1 ? 16 : 0,
+                  borderRight:
+                    i < tiles.length - 1 ? "1px solid rgba(255,255,255,0.12)" : "none",
+                  marginRight: i < tiles.length - 1 ? 16 : 0,
                 }}
               >
-                {m.sub} margin
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(255,255,255,0.6)",
+                    marginBottom: 3,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {m.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    letterSpacing: "-0.5px",
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {m.value}
+                </div>
+                {m.sub && (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#86EFAC",
+                      fontWeight: 600,
+                      marginTop: 2,
+                    }}
+                  >
+                    {m.sub}
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
+        );
+      })()}
 
       {/* AI summary */}
       <div
@@ -932,7 +949,9 @@ function WeekFocus() {
 
 // ── Team Section ──────────────────────────────────────────
 
-function TechCard({ tech }) {
+function TechCard({ tech, liveEfficiencyPct }) {
+  const efficiency = liveEfficiencyPct != null ? liveEfficiencyPct : tech.efficiency;
+  tech = { ...tech, efficiency };
   const effColor =
     tech.efficiency >= 90
       ? COLORS.success
@@ -1096,14 +1115,30 @@ function TechCard({ tech }) {
   );
 }
 
-function TeamSection() {
+function TeamSection({ liveTechByName }) {
   return (
     <Card>
-      <SectionHeader
-        icon={Users}
-        title="Your Team"
-        subtitle="Technician performance this month"
-      />
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        <SectionHeader
+          icon={Users}
+          title="Your Team"
+          subtitle="Technician performance this month"
+        />
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: COLORS.textMuted,
+            background: COLORS.borderLight,
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: 20,
+            padding: "3px 10px",
+            whiteSpace: "nowrap",
+          }}
+        >
+          75-85% industry average
+        </span>
+      </div>
       <div
         style={{
           display: "grid",
@@ -1111,9 +1146,16 @@ function TeamSection() {
           gap: 12,
         }}
       >
-        {technicians.map((tech) => (
-          <TechCard key={tech.id} tech={tech} />
-        ))}
+        {technicians.map((tech) => {
+          const live = liveTechByName ? liveTechByName[tech.name] : null;
+          return (
+            <TechCard
+              key={tech.id}
+              tech={tech}
+              liveEfficiencyPct={live ? live.efficiencyPct : null}
+            />
+          );
+        })}
       </div>
     </Card>
   );
@@ -1325,6 +1367,30 @@ function ViewToggle({ view, onViewChange }) {
 export default function AnalyticsScreen() {
   const [view, setView] = useState("summary");
   const [period, setPeriod] = useState("mtd");
+
+  // ── Live ELR / tech-efficiency data ───────────────────────────────────────
+  // Falls back to the hardcoded demo figures above if the fetch fails (503 /
+  // network error) — the screen must never break when the live API is down.
+  const [liveELR, setLiveELR] = useState(null);
+  const [liveTechByName, setLiveTechByName] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/analytics/elr?shopId=shop-001`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (!data) return;
+        setLiveELR(data.shop || null);
+        const byName = {};
+        for (const t of data.byTech || []) {
+          if (t.name) byName[t.name] = t;
+        }
+        setLiveTechByName(Object.keys(byName).length ? byName : null);
+      })
+      .catch(() => {
+        // Live fetch unavailable — keep hardcoded demo values (liveELR/liveTechByName stay null).
+      });
+  }, []);
+
   const ownerFirstName = SHOP.owner.split(" ")[0];
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -1427,7 +1493,7 @@ export default function AnalyticsScreen() {
 
         {/* ── FINANCIAL HEALTH BANNER (always visible) ── */}
         <div style={{ marginBottom: 24 }}>
-          <FinancialHealthBanner />
+          <FinancialHealthBanner liveELR={liveELR} />
         </div>
 
         {/* ── SUMMARY VIEW ── */}
@@ -1443,7 +1509,7 @@ export default function AnalyticsScreen() {
               <WeekFocus />
             </div>
             <div style={{ marginBottom: 24 }}>
-              <TeamSection />
+              <TeamSection liveTechByName={liveTechByName} />
             </div>
             <div style={{ marginBottom: 24 }}>
               <ARAgingSection />
@@ -1464,7 +1530,7 @@ export default function AnalyticsScreen() {
               <ExpenseBreakdown />
             </div>
             <div style={{ marginBottom: 24 }}>
-              <TeamSection />
+              <TeamSection liveTechByName={liveTechByName} />
             </div>
             <div style={{ marginBottom: 24 }}>
               <ARAgingSection />

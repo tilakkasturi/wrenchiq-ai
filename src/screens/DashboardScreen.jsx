@@ -8,6 +8,7 @@ import {
   Zap, Package, Send, ChevronRight, Sparkles, Database, ArrowRight,
 } from "lucide-react";
 import { useRecommendations } from "../context/RecommendationsContext";
+import { useDemo } from "../context/DemoContext";
 import { COLORS } from "../theme/colors";
 import {
   SHOP, repairOrders, customers, vehicles, technicians,
@@ -16,17 +17,25 @@ import {
 import MetricCard from "../components/shared/MetricCard";
 import StatusBadge from "../components/shared/StatusBadge";
 import NewROWizard from "../components/NewROWizard";
+import useCanViewFinancials from "../hooks/useCanViewFinancials";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
+// V5 feedback (E1): owner/queue-attention prompts lead, ahead of the
+// general repair-history insight questions — this is the chat's answer to
+// "How's my business today?" and "Which open ROs need my attention?".
 const SAMPLE_QUESTIONS = [
+  "Which open ROs need my attention today?",
+  "How's my business doing today?",
   "What are the most common repairs across all vehicles?",
   "Which jobs are done together most often?",
   "What are the top repairs for Toyota vehicles?",
   "What parts are replaced during brake jobs?",
 ];
 
-export default function DashboardScreen({ onNavigate }) {
+export default function DashboardScreen({ onNavigate, persona }) {
+  const canViewFinancials = useCanViewFinancials(persona);
+  const { activeShopId } = useDemo();
   const [showNewRO, setShowNewRO] = useState(false);
   const m = todayMetrics;
 
@@ -40,6 +49,34 @@ export default function DashboardScreen({ onNavigate }) {
   // ── KG mini stats state ───────────────────────────────────────────────────
   const [kgStats, setKgStats]         = useState(null);
   const [topClusters, setTopClusters] = useState([]);
+
+  // ── Live ELR / tech-efficiency state ──────────────────────────────────────
+  // Falls back to the hardcoded demoData todayMetrics figures if the fetch
+  // fails (503 / network error) — the dashboard must never break when the
+  // live API is unavailable.
+  const [liveELR, setLiveELR] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/analytics/elr?shopId=shop-001`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (data) setLiveELR(data); })
+      .catch(() => {});
+  }, []);
+
+  // V5 feedback (C2): closed-loop recommendation conversion — shown vs.
+  // accepted/implemented. Financial-adjacent, so gated the same as revenue.
+  const [recConversion, setRecConversion] = useState(null);
+  useEffect(() => {
+    if (!canViewFinancials) return;
+    fetch(`${API_BASE}/api/recommendations/conversion-rate?shopId=shop-001`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (data) setRecConversion(data); })
+      .catch(() => {});
+  }, [canViewFinancials]);
+
+  const liveAvgTechEfficiency = liveELR?.byTech?.length
+    ? Math.round(liveELR.byTech.reduce((s, t) => s + (t.efficiencyPct || 0), 0) / liveELR.byTech.length)
+    : null;
 
   // Auto-scroll chat
   useEffect(() => {
@@ -81,7 +118,7 @@ export default function DashboardScreen({ onNavigate }) {
       const res  = await fetch(`${API_BASE}/api/knowledge-graph/ask`, {
         method:  "POST",
         headers: { "content-type": "application/json" },
-        body:    JSON.stringify({ question: q, history }),
+        body:    JSON.stringify({ question: q, history, shopId: activeShopId }),
       });
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};
@@ -246,11 +283,33 @@ export default function DashboardScreen({ onNavigate }) {
 
       {/* Top Metrics */}
       <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-        <MetricCard icon={DollarSign} label="Today's Revenue"   value={`$${m.revenue.toLocaleString()}`}   change={`+${m.revenueTrend}%`}    positive sub={`Target: $${m.revenueTarget.toLocaleString()}`} onClick={() => onNavigate?.("analytics")} />
+        {canViewFinancials && (
+          <MetricCard icon={DollarSign} label="Today's Revenue"   value={`$${m.revenue.toLocaleString()}`}   change={`+${m.revenueTrend}%`}    positive sub={`Target: $${m.revenueTarget.toLocaleString()}`} onClick={() => onNavigate?.("analytics")} />
+        )}
         <MetricCard icon={Car}        label="Car Count"          value={String(m.carCount)}                 change={`+${m.carCountTrend}`}     positive sub={`${m.carsScheduled} scheduled today`}           onClick={() => onNavigate?.("orders")} />
-        <MetricCard icon={Target}     label="Avg Repair Order"   value={`$${m.avgRO}`}                      change={`+${m.aroTrend}%`}         positive sub={`Goal: $${m.aroGoal}`}                          onClick={() => onNavigate?.("orders")} />
+        {canViewFinancials && (
+          <MetricCard icon={Target}     label="Avg Repair Order"   value={`$${m.avgRO}`}                      change={`+${m.aroTrend}%`}         positive sub={`Goal: $${m.aroGoal}`}                          onClick={() => onNavigate?.("orders")} />
+        )}
         <MetricCard icon={Timer}      label="Bay Utilization"    value={`${m.bayUtilization}%`}             change={`${m.bayTrend}%`}                   sub={`${m.baysActive} of ${m.baysTotal} bays active`} onClick={() => onNavigate?.("orders")} />
-        <MetricCard icon={UserCheck}  label="Tech Efficiency"    value={`${m.techEfficiency}%`}             change={`+${m.techTrend}%`}        positive sub="Billed vs. available hrs"                       onClick={() => onNavigate?.("orders")} />
+        <MetricCard icon={UserCheck}  label="Tech Efficiency"    value={`${liveAvgTechEfficiency ?? m.techEfficiency}%`}             change={`+${m.techTrend}%`}        positive sub="Billed vs. available hrs · 75-85% industry avg"                       onClick={() => onNavigate?.("orders")} />
+        {canViewFinancials && liveELR?.shop?.elr > 0 && (
+          <MetricCard
+            icon={DollarSign}
+            label="Effective Labor Rate"
+            value={`$${liveELR.shop.elr}/hr`}
+            sub={liveELR.shop.postedRate > 0 ? `${liveELR.shop.gapPct}% below $${liveELR.shop.postedRate} posted rate` : "Live"}
+            onClick={() => onNavigate?.("analytics")}
+          />
+        )}
+        {canViewFinancials && recConversion?.shownCount > 0 && (
+          <MetricCard
+            icon={Zap}
+            label="Recommendation Conversion"
+            value={`${recConversion.conversionRatePct}%`}
+            sub={`${recConversion.convertedCount} of ${recConversion.shownCount} recommendations acted on`}
+            onClick={() => onNavigate?.("analytics")}
+          />
+        )}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 20 }}>
@@ -418,26 +477,32 @@ export default function DashboardScreen({ onNavigate }) {
             </div>
           </div>
 
-          {/* Revenue Chart */}
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E5E7EB", padding: "18px 20px" }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>This Week's Revenue</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={revenueData}>
-                <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={COLORS.primary} stopOpacity={0.15} />
-                    <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                <XAxis dataKey="day"     tick={{ fontSize: 12, fill: COLORS.textSecondary }} />
-                <YAxis                   tick={{ fontSize: 12, fill: COLORS.textSecondary }} tickFormatter={v => `$${(v / 1000).toFixed(1)}k`} />
-                <Tooltip formatter={v => [`$${v.toLocaleString()}`, ""]} />
-                <Area type="monotone" dataKey="revenue" stroke={COLORS.primary} strokeWidth={2.5} fill="url(#revGrad)" isAnimationActive={false} />
-                <Line type="monotone" dataKey="target"  stroke={COLORS.accent}  strokeDasharray="5 5" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          {/* Revenue Chart — financial view, owner/manager only */}
+          {canViewFinancials ? (
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E5E7EB", padding: "18px 20px" }}>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>This Week's Revenue</div>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={revenueData}>
+                  <defs>
+                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor={COLORS.primary} stopOpacity={0.15} />
+                      <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                  <XAxis dataKey="day"     tick={{ fontSize: 12, fill: COLORS.textSecondary }} />
+                  <YAxis                   tick={{ fontSize: 12, fill: COLORS.textSecondary }} tickFormatter={v => `$${(v / 1000).toFixed(1)}k`} />
+                  <Tooltip formatter={v => [`$${v.toLocaleString()}`, ""]} />
+                  <Area type="monotone" dataKey="revenue" stroke={COLORS.primary} strokeWidth={2.5} fill="url(#revGrad)" isAnimationActive={false} />
+                  <Line type="monotone" dataKey="target"  stroke={COLORS.accent}  strokeDasharray="5 5" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #E5E7EB", padding: "24px 20px", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+              Ask an owner or manager to view shop revenue.
+            </div>
+          )}
         </div>
 
         {/* ── Right Sidebar ─────────────────────────────────────────────────── */}

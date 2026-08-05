@@ -344,7 +344,7 @@ router.get('/stats', async (req, res) => {
 //  Returns:   { answer, data_used, suggested_questions }
 router.post('/ask', async (req, res) => {
   try {
-    const { question, history = [], location, customer_name } = req.body;
+    const { question, history = [], location, customer_name, shopId } = req.body;
     if (!question?.trim()) return res.status(400).json({ error: 'question required' });
 
     if (!AZURE_OPENAI_API_KEY) return res.status(500).json({ error: 'AZURE_OPENAI_API_KEY not configured — set it in .env.local' });
@@ -375,11 +375,15 @@ router.post('/ask', async (req, res) => {
     const wantsRevenue  = q.includes('revenue') || q.includes('cost') || q.includes('price') || q.includes('expensive') || q.includes('profit');
     const wantsParts    = q.includes('part') || q.includes('affinity') || q.includes('together') || q.includes('bundle') || q.includes('upsell');
     const wantsShop     = q.includes('shop') || q.includes('rooftop') || q.includes('location') || q.includes('branch');
+    // V5 feedback (E1): "how's my queue doing / which ROs need attention"
+    // questions weren't answerable at all before — this shop's own live
+    // open-RO queue lives in the RepairOrder collection, not wrenchiq_ro.
+    const wantsQueueAttention = ['attention', 'need my', 'today', 'waiting', 'unassigned', 'queue', 'my business', 'open ro', 'open orders'].some(k => q.includes(k));
 
     const canonicalMake = mentionedMake ? (MAKE_CANONICAL[mentionedMake] ?? null) : null;
 
     // Build all conditional queries as promises, resolved to null if not needed
-    const [makeROs, relevantClusters, priceData, affinityClusters, shopStats, customerROs] = await Promise.all([
+    const [makeROs, relevantClusters, priceData, affinityClusters, shopStats, customerROs, queueROs] = await Promise.all([
       mentionedMake
         ? req.db.collection(RO_COLL)
             .find({ ...roFilter, ...(canonicalMake
@@ -436,6 +440,14 @@ router.post('/ask', async (req, res) => {
             .find({ 'customer.name': { $regex: customer_name, $options: 'i' } })
             .sort({ date_in: -1 })
             .limit(10)
+            .toArray()
+        : Promise.resolve(null),
+
+      // Live queue attention (this shop's own open ROs — separate collection/schema)
+      wantsQueueAttention
+        ? req.db.collection('RepairOrder')
+            .find({ shopId: shopId || 'cornerstone', status: { $ne: 'closed' }, isCannedJobCatalog: { $ne: true } })
+            .limit(50)
             .toArray()
         : Promise.resolve(null),
     ]);
@@ -497,6 +509,35 @@ router.post('/ask', async (req, res) => {
       const custVehicles = [...new Set(customerROs.map(ro => `${ro.vehicle?.year} ${ro.vehicle?.make} ${ro.vehicle?.model}`))];
       extraContext += `\n### Customer: ${custName} (${customerROs.length} ROs on file)\nVehicles: ${custVehicles.join(', ')}\nPast repairs: ${custJobs.slice(0, 10).join(', ')}\n`;
       dataSources.push(`wrenchiq_ro for customer "${customer_name}" (${customerROs.length} records)`);
+    }
+
+    if (queueROs) {
+      const now = Date.now();
+      const unassigned = queueROs.filter(ro => !ro.tech?.id && ro.kanbanStatus !== 'ready');
+      const longWaiting = queueROs.filter(ro => {
+        if (ro.kanbanStatus !== 'estimate_sent' || !ro.waitingSince) return false;
+        return (now - new Date(ro.waitingSince).getTime()) / 3600000 > 1;
+      });
+      const ready = queueROs.filter(ro => ro.kanbanStatus === 'ready');
+
+      if (queueROs.length === 0) {
+        extraContext += `\n### Today's open RO queue\nNo open repair orders on file right now.\n`;
+      } else {
+        extraContext += `\n### Today's open RO queue (${queueROs.length} open ROs)\n`;
+        if (unassigned.length) {
+          extraContext += `Unassigned (no tech yet): ${unassigned.map(ro => `${ro.roNumber} (${ro.customer?.name || 'unknown customer'})`).join(', ')}\n`;
+        }
+        if (longWaiting.length) {
+          extraContext += `Waiting on customer response >1hr: ${longWaiting.map(ro => `${ro.roNumber} (${ro.customer?.name || 'unknown customer'})`).join(', ')}\n`;
+        }
+        if (ready.length) {
+          extraContext += `Ready for pickup: ${ready.map(ro => ro.roNumber).join(', ')}\n`;
+        }
+        if (!unassigned.length && !longWaiting.length) {
+          extraContext += `Nothing flagged — no unassigned ROs or estimates waiting over an hour.\n`;
+        }
+      }
+      dataSources.push(`RepairOrder live queue for shop "${shopId || 'cornerstone'}" (${queueROs.length} open ROs)`);
     }
 
     if (location) {
