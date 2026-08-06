@@ -21,6 +21,32 @@ Built by [Predii, Inc.](https://predii.com) — CONFIDENTIAL.
 
 ---
 
+## Running the Full Demo
+
+The fastest path to a fully working demo — API server, Vite, `ro-ner-demo`, and the Tauri Sidecar window, all started together in the right order:
+
+```bash
+# One-time setup
+npm install
+pip install -r ro-ner-demo/requirements.txt   # optional — see Prerequisites above
+cp .env.example .env.local                    # fill in your API key(s); endpoints are pre-filled/fixed
+source "$HOME/.cargo/env"                     # if you installed Rust via rustup this session
+
+# Connect to the Predii VPN — Mongo/LLM endpoints are internal-only
+
+bin/start-demo
+```
+
+This starts (in order): `ro-ner-demo` on `:8090` (skipped gracefully if Python deps aren't installed — Predii Learn just falls back to its persisted snapshot), the API server on `:3001`, Vite on `:5173`, then opens the native Tauri Sidecar window.
+
+```bash
+bin/stop-demo   # tears down everything start-demo started
+```
+
+If you only want a web surface in a browser (no Tauri window), skip straight to **Quick Start** below instead.
+
+---
+
 ## Quick Start (web surfaces)
 
 ```bash
@@ -78,18 +104,21 @@ Six Vite entry points, all built from one `dist/` (see `vite.config.js`):
 
 ### Run in dev mode
 
-Tauri's `beforeDevCommand` is intentionally left empty (`src-tauri/tauri.conf.json`) — it does **not** start Vite for you. Start the Vite dev server yourself first, then run Tauri in a second terminal:
+`bin/tauri-app` (used by `bin/start-demo`, see **Running the Full Demo** above) is the recommended way to run this — it puts Rust/Node on `PATH` and handles everything below for you:
 
 ```bash
-# terminal 1
-PATH="/opt/homebrew/opt/node@24/bin:$PATH" npm run dev
+bin/tauri-app         # start
+bin/tauri-app stop    # stop the app + the dev servers it started
+```
 
-# terminal 2
+Under the hood, Tauri's `beforeDevCommand` (`src-tauri/tauri.conf.json`) is `npm run dev:full` — it starts both Vite *and* the API server itself and waits for `:5173` before opening the window, so you don't need to start anything separately first. If you want to run it by hand instead:
+
+```bash
 source "$HOME/.cargo/env"
 PATH="/opt/homebrew/opt/node@24/bin:$PATH" npm run tauri:dev
 ```
 
-First run compiles ~360 Rust crates (~25-40s); subsequent runs are incremental. A native "WrenchIQ Intelligence" window (420×720) opens once the build finishes and connects to `http://localhost:5173/sidecar.html`.
+First run compiles ~360 Rust crates (~25-40s); subsequent runs are incremental. A native "WrenchIQ Intelligence" window opens once the build finishes and connects to `http://localhost:5173/sidecar.html` — by default it docks to the **right edge of the primary display, spanning its full height** (see the `setup()` hook in `src-tauri/src/lib.rs`; `tauri.conf.json`'s `width`/`height` are just the fallback size for the brief moment before that hook repositions it).
 
 To just verify the Rust side compiles without launching a window (useful in a headless/CI environment):
 
