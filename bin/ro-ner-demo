@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# bin/ro-ner-demo — Start the packaged ro-ner-demo service (Predii Learn's
+# live NER extraction + Shop Profile backend)
+#
+# Usage:
+#   bin/ro-ner-demo             # start in foreground
+#   bin/ro-ner-demo --check     # just report whether it's already running
+#
+# Listens on $RO_NER_PORT (default 8090) — matches RO_NER_BASE_URL's default
+# in .env.example. See ro-ner-demo/README.md for what this package is and
+# isn't (a minimal slice of the real ro-ner-demo repo, not the whole thing).
+
+set -euo pipefail
+cd "$(dirname "$0")/../ro-ner-demo"
+
+PORT="${RO_NER_PORT:-8090}"
+
+if curl -sf "http://localhost:${PORT}/api/health" >/dev/null 2>&1; then
+  echo "ro-ner-demo already running on :${PORT}"
+  exit 0
+fi
+
+if [[ "${1:-}" == "--check" ]]; then
+  echo "ro-ner-demo is not running on :${PORT}"
+  exit 1
+fi
+
+# Load .env.local from the parent repo (same convention as bin/server) so
+# MONGODB_URI/LLM_BASE_URL overrides apply here too, if ever set.
+if [[ -f ../.env.local ]]; then
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ -z "${line// }" ]] && continue
+    export "$line"
+  done < ../.env.local
+fi
+
+if ! python3 -c "import fastapi" 2>/dev/null; then
+  echo "error: Python deps not installed — run: pip install -r ro-ner-demo/requirements.txt" >&2
+  exit 1
+fi
+
+exec python3 ner_server.py

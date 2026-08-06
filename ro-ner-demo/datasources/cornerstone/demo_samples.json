@@ -1,0 +1,1125 @@
+[
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_01",
+    "work_requested": "",
+    "work_performed": "diagnostic time ck eng lt misfire includes up to one half hour diagnostic time with scanner or scope p0300 multiple cylinder misfire p1217 engine overtemp protection active there are exhaust gasses in the cooling system this is due to a failing head gasket this causses the loss of coolant and the overheating the cost to repair would prbably be in the 3 000 00 range",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "infiniti",
+      "model": "qx60",
+      "year": "2016",
+      "ro_id": "RO-001584"
+    }
+  },
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_02",
+    "work_requested": "",
+    "work_performed": "level one diagnostics automatic climate control h v a c diagnostic testing for active and detectable issues b1249 blend door failure blend door is located on top of the hvac box under the dash need to remove dash to gain access once actuator is removed will check to make sure blend door moves freely very common problem on this system",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "honda",
+      "model": "odyssey",
+      "year": "2016",
+      "ro_id": "RO-001351"
+    }
+  },
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_03",
+    "work_requested": "",
+    "work_performed": "4qt 5w30 full synthetic oil change includes lubricate and check chassis change oil and oil filter with fully synthetic oil up to 4 quarts check air filter and breather filter check all fluid levels and tire pressures inflation 35 33 viscosity 5w 30 use oil meeting ilsac gf 4 std engine oil capacity quarts 3 9 includes filter capacity",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "honda",
+      "model": "cbr1000rr abs",
+      "year": "2017",
+      "ro_id": "RO-001428"
+    }
+  },
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_04",
+    "work_requested": "",
+    "work_performed": "remove replace fuel tank charcoal canister fuel pump w all associated parts install 034 subframe insert kit arp prop shaft hardware technician comments replace fuel tank fuel pump fuel pump module charcoal canister installed *** vehicle and validated repair by filling 5 gallons of e85 no issues at this time",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "dodge",
+      "model": "journey",
+      "year": "2016",
+      "ro_id": "RO-000586"
+    }
+  },
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_05",
+    "work_requested": "",
+    "work_performed": "inspect vehicle as per 79 point inspection sheet advise on needs 0 5 customer states vehicle is newer to him the suspension seems a little bouncy front brake friction material is at 80 remaining rear brake friction material is approximately at 75 remaining inspect vehicle as per 79 point inspecti",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "toyota",
+      "model": "camry",
+      "year": "2024",
+      "ro_id": "RO-001512"
+    }
+  },
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_06",
+    "work_requested": "",
+    "work_performed": "3 4 truck pa state inspection emissions sticker im2 2561456 safety sticker ai2 04140763 exp 03 2023 state farm mutual automobile insurance company policy 4491441f1338a001 exp date 6 13 2022 brakes lf 10b lr 10b rf 10b rr 10b tires lf 7 lr 7 rf 7 rr 7 previous odometer no sticker",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "replace tires"
+      ],
+      "repairs": [
+        "replace tires"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "gmc",
+      "model": "canyon",
+      "year": "2019",
+      "ro_id": "RO-000661"
+    }
+  },
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_07",
+    "work_requested": "",
+    "work_performed": "3 4 truck pa state inspection emissions sticker im2 2561456 safety sticker ai2 04140763 exp 03 2023 state farm mutual automobile insurance company policy 4491441f1338a001 exp date 6 13 2022 brakes lf 10b lr 10b rf 10b rr 10b tires lf 7 lr 7 rf 7 rr 7 previous odometer no sticker",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "replace tires"
+      ],
+      "repairs": [
+        "replace tires"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "ford",
+      "model": "transit 150",
+      "year": "2021",
+      "ro_id": "RO-001505"
+    }
+  },
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_08",
+    "work_requested": "",
+    "work_performed": "customer states there is a squeeling noise in the front of the vehicle when taking off from a stop please check and report back road test and found front brake rotor dust shield rubbing on rotor adjust duat shield customer states there is a squeeling noi",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "nissan",
+      "model": "rogue",
+      "year": "2023",
+      "ro_id": "RO-000837"
+    }
+  },
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_09",
+    "work_requested": "",
+    "work_performed": "perform pa state inspection emissions sticker im2 2561434 safety sticker ai2 04140739 exp 03 2023 ace american insurance company policy isah25305590 exp date 12 1 2022 brakes lf 10b lr 6b rf 10b rr tires lf 12 lr 8 rf 8 rr 8 previous odometer 113647",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "replace tires"
+      ],
+      "repairs": [
+        "replace tires"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "subaru",
+      "model": "legacy",
+      "year": "2016",
+      "ro_id": "RO-000286"
+    }
+  },
+  {
+    "category": "standard_maintenance",
+    "category_label": "Standard Maintenance",
+    "id": "cs_sta_10",
+    "work_requested": "",
+    "work_performed": "note evac and recharging the ac system is just a diagnostics it is not a repair of the ac system this just gets us to see if the charge is low and in put new freon r134a with dye into the system to check for leaks and why the charge of freon is low",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "recharge refrigerant"
+      ],
+      "repairs": [
+        "recharge refrigerant"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "chevrolet",
+      "model": "cruze",
+      "year": "2015",
+      "ro_id": "RO-001042"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_01",
+    "work_requested": "issue found with engine coolant thermostat",
+    "work_performed": "customer states requests ck engine light on heater and engine colder than normal friend borrowed vehicle and thought transmission was shuddering she felt no changes took to columbia transmission they found no transmission problems but thinks needs thermostat replaced scan diag and estimate",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "issue found with engine coolant thermostat"
+      ],
+      "repair_jobs": [
+        "replace engine coolant thermostat"
+      ],
+      "repairs": [
+        "replace engine coolant thermostat"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "gmc",
+      "model": "canyon",
+      "year": "2019",
+      "ro_id": "RO-000194"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_02",
+    "work_requested": "issue found with engine coolant thermostat",
+    "work_performed": "customer states requests ck engine light on heater and engine colder than normal friend borrowed vehicle and thought transmission was shuddering she felt no changes took to columbia transmission they found no transmission problems but thinks needs thermostat replaced scan diag and estimate",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "issue found with engine coolant thermostat"
+      ],
+      "repair_jobs": [
+        "replace engine coolant thermostat"
+      ],
+      "repairs": [
+        "replace engine coolant thermostat"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "honda",
+      "model": "mrt2604f montesa cota 4rt260",
+      "year": "2015",
+      "ro_id": "RO-000568"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_03",
+    "work_requested": "issue found with engine coolant thermostat",
+    "work_performed": "customer states requests ck engine light on heater and engine colder than normal friend borrowed vehicle and thought transmission was shuddering she felt no changes took to columbia transmission they found no transmission problems but thinks needs thermostat replaced scan diag and estimate",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "issue found with engine coolant thermostat"
+      ],
+      "repair_jobs": [
+        "replace engine coolant thermostat"
+      ],
+      "repairs": [
+        "replace engine coolant thermostat"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "chevrolet",
+      "model": "equinox",
+      "year": "2015",
+      "ro_id": "RO-000905"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_04",
+    "work_requested": "radiator coolant hose is leaking radiator is cracked",
+    "work_performed": "technician notes technician pressure tested the cooling system and found the radiator is cracked on the passenger front corner of plastic tank causing leak and the radiator hoses are soft from age technician recommends replacing the radiator upper and lower radiator hoses radiator cap",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "radiator coolant hose is leaking",
+        "radiator is cracked"
+      ],
+      "repair_jobs": [
+        "pressure test engine cooling system"
+      ],
+      "repairs": [
+        "pressure test engine cooling system"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "ford",
+      "model": "taurus",
+      "year": "2017",
+      "ro_id": "RO-001404"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_05",
+    "work_requested": "alternator suddenly started",
+    "work_performed": "diagnostics for no start after customer replaced battery himself check charging system operation current draw test performed check and clean battery cables battery terminals alternator replace includes removal and installation of alternator diagnostics for no start after custome",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "alternator suddenly started"
+      ],
+      "repair_jobs": [
+        "battery replacement service",
+        "replace alternator"
+      ],
+      "repairs": [
+        "battery replacement service",
+        "clean battery terminal",
+        "replace alternator",
+        "clean battery cable",
+        "install alternator"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "scion",
+      "model": "fr s",
+      "year": "2015",
+      "ro_id": "RO-000732"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_06",
+    "work_requested": "loud noise heard from wheel bearing wheel alignment service is worn noise heard from vehicle tires is worn noise heard from wheel bearing",
+    "work_performed": "complimentary courtesy check see attachment for details upon inspection technician found recommends tire tread frt good rear good 1 loud wheel bearing noise coming from front need to check further to confirm front and find source 2 tires have inside edge wear suggest alignment",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "loud noise heard from wheel bearing",
+        "wheel alignment service is worn",
+        "noise heard from vehicle",
+        "tires is worn",
+        "noise heard from wheel bearing"
+      ],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "toyota",
+      "model": "camry",
+      "year": "2019",
+      "ro_id": "RO-001568"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_07",
+    "work_requested": "brake light switch is broken",
+    "work_performed": "brake lights don t work he has a circuit breaker in the spot for the brake light fuse he thinks there is a short we found the brake light switch broken we replaced the switch and installed a mini 20 amp circuit breaker in the fuse panel brake lights don t work he has a circui",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "brake light switch is broken"
+      ],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "toyota",
+      "model": "highlander",
+      "year": "2017",
+      "ro_id": "RO-000210"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_08",
+    "work_requested": "vehicle key suddenly started",
+    "work_performed": "labor to check no crank hook up scan tool scan all modules no codes check all fuses all ok check power to starter motor voltage at all times ok check power when turning key no voltage trace wiring back to relay check power at relay check labor to check no crank hook up scan",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "vehicle key suddenly started"
+      ],
+      "repair_jobs": [
+        "replace relay"
+      ],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "honda",
+      "model": "trx420tm1 fourtrax rancher",
+      "year": "2020",
+      "ro_id": "RO-000014"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_09",
+    "work_requested": "wiring harness failed",
+    "work_performed": "hvac fan inside car does not work has power at resistor needs blower motor and harness replaced first advised customer resistor and wire harness has high failure rate and may need replacement in the future due to costs we will just replace motor and harness at blower motor",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "wiring harness failed"
+      ],
+      "repair_jobs": [
+        "replace hvac blower motor"
+      ],
+      "repairs": [
+        "replace hvac blower motor"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "chevrolet",
+      "model": "camaro",
+      "year": "2021",
+      "ro_id": "RO-000513"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_10",
+    "work_requested": "a/c compressor is not working",
+    "work_performed": "service writers notes we replaced the a c compressor on june 29th diagnostic notes from that appointment the ac system is fully charged the ac system is commanded on but the solenoid controlled ac compressor is not functioning we recommend replacing the ac compressor",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "a/c compressor is not working"
+      ],
+      "repair_jobs": [
+        "replace a/c compressor"
+      ],
+      "repairs": [
+        "replace a/c compressor",
+        "recommend a/c compressor"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "toyota",
+      "model": "yaris r",
+      "year": "2019",
+      "ro_id": "RO-000083"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_11",
+    "work_requested": "a/c compressor is not working",
+    "work_performed": "service writers notes we replaced the a c compressor on june 29th diagnostic notes from that appointment the ac system is fully charged the ac system is commanded on but the solenoid controlled ac compressor is not functioning we recommend replacing the ac compressor",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "a/c compressor is not working"
+      ],
+      "repair_jobs": [
+        "replace a/c compressor"
+      ],
+      "repairs": [
+        "replace a/c compressor",
+        "recommend a/c compressor"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "dodge",
+      "model": "challenger",
+      "year": "2023",
+      "ro_id": "RO-001758"
+    }
+  },
+  {
+    "category": "symptom_repair",
+    "category_label": "Symptom \u2192 Repair",
+    "id": "cs_sym_12",
+    "work_requested": "radiator is leaking lof service is overheating",
+    "work_performed": "we pressure tested the coolant system and found the radiator is leaking we scanned for codes and there was a p1217 engine temp over heated tech notes that there could be other damage due to the vehicle overheating tech noted the oil change is over due as well",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [
+        "radiator is leaking",
+        "lof service is overheating"
+      ],
+      "repair_jobs": [
+        "lof service",
+        "engine coolant pressure test"
+      ],
+      "repairs": [
+        "lof service",
+        "engine coolant pressure test"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "nissan",
+      "model": "maxima",
+      "year": "2023",
+      "ro_id": "RO-000448"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_01",
+    "work_requested": "",
+    "work_performed": "check engine light is on pulled code p0455 for large evap leak and also a p0306 for cylinder 6 misfire we found there was an aftermarket gas cap not sealing we installed a new factory cap and cleared the codes we did not encounter aany misfire codes at this time need to drive the car for 50 miles then return for state inspection if the light comes back on we will need to perform further testing",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0306",
+        "p0455"
+      ]
+    },
+    "meta": {
+      "make": "ford",
+      "model": "police interceptor sedan",
+      "year": "2019",
+      "ro_id": "RO-000379"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_02",
+    "work_requested": "",
+    "work_performed": "system diagnosis scanned vehicle and found codes p0420 catalyst below efficiency p0300 random misfire turbo impeller making noise on decel flex pipe for exhasut leaking refer to exhaust shop vehicle has excessive vacuum in crankcase causing abnormal fuel trms we need to start by replaccing valve cover pcv hose and spark plugs and recheck fuel trims after completed oil change light is on due",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0300",
+        "p0420"
+      ]
+    },
+    "meta": {
+      "make": "ford",
+      "model": "transit 350 hd",
+      "year": "2024",
+      "ro_id": "RO-000729"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_03",
+    "work_requested": "",
+    "work_performed": "diagnostics level 2 complaint customer states that the vehicle cel came on there are no drivablity issues please check and advise cause during our inspection we found that the vehicle has a history code for the p0430 catalysts below threshold we recommend a motor vac cleaning to start and if that doesn t clean it out we will need to replace the spark plugs as well correction confirmation",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0430"
+      ]
+    },
+    "meta": {
+      "make": "ford",
+      "model": "ecosport",
+      "year": "2020",
+      "ro_id": "RO-001578"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_04",
+    "work_requested": "",
+    "work_performed": "check engine light codes p0328 for a knock sensor and multiple low voltage codes charged battery and passed test cleared knock sensor code and test drove vehicle code did not return as for acceleration issue could not duplicate customers concern at this time vehicle ran normally upon inspection found that the oil was a quart and a half low after recent oil change and topped up to spec",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0328"
+      ]
+    },
+    "meta": {
+      "make": "keeway",
+      "model": "patagonian eagle 250",
+      "year": "2021",
+      "ro_id": "RO-000784"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_05",
+    "work_requested": "",
+    "work_performed": "check engine light codes p0328 for a knock sensor and multiple low voltage codes charged battery and passed test cleared knock sensor code and test drove vehicle code did not return as for acceleration issue could not duplicate customers concern at this time vehicle ran normally upon inspection found that the oil was a quart and a half low after recent oil change and topped up to spec",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0328"
+      ]
+    },
+    "meta": {
+      "make": "honda",
+      "model": "cargo 150",
+      "year": "2022",
+      "ro_id": "RO-001363"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_06",
+    "work_requested": "",
+    "work_performed": "client states check engine light is on vehicle runs good check and advise tech checked for codes found code p2186 62 and p2190 62 system too rich see provided print out for detals as these codes are emmisions related we recomend taking vehicle to the dealer mike called emissions warranty is 7 years *** no code returned again if mil light returns take vehicle to the dealer will advise",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p2186",
+        "p2190"
+      ]
+    },
+    "meta": {
+      "make": "ford",
+      "model": "escape",
+      "year": "2014",
+      "ro_id": "RO-001424"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_07",
+    "work_requested": "",
+    "work_performed": "level one diagnostic single fault 119 95 check vehicle for diagnostic trouble codes p0722 00 check for factory recalls or technical service articles perform testing research and other related diagnostics for a single fault p0722 00 output shaft speed sensor circuit no signal road test to verify duplicate concern inspect and trace wiring found broken wire to output shaft speed sensor",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0722"
+      ]
+    },
+    "meta": {
+      "make": "jeep",
+      "model": "wrangler",
+      "year": "2018",
+      "ro_id": "RO-000713"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_08",
+    "work_requested": "",
+    "work_performed": "kicks in and out of overdrive when it shouldn t and vehicle vibrates perform transmission diagnosis and found engine codes in history p0442 evap system small leak detected and b2799 engine immobilizer system fault hood shocks bad and tire monitor light on front brakes making noise going down the road and steering wheel shakes bad when appling the brakes rear suspension has no travel",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0442"
+      ]
+    },
+    "meta": {
+      "make": "ford",
+      "model": "police interceptor utility",
+      "year": "2024",
+      "ro_id": "RO-001381"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_09",
+    "work_requested": "",
+    "work_performed": "kicks in and out of overdrive when it shouldn t and vehicle vibrates perform transmission diagnosis and found engine codes in history p0442 evap system small leak detected and b2799 engine immobilizer system fault hood shocks bad and tire monitor light on front brakes making noise going down the road and steering wheel shakes bad when appling the brakes rear suspension has no travel",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0442"
+      ]
+    },
+    "meta": {
+      "make": "faw",
+      "model": "elam 1102d",
+      "year": "2021",
+      "ro_id": "RO-001417"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_10",
+    "work_requested": "",
+    "work_performed": "additional issues concerns noticed the service technician noticed the following while performing your requested service work battery corrosion present suggest battery cleaning service a stored codes present u1123 for databus error p0441 for evaporative emission system purge monitor a advised definitions m maintenance p priority a advised customer advised of additional issues",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0441"
+      ]
+    },
+    "meta": {
+      "make": "nissan",
+      "model": "maxima",
+      "year": "2023",
+      "ro_id": "RO-001480"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_11",
+    "work_requested": "",
+    "work_performed": "scan for engine codes abs codes airbag codes transmission traction control codes etc check engine light on test drove car and confirmed cust concern found tires and chopped this is the vibration recommend tires and an alignment code preesent p0017 crankshaft position sensor correlation bank 1 checked oil level and found low in oil this is the engine light and running issue",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0017"
+      ]
+    },
+    "meta": {
+      "make": "jeep",
+      "model": "cherokee",
+      "year": "2016",
+      "ro_id": "RO-000708"
+    }
+  },
+  {
+    "category": "dtc_driven",
+    "category_label": "DTC / Check Engine",
+    "id": "cs_dtc_12",
+    "work_requested": "",
+    "work_performed": "check for client concern that the check engine light is on scan test retrieve code p0456 evap system small leak detected system checked trace problem to failed evap system integrity monitor labor to remove and replace esim per chrysler fuel cap also replaced codes cleared vehicle road tested to set readiness monitors for inspection check for client concern that the check",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": [
+        "p0456"
+      ]
+    },
+    "meta": {
+      "make": "gmc",
+      "model": "sierra",
+      "year": "2023",
+      "ro_id": "RO-001690"
+    }
+  },
+  {
+    "category": "complex_multi",
+    "category_label": "Complex / Multi-System",
+    "id": "cs_com_01",
+    "work_requested": "",
+    "work_performed": "bg coolant flush service includes removal of old coolant adding bg two part cleaning conditioning kit and filling system with fresh factory recommended type coolant",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "service engine coolant",
+        "flush engine coolant"
+      ],
+      "repairs": [
+        "service engine coolant",
+        "flush engine coolant"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "toyota",
+      "model": "tacoma",
+      "year": "2017",
+      "ro_id": "RO-001104"
+    }
+  },
+  {
+    "category": "complex_multi",
+    "category_label": "Complex / Multi-System",
+    "id": "cs_com_02",
+    "work_requested": "",
+    "work_performed": "rear disc brakes labor to reline rear disc brakes bleed and adjust all brakes all wheel disc",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "replace disc brake pad",
+        "bleed disc brake pad"
+      ],
+      "repairs": [
+        "bleed disc brake pad"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "volvo",
+      "model": "v90 cross country",
+      "year": "2021",
+      "ro_id": "RO-001342"
+    }
+  },
+  {
+    "category": "complex_multi",
+    "category_label": "Complex / Multi-System",
+    "id": "cs_com_03",
+    "work_requested": "",
+    "work_performed": "perform bg brake fluid service and flush",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "flush brake fluid",
+        "service brake fluid"
+      ],
+      "repairs": [
+        "flush brake fluid",
+        "service brake fluid"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "chevrolet",
+      "model": "tracker",
+      "year": "2023",
+      "ro_id": "RO-000422"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_01",
+    "work_requested": "",
+    "work_performed": "perform hvac system test test hvac currently stuck in defrost mode scan all systems for codes rcm b11d8 14 28 restraint event notification fcim b1086 07 0a air distribution damper motor testing indicates the hvac mode door actuator has failed suggest replace clear codes and retest operation",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "ford",
+      "model": "transit 150",
+      "year": "2017",
+      "ro_id": "RO-001347"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_02",
+    "work_requested": "",
+    "work_performed": "technician notes technician scanned pcm and noted codes p1634 tcm internal watch dog performance and u1645 implausible driver request signal received are stored technician noted it s likely due to low battery technician erased the codes and noted they did not reappear after long test drive",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "ford",
+      "model": "taurus",
+      "year": "2017",
+      "ro_id": "RO-001000"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_03",
+    "work_requested": "",
+    "work_performed": "lube oil and filter change synthetic 5 qt drain and refill crankcase with premium synthetic motor oil replace oil filter lubricate chassis where applicable inspect air filter additional charge for some air filters top off all fluid levels up to 1 pt and check air pressure in tires",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "lof service",
+        "replace engine oil",
+        "recharge air filter"
+      ],
+      "repairs": [
+        "lof service",
+        "replace engine oil",
+        "recharge air filter"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "hyundai",
+      "model": "tucson",
+      "year": "2016",
+      "ro_id": "RO-000326"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_04",
+    "work_requested": "",
+    "work_performed": "lube oil and filter change synthetic 5 qt drain and refill crankcase with premium synthetic motor oil replace oil filter lubricate chassis where applicable inspect air filter additional charge for some air filters top off all fluid levels up to 1 pt and check air pressure in tires",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "lof service",
+        "replace engine oil",
+        "recharge air filter"
+      ],
+      "repairs": [
+        "lof service",
+        "replace engine oil",
+        "recharge air filter"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "acura",
+      "model": "ilx",
+      "year": "2015",
+      "ro_id": "RO-000466"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_05",
+    "work_requested": "",
+    "work_performed": "water pump labor on coolant system to remove necessary obstacles and disassemble front portion of engine to remove and replace water pump assembly serpentine belt labor to replace serpentine belt while doing water pump need car back in four weeks to re torque serpentine belt",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "replace serpentine belt",
+        "replace engine coolant",
+        "replace engine water pump",
+        "replace engine water pump assembly"
+      ],
+      "repairs": [
+        "replace engine water pump assembly"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "lexus",
+      "model": "lc500",
+      "year": "2018",
+      "ro_id": "RO-000346"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_06",
+    "work_requested": "",
+    "work_performed": "water pump labor on coolant system to remove necessary obstacles and disassemble front portion of engine to remove and replace water pump assembly serpentine belt labor to replace serpentine belt while doing water pump need car back in four weeks to re torque serpentine belt",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "replace serpentine belt",
+        "replace engine coolant",
+        "replace engine water pump",
+        "replace engine water pump assembly"
+      ],
+      "repairs": [
+        "replace engine water pump assembly"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "toyota",
+      "model": "sienna",
+      "year": "2023",
+      "ro_id": "RO-001093"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_07",
+    "work_requested": "",
+    "work_performed": "tire pressure tire pressures set to manufacturers recommended specifications listed on tire information sticker on vehicle if no tire inflation information availible tires will be set to pressure according to vehicle size tire type and vehicle use front psi 35 rear psi 35",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "jeep",
+      "model": "renegade",
+      "year": "2019",
+      "ro_id": "RO-000052"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_08",
+    "work_requested": "",
+    "work_performed": "tire pressure tire pressures set to manufacturers recommended specifications listed on tire information sticker on vehicle if no tire inflation information availible tires will be set to pressure according to vehicle size tire type and vehicle use front psi 35 rear psi 35",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [],
+      "repairs": [],
+      "codes": []
+    },
+    "meta": {
+      "make": "nissan",
+      "model": "frontier",
+      "year": "2024",
+      "ro_id": "RO-000614"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_09",
+    "work_requested": "",
+    "work_performed": "customer concerns check to see if save for wife to take on trip tech notes needs a oil change new engine air filter cabin air filter tire are worn very low tread and battery at 64 needs 4 new tires size 235 60 r18 102h a new battery cabin and engine air filter oil change",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "lof service",
+        "replace air filter oil",
+        "replace cabin air filter"
+      ],
+      "repairs": [
+        "lof service",
+        "replace air filter oil",
+        "replace cabin air filter"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "chevrolet",
+      "model": "silverado 2500 hd",
+      "year": "2021",
+      "ro_id": "RO-000637"
+    }
+  },
+  {
+    "category": "parts_focused",
+    "category_label": "Parts Replacement",
+    "id": "cs_par_10",
+    "work_requested": "",
+    "work_performed": "customer concerns check to see if save for wife to take on trip tech notes needs a oil change new engine air filter cabin air filter tire are worn very low tread and battery at 64 needs 4 new tires size 235 60 r18 102h a new battery cabin and engine air filter oil change",
+    "count": 1,
+    "ground_truth": {
+      "symptoms": [],
+      "repair_jobs": [
+        "lof service",
+        "replace air filter oil",
+        "replace cabin air filter"
+      ],
+      "repairs": [
+        "lof service",
+        "replace air filter oil",
+        "replace cabin air filter"
+      ],
+      "codes": []
+    },
+    "meta": {
+      "make": "ford",
+      "model": "taurus",
+      "year": "2017",
+      "ro_id": "RO-001193"
+    }
+  }
+]

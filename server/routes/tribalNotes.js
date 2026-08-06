@@ -50,6 +50,22 @@ const DEFAULT_NOTES_TEMPLATE = [
     note: 'Check for timing belt service on Japanese vehicles 80k–100k miles',
     active: true, expiresAt: null, triggerType: 'vehicle_type:japanese',
   },
+  // ── Time-bound objectives (tactical campaigns, not standing targets) ──
+  // expiresInDays is resolved to a real expiresAt relative to seed time
+  // below (never a literal date baked into this template — a hardcoded
+  // future date here would eventually become a past date for any shop
+  // seeded after that date, the same class of bug fixed in
+  // scripts/seedSeasonalGapCornerstone.js).
+  {
+    locationId: 'all', noteType: 'objective', priorityKind: 'time_bound',
+    note: 'This month: offer a complimentary multi-point inspection with any brake or suspension job — use it to catch additional deferred work',
+    active: true, expiresAt: null, expiresInDays: 30, triggerType: 'any_ro',
+  },
+  {
+    locationId: 'all', noteType: 'objective', priorityKind: 'time_bound',
+    note: 'Next 2 weeks: call every customer with a declined service from the last 90 days to re-offer it',
+    active: true, expiresAt: null, expiresInDays: 14, triggerType: 'any_ro',
+  },
   // ── ings (per-RO advisor reminders) ────────────────────────
   {
     locationId: 'all', noteType: 'ing',
@@ -137,8 +153,20 @@ router.get('/:shopId', async (req, res) => {
       const hierNode = await db.collection('location_hierarchy').findOne({ id: shopId }).catch(() => null);
       const isScopeNode = hierNode && hierNode.type !== 'shop';
       if (!isScopeNode) {
-        const now = new Date().toISOString();
-        await col.insertMany(DEFAULT_NOTES_TEMPLATE.map(n => ({ ...n, shopId, createdAt: now, updatedAt: now })));
+        const nowDate = new Date();
+        const now = nowDate.toISOString();
+        const docs = DEFAULT_NOTES_TEMPLATE.map(({ expiresInDays, ...n }) => ({
+          ...n,
+          shopId,
+          createdAt: now,
+          updatedAt: now,
+          // Resolved relative to seed time, not a literal date baked into
+          // the template — see the comment above DEFAULT_NOTES_TEMPLATE.
+          expiresAt: expiresInDays
+            ? new Date(nowDate.getTime() + expiresInDays * 24 * 60 * 60 * 1000).toISOString()
+            : n.expiresAt,
+        }));
+        await col.insertMany(docs);
       }
     }
 

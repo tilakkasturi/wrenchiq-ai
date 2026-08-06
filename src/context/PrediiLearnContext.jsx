@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
-import { runBatch, fetchShopProfile } from "../services/prediiLearnService";
+import { runBatch, fetchShopProfile, fetchPersistedShopProfile } from "../services/prediiLearnService";
 import { useDemo } from "./DemoContext";
 
 export const PrediiLearnContext = createContext(null);
@@ -26,6 +26,36 @@ export function PrediiLearnProvider({ children }) {
   const [error, setError] = useState(null);
   const [historyCounts, setHistoryCounts] = useState([]); // [{year, count}], most recent first
   const [historyLoading, setHistoryLoading] = useState(true);
+
+  // Persisted Shop Intelligence profile (see shopProfileSnapshotService.js).
+  // Lives here — not in the tab component — specifically so it survives
+  // switching between Predii Learn's sub-tabs: that component unmounts on
+  // every navigation away, and a fetch-on-mount there silently dropped the
+  // profile on any transient failure (error was swallowed, remount reset
+  // state to null) whenever the advisor came back to the Shop Intelligence
+  // tab. Fetched once per shop here and reused across the whole session.
+  const [persistedProfile, setPersistedProfile] = useState(null);
+  const [persistedLoading, setPersistedLoading] = useState(true);
+  const [persistedError, setPersistedError] = useState(null);
+  const [persistedSavedAt, setPersistedSavedAt] = useState(null);
+
+  const refreshPersistedProfile = useCallback(async (shopId) => {
+    setPersistedLoading(true);
+    setPersistedError(null);
+    try {
+      const data = await fetchPersistedShopProfile(shopId);
+      setPersistedProfile(data.profile || null);
+      setPersistedSavedAt(data.savedAt || null);
+    } catch (err) {
+      setPersistedError(err.message || "Failed to load persisted Shop Intelligence profile");
+    } finally {
+      setPersistedLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshPersistedProfile(activeShopId);
+  }, [activeShopId, refreshPersistedProfile]);
 
   const abortRef = useRef(null);
 
@@ -112,6 +142,11 @@ export function PrediiLearnProvider({ children }) {
     results,
     shopProfile,
     shopProfileLoading,
+    persistedProfile,
+    persistedLoading,
+    persistedError,
+    persistedSavedAt,
+    refreshPersistedProfile,
     error,
     startRun,
     loadShopProfile,

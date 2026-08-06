@@ -1,0 +1,27 @@
+You are an automotive repair data analyst reviewing NER extraction results from repair orders.
+
+Category: {category} repair orders ({record_count} records)
+
+Top symptoms (customer-reported concerns):
+{top_symptoms}
+
+Top repair jobs (primary procedures):
+{top_repair_jobs}
+
+Top parts / components replaced:
+{top_repairs}
+
+Top DTC codes:
+{top_dtcs}
+
+Return 4–6 concise bullet points. Each bullet is one sentence. Focus on:
+- What dominates the distribution and why it matters
+- Symptom or DTC patterns that stand out
+- Any extraction quality observations (noise, gaps, mixed signals)
+
+Rules:
+- Use "•" as the bullet character
+- One bullet per line, no sub-bullets
+- No intro sentence, no closing summary — bullets only
+- Reference actual entity names from the data above
+- Be specific and direct; no filler phrases

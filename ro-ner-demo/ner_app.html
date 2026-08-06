@@ -1,0 +1,3963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Predii360 Pipeline for Repair Orders</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+<script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<style>
+  /* ── Dark theme (default) ─────────────────────────────────────────────────── */
+  body { background: #0f172a; color: #f1f5f9; font-family: 'Inter', system-ui, sans-serif; }
+  .spinner { border: 2px solid #334155; border-top-color: #3b82f6; border-radius: 50%; width: 16px; height: 16px; animation: spin 0.7s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #1e293b; }
+  ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+  .tab-btn { transition: all 0.15s; }
+  .entity-highlight { border-radius: 3px; padding: 1px 4px; font-weight: 500; cursor: default; }
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ── Light theme overrides ────────────────────────────────────────────────── */
+  body.light { background: #f1f5f9; color: #0f172a; }
+  body.light ::-webkit-scrollbar-track { background: #e2e8f0; }
+  body.light ::-webkit-scrollbar-thumb { background: #94a3b8; }
+  body.light .spinner { border-color: #cbd5e1; border-top-color: #3b82f6; }
+
+  /* Backgrounds */
+  body.light .bg-slate-950 { background-color: #f8fafc !important; }
+  body.light .bg-slate-900 { background-color: #f8fafc !important; }
+  body.light .bg-slate-800 { background-color: #ffffff !important; }
+  body.light .bg-slate-700 { background-color: #e2e8f0 !important; }
+  body.light .bg-slate-800\/60 { background-color: rgba(241,245,249,0.8) !important; }
+  body.light .bg-blue-950  { background-color: #eff6ff !important; }
+  body.light .bg-blue-600  { background-color: #2563eb !important; }
+  body.light .bg-amber-600 { background-color: #d97706 !important; }
+  body.light .bg-emerald-400 { background-color: #10b981 !important; }
+  body.light .bg-red-400   { background-color: #ef4444 !important; }
+
+  /* Text */
+  body.light .text-slate-100 { color: #0f172a !important; }
+  body.light .text-slate-200 { color: #1e293b !important; }
+  body.light .text-slate-300 { color: #334155 !important; }
+  body.light .text-slate-400 { color: #475569 !important; }
+  body.light .text-slate-500 { color: #64748b !important; }
+  body.light .text-slate-600 { color: #475569 !important; }
+  body.light .text-blue-300  { color: #1d4ed8 !important; }
+  body.light .text-blue-400  { color: #2563eb !important; }
+  body.light .text-blue-500  { color: #1d4ed8 !important; }
+  body.light .text-amber-700 { color: #b45309 !important; }
+
+  /* Borders */
+  body.light .border-slate-800 { border-color: #e2e8f0 !important; }
+  body.light .border-slate-700 { border-color: #cbd5e1 !important; }
+  body.light .border-slate-600 { border-color: #94a3b8 !important; }
+  body.light .border-blue-600  { border-color: #2563eb !important; }
+  body.light .border-blue-400  { border-color: #2563eb !important; }
+  body.light .border-blue-500  { border-color: #3b82f6 !important; }
+  body.light .border-amber-700 { border-color: #d97706 !important; }
+
+  /* Hover states */
+  body.light .hover\:bg-slate-700:hover  { background-color: #f1f5f9 !important; }
+  body.light .hover\:bg-slate-600:hover  { background-color: #e2e8f0 !important; }
+  body.light .hover\:text-slate-200:hover { color: #0f172a !important; }
+  body.light .hover\:text-slate-300:hover { color: #1e293b !important; }
+  body.light .hover\:border-slate-500:hover { border-color: #64748b !important; }
+  body.light .hover\:border-blue-500:hover  { border-color: #3b82f6 !important; }
+  body.light .hover\:text-blue-300:hover    { color: #1d4ed8 !important; }
+
+  /* Inputs and textareas */
+  body.light textarea, body.light input[type=text] {
+    background: #f8fafc; color: #0f172a; border-color: #cbd5e1;
+  }
+  body.light textarea:focus, body.light input:focus {
+    border-color: #3b82f6; outline: none;
+  }
+
+  /* Selected tab active state */
+  body.light .border-blue-400.bg-slate-900 { background-color: #eff6ff !important; }
+
+  /* Category filter chips */
+  body.light .border-blue-400.text-blue-300.bg-blue-950 {
+    background-color: #eff6ff !important; color: #1d4ed8 !important; border-color: #3b82f6 !important;
+  }
+  body.light .border-slate-700.text-slate-500 {
+    color: #64748b !important; border-color: #cbd5e1 !important;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+const { createRoot } = ReactDOM;
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const ENTITY_CONFIG = {
+  symptom:    { color: '#f59e0b', bg: '#16120a', lightBg: '#fffbeb', lightColor: '#b45309', label: 'Symptom' },
+  repair_job: { color: '#3b82f6', bg: '#0c1a2e', lightBg: '#eff6ff', lightColor: '#1d4ed8', label: 'Repair Job' },
+  repair:     { color: '#34d399', bg: '#071a12', lightBg: '#ecfdf5', lightColor: '#059669', label: 'Component (Repair)' },
+  dtc_code:   { color: '#fb7185', bg: '#1c0c10', lightBg: '#fff1f2', lightColor: '#e11d48', label: 'DTC Code' },
+};
+const ENTITY_TYPES = ['symptom', 'repair_job', 'repair', 'dtc_code'];
+
+// ─── Theme context ────────────────────────────────────────────────────────────
+const ThemeContext = React.createContext({ theme: 'dark', toggle: () => {} });
+const useTheme = () => React.useContext(ThemeContext);
+
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState(() => localStorage.getItem('ner-theme') || 'dark');
+  useEffect(() => {
+    document.body.classList.toggle('light', theme === 'light');
+    localStorage.setItem('ner-theme', theme);
+  }, [theme]);
+  const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;
+}
+
+// Returns {bg, color} for ENTITY_CONFIG entries, theme-aware
+function useEntityStyle(type) {
+  const { theme } = useTheme();
+  const cfg = ENTITY_CONFIG[type] || {};
+  return {
+    bg:    theme === 'light' ? (cfg.lightBg    || cfg.bg)    : cfg.bg,
+    color: theme === 'light' ? (cfg.lightColor || cfg.color) : cfg.color,
+    label: cfg.label,
+  };
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+
+function topN(items, n = 10) {
+  const freq = {};
+  items.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+  return Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([name, value]) => ({ name, value }));
+}
+
+function buildEntityFreqs(results) {
+  const all = Object.fromEntries(ENTITY_TYPES.map(t => [t, []]));
+  results.forEach(r => {
+    ENTITY_TYPES.forEach(t => {
+      (r.entities?.[t] || []).forEach(v => all[t].push(v.toLowerCase().trim()));
+    });
+  });
+  return all;
+}
+
+
+// mode: 'symptom-job' | 'job-repair'
+const MAINTENANCE_COMPONENTS = new Set([
+  'oil filter', 'engine oil', 'motor oil', 'oil and filter', 'engine oil and filter',
+  'air filter', 'cabin air filter', 'engine air filter',
+  'wiper blade', 'wiper blades', 'windshield wiper blade', 'windshield wiper blades',
+  'spark plug', 'spark plugs',
+  'fuel filter',
+  'transmission fluid', 'coolant', 'antifreeze', 'brake fluid', 'power steering fluid',
+  'differential fluid', 'transfer case fluid',
+  'tire', 'tires',
+  'battery', 'serpentine belt', 'drive belt', 'timing belt',
+  'pcv valve', 'breather filter',
+]);
+
+function isMaintenance(name) {
+  const n = name.toLowerCase().trim();
+  if (MAINTENANCE_COMPONENTS.has(n)) return true;
+  // prefix match for plurals / qualified names not in the set
+  for (const m of MAINTENANCE_COMPONENTS) {
+    if (n.startsWith(m) || n.endsWith(m)) return true;
+  }
+  return false;
+}
+
+function buildSankeyData(results, topK = 8, mode = 'job-repair') {
+  const freqs = buildEntityFreqs(results);
+
+  let nodes, acc = {};
+
+  if (mode === 'symptom-job') {
+    // Only mechanical records have real customer-reported symptoms
+    const mechResults = results.filter(r => r.category === 'mechanical');
+    const mechFreqs = buildEntityFreqs(mechResults);
+    const topS = topN(mechFreqs.symptom,    topK).map(x => x.name);
+    const topJ = topN(mechFreqs.repair_job, topK).map(x => x.name);
+    nodes = [
+      ...topS.map(n => ({ label: n, type: 'symptom' })),
+      ...topJ.map(n => ({ label: n, type: 'repair_job' })),
+    ];
+    const idxS = Object.fromEntries(topS.map((n, i) => [n, i]));
+    const idxJ = Object.fromEntries(topJ.map((n, i) => [n, topS.length + i]));
+    mechResults.forEach(r => {
+      const syms = (r.entities?.symptom    || []).map(v => v.toLowerCase().trim()).filter(v => idxS[v] !== undefined);
+      const jobs = (r.entities?.repair_job || []).map(v => v.toLowerCase().trim()).filter(v => idxJ[v] !== undefined);
+      syms.forEach(s => jobs.forEach(j => { const k = `${idxS[s]}|${idxJ[j]}`; acc[k] = (acc[k] || 0) + 1; }));
+    });
+  } else if (mode === 'dtc-single-repair' || mode === 'dtc-multi-repair') {
+    // Filter to records with exactly 1 DTC (single) or 2+ DTCs (multi)
+    const dtcResults = results.filter(r => {
+      const dtcs = (r.entities?.dtc_code || []).filter(v => v && v.trim());
+      return mode === 'dtc-single-repair' ? dtcs.length === 1 : dtcs.length >= 1;
+    });
+    const dtcFreqs = buildEntityFreqs(dtcResults);
+    const topD = topN(dtcFreqs.dtc_code, topK).map(x => x.name);
+    const topP = topN(dtcFreqs.repair,   topK * 3)
+      .filter(x => !isMaintenance(x.name))
+      .slice(0, topK)
+      .map(x => x.name);
+    nodes = [
+      ...topD.map(n => ({ label: n, type: 'dtc_code' })),
+      ...topP.map(n => ({ label: n, type: 'repair' })),
+    ];
+    const idxD = Object.fromEntries(topD.map((n, i) => [n, i]));
+    const idxP = Object.fromEntries(topP.map((n, i) => [n, topD.length + i]));
+    dtcResults.forEach(r => {
+      const dtcs  = (r.entities?.dtc_code || []).map(v => v.toLowerCase().trim()).filter(v => idxD[v] !== undefined);
+      const parts = (r.entities?.repair   || []).map(v => v.toLowerCase().trim()).filter(v => idxP[v] !== undefined);
+      dtcs.forEach(d => parts.forEach(p => { const k = `${idxD[d]}|${idxP[p]}`; acc[k] = (acc[k] || 0) + 1; }));
+    });
+  } else {
+    const topJ = topN(freqs.repair_job, topK).map(x => x.name);
+    const topP = topN(freqs.repair,     topK).map(x => x.name);
+    nodes = [
+      ...topJ.map(n => ({ label: n, type: 'repair_job' })),
+      ...topP.map(n => ({ label: n, type: 'repair' })),
+    ];
+    const idxJ = Object.fromEntries(topJ.map((n, i) => [n, i]));
+    const idxP = Object.fromEntries(topP.map((n, i) => [n, topJ.length + i]));
+    results.forEach(r => {
+      const jobs  = (r.entities?.repair_job || []).map(v => v.toLowerCase().trim()).filter(v => idxJ[v] !== undefined);
+      const parts = (r.entities?.repair     || []).map(v => v.toLowerCase().trim()).filter(v => idxP[v] !== undefined);
+      jobs.forEach(j => parts.forEach(p => { const k = `${idxJ[j]}|${idxP[p]}`; acc[k] = (acc[k] || 0) + 1; }));
+    });
+  }
+
+  const rawLinks = Object.entries(acc).map(([k, value]) => {
+    const [s, t] = k.split('|');
+    return { source: +s, target: +t, value };
+  });
+
+  // Drop nodes with no links — they float disconnected and crowd the diagram
+  const usedIdx = new Set(rawLinks.flatMap(l => [l.source, l.target]));
+  const keptNodes = nodes.filter((_, i) => usedIdx.has(i));
+  const remap = {};
+  keptNodes.forEach((n, newI) => { remap[nodes.indexOf(n)] = newI; });
+  const links = rawLinks.map(l => ({ source: remap[l.source], target: remap[l.target], value: l.value }));
+
+  return { nodes: keptNodes, links };
+}
+
+// ─── HighlightedText ─────────────────────────────────────────────────────────
+
+function HighlightedText({ wr, wp, entities }) {
+  const { theme } = useTheme();
+  const segments = useMemo(() => {
+    const text = [wr ? `Work Requested: ${wr}` : '', wp ? `Work Performed: ${wp}` : ''].filter(Boolean).join('\n');
+    if (!text) return [{ text: '', highlights: [] }];
+
+    const spans = [];
+    ENTITY_TYPES.forEach(type => {
+      const raw = entities?.[type];
+      const vals = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+      vals.forEach(val => {
+        if (!val || typeof val !== 'string') return;
+        const re = new RegExp(val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        let m;
+        while ((m = re.exec(text)) !== null) {
+          spans.push({ start: m.index, end: m.index + m[0].length, type, val: m[0] });
+        }
+      });
+    });
+    spans.sort((a, b) => a.start - b.start);
+
+    const merged = [];
+    let pos = 0;
+    for (const span of spans) {
+      if (span.start < pos) continue;
+      if (span.start > pos) merged.push({ text: text.slice(pos, span.start), type: null });
+      merged.push({ text: text.slice(span.start, span.end), type: span.type });
+      pos = span.end;
+    }
+    if (pos < text.length) merged.push({ text: text.slice(pos), type: null });
+    return merged;
+  }, [wr, wp, entities]);
+
+  return (
+    <div className="text-sm leading-7 whitespace-pre-wrap text-slate-200">
+      {segments.map((seg, i) => {
+        if (!seg.type) return <span key={i}>{seg.text}</span>;
+        const cfg = ENTITY_CONFIG[seg.type];
+        const bg = theme === 'light' ? cfg.lightBg : cfg.bg;
+        const color = theme === 'light' ? cfg.lightColor : cfg.color;
+        return (
+          <span key={i} className="entity-highlight"
+            style={{ background: bg, color, border: `1px solid ${color}40` }}
+            title={cfg.label}>{seg.text}</span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── EntityPanel ─────────────────────────────────────────────────────────────
+
+function SymptomBadge({ norm, color, bg }) {
+  const changed = norm.matched && norm.canonical.toLowerCase() !== norm.raw.toLowerCase();
+  return (
+    <span className="inline-flex items-baseline gap-1 px-2.5 py-0.5 rounded-md text-xs font-medium"
+      style={{ background: bg, color, border: `1px solid ${color}30` }}>
+      <span>{norm.canonical}</span>
+      {changed && (
+        <span className="opacity-50 font-normal">({norm.raw})</span>
+      )}
+    </span>
+  );
+}
+
+const CHIP_LIMIT = 10;
+
+function ChipList({ items, bg, color, border }) {
+  const [expanded, setExpanded] = React.useState(false);
+  const shown = expanded ? items : items.slice(0, CHIP_LIMIT);
+  const extra = items.length - CHIP_LIMIT;
+  return (
+    <div className="flex flex-wrap gap-1.5 items-center">
+      {shown.map((v, i) => (
+        <span key={i} className="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap"
+          style={{ background: bg, color, border }}>
+          {v}
+        </span>
+      ))}
+      {!expanded && extra > 0 && (
+        <button onClick={() => setExpanded(true)}
+          className="text-xs px-2 py-0.5 rounded border transition-colors text-slate-400 border-slate-600 hover:text-slate-200 hover:border-slate-400">
+          +{extra} more
+        </button>
+      )}
+      {expanded && items.length > CHIP_LIMIT && (
+        <button onClick={() => setExpanded(false)}
+          className="text-xs px-2 py-0.5 rounded border transition-colors text-slate-400 border-slate-600 hover:text-slate-200 hover:border-slate-400">
+          show less
+        </button>
+      )}
+    </div>
+  );
+}
+
+function RepairSection({ entities, normalized }) {
+  const { theme } = useTheme();
+  const cfg = ENTITY_CONFIG['repair'];
+  const color   = theme === 'light' ? cfg.lightColor : cfg.color;
+  const bg      = theme === 'light' ? cfg.lightBg    : cfg.bg;
+  const mutedBg = theme === 'light' ? '#f1f5f9' : '#1e293b';
+  const mutedColor = theme === 'light' ? '#64748b' : '#475569';
+
+  const rawList  = (Array.isArray(entities?.repair) ? entities.repair : []).filter(Boolean);
+  const normList = normalized?.repair || [];
+  if (!rawList.length) return null;
+
+  // Merge: prefer normalized PT when available, fall back to raw LLM text
+  const chips = rawList.map((raw, i) => {
+    const entry = normList[i];
+    return entry?.pt
+      ? { label: entry.pt, normalized: true }
+      : { label: raw,      normalized: false };
+  });
+
+  const [expanded, setExpanded] = React.useState(false);
+  const shown = expanded ? chips : chips.slice(0, CHIP_LIMIT);
+  const extra = chips.length - CHIP_LIMIT;
+
+  return (
+    <div className="flex items-start gap-3">
+      <span className="text-xs font-semibold shrink-0 w-24 pt-0.5" style={{ color }}>Component</span>
+      <div className="flex flex-wrap gap-1.5 items-center">
+        {shown.map((chip, i) => (
+          <span key={i}
+            className="px-2.5 py-0.5 rounded-md text-xs font-medium whitespace-nowrap"
+            style={chip.normalized
+              ? { background: bg, color, border: `1px solid ${color}40` }
+              : { background: mutedBg, color: mutedColor, border: `1px solid ${mutedColor}40` }}
+            title={chip.normalized ? undefined : 'No taxonomy match found'}>
+            {chip.label}
+            {!chip.normalized && <span className="ml-1 opacity-50">~</span>}
+          </span>
+        ))}
+        {!expanded && extra > 0 && (
+          <button onClick={() => setExpanded(true)}
+            className="text-xs px-2 py-0.5 rounded border transition-colors text-slate-400 border-slate-600 hover:text-slate-200 hover:border-slate-400">
+            +{extra} more
+          </button>
+        )}
+        {expanded && chips.length > CHIP_LIMIT && (
+          <button onClick={() => setExpanded(false)}
+            className="text-xs px-2 py-0.5 rounded border transition-colors text-slate-400 border-slate-600 hover:text-slate-200 hover:border-slate-400">
+            show less
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const SME_HINT_LABEL = { dtc: 'DTC', component: 'Component' };
+
+function SmeCandidateRow({ candidates, workRequested, workPerformed }) {
+  const { theme } = useTheme();
+  const [expanded, setExpanded]   = React.useState(null);
+  const [feedback, setFeedback]   = React.useState({});  // token → 'accepted'|'rejected'|'pending'
+  const [counts, setCounts]       = React.useState({});  // token → accept_count from server
+
+  if (!candidates || candidates.length === 0) return null;
+  const amberColor  = theme === 'light' ? '#b45309' : '#f59e0b';
+  const amberBg     = theme === 'light' ? '#fffbeb' : '#1c1407';
+  const popupBg     = theme === 'light' ? '#ffffff' : '#1e293b';
+  const popupText   = theme === 'light' ? '#1e293b' : '#cbd5e1';
+  const greenColor  = theme === 'light' ? '#15803d' : '#4ade80';
+  const redColor    = theme === 'light' ? '#b91c1c' : '#f87171';
+
+  async function doAccept(c) {
+    setFeedback(f => ({ ...f, [c.token]: 'pending' }));
+    try {
+      const res = await fetch('/api/sme/accept', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: c.token, hint_type: c.hint_type || 'dtc', entity_type: 'dtc_code',
+          context: c.context || '', source_excerpt: (workRequested + ' ' + workPerformed).slice(0, 200),
+        }),
+      });
+      const data = await res.json();
+      setFeedback(f => ({ ...f, [c.token]: 'accepted' }));
+      setCounts(ct => ({ ...ct, [c.token]: data.accept_count }));
+      if (data.promoted) setExpanded(null);
+    } catch { setFeedback(f => ({ ...f, [c.token]: null })); }
+  }
+
+  async function doReject(c) {
+    setFeedback(f => ({ ...f, [c.token]: 'pending' }));
+    try {
+      await fetch('/api/sme/reject', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: c.token }),
+      });
+      setFeedback(f => ({ ...f, [c.token]: 'rejected' }));
+    } catch { setFeedback(f => ({ ...f, [c.token]: null })); }
+  }
+
+  return (
+    <div className="flex items-start gap-3">
+      <span className="text-xs font-semibold shrink-0 w-24 pt-0.5" style={{ color: amberColor }}>
+        ⚑ SME Review
+      </span>
+      <div className="flex flex-wrap gap-1.5 items-center">
+        {candidates.map((c, i) => {
+          const typeLabel = SME_HINT_LABEL[c.hint_type] || '?';
+          const fb = feedback[c.token];
+          const count = counts[c.token];
+          const isAccepted = fb === 'accepted';
+          const isRejected = fb === 'rejected';
+          const isPending  = fb === 'pending';
+          return (
+            <span key={i} className="relative">
+              <span
+                className="px-2 py-0.5 rounded-md text-xs font-medium whitespace-nowrap cursor-pointer inline-flex items-center gap-1"
+                style={{
+                  background: isAccepted ? (theme==='light'?'#f0fdf4':'#052e16') : isRejected ? (theme==='light'?'#fef2f2':'#1c0606') : amberBg,
+                  color: isAccepted ? greenColor : isRejected ? redColor : amberColor,
+                  border: `1px dashed ${isAccepted ? greenColor : isRejected ? redColor : amberColor}60`,
+                  opacity: isPending ? 0.5 : 1,
+                }}
+                onClick={() => !isPending && setExpanded(expanded === i ? null : i)}
+              >
+                <span className="opacity-60 font-normal">{typeLabel}</span>
+                <span>{c.token}{isAccepted ? ' ✓' : isRejected ? ' ✗' : '?'}</span>
+                {isAccepted && count && <span className="opacity-60">({count}/3)</span>}
+              </span>
+              {expanded === i && !isRejected && (
+                <div className="absolute left-0 top-7 z-10 w-80 p-3 rounded-lg text-xs shadow-xl"
+                  style={{ background: popupBg, color: popupText, border: `1px solid ${amberColor}60`, lineHeight: 1.6 }}>
+                  <div className="font-semibold mb-1" style={{ color: amberColor }}>
+                    Possible {typeLabel} — SME review
+                  </div>
+                  <div className="mb-2 opacity-75 italic leading-snug">"{c.context}"</div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      className="flex-1 px-2 py-1 rounded text-xs font-semibold"
+                      style={{ background: greenColor + '22', color: greenColor, border: `1px solid ${greenColor}60` }}
+                      onClick={(e) => { e.stopPropagation(); doAccept(c); setExpanded(null); }}
+                    >✓ Accept</button>
+                    <button
+                      className="flex-1 px-2 py-1 rounded text-xs font-semibold"
+                      style={{ background: redColor + '22', color: redColor, border: `1px solid ${redColor}60` }}
+                      onClick={(e) => { e.stopPropagation(); doReject(c); setExpanded(null); }}
+                    >✗ Reject</button>
+                  </div>
+                  <div className="opacity-40 text-xs mt-2">Accepted 3× → promoted to extraction rules</div>
+                </div>
+              )}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function EntityRow({ t, vals, normList }) {
+  const { theme } = useTheme();
+  const [expanded, setExpanded] = React.useState(false);
+  const cfg   = ENTITY_CONFIG[t];
+  const color = theme === 'light' ? cfg.lightColor : cfg.color;
+  const bg    = theme === 'light' ? cfg.lightBg    : cfg.bg;
+  const shown = expanded ? vals : vals.slice(0, CHIP_LIMIT);
+  const extra = vals.length - CHIP_LIMIT;
+  return (
+    <div className="flex items-start gap-3">
+      <span className="text-xs font-semibold shrink-0 w-24 pt-0.5" style={{ color }}>{cfg.label}</span>
+      <div className="flex flex-wrap gap-1.5 items-center">
+        {shown.map((v, i) => {
+          const norm = normList[i];
+          if (norm && t === 'symptom') return <SymptomBadge key={i} norm={norm} color={color} bg={bg} />;
+          return (
+            <span key={i} className="px-2.5 py-0.5 rounded-md text-xs font-medium whitespace-nowrap"
+              style={{ background: bg, color, border: `1px solid ${color}30` }}>
+              {v}
+            </span>
+          );
+        })}
+        {!expanded && extra > 0 && (
+          <button onClick={() => setExpanded(true)}
+            className="text-xs px-2 py-0.5 rounded border transition-colors text-slate-400 border-slate-600 hover:text-slate-200 hover:border-slate-400">
+            +{extra} more
+          </button>
+        )}
+        {expanded && vals.length > CHIP_LIMIT && (
+          <button onClick={() => setExpanded(false)}
+            className="text-xs px-2 py-0.5 rounded border transition-colors text-slate-400 border-slate-600 hover:text-slate-200 hover:border-slate-400">
+            show less
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EntityPanel({ entities, normalized, smeCandidates, loading, workRequested, workPerformed }) {
+  if (loading) return (
+    <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
+      <span className="spinner" /> Extracting entities…
+    </div>
+  );
+  const hasAny = ENTITY_TYPES.some(t => entities?.[t]?.length > 0);
+  if (!hasAny) return <div className="text-slate-500 text-sm py-2">No entities extracted yet.</div>;
+  return (
+    <div className="space-y-2.5">
+      {/* Component: merged LLM + normalized into one row */}
+      <RepairSection entities={entities} normalized={normalized} />
+
+      {/* Other entity types */}
+      {ENTITY_TYPES.filter(t => t !== 'repair').map(t => {
+        const vals = Array.isArray(entities?.[t]) ? entities[t] : (entities?.[t] ? [entities[t]] : []);
+        if (!vals.length) return null;
+        return <EntityRow key={t} t={t} vals={vals} normList={normalized?.[t] || []} />;
+      })}
+
+      {/* SME review — unrecognized DTC-like patterns flagged for learning */}
+      <SmeCandidateRow candidates={smeCandidates} workRequested={workRequested} workPerformed={workPerformed} />
+    </div>
+  );
+}
+
+// ─── HBar (horizontal bar chart) ─────────────────────────────────────────────
+
+function HBar({ data, color, emptyMsg = 'No data yet — run batch first.' }) {
+  if (!data.length) return <div className="text-slate-500 text-xs py-6 text-center">{emptyMsg}</div>;
+  const max = data[0].value;
+  return (
+    <div className="space-y-1.5">
+      {data.map(({ name, value }) => (
+        <div key={name} className="flex items-center gap-2 text-xs">
+          <div className="w-40 text-right text-slate-400 truncate shrink-0" title={name}>{name}</div>
+          <div className="flex-1 bg-slate-700 rounded-full h-4 overflow-hidden">
+            <div className="h-4 rounded-full transition-all duration-500" style={{ width: `${(value / max) * 100}%`, background: color }} />
+          </div>
+          <div className="text-slate-400 w-8 text-right">{value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── ParetoChart ─────────────────────────────────────────────────────────────
+
+function ParetoChart({ data, color, height = 240 }) {
+  const svgRef = useRef(null);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!data.length || !svgRef.current) return;
+    const W = wrapRef.current?.clientWidth || 400;
+    const m = { top: 12, right: 42, bottom: 72, left: 36 };
+    const iw = W - m.left - m.right;
+    const ih = height - m.top - m.bottom;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove();
+    svg.attr('width', W).attr('height', height);
+
+    const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`);
+
+    const total = d3.sum(data, d => d.value);
+    let cum = 0;
+    const points = data.map(d => { cum += d.value; return { ...d, pct: cum / total * 100 }; });
+
+    const x = d3.scaleBand().domain(data.map(d => d.name)).range([0, iw]).padding(0.25);
+    const yL = d3.scaleLinear().domain([0, data[0].value * 1.1]).range([ih, 0]);
+    const yR = d3.scaleLinear().domain([0, 100]).range([ih, 0]);
+
+    // Grid lines
+    g.append('g').selectAll('line').data(yL.ticks(4)).join('line')
+      .attr('x1', 0).attr('x2', iw)
+      .attr('y1', d => yL(d)).attr('y2', d => yL(d))
+      .attr('stroke', '#1e293b').attr('stroke-width', 1);
+
+    // Bars
+    g.append('g').selectAll('rect').data(data).join('rect')
+      .attr('x', d => x(d.name))
+      .attr('y', d => yL(d.value))
+      .attr('width', x.bandwidth())
+      .attr('height', d => ih - yL(d.value))
+      .attr('fill', color)
+      .attr('opacity', 0.85)
+      .attr('rx', 3);
+
+    // Cumulative line
+    const line = d3.line().x(d => x(d.name) + x.bandwidth() / 2).y(d => yR(d.pct)).curve(d3.curveMonotoneX);
+    g.append('path').datum(points).attr('fill', 'none').attr('stroke', '#94a3b8')
+      .attr('stroke-width', 2).attr('d', line);
+
+    // Dots on line
+    g.append('g').selectAll('circle').data(points).join('circle')
+      .attr('cx', d => x(d.name) + x.bandwidth() / 2).attr('cy', d => yR(d.pct))
+      .attr('r', 3).attr('fill', '#94a3b8');
+
+    // 80% threshold line
+    g.append('line')
+      .attr('x1', 0).attr('x2', iw).attr('y1', yR(80)).attr('y2', yR(80))
+      .attr('stroke', '#475569').attr('stroke-dasharray', '4,3').attr('stroke-width', 1);
+    g.append('text').attr('x', iw + 4).attr('y', yR(80) + 4)
+      .attr('font-size', 9).attr('fill', '#64748b').text('80%');
+
+    // Left Y axis
+    g.append('g').call(d3.axisLeft(yL).ticks(4).tickSize(0))
+      .call(a => a.select('.domain').remove())
+      .call(a => a.selectAll('text').attr('fill', '#64748b').attr('font-size', 9).attr('dx', -4));
+
+    // Right Y axis
+    g.append('g').attr('transform', `translate(${iw},0)`)
+      .call(d3.axisRight(yR).ticks(4).tickFormat(d => d + '%').tickSize(0))
+      .call(a => a.select('.domain').remove())
+      .call(a => a.selectAll('text').attr('fill', '#64748b').attr('font-size', 9).attr('dx', 4));
+
+    // X axis labels
+    g.append('g').attr('transform', `translate(0,${ih})`)
+      .call(d3.axisBottom(x).tickSize(0))
+      .call(a => a.select('.domain').attr('stroke', '#334155'))
+      .call(a => a.selectAll('text')
+        .attr('fill', '#94a3b8').attr('font-size', 10)
+        .attr('transform', 'rotate(-35)').attr('text-anchor', 'end')
+        .attr('dx', -4).attr('dy', 4)
+        .text(function() {
+          const t = d3.select(this).text();
+          return t.length > 16 ? t.slice(0, 14) + '…' : t;
+        }));
+  }, [data, color, height]);
+
+  return (
+    <div ref={wrapRef} style={{ width: '100%' }}>
+      <svg ref={svgRef} style={{ width: '100%', overflow: 'visible' }} />
+    </div>
+  );
+}
+
+// ─── TreemapChart ─────────────────────────────────────────────────────────────
+
+function TreemapChart({ freqs, activeTypes = ENTITY_TYPES, height = 300 }) {
+  const svgRef = useRef(null);
+  const wrapRef = useRef(null);
+
+  const data = useMemo(() => {
+    const children = activeTypes.flatMap(t => {
+      const top = topN(freqs[t] || [], 10);
+      return top.map(({ name, value }) => ({ name, value, type: t }));
+    });
+    return { name: 'root', children };
+  }, [freqs, activeTypes]);
+
+  useEffect(() => {
+    if (!svgRef.current || !wrapRef.current) return;
+    const W = wrapRef.current.clientWidth || 600;
+    const H = height;
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove();
+    svg.attr('width', W).attr('height', H);
+
+    const root = d3.hierarchy(data).sum(d => d.value).sort((a, b) => b.value - a.value);
+    d3.treemap().size([W, H]).padding(3).round(true)(root);
+
+    const leaf = svg.selectAll('g').data(root.leaves()).join('g')
+      .attr('transform', d => `translate(${d.x0},${d.y0})`);
+
+    leaf.append('rect')
+      .attr('width', d => d.x1 - d.x0)
+      .attr('height', d => d.y1 - d.y0)
+      .attr('fill', d => ENTITY_CONFIG[d.data.type]?.color || '#64748b')
+      .attr('opacity', 0.75)
+      .attr('rx', 4);
+
+    leaf.append('clipPath').attr('id', (d, i) => `tm-clip-${i}`)
+      .append('rect')
+        .attr('width', d => d.x1 - d.x0)
+        .attr('height', d => d.y1 - d.y0);
+
+    leaf.append('text')
+      .attr('clip-path', (_, i) => `url(#tm-clip-${i})`)
+      .attr('x', 5).attr('y', 14)
+      .attr('font-size', d => Math.min(12, Math.max(8, (d.x1 - d.x0) / 7)))
+      .attr('fill', '#fff')
+      .attr('font-weight', 600)
+      .text(d => {
+        const w = d.x1 - d.x0;
+        if (w < 32) return '';
+        const label = d.data.name;
+        return label.length > Math.floor(w / 7) ? label.slice(0, Math.floor(w / 7) - 1) + '…' : label;
+      });
+
+    leaf.append('text')
+      .attr('clip-path', (_, i) => `url(#tm-clip-${i})`)
+      .attr('x', 5).attr('y', 26)
+      .attr('font-size', 9)
+      .attr('fill', '#fff')
+      .attr('opacity', 0.7)
+      .text(d => {
+        const w = d.x1 - d.x0;
+        const h = d.y1 - d.y0;
+        return (w > 40 && h > 30) ? d.data.value : '';
+      });
+
+    // Tooltip
+    const tip = d3.select(wrapRef.current).select('.tm-tip');
+    leaf.on('mouseenter', function(event, d) {
+      tip.style('opacity', 1)
+        .style('left', `${event.offsetX + 10}px`)
+        .style('top', `${event.offsetY - 24}px`)
+        .html(`<span style="color:${ENTITY_CONFIG[d.data.type]?.color}">${ENTITY_CONFIG[d.data.type]?.label}</span>: <b>${d.data.name}</b> (${d.data.value})`);
+    }).on('mousemove', function(event) {
+      tip.style('left', `${event.offsetX + 10}px`).style('top', `${event.offsetY - 24}px`);
+    }).on('mouseleave', () => tip.style('opacity', 0));
+  }, [data, activeTypes, height]);
+
+  return (
+    <div ref={wrapRef} style={{ width: '100%', position: 'relative' }}>
+      <svg ref={svgRef} style={{ width: '100%', display: 'block' }} />
+      <div className="tm-tip" style={{
+        position: 'absolute', pointerEvents: 'none', opacity: 0, transition: 'opacity 0.1s',
+        background: '#1e293b', border: '1px solid #334155', borderRadius: 6,
+        padding: '4px 8px', fontSize: 11, color: '#e2e8f0', whiteSpace: 'nowrap',
+      }} />
+    </div>
+  );
+}
+
+// ─── Category pill ────────────────────────────────────────────────────────────
+
+const CATEGORY_STYLES = {
+  standard_maintenance: { color: '#64748b', bg: '#111820', lightColor: '#475569', lightBg: '#f1f5f9', label: 'Standard Maintenance' },
+  symptom_repair:       { color: '#f59e0b', bg: '#16120a', lightColor: '#b45309', lightBg: '#fffbeb', label: 'Symptom → Repair' },
+  dtc_driven:           { color: '#fb7185', bg: '#1c0c10', lightColor: '#e11d48', lightBg: '#fff1f2', label: 'DTC / Check Engine' },
+  complex_multi:        { color: '#818cf8', bg: '#12102a', lightColor: '#4f46e5', lightBg: '#eef2ff', label: 'Complex / Multi-System' },
+  parts_focused:        { color: '#3b82f6', bg: '#0c1a2e', lightColor: '#1d4ed8', lightBg: '#eff6ff', label: 'Parts Replacement' },
+};
+
+function CategoryPill({ category }) {
+  const { theme } = useTheme();
+  const s = CATEGORY_STYLES[category] || { color: '#94a3b8', bg: '#1e293b', lightColor: '#475569', lightBg: '#f1f5f9', label: category };
+  const color = theme === 'light' ? s.lightColor : s.color;
+  const bg    = theme === 'light' ? s.lightBg    : s.bg;
+  return (
+    <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
+      style={{ background: bg, color, border: `1px solid ${color}40` }}>
+      {s.label}
+    </span>
+  );
+}
+
+// Year/Make/Model — present on any sample sourced from a DMS export with real
+// vehicle linkage (cd's CSV, cornerstone/synthetic's jsonl), absent on samples
+// that only ever had aggregated WR/WP text (e.g. cd's TSV-derived records).
+// Renders nothing rather than an empty pill when there's no vehicle data.
+function VehiclePill({ make, model, year }) {
+  const label = [year, make, model].filter(Boolean).join(' ');
+  if (!label) return null;
+  return (
+    <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0 bg-slate-700/60 text-slate-300 border border-slate-600 font-mono">
+      🚗 {label}
+    </span>
+  );
+}
+
+// ─── LiveTab ──────────────────────────────────────────────────────────────────
+
+function LiveTab({ selectedDs, availableDs, toggleDs, clearDs, defaultMode = 'demo' }) {
+  const [mode, setMode] = useState(defaultMode);          // 'demo' | 'raw'
+  const [mechType, setMechType] = useState(defaultMode === 'raw' ? 'all' : 'mechanical'); // 'mechanical' | 'maintenance' | 'all'
+  const [demoSamples, setDemoSamples] = useState([]);
+  const [rawSamples, setRawSamples] = useState([]);
+  const [filterCat, setFilterCat] = useState('all');
+  const [idx, setIdx] = useState(0);
+  const [editWR, setEditWR] = useState('');
+  const [editWP, setEditWP] = useState('');
+  const [entities, setEntities] = useState(null);
+  const [normalized, setNormalized] = useState(null);
+  const [smeCandidates, setSmeCandidates] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showTagged, setShowTagged] = useState(false);
+  const lastExtractedRef = useRef({ wr: '', wp: '' });
+  const editWRRef = useRef('');
+  const editWPRef = useRef('');
+  const blurTimerRef = useRef(null);
+
+  const extract = useCallback(async (s) => {
+    if (!s) return;
+    const wr = s.work_requested ?? '';
+    const wp = s.work_performed ?? '';
+    lastExtractedRef.current = { wr, wp };
+    setLoading(true); setError(''); setEntities(null); setNormalized(null); setSmeCandidates([]);
+    try {
+      const r = await fetch('/api/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ work_requested: wr, work_performed: wp }),
+      });
+      const data = await r.json();
+      if (data.error) setError(data.error);
+      setEntities(data.entities);
+      setNormalized(data.normalized || {});
+      setSmeCandidates(data.dtc_sme_candidates || []);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleFieldFocus = useCallback(() => {
+    clearTimeout(blurTimerRef.current);
+  }, []);
+
+  const handleFieldBlur = useCallback(() => {
+    clearTimeout(blurTimerRef.current);
+    blurTimerRef.current = setTimeout(() => {
+      const wr = editWRRef.current;
+      const wp = editWPRef.current;
+      if (wr !== lastExtractedRef.current.wr || wp !== lastExtractedRef.current.wp) {
+        extract({ work_requested: wr, work_performed: wp });
+      }
+    }, 200);
+  }, [extract]);
+
+  useEffect(() => {
+    if (!selectedDs || selectedDs.size === 0) { setDemoSamples([]); return; }
+    const dsParam = `?datasources=${[...selectedDs].join(',')}`;
+    fetch(`/api/samples/demo${dsParam}`).then(r => r.json()).then(d => {
+      setDemoSamples(d);
+      if (d[0]) {
+        setEditWR(d[0].work_requested ?? ''); editWRRef.current = d[0].work_requested ?? '';
+        setEditWP(d[0].work_performed  ?? ''); editWPRef.current = d[0].work_performed  ?? '';
+      }
+      extract(d[0]);
+    });
+  }, [selectedDs]);
+
+  useEffect(() => {
+    if (!selectedDs || selectedDs.size === 0) { setRawSamples([]); return; }
+    const dsParam = `&datasources=${[...selectedDs].join(',')}`;
+    fetch(`/api/samples?n=1000&category=${mechType}${dsParam}`)
+      .then(r => r.json())
+      .then(d => { setRawSamples(d); setIdx(0); setEntities(null); setError(''); });
+  }, [mechType, selectedDs]);
+
+  const filteredDemo = useMemo(() =>
+    filterCat === 'all' ? demoSamples : demoSamples.filter(s => s.category === filterCat),
+  [demoSamples, filterCat]);
+
+  const samples = mode === 'demo' ? filteredDemo : rawSamples;
+  const sample = samples[idx] || null;
+
+  const pickIdx = (i, sampleList) => {
+    const s = (sampleList ?? samples)[i];
+    setIdx(i);
+    setEntities(null); setNormalized(null); setError('');
+    const wr = s?.work_requested ?? ''; setEditWR(wr); editWRRef.current = wr;
+    const wp = s?.work_performed  ?? ''; setEditWP(wp); editWPRef.current = wp;
+    extract(s);
+  };
+
+  return (
+    <div className="grid grid-cols-5 gap-4 h-full">
+      {/* ── Sample browser ── */}
+      <div className="col-span-2 bg-slate-800 rounded-xl p-4 flex flex-col gap-3 border border-slate-700">
+
+        {/* Mode toggle */}
+        <div className="flex rounded-lg overflow-hidden border border-slate-700 text-xs font-semibold">
+          {[['demo', '🎯 Curated Demo'], ['raw', '📂 Raw RO Data']].map(([m, lbl]) => (
+            <button key={m} onClick={() => {
+              setMode(m); setIdx(0); setEntities(null); setError('');
+              if (m === 'demo') extract(filteredDemo[0]);
+            }}
+              className={`flex-1 py-1.5 transition-colors ${mode === m ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+
+        {/* Category filter (demo mode only) */}
+        {mode === 'demo' && (
+          <div className="flex flex-wrap gap-1">
+            {['all', ...Object.keys(CATEGORY_STYLES)].map(cat => (
+              <button key={cat}
+                className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${filterCat === cat
+                  ? 'border-blue-400 text-blue-300 bg-blue-950'
+                  : 'border-slate-700 text-slate-500 hover:border-slate-500 hover:text-slate-300'}`}
+                onClick={() => {
+                  const next = cat === 'all' ? demoSamples : demoSamples.filter(s => s.category === cat);
+                  setFilterCat(cat); setIdx(0); setEntities(null); setError('');
+                  extract(next[0]);
+                }}>
+                {cat === 'all' ? 'All' : CATEGORY_STYLES[cat].label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Mechanical / Maintenance toggle (raw mode only) */}
+        {mode === 'raw' && (
+          <>
+            <div className="flex rounded-lg overflow-hidden border border-slate-700 text-xs font-semibold">
+              {[['mechanical', 'Mechanical'], ['maintenance', 'Maintenance'], ['all', 'All']].map(([val, lbl]) => (
+                <button key={val}
+                  onClick={() => setMechType(val)}
+                  className={`flex-1 py-1.5 transition-colors ${mechType === val
+                    ? val === 'maintenance' ? 'bg-amber-600 text-white' : 'bg-blue-600 text-white'
+                    : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+            {availableDs && availableDs.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-slate-500">Sources:</span>
+                <DatasourceDropdown availableDs={availableDs} selectedDs={selectedDs} toggleDs={toggleDs} clearDs={clearDs} />
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Datasource gate */}
+        {selectedDs.size === 0 && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-6">
+            <div className="text-slate-500 text-sm text-center">Select a datasource to load samples</div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {(availableDs || []).map(ds => (
+                <button key={ds.id} onClick={() => toggleDs(ds.id)}
+                  className="text-sm px-4 py-2 rounded-lg border border-slate-600 bg-slate-900 text-slate-300 hover:border-blue-500 hover:text-blue-300 font-mono transition-colors">
+                  {ds.id}
+                  <span className="ml-2 text-xs text-slate-500">{ds.count >= 1000 ? `${(ds.count/1000).toFixed(0)}k` : ds.count} samples</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sample list */}
+        {selectedDs.size > 0 && (
+          <>
+            <div className="flex-1 overflow-y-auto space-y-1 pr-1" style={{ maxHeight: 440 }}>
+              {samples.map((s, i) => (
+                <button key={s.id ?? i} onClick={() => pickIdx(i, samples)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${i === idx
+                    ? 'bg-blue-900 border border-blue-600 text-blue-200'
+                    : 'bg-slate-900 border border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-300'}`}>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {s.category && <CategoryPill category={s.category} />}
+                    <VehiclePill make={s.make} model={s.model} year={s.year} />
+                  </div>
+                  <div className="font-medium truncate mt-1">{s.work_requested || '—'}</div>
+                  {s.work_performed && <div className="text-slate-500 truncate mt-0.5 text-xs">{s.work_performed.slice(0, 80)}{s.work_performed.length > 80 ? '…' : ''}</div>}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => pickIdx(Math.max(0, idx - 1), samples)} className="flex-1 py-1.5 text-xs rounded bg-slate-700 hover:bg-slate-600 text-slate-300">← Prev</button>
+              <button onClick={() => pickIdx(Math.min(samples.length - 1, idx + 1), samples)} className="flex-1 py-1.5 text-xs rounded bg-slate-700 hover:bg-slate-600 text-slate-300">Next →</button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── Extraction view ── */}
+      <div className="col-span-3 flex flex-col gap-4">
+        {/* Text display / edit */}
+        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Repair Order</span>
+              {sample?.category && <CategoryPill category={sample.category} />}
+              {sample && <VehiclePill make={sample.make} model={sample.model} year={sample.year} />}
+            </div>
+            {sample && <span className="text-xs text-slate-500">{idx + 1} / {samples.length}</span>}
+          </div>
+          {sample ? (
+            <div className="space-y-2">
+              {/* Editable fields */}
+              <div className="space-y-1.5">
+                {[['Work Requested', editWR, v => { setEditWR(v); editWRRef.current = v; }],
+                  ['Work Performed', editWP, v => { setEditWP(v); editWPRef.current = v; }]].map(([label, val, setter]) => (
+                  <div key={label} className="flex gap-2 items-start">
+                    <span className="text-xs text-slate-500 w-28 shrink-0 pt-1.5 leading-tight">{label}</span>
+                    <textarea
+                      className="flex-1 bg-slate-900 border border-slate-700 rounded-md text-xs text-slate-200 px-2.5 py-1.5 resize-y focus:outline-none focus:border-blue-500 transition-colors leading-relaxed"
+                      rows={6}
+                      value={val}
+                      onChange={e => setter(e.target.value)}
+                      onFocus={handleFieldFocus}
+                      onBlur={handleFieldBlur}
+                    />
+                  </div>
+                ))}
+              </div>
+              {/* Tagged text — collapsed by default */}
+              {entities && (
+                <div className="border-t border-slate-700 pt-2">
+                  <button onClick={() => setShowTagged(v => !v)}
+                    className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 mb-1.5 transition-colors">
+                    <span>{showTagged ? '▾' : '▸'}</span> Tagged text
+                  </button>
+                  {showTagged && (
+                    <div className="overflow-y-auto rounded bg-slate-900/60 px-2 py-1.5" style={{ maxHeight: 90 }}>
+                      <HighlightedText wr={editWR} wp={editWP} entities={entities} />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : <div className="text-slate-500 text-sm py-2">Select a sample on the left.</div>}
+        </div>
+
+        {/* Legend + loading indicator */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {loading && <span className="flex items-center gap-1.5 text-xs text-blue-400"><span className="spinner" /> Extracting…</span>}
+          <div className="flex gap-4 flex-wrap">
+            {ENTITY_TYPES.map(t => (
+              <div key={t} className="flex items-center gap-1.5 text-xs text-slate-400">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: ENTITY_CONFIG[t].color }} />
+                {ENTITY_CONFIG[t].label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Entity panel — extracted entities + parts forecast, one merged section */}
+        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 flex-1 overflow-y-auto">
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Extracted Entities</div>
+          {error && <div className="text-red-400 text-xs mb-2">⚠ {error}</div>}
+          <EntityPanel entities={entities} normalized={normalized} smeCandidates={smeCandidates} loading={loading} workRequested={editWR} workPerformed={editWP} />
+
+          {!loading && entities && (
+            <div className="mt-4 pt-4 border-t border-slate-700">
+              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Parts Forecast</div>
+              <PartsForecastPanel entities={entities} currentSample={sample} pool={samples} rawText={`${editWR} ${editWP}`} />
+            </div>
+          )}
+
+          {!loading && sample && (
+            <div className="mt-4 pt-4 border-t border-slate-700">
+              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Technician Signal</div>
+              <TechnicianSignalPanel currentSample={sample} pool={samples} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Parts Forecasting helpers ────────────────────────────────────────────────
+// These operate purely on what a single /api/extract call returns (plus the
+// raw text of other already-loaded samples) — no separate forecasting model.
+// The point is to show, live, what CDK's "enrichment layer" conversation looks
+// like on real RO text: does this complaint resolve to a specific part today,
+// or is it a sparse/emerging signal with no part history yet?
+
+const FORECAST_STOPWORDS = new Set([
+  'the','a','an','and','or','to','of','for','on','in','at','with','is','are',
+  'this','that','it','was','has','have','had','will','be','as','by','from',
+  'replace','remove','install','perform','check','inspect','vehicle','client',
+  'customer','states','advise','present','side','left','right','front','rear',
+]);
+
+function forecastTokens(text) {
+  return (text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(t => t.length > 2 && !FORECAST_STOPWORDS.has(t));
+}
+
+// Some datasources (notably cd) encode replaced parts as a
+// "... | PARTS: Part One, Part Two" suffix on work_performed.
+function extractPartsSuffix(text) {
+  const m = /\|\s*PARTS:\s*(.+)$/i.exec(text || '');
+  if (!m) return [];
+  return m[1].split(',').map(s => s.trim()).filter(Boolean);
+}
+
+// Pure function of extracted entities — classifies what kind of forecasting
+// signal this RO represents, mirroring the CDK discussion-brief cases.
+function classifyForecastSignal(entities, rawText = '') {
+  const parts    = entities?.repair     || [];
+  const dtcs     = entities?.dtc_code   || [];
+  const jobs     = entities?.repair_job || [];
+  const symptoms = entities?.symptom    || [];
+  // NER summarizes free text into entities and often drops the word "recall"
+  // itself (e.g. "no remedy at this time" becomes just a symptom) — so this
+  // has to check the ORIGINAL RO text, not the extracted entity strings.
+  const looksRecall = /recall|no remedy|tsb|open campaign/i.test(rawText);
+
+  if (parts.length > 0) {
+    return {
+      key: 'direct', label: 'Direct Parts Signal', color: '#34d399',
+      summary: 'The complaint/correction text resolves to specific parts today.',
+      action: `Forecast demand now for: ${parts.slice(0, 4).join(', ')}.`,
+    };
+  }
+  if (dtcs.length > 0 || looksRecall) {
+    return {
+      key: 'emerging', label: 'Emerging / Sparse Signal', color: '#fb7185',
+      summary: dtcs.length
+        ? 'A DTC is present but no part has been logged against it yet.'
+        : 'This reads as a recall/TSB-style event with no parts history yet.',
+      action: 'Flag for monitoring — do not wait for repair volume to accumulate before tracking this.',
+    };
+  }
+  if (jobs.length > 0 || symptoms.length > 0) {
+    return {
+      key: 'semantic', label: 'Semantic Match Candidate', color: '#3b82f6',
+      summary: 'A symptom or repair job was extracted, but no part was named explicitly.',
+      action: 'No direct part — check similar historical repairs below for likely parts.',
+    };
+  }
+  return {
+    key: 'none', label: 'No Structured Signal', color: '#64748b',
+    summary: 'Nothing was extracted from this text to forecast from.',
+    action: 'Not enough signal — try a different sample or edit the text.',
+  };
+}
+
+// Simple token-overlap "semantic" search over whatever pool of samples is
+// already loaded for this datasource — a transparent stand-in for embedding
+// similarity, using only data already present in the dataset.
+function findSimilarPrecedent(current, entities, pool, limit = 3) {
+  const queryTokens = new Set([
+    ...forecastTokens((entities?.repair_job || []).join(' ')),
+    ...forecastTokens((entities?.symptom || []).join(' ')),
+  ]);
+  if (queryTokens.size === 0) return [];
+  const scored = pool
+    .filter(s => s !== current)
+    .map(s => {
+      const tokens = new Set(forecastTokens(`${s.work_requested} ${s.work_performed}`));
+      let overlap = 0;
+      queryTokens.forEach(t => { if (tokens.has(t)) overlap++; });
+      return { sample: s, overlap };
+    })
+    .filter(x => x.overlap > 0)
+    .sort((a, b) => b.overlap - a.overlap)
+    .slice(0, limit);
+  return scored.map(({ sample, overlap }) => ({
+    sample, overlap,
+    parts: extractPartsSuffix(sample.work_performed),
+  }));
+}
+
+function ForecastSignalBadge({ signal }) {
+  return (
+    <span className="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0"
+      style={{ background: `${signal.color}22`, color: signal.color, border: `1px solid ${signal.color}55` }}>
+      {signal.label}
+    </span>
+  );
+}
+
+function PartsForecastPanel({ entities, loading, error, currentSample, pool, rawText = '' }) {
+  if (loading) return (
+    <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
+      <span className="spinner" /> Running Live NER…
+    </div>
+  );
+  if (error) return <div className="text-red-400 text-xs py-2">⚠ {error}</div>;
+  if (!entities) return <div className="text-slate-500 text-sm py-2">Select a sample and run Live NER to see a parts forecast.</div>;
+
+  const signal = classifyForecastSignal(entities, rawText);
+  const parts = entities.repair || [];
+  const similar = findSimilarPrecedent(currentSample, entities, pool || []);
+
+  return (
+    <div className="space-y-4">
+      {/* Signal classification */}
+      <div>
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Demand Signal</span>
+          <ForecastSignalBadge signal={signal} />
+        </div>
+        <div className="text-sm text-slate-300">{signal.summary}</div>
+        <div className="text-xs text-slate-500 mt-1">→ {signal.action}</div>
+      </div>
+
+      {/* Forecasted parts */}
+      <div>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Forecasted Parts Demand</div>
+        {parts.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {parts.map((p, i) => (
+              <span key={i} className="text-xs px-2 py-1 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-800">
+                {p}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-slate-500">No part extracted directly from this text — see similar historical repairs below.</div>
+        )}
+      </div>
+
+      {/* Similar historical precedent — the "semantic clustering" story made concrete */}
+      <div>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+          Similar Repairs in This Dataset
+        </div>
+        {similar.length === 0 ? (
+          <div className="text-xs text-slate-500">
+            No overlapping repair jobs or symptoms found in the currently loaded samples.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {similar.map(({ sample, overlap, parts: simParts }, i) => (
+              <div key={i} className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs text-slate-300 truncate">{sample.work_requested || sample.work_performed}</div>
+                  <span className="text-[10px] text-slate-500 shrink-0">{overlap} shared term{overlap === 1 ? '' : 's'}</span>
+                </div>
+                {simParts.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {simParts.map((p, j) => (
+                      <span key={j} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">{p}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Technician Skill Modeling ─────────────────────────────────────────────────
+// Technician *name* is never populated in the CD export, but an anonymized
+// tech number, department, and op code survive on ~95% of lines. This panel
+// builds a live "skill profile" for that tech number from whatever else is
+// already loaded in the pool — the same technique proven in the CDK
+// Technician Assignment response, running here against real extraction output
+// instead of a static table.
+function TechnicianSignalPanel({ currentSample, pool }) {
+  if (!currentSample) return <div className="text-xs text-slate-500 py-2">Select a sample to see technician signal.</div>;
+
+  const techNo = currentSample.tech_no;
+  const dept = currentSample.department;
+
+  if (!techNo && !dept) {
+    return (
+      <div className="text-xs text-slate-500 py-2">
+        No technician or department field on this record — not every datasource (or every line, even in the CD export) carries one.
+      </div>
+    );
+  }
+
+  const sameTech = techNo ? (pool || []).filter(s => s !== currentSample && s.tech_no === techNo) : [];
+  const opCodes = Array.from(new Set([currentSample.op_code, ...sameTech.map(s => s.op_code)].filter(Boolean)));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {techNo && (
+          <span className="text-xs px-2 py-1 rounded-md bg-indigo-950 text-indigo-300 border border-indigo-800 font-mono">
+            🔧 Tech #{techNo}
+          </span>
+        )}
+        {dept && (
+          <span className="text-xs px-2 py-1 rounded-md bg-slate-700 text-slate-300 border border-slate-600 font-mono">
+            {dept}
+          </span>
+        )}
+      </div>
+
+      {!techNo ? (
+        <div className="text-xs text-slate-500">
+          Department is present ({dept}) but this line has no technician number — department alone still routes work, just not to a specific person.
+        </div>
+      ) : sameTech.length > 0 ? (
+        <div>
+          <div className="text-xs text-slate-400 mb-1.5">
+            This technician's other work in the loaded pool ({sameTech.length} job{sameTech.length === 1 ? '' : 's'}) — a specialization profile built with zero name data:
+          </div>
+          <div className="space-y-1.5">
+            {sameTech.map((s, i) => (
+              <div key={i} className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                {s.op_code && <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800 font-mono shrink-0">{s.op_code}</span>}
+                <span className="text-xs text-slate-300 truncate">{s.work_requested || s.work_performed}</span>
+              </div>
+            ))}
+          </div>
+          {opCodes.length > 1 && (
+            <div className="text-xs text-slate-500 mt-2">
+              Op codes seen for this tech: {opCodes.join(', ')} — department + op-code concentration is exactly the signal that powers Technician Skill Modeling.
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="text-xs text-slate-500">
+          No other jobs by Tech #{techNo} found in the currently loaded pool. Switch to Raw RO Data mode (larger sample) or the cd datasource to see this technician's other work.
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── BatchTab ─────────────────────────────────────────────────────────────────
+
+function BatchTab({ running, setRunning, progress, setProgress, results, setResults, abortRef, selectedDs, availableDs }) {
+  const { theme } = useTheme();
+  const [batchSize, setBatchSize] = useState(4000);
+  const [source, setSource] = useState('all');
+  const [category, setCategory] = useState('balanced');
+
+  const dsPayload = selectedDs && selectedDs.size > 0 ? [...selectedDs] : [];
+
+  const runBatch = async () => {
+    setRunning(true);
+    setResults([]);
+    setProgress({ completed: 0, total: batchSize });
+    abortRef.current = new AbortController();
+
+    try {
+      const resp = await fetch('/api/batch/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ n: batchSize, source, category, datasources: dsPayload }),
+        signal: abortRef.current.signal,
+      });
+
+      const reader = resp.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (raw === '[DONE]') { setRunning(false); break; }
+          try {
+            const evt = JSON.parse(raw);
+            setProgress({ completed: evt.completed, total: evt.total });
+            setResults(prev => [...prev, evt.result]);
+          } catch (_) {}
+        }
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') console.error(e);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const stop = () => { abortRef.current?.abort(); setRunning(false); };
+
+  const pct = progress.total ? Math.round((progress.completed / progress.total) * 100) : 0;
+
+  return (
+    <div className="flex flex-col gap-4 h-full">
+      {/* Controls */}
+      <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 flex items-center gap-6 flex-wrap">
+        <div className="flex items-center gap-3">
+          <label className="text-xs text-slate-400">Batch size</label>
+          <input type="range" min={5} max={4000} step={5} value={batchSize} onChange={e => setBatchSize(+e.target.value)} className="w-32" />
+          <span className="text-sm font-mono text-slate-200 w-14">{batchSize}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-slate-400">Mix</label>
+          <select value={category} onChange={e => setCategory(e.target.value)} className="text-xs bg-slate-700 border border-slate-600 rounded px-2 py-1 text-slate-300">
+            <option value="balanced">⚖ Balanced (50/50)</option>
+            <option value="mechanical">🔧 Mechanical</option>
+            <option value="maintenance">🛢 Maintenance</option>
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-slate-400">Type</label>
+          <select value={source} onChange={e => setSource(e.target.value)} className="text-xs bg-slate-700 border border-slate-600 rounded px-2 py-1 text-slate-300">
+            <option value="all">All</option>
+            <option value="labor">Labor</option>
+            <option value="parts">Parts</option>
+          </select>
+        </div>
+        {availableDs && availableDs.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-slate-400">Datasources</label>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(dsPayload.length > 0 ? dsPayload : availableDs.map(d => d.id)).map(id => {
+                const ds = availableDs.find(d => d.id === id);
+                return (
+                  <span key={id} className="text-xs px-2 py-0.5 rounded-full border bg-blue-700 border-blue-600 text-white font-mono">
+                    {id}{ds ? ` · ${ds.count >= 1000 ? `${(ds.count/1000).toFixed(0)}k` : ds.count}` : ''}
+                  </span>
+                );
+              })}
+            </div>
+            <span className="text-xs text-slate-600">(change in ⚙ Settings)</span>
+          </div>
+        )}
+        {!running
+          ? <button onClick={runBatch} className="px-5 py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-500 transition-colors">▶ Run Batch</button>
+          : <button onClick={stop} className="px-5 py-2 rounded-lg text-sm font-semibold bg-red-700 hover:bg-red-600 transition-colors">■ Stop</button>
+        }
+        {results.length > 0 && !running && (() => {
+          const mech  = results.filter(r => r.category === 'mechanical').length;
+          const maint = results.filter(r => r.category === 'maintenance').length;
+          return (
+            <span className="text-xs text-slate-400">
+              {results.length} records — <span className="text-blue-400">{mech} mech</span> · <span className="text-amber-400">{maint} maint</span>
+            </span>
+          );
+        })()}
+        {running && (
+          <span className="text-xs text-blue-400 flex items-center gap-1.5 ml-auto">
+            <span className="spinner" /> Running in background — switch tabs freely
+          </span>
+        )}
+      </div>
+
+      {/* Progress */}
+      {(running || progress.completed > 0) && (
+        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-slate-400">{progress.completed} / {progress.total} records</span>
+            <span className="text-xs font-mono text-blue-400">{pct}%</span>
+          </div>
+          <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-blue-500 rounded-full transition-all duration-300" style={{ width: `${pct}%` }} />
+          </div>
+        </div>
+      )}
+
+      {/* Live results */}
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1" style={{ maxHeight: 420 }}>
+        {results.slice().reverse().map((r, i) => (
+          <div key={i} className="bg-slate-800 rounded-lg p-3 border border-slate-700 fade-in">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="text-xs text-slate-300 flex-1">
+                {r.work_requested && <div><span className="text-slate-500">WR: </span>{r.work_requested}</div>}
+                {r.work_performed && <div><span className="text-slate-500">WP: </span>{r.work_performed.slice(0, 120)}{r.work_performed.length > 120 ? '…' : ''}</div>}
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <VehiclePill make={r.make} model={r.model} year={r.year} />
+                {r.category && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded ${r.category === 'maintenance' ? 'bg-amber-900 text-amber-400' : 'bg-blue-900 text-blue-400'}`}>
+                    {r.category === 'maintenance' ? 'maint' : 'mech'}
+                  </span>
+                )}
+                <span className={`text-xs px-1.5 py-0.5 rounded ${r.status === 'ok' ? 'bg-slate-700 text-slate-300' : 'bg-red-900 text-red-400'}`}>{r.status}</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {ENTITY_TYPES.map(t =>
+                (r.entities?.[t] || []).map((v, j) => (
+                  <span key={`${t}-${j}`} className="px-2 py-0.5 rounded text-xs" style={{ background: theme === 'light' ? ENTITY_CONFIG[t].lightBg : ENTITY_CONFIG[t].bg, color: theme === 'light' ? ENTITY_CONFIG[t].lightColor : ENTITY_CONFIG[t].color }}>
+                    {v}
+                  </span>
+                ))
+              )}
+              {ENTITY_TYPES.every(t => !(r.entities?.[t]?.length)) && (
+                <span className="text-xs text-slate-600">no entities</span>
+              )}
+            </div>
+          </div>
+        ))}
+        {results.length === 0 && !running && (
+          <div className="text-slate-500 text-sm text-center py-12">Run a batch to see live results here.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── AnalyticsTab ─────────────────────────────────────────────────────────────
+
+function AnalyticsTab({ batchResults }) {
+  const { theme } = useTheme();
+  const [roFilter, setRoFilter] = useState('all');
+
+  const filtered = useMemo(() =>
+    roFilter === 'all' ? batchResults : batchResults.filter(r => r.category === roFilter),
+  [batchResults, roFilter]);
+
+  const freqs = useMemo(() => {
+    try { return buildEntityFreqs(filtered); }
+    catch(e) { console.error('buildEntityFreqs', e); return Object.fromEntries(ENTITY_TYPES.map(t => [t, []])); }
+  }, [filtered]);
+
+  const displayEntityTypes = ENTITY_TYPES;
+
+  const coverage = displayEntityTypes.map(t => ({
+    type: t,
+    count: filtered.filter(r => r.entities?.[t]?.length > 0).length,
+    pct: filtered.length ? Math.round(filtered.filter(r => r.entities?.[t]?.length > 0).length / filtered.length * 100) : 0,
+  }));
+
+  // Year/Make/Model — only present on records sourced from a DMS export with
+  // real vehicle linkage; combined into one label rather than 3 separate charts
+  // since make/model only make sense together (e.g. "Land Rover" alone is noise).
+  const vehicleRecords = useMemo(() => filtered.filter(r => r.make || r.model || r.year), [filtered]);
+  const vehicleFreq = useMemo(() =>
+    topN(vehicleRecords.map(r => [r.year, r.make, r.model].filter(Boolean).join(' ')), 10),
+  [vehicleRecords]);
+
+  if (!batchResults.length) {
+    return <div className="text-slate-500 text-sm text-center py-20">No data yet — run a batch from the Batch tab first.</div>;
+  }
+
+  const filterBtns = [
+    { val: 'all',         label: 'All',         activeClass: 'bg-slate-600 text-white border-slate-500' },
+    { val: 'mechanical',  label: 'Mechanical',  activeClass: 'bg-blue-600 text-white border-blue-500' },
+    { val: 'maintenance', label: 'Maintenance', activeClass: 'bg-amber-600 text-white border-amber-500' },
+  ];
+
+  return (
+    <div className="space-y-4">
+
+      {/* RO type filter */}
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Filter</span>
+        <div className="flex gap-1">
+          {filterBtns.map(({ val, label, activeClass }) => {
+            const count = val === 'all' ? batchResults.length : batchResults.filter(r => r.category === val).length;
+            return (
+              <button key={val} onClick={() => setRoFilter(val)}
+                className={`px-3 py-1 rounded text-xs font-medium border transition-colors ${roFilter === val ? activeClass : 'border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-500'}`}>
+                {label} <span className="opacity-60 ml-1">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+        {roFilter !== 'all' && (
+          <span className="text-xs text-slate-500">{filtered.length} of {batchResults.length} records</span>
+        )}
+      </div>
+
+      {/* Coverage */}
+      <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Entity Coverage — {filtered.length} records</div>
+        <div className="grid grid-cols-4 gap-3">
+          {coverage.map(({ type, count, pct }) => {
+            const c = ENTITY_CONFIG[type];
+            const bg    = theme === 'light' ? c.lightBg    : c.bg;
+            const color = theme === 'light' ? c.lightColor : c.color;
+            return (
+              <div key={type} className="rounded-lg p-3 text-center" style={{ background: bg, border: `1px solid ${color}40` }}>
+                <div className="text-2xl font-bold" style={{ color }}>{pct}%</div>
+                <div className="text-xs mt-1" style={{ color }}>{c.label}</div>
+                <div className="text-xs text-slate-500 mt-0.5">{count} records</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Top-10 charts */}
+      <div className="grid grid-cols-2 gap-4">
+        {displayEntityTypes.map(t => {
+          const c = ENTITY_CONFIG[t];
+          const data = topN(freqs[t], 10);
+          return (
+            <div key={t} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+              <div className="text-xs font-semibold mb-3" style={{ color: c.color }}>Top {c.label}s</div>
+              <HBar data={data} color={c.color} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Vehicles — only shown when this batch actually has vehicle-linked records */}
+      {vehicleRecords.length > 0 && (
+        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            Top Vehicles (Year Make Model) — {vehicleRecords.length} of {filtered.length} records
+          </div>
+          <HBar data={vehicleFreq} color="#94a3b8" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── PartsForecastAnalyticsTab ────────────────────────────────────────────────
+// Batch-wide view of the same forecasting read the Parts Forecasting tab does
+// per-record: classifyForecastSignal() run across every batch result, live —
+// batchResults is the same lifted state Analytics/Shop Profile read, so this
+// updates as results stream in from the Batch tab with no extra wiring.
+
+function PartsForecastAnalyticsTab({ batchResults }) {
+  const [roFilter, setRoFilter] = useState('all');
+
+  const filtered = useMemo(() =>
+    roFilter === 'all' ? batchResults : batchResults.filter(r => r.category === roFilter),
+  [batchResults, roFilter]);
+
+  const classified = useMemo(() => filtered.map(r => ({
+    r,
+    signal: classifyForecastSignal(r.entities, `${r.work_requested || ''} ${r.work_performed || ''}`),
+  })), [filtered]);
+
+  const counts = useMemo(() => {
+    const c = { direct: 0, emerging: 0, semantic: 0, none: 0 };
+    classified.forEach(({ signal }) => { c[signal.key] = (c[signal.key] || 0) + 1; });
+    return c;
+  }, [classified]);
+
+  const total = filtered.length;
+  const pct = n => total ? Math.round((n / total) * 100) : 0;
+
+  const directPartsItems = useMemo(() => {
+    const items = [];
+    classified.forEach(({ r, signal }) => {
+      if (signal.key === 'direct') (r.entities?.repair || []).forEach(p => items.push(p.toLowerCase().trim()));
+    });
+    return items;
+  }, [classified]);
+  const uniquePartsCount = useMemo(() => new Set(directPartsItems).size, [directPartsItems]);
+  const forecastedPartsFreq = useMemo(() => topN(directPartsItems, 10), [directPartsItems]);
+
+  const emergingList = useMemo(() =>
+    classified.filter(({ signal }) => signal.key === 'emerging').map(({ r, signal }) => ({ ...r, _signal: signal })),
+  [classified]);
+
+  const bySource = useMemo(() => {
+    const groups = {};
+    classified.forEach(({ r, signal }) => {
+      const ds = r.datasource || 'unknown';
+      groups[ds] = groups[ds] || { datasource: ds, total: 0, direct: 0, emerging: 0 };
+      groups[ds].total++;
+      if (signal.key === 'direct') groups[ds].direct++;
+      if (signal.key === 'emerging') groups[ds].emerging++;
+    });
+    return Object.values(groups).sort((a, b) => b.total - a.total);
+  }, [classified]);
+
+  if (!batchResults.length) {
+    return <div className="text-slate-500 text-sm text-center py-20">No data yet — run a batch from the Batch tab first.</div>;
+  }
+
+  const filterBtns = [
+    { val: 'all',         label: 'All',         activeClass: 'bg-slate-600 text-white border-slate-500' },
+    { val: 'mechanical',  label: 'Mechanical',  activeClass: 'bg-blue-600 text-white border-blue-500' },
+    { val: 'maintenance', label: 'Maintenance', activeClass: 'bg-amber-600 text-white border-amber-500' },
+  ];
+
+  const signalBuckets = [
+    { key: 'direct',   label: 'Direct Parts Signal',      color: '#34d399', value: counts.direct },
+    { key: 'emerging', label: 'Emerging / Sparse Signal',  color: '#fb7185', value: counts.emerging },
+    { key: 'semantic', label: 'Semantic Match Candidate',  color: '#3b82f6', value: counts.semantic },
+    { key: 'none',     label: 'No Structured Signal',      color: '#64748b', value: counts.none },
+  ];
+  const maxBucket = Math.max(1, ...signalBuckets.map(b => b.value));
+
+  const cardCls = "bg-slate-800 rounded-xl p-4 border border-slate-700";
+
+  return (
+    <div className="space-y-4">
+
+      {/* RO type filter */}
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Filter</span>
+        <div className="flex gap-1">
+          {filterBtns.map(({ val, label, activeClass }) => {
+            const count = val === 'all' ? batchResults.length : batchResults.filter(r => r.category === val).length;
+            return (
+              <button key={val} onClick={() => setRoFilter(val)}
+                className={`px-3 py-1 rounded text-xs font-medium border transition-colors ${roFilter === val ? activeClass : 'border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-500'}`}>
+                {label} <span className="opacity-60 ml-1">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+        {roFilter !== 'all' && (
+          <span className="text-xs text-slate-500">{filtered.length} of {batchResults.length} records</span>
+        )}
+      </div>
+
+      {/* Metric cards */}
+      <div className="grid grid-cols-5 gap-3">
+        <MetricCard label="Analyzed" value={total.toLocaleString()} color="#94a3b8" />
+        <MetricCard label="Direct Parts Signal" value={`${pct(counts.direct)}%`} sub={`${counts.direct} records`} color="#34d399" />
+        <MetricCard label="Emerging / Sparse" value={`${pct(counts.emerging)}%`} sub={`${counts.emerging} records`} color="#fb7185" />
+        <MetricCard label="Semantic Match Only" value={`${pct(counts.semantic)}%`} sub={`${counts.semantic} records`} color="#3b82f6" />
+        <MetricCard label="Unique Forecasted Parts" value={uniquePartsCount.toLocaleString()} color="#fbbf24" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {/* Signal distribution */}
+        <div className={cardCls}>
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Demand Signal Distribution — {total} records</div>
+          <div className="space-y-2.5">
+            {signalBuckets.map(b => (
+              <div key={b.key} className="flex items-center gap-2 text-xs">
+                <div className="w-44 shrink-0 text-slate-400 truncate">{b.label}</div>
+                <div className="flex-1 bg-slate-700 rounded-full h-4 overflow-hidden">
+                  <div className="h-4 rounded-full transition-all duration-500" style={{ width: `${(b.value / maxBucket) * 100}%`, background: b.color }} />
+                </div>
+                <div className="text-slate-400 w-16 text-right">{b.value} ({pct(b.value)}%)</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Top forecasted parts */}
+        <div className={cardCls}>
+          <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: ENTITY_CONFIG.repair.color }}>
+            Top Forecasted Parts — Direct Signal Only
+          </div>
+          <HBar data={forecastedPartsFreq} color={ENTITY_CONFIG.repair.color} emptyMsg="No direct part signals yet in this batch." />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {/* Emerging signals feed */}
+        <div className={cardCls}>
+          <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#fb7185' }}>
+            Emerging / Sparse Signals — {emergingList.length} flagged
+          </div>
+          <div className="space-y-2 overflow-y-auto pr-1" style={{ maxHeight: 320 }}>
+            {emergingList.length === 0 ? (
+              <div className="text-xs text-slate-500 py-6 text-center">No emerging/sparse signals in this batch.</div>
+            ) : emergingList.slice(0, 30).map((r, i) => (
+              <div key={i} className="bg-slate-900 border rounded-lg px-3 py-2" style={{ borderColor: '#fb718550' }}>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-mono text-rose-300">{r.datasource || 'unknown'}</span>
+                    <VehiclePill make={r.make} model={r.model} year={r.year} />
+                  </div>
+                  <span className="text-[10px] text-slate-500 truncate max-w-[40%]">{r._signal.summary}</span>
+                </div>
+                <div className="text-xs text-slate-300 truncate">{r.work_requested || r.work_performed}</div>
+              </div>
+            ))}
+            {emergingList.length > 30 && <div className="text-xs text-slate-600 text-center pt-1">+ {emergingList.length - 30} more</div>}
+          </div>
+        </div>
+
+        {/* Per-datasource breakdown */}
+        <div className={cardCls}>
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Forecastability by Datasource</div>
+          <ShopTable
+            emptyMsg="No datasource breakdown yet."
+            columns={[
+              { key: 'datasource', label: 'Datasource' },
+              { key: 'total', label: 'Records', align: 'right' },
+              { key: 'direct', label: 'Direct %', align: 'right', render: r => `${Math.round((r.direct / r.total) * 100)}%` },
+              { key: 'emerging', label: 'Emerging %', align: 'right', render: r => `${Math.round((r.emerging / r.total) * 100)}%` },
+            ]}
+            rows={bySource}
+          />
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+// ─── TechnicianSkillModelTab ──────────────────────────────────────────────────
+// Same live pattern as Parts Forecast Analytics: reads the shared batchResults
+// state, so it updates as the Batch tab streams results in — no extra wiring.
+// The point is to show technician-specific intelligence built from ACTUAL NER
+// output (repair_job/symptom entities extracted per job), not just the raw
+// tech number/department/op-code fields — those alone are a lookup table;
+// this is what turns them into a skill profile.
+
+function TechnicianSkillModelTab({ batchResults }) {
+  const withTech = useMemo(() => batchResults.filter(r => r.tech_no), [batchResults]);
+
+  const profiles = useMemo(() => {
+    const byTech = {};
+    withTech.forEach(r => {
+      const key = r.tech_no;
+      if (!byTech[key]) byTech[key] = { tech_no: key, depts: new Set(), opCodes: new Set(), jobs: 0, repairJobs: [], symptoms: [] };
+      const p = byTech[key];
+      p.jobs++;
+      if (r.department) p.depts.add(r.department);
+      if (r.op_code) p.opCodes.add(r.op_code);
+      (r.entities?.repair_job || []).forEach(v => p.repairJobs.push(v));
+      (r.entities?.symptom || []).forEach(v => p.symptoms.push(v));
+    });
+    return Object.values(byTech).sort((a, b) => b.jobs - a.jobs);
+  }, [withTech]);
+
+  const singleDept = profiles.filter(p => p.depts.size === 1).length;
+  const totalTechs = profiles.length;
+  const avgJobs = totalTechs ? (withTech.length / totalTechs).toFixed(1) : '0';
+
+  const topByJobs = useMemo(() =>
+    profiles.slice(0, 10).map(p => ({ name: `Tech #${p.tech_no}`, value: p.jobs })),
+  [profiles]);
+
+  if (!batchResults.length) {
+    return <div className="text-slate-500 text-sm text-center py-20">No data yet — run a batch from the Batch tab first (include the <code className="text-slate-400">cd</code> datasource to see technician fields).</div>;
+  }
+  if (!withTech.length) {
+    return (
+      <div className="text-slate-500 text-sm text-center py-20">
+        {batchResults.length} records in this batch, but none carry a technician number.<br/>
+        Technician fields only exist on <code className="text-slate-400">cd</code> datasource records sourced from the raw DMS CSV — re-run a batch including <code className="text-slate-400">cd</code>.
+      </div>
+    );
+  }
+
+  const cardCls = "bg-slate-800 rounded-xl p-4 border border-slate-700";
+
+  return (
+    <div className="space-y-4">
+
+      {/* Metric cards */}
+      <div className="grid grid-cols-4 gap-3">
+        <MetricCard label="Technicians Identified" value={totalTechs} color="#818cf8" />
+        <MetricCard label="Jobs With Tech Data" value={withTech.length} sub={`of ${batchResults.length} total`} color="#38bdf8" />
+        <MetricCard label="Single-Department Techs" value={`${singleDept} / ${totalTechs}`} sub="Work in exactly one dept" color="#34d399" />
+        <MetricCard label="Avg Jobs / Technician" value={avgJobs} color="#fbbf24" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {/* Top technicians by job volume */}
+        <div className={cardCls}>
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Top Technicians by Job Volume</div>
+          <HBar data={topByJobs} color="#818cf8" />
+        </div>
+
+        {/* Department concentration */}
+        <div className={cardCls}>
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Department Concentration</div>
+          <div className="flex items-center justify-center h-full py-6">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-emerald-400">{totalTechs ? Math.round(singleDept / totalTechs * 100) : 0}%</div>
+              <div className="text-xs text-slate-400 mt-2">of technicians work in exactly one department</div>
+              <div className="text-xs text-slate-600 mt-1">A real routing/specialization signal, not an assumption — computed live from this batch.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Per-technician skill profile, built from actual NER output */}
+      <div className={cardCls}>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+          Technician Skill Profiles — From Extracted NER Entities
+        </div>
+        <ShopTable
+          emptyMsg="No technician skill profiles yet."
+          columns={[
+            { key: 'tech_no', label: 'Tech #', render: r => `#${r.tech_no}` },
+            { key: 'depts', label: 'Dept(s)', render: r => [...r.depts].join(', ') || '—' },
+            { key: 'jobs', label: 'Jobs', align: 'right' },
+            {
+              key: 'skill', label: 'Skill Profile (NER repair jobs)',
+              render: r => {
+                const uniq = Array.from(new Set(r.repairJobs.map(v => v.toLowerCase().trim())));
+                return uniq.length ? uniq.slice(0, 4).join(', ') + (uniq.length > 4 ? `, +${uniq.length - 4} more` : '') : '—';
+              },
+            },
+            { key: 'opCodes', label: 'Op Codes', render: r => [...r.opCodes].slice(0, 5).join(', ') || '—' },
+          ]}
+          rows={profiles}
+        />
+      </div>
+
+      <div className="text-xs text-slate-600 text-center">
+        Technician name is never populated in the CD export — every profile above is keyed to the anonymized technician number alone.
+      </div>
+    </div>
+  );
+}
+
+// ─── SankeyChart ─────────────────────────────────────────────────────────────
+
+function SankeyChart({ batchResults, mode = 'job-repair' }) {
+  const svgRef  = useRef(null);
+  const wrapRef = useRef(null);
+  const { theme } = useTheme();
+  // unique prefix per mode so gradient IDs don't collide between two charts on the same page
+  const gradPrefix = mode;
+
+  const topK = mode === 'symptom-job' ? 20 : 8;
+  const sankeyData = useMemo(() => {
+    if (!batchResults.length) return { nodes: [], links: [] };
+    try { return buildSankeyData(batchResults, topK, mode); }
+    catch(e) { console.error('buildSankeyData', mode, e); return { nodes: [], links: [] }; }
+  }, [batchResults, mode]);
+
+  useEffect(() => {
+    if (!svgRef.current || !wrapRef.current) return;
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove();
+
+    const { nodes: rawNodes, links: rawLinks } = sankeyData;
+    if (!rawNodes.length || !rawLinks.length) return;
+
+    const labelColor = theme === 'light' ? '#1e293b' : '#cbd5e1';
+
+    const W   = wrapRef.current.clientWidth || 800;
+    const H   = mode === 'symptom-job' ? 680 : 500;
+    const pad = { top: 28, right: 190, bottom: 16, left: 20 };
+
+    svg.attr('width', W).attr('height', H);
+
+    const sankeyGen = d3.sankey()
+      .nodeWidth(16)
+      .nodePadding(mode === 'symptom-job' ? 6 : 10)
+      .extent([[pad.left, pad.top], [W - pad.right, H - pad.bottom]]);
+
+    const { nodes, links } = sankeyGen({
+      nodes: rawNodes.map(d => ({ ...d })),
+      links: rawLinks.map(d => ({ ...d })),
+    });
+
+    const g = svg.append('g');
+
+    const defs = svg.append('defs');
+
+    const GRAD_COLORS = {
+      'symptom-repair_job': ['#f59e0b', '#3b82f6'],
+      'repair_job-repair':  ['#3b82f6', '#64748b'],
+    };
+
+    // Links — per-link gradients using userSpaceOnUse so they always render correctly
+    const linkPaths = g.append('g')
+      .selectAll('path')
+      .data(links)
+      .join('path')
+      .attr('d', d3.sankeyLinkHorizontal())
+      .attr('fill', 'none')
+      .attr('stroke-width', d => Math.max(1, d.width))
+      .attr('opacity', 0.25)
+      .on('mouseover', function() { d3.select(this).attr('opacity', 0.6); })
+      .on('mouseout',  function() { d3.select(this).attr('opacity', 0.25); });
+
+    // Build per-link gradient after path geometry is known
+    linkPaths.each(function(d, i) {
+      const key = `${d.source.type}-${d.target.type}`;
+      const colors = GRAD_COLORS[key] || ['#60a5fa', '#64748b'];
+      const gradId = `${gradPrefix}-link-${i}`;
+      const grad = defs.append('linearGradient')
+        .attr('id', gradId)
+        .attr('gradientUnits', 'userSpaceOnUse')
+        .attr('x1', d.source.x1).attr('y1', 0)
+        .attr('x2', d.target.x0).attr('y2', 0);
+      grad.append('stop').attr('offset', '0%').attr('stop-color', colors[0]);
+      grad.append('stop').attr('offset', '100%').attr('stop-color', colors[1]);
+      d3.select(this).attr('stroke', `url(#${gradId})`);
+    });
+
+    // Nodes
+    const nodeG = g.append('g').selectAll('g').data(nodes).join('g');
+
+    nodeG.append('rect')
+      .attr('x',      d => d.x0)
+      .attr('y',      d => d.y0)
+      .attr('width',  d => d.x1 - d.x0)
+      .attr('height', d => Math.max(2, d.y1 - d.y0))
+      .attr('fill',   d => ENTITY_CONFIG[d.type]?.color || '#3b82f6')
+      .attr('rx', 2)
+      .attr('opacity', 0.9);
+
+    // Labels
+    const rightEdge = W - pad.right;
+    nodeG.append('text')
+      .attr('x',           d => d.x1 >= rightEdge - 20 ? d.x0 - 8 : d.x1 + 8)
+      .attr('y',           d => (d.y0 + d.y1) / 2)
+      .attr('dy',          '0.35em')
+      .attr('text-anchor', d => d.x1 >= rightEdge - 20 ? 'end' : 'start')
+      .attr('font-size',   11)
+      .attr('fill',        labelColor)
+      .text(d => d.label.length > 26 ? d.label.slice(0, 24) + '…' : d.label);
+
+    // Column headers
+    const colX = {};
+    nodes.forEach(n => { if (colX[n.type] === undefined || n.x0 < colX[n.type]) colX[n.type] = n.x0; });
+    const colDefs = { symptom: 'SYMPTOM', repair_job: 'REPAIR JOB', repair: 'COMPONENT (REPAIR)', dtc_code: 'DTC CODE' };
+    Object.entries(colDefs).forEach(([type, lbl]) => {
+      if (colX[type] === undefined) return;
+      svg.append('text')
+        .attr('x', colX[type] + 8).attr('y', 16)
+        .attr('font-size', 10).attr('font-weight', '600')
+        .attr('fill', ENTITY_CONFIG[type].color)
+        .attr('letter-spacing', '0.06em')
+        .text(lbl);
+    });
+  }, [sankeyData, mode, theme]);
+
+  if (!sankeyData.links.length) {
+    const hint = mode === 'symptom-job'
+      ? 'No records with both a symptom and a repair job — try a larger or Mechanical-only batch.'
+      : 'No repair job → part co-occurrence found — try a larger batch.';
+    return <div className="text-slate-500 text-xs py-10 text-center">{hint}</div>;
+  }
+
+  return (
+    <div ref={wrapRef} style={{ width: '100%' }}>
+      <svg ref={svgRef} style={{ width: '100%', overflow: 'visible' }} />
+    </div>
+  );
+}
+
+// ─── RelationshipsTab ─────────────────────────────────────────────────────────
+
+function RelationshipsTab({ batchResults }) {
+  const { theme } = useTheme();
+  const [roFilter, setRoFilter] = useState('all');
+  const [activeType, setActiveType] = useState('symptom');
+  const [chartMode, setChartMode] = useState('pareto');   // 'pareto' | 'treemap'
+  const [activeTreeTypes, setActiveTreeTypes] = useState(new Set(ENTITY_TYPES));
+  const [summaries, setSummaries] = useState({ mechanical: '', maintenance: '' });
+  const [summaryLoading, setSummaryLoading] = useState({ mechanical: false, maintenance: false });
+  const [summaryError, setSummaryError] = useState({ mechanical: '', maintenance: '' });
+
+  const filtered = useMemo(() =>
+    roFilter === 'all' ? batchResults : batchResults.filter(r => r.category === roFilter),
+  [batchResults, roFilter]);
+
+  const freqs = useMemo(() => {
+    try { return buildEntityFreqs(filtered); }
+    catch(e) { console.error('buildEntityFreqs', e); return Object.fromEntries(ENTITY_TYPES.map(t => [t, []])); }
+  }, [filtered]);
+
+  if (!batchResults.length) {
+    return <div className="text-slate-500 text-sm text-center py-20">No data yet — run a batch from the Batch tab first.</div>;
+  }
+
+  const paretoData = topN(freqs[activeType], 15);
+
+  const filterBtns = [
+    { val: 'all',         label: 'All',         activeClass: 'bg-slate-600 text-white border-slate-500' },
+    { val: 'mechanical',  label: 'Mechanical',  activeClass: 'bg-blue-600 text-white border-blue-500' },
+    { val: 'maintenance', label: 'Maintenance', activeClass: 'bg-amber-600 text-white border-amber-500' },
+  ];
+
+  async function generateSummary(cat) {
+    setSummaryLoading(prev => ({ ...prev, [cat]: true }));
+    setSummaryError(prev => ({ ...prev, [cat]: '' }));
+    setSummaries(prev => ({ ...prev, [cat]: '' }));
+    const catResults = batchResults.filter(r => r.category === cat);
+    const f = buildEntityFreqs(catResults);
+    const body = {
+      category: cat,
+      record_count: catResults.length,
+      top_symptoms:    topN(f.symptom    || [], 12).map(x => x.name),
+      top_repair_jobs: topN(f.repair_job || [], 12).map(x => x.name),
+      top_repairs:     topN(f.repair     || [], 12).map(x => x.name),
+      top_dtcs:        topN(f.dtc_code   || [], 8).map(x => x.name),
+    };
+    try {
+      const res = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.error) setSummaryError(prev => ({ ...prev, [cat]: data.error }));
+      else setSummaries(prev => ({ ...prev, [cat]: data.summary }));
+    } catch(e) {
+      setSummaryError(prev => ({ ...prev, [cat]: String(e) }));
+    } finally {
+      setSummaryLoading(prev => ({ ...prev, [cat]: false }));
+    }
+  }
+
+  function SummaryPanel({ cat, label, accentColor, accentBg }) {
+    const loading = summaryLoading[cat];
+    const error   = summaryError[cat];
+    const text    = summaries[cat];
+    const catCount = batchResults.filter(r => r.category === cat).length;
+    const bullets = text ? text.split('\n').filter(l => l.trim()) : [];
+    return (
+      <div className="flex-1 min-w-0 bg-slate-900 rounded-xl p-4 border border-slate-700 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: accentColor }}>{label}</span>
+            <span className="text-xs text-slate-500 ml-2">{catCount} records</span>
+          </div>
+          <button onClick={() => generateSummary(cat)} disabled={loading || catCount === 0}
+            className="px-3 py-1 rounded text-xs font-semibold border transition-colors disabled:opacity-40"
+            style={{ background: accentBg, border: `1px solid ${accentColor}`, color: accentColor }}>
+            {loading ? 'Generating…' : text ? 'Regenerate' : 'Generate'}
+          </button>
+        </div>
+        {loading && (
+          <div className="flex items-center gap-2 text-slate-500 text-xs">
+            <svg className="animate-spin h-3.5 w-3.5" style={{ color: accentColor }} viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+            </svg>
+            Analyzing {label.toLowerCase()} ROs…
+          </div>
+        )}
+        {error && !loading && <div className="text-rose-400 text-xs">{error}</div>}
+        {bullets.length > 0 && !loading && (
+          <ul className="space-y-2">
+            {bullets.map((b, i) => (
+              <li key={i} className="flex gap-2 text-xs text-slate-300 leading-snug">
+                <span style={{ color: accentColor, flexShrink: 0 }}>•</span>
+                <span>{b.replace(/^[•\-]\s*/, '')}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {!text && !loading && !error && (
+          <div className="text-slate-600 text-xs italic">Click Generate to analyze {label.toLowerCase()} ROs.</div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+
+      {/* RO type filter */}
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Filter</span>
+        <div className="flex gap-1">
+          {filterBtns.map(({ val, label, activeClass }) => {
+            const count = val === 'all' ? batchResults.length : batchResults.filter(r => r.category === val).length;
+            return (
+              <button key={val} onClick={() => setRoFilter(val)}
+                className={`px-3 py-1 rounded text-xs font-medium border transition-colors ${roFilter === val ? activeClass : 'border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-500'}`}>
+                {label} <span className="opacity-60 ml-1">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+        {roFilter !== 'all' && (
+          <span className="text-xs text-slate-500">{filtered.length} of {batchResults.length} records</span>
+        )}
+      </div>
+
+      {/* Repair Job to Repairs Sankey */}
+      <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+        <div className="mb-3">
+          <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Repair Job to Repairs</span>
+          <span className="text-xs text-slate-500 ml-2">Repair Job → Component (Repair) · hover links to highlight</span>
+        </div>
+        {filtered.length
+          ? <SankeyChart batchResults={filtered} mode="job-repair" />
+          : <div className="text-slate-500 text-xs py-12 text-center">No {roFilter} records in this batch.</div>
+        }
+      </div>
+
+      {/* Pareto / Treemap toggle */}
+      <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1 rounded-lg overflow-hidden border border-slate-700">
+              <button onClick={() => setChartMode('pareto')}
+                className={`px-3 py-1 text-xs font-semibold transition-colors ${chartMode === 'pareto' ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+                Pareto
+              </button>
+              <button onClick={() => setChartMode('treemap')}
+                className={`px-3 py-1 text-xs font-semibold transition-colors ${chartMode === 'treemap' ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+                Treemap
+              </button>
+            </div>
+            <span className="text-xs text-slate-500">
+              {chartMode === 'pareto'
+                ? 'bars = frequency · line = cumulative % · dashed = 80% threshold'
+                : 'cell size = frequency · all entity types · hover for detail'}
+            </span>
+          </div>
+          {chartMode === 'pareto' && (
+            <div className="flex gap-1">
+              {ENTITY_TYPES.map(t => {
+                const c = ENTITY_CONFIG[t];
+                const bg    = theme === 'light' ? c.lightBg    : c.bg;
+                const color = theme === 'light' ? c.lightColor : c.color;
+                const inactiveBorder = theme === 'light' ? '#cbd5e1' : '#334155';
+                return (
+                  <button key={t} onClick={() => setActiveType(t)}
+                    className={`px-3 py-1 rounded text-xs font-medium transition-colors ${activeType === t ? '' : 'text-slate-400 hover:text-slate-200'}`}
+                    style={activeType === t ? { background: bg, border: `1px solid ${color}`, color } : { border: `1px solid ${inactiveBorder}` }}>
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {chartMode === 'treemap' && (
+            <div className="flex gap-1 flex-wrap">
+              {ENTITY_TYPES.map(t => {
+                const c = ENTITY_CONFIG[t];
+                const bg    = theme === 'light' ? c.lightBg    : c.bg;
+                const color = theme === 'light' ? c.lightColor : c.color;
+                const on = activeTreeTypes.has(t);
+                const inactiveBorder = theme === 'light' ? '#cbd5e1' : '#334155';
+                const inactiveColor  = theme === 'light' ? '#64748b' : '#475569';
+                return (
+                  <button key={t} onClick={() => {
+                    setActiveTreeTypes(prev => {
+                      const next = new Set(prev);
+                      if (on && next.size > 1) next.delete(t); else next.add(t);
+                      return next;
+                    });
+                  }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border transition-colors"
+                    style={on
+                      ? { background: bg, border: `1px solid ${color}`, color }
+                      : { background: 'transparent', border: `1px solid ${inactiveBorder}`, color: inactiveColor }}>
+                    <span className="inline-block w-2 h-2 rounded-sm" style={{ background: on ? color : inactiveBorder }} />
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {chartMode === 'pareto'
+          ? (paretoData.length
+              ? <ParetoChart data={paretoData} color={ENTITY_CONFIG[activeType].color} height={260} />
+              : <div className="text-slate-500 text-xs py-8 text-center">No {ENTITY_CONFIG[activeType].label} data yet.</div>)
+          : <TreemapChart freqs={freqs} activeTypes={[...activeTreeTypes]} height={300} />
+        }
+      </div>
+
+      {/* Symptom to Repair Job Sankey */}
+      <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+        <div className="mb-3">
+          <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Symptom to Repair Job</span>
+          <span className="text-xs text-slate-500 ml-2">mechanical ROs only · customer-reported symptoms → repair jobs · hover links to highlight</span>
+        </div>
+        {filtered.length
+          ? <SankeyChart batchResults={filtered} mode="symptom-job" />
+          : <div className="text-slate-500 text-xs py-12 text-center">No {roFilter} records in this batch.</div>
+        }
+      </div>
+
+      {/* DTC to Component Sankey */}
+      <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+        <div className="mb-3">
+          <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">DTC to Component</span>
+          <span className="text-xs text-slate-500 ml-2">ROs with one or more DTC codes · DTC → Component (Repair) · hover links to highlight</span>
+        </div>
+        {filtered.length
+          ? <SankeyChart batchResults={filtered} mode="dtc-multi-repair" />
+          : <div className="text-slate-500 text-xs py-12 text-center">No {roFilter} records in this batch.</div>
+        }
+      </div>
+
+      {/* AI Summary — Mechanical + Maintenance side by side */}
+      <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">AI Summary</span>
+            <span className="text-xs text-slate-500 ml-2">key takeaways per RO category · for SME review</span>
+          </div>
+          <button onClick={() => { generateSummary('mechanical'); generateSummary('maintenance'); }}
+            disabled={summaryLoading.mechanical || summaryLoading.maintenance}
+            className="px-3 py-1 rounded text-xs font-semibold border border-slate-600 text-slate-300 hover:border-slate-400 transition-colors disabled:opacity-40">
+            Generate Both
+          </button>
+        </div>
+        <div className="flex gap-3 flex-col sm:flex-row">
+          <SummaryPanel cat="mechanical"  label="Mechanical"  accentColor="#3b82f6" accentBg="#0c1a2e" />
+          <SummaryPanel cat="maintenance" label="Maintenance" accentColor="#f59e0b" accentBg="#16120a" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PipelineTab ─────────────────────────────────────────────────────────────
+
+// Ground truth from stats.txt (6-month RO window, 2025)
+const PIPELINE_STATS = {
+  totalLines:        476_637_015,
+  uniqueROs:          94_225_171,
+  rosWithParts:       74_869_665,
+  partLines:         227_447_725,
+  laborLines:        183_293_692,
+  uniqueLaborCombos:  22_670_619,
+  uniquePartCombos:    8_744_395,
+  totalUniqueCalls:   31_415_014,
+};
+
+const MODEL_DEFS = {
+  'qwen3-32b': {
+    name: 'Qwen3-32B FP8', tag: 'Current', type: 'h100', color: '#3b82f6',
+    sizeGB: 32, baseRPS: 9.6,
+    desc: 'Self-hosted on H100 · vLLM · 48.1 rec/s @ concurrency=40 (measured)',
+  },
+  'gemma4-27b': {
+    name: 'Gemma4-27B', tag: 'Alt H100', type: 'h100', color: '#3b82f6',
+    sizeGB: 27, baseRPS: 9.5,
+    desc: 'Self-hosted on H100 · smaller model · ~56 rec/s projected @ concurrency=40',
+  },
+  'gpt4o-mini': {
+    name: 'GPT-4o-mini', tag: 'Foundry', type: 'foundry', color: '#f59e0b',
+    baseRPS: 50, inputCostPer1M: 0.15, outputCostPer1M: 0.60,
+    desc: 'Azure OpenAI / OpenAI API · pay-per-token',
+  },
+  'claude-haiku': {
+    name: 'Claude Haiku 4.5', tag: 'Foundry', type: 'foundry', color: '#f59e0b',
+    baseRPS: 50, inputCostPer1M: 0.80, outputCostPer1M: 4.00,
+    desc: 'Anthropic API · pay-per-token',
+  },
+};
+
+function fmtBig(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n.toFixed(0);
+}
+function fmtTime(sec) {
+  if (sec < 60)    return sec.toFixed(1) + 's';
+  if (sec < 3600)  return (sec / 60).toFixed(1) + ' min';
+  if (sec < 86400) return (sec / 3600).toFixed(1) + ' hrs';
+  return (sec / 86400).toFixed(1) + ' days';
+}
+function fmtCost(usd) {
+  if (usd >= 1e6) return '$' + (usd / 1e6).toFixed(2) + 'M';
+  if (usd >= 1e3) return '$' + (usd / 1e3).toFixed(1) + 'K';
+  return '$' + usd.toFixed(2);
+}
+
+function PipelineDiagram({ uniqueCalls, totalLines }) {
+  const { theme } = useTheme();
+  const cardBg        = theme === 'light' ? '#f1f5f9' : '#0f172a';
+  const smartCacheBg  = theme === 'light' ? '#eff6ff' : '#0c1a2e';
+  const incrementalBg = theme === 'light' ? '#fffbeb' : '#16120a';
+  const cacheHitPct = ((1 - uniqueCalls / totalLines) * 100).toFixed(1);
+  const stages = [
+    { label: 'SOURCE',  sub: 'On-Prem NFS',      stat: '30 TB · 476M lines',          color: '#64748b', icon: '💾' },
+    { label: 'INGEST',  sub: 'Azure Blob',        stat: '94.2M unique ROs',             color: '#64748b', icon: '☁️' },
+    { label: 'PROCESS', sub: 'H100 · NER Engine', stat: fmtBig(uniqueCalls) + ' unique NER calls', color: '#3b82f6', icon: '⚡' },
+    { label: 'STORE',   sub: 'MongoDB',           stat: '~12 TB · 31.4M docs',          color: '#64748b', icon: '🗄️' },
+    { label: 'DELIVER', sub: 'REST API',          stat: 'Suretrack · backwards compat', color: '#f59e0b', icon: '📡' },
+  ];
+  return (
+    <div className="bg-slate-800 rounded-xl p-5 border border-slate-700">
+      <div className="flex items-center justify-between mb-1">
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pipeline Architecture</div>
+        <div className="text-xs text-slate-500">Predii Olympus — end-to-end orchestration & monitoring</div>
+      </div>
+      <div className="mb-3 px-3 py-1.5 rounded-lg border border-slate-600 bg-slate-900/60 text-center text-xs text-slate-400">
+        🔭 PREDII OLYMPUS · Real-time run tracking · Per-stage throughput · Error rate alerting · Completion estimates
+      </div>
+      <div className="flex items-stretch gap-1.5">
+        {stages.map((s, i) => (
+          <React.Fragment key={s.label}>
+            <div className="flex-1 rounded-lg p-3 flex flex-col items-center justify-center gap-1"
+              style={{ background: cardBg, border: `1px solid ${s.color}50` }}>
+              <div className="text-xl">{s.icon}</div>
+              <div className="text-xs font-bold tracking-wider" style={{ color: s.color }}>{s.label}</div>
+              <div className="text-xs text-slate-400">{s.sub}</div>
+              <div className="text-xs text-slate-500 text-center leading-tight">{s.stat}</div>
+            </div>
+            {i < stages.length - 1 && (
+              <div className="flex items-center text-slate-600 text-xl shrink-0">→</div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="mt-3 flex gap-3 text-xs">
+        <div className="flex-1 rounded-lg px-3 py-2 text-center"
+          style={{ background: smartCacheBg, border: '1px solid #3b82f640' }}>
+          <span className="text-blue-400 font-semibold">Smart Cache</span>
+          <span className="text-slate-400 ml-2">
+            {fmtBig(totalLines)} total lines → {fmtBig(uniqueCalls)} unique calls
+            <span className="text-blue-300 ml-1">({cacheHitPct}% cache hit rate)</span>
+          </span>
+        </div>
+        <div className="flex-1 rounded-lg px-3 py-2 text-center"
+          style={{ background: incrementalBg, border: '1px solid #f59e0b40' }}>
+          <span className="text-amber-400 font-semibold">Incremental Runs</span>
+          <span className="text-slate-400 ml-2">75M full baseline + 5 × 5M incremental runs · no full re-execution</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SliderRow({ label, value, min, max, step, onChange, fmt, hint }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-36 shrink-0">
+        <div className="text-xs text-slate-300 font-medium leading-tight">{label}</div>
+        {hint && <div className="text-xs text-slate-500 leading-tight">{hint}</div>}
+      </div>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={e => onChange(parseFloat(e.target.value))} className="flex-1 accent-blue-500" />
+      <div className="text-xs font-mono text-slate-200 w-20 text-right shrink-0">{fmt(value)}</div>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, sub, color }) {
+  const { theme } = useTheme();
+  const cardBg = theme === 'light' ? '#f1f5f9' : '#0f172a';
+  return (
+    <div className="rounded-lg p-3 text-center" style={{ background: cardBg, border: `1px solid ${color}50` }}>
+      <div className="text-xl font-bold font-mono" style={{ color }}>{value}</div>
+      <div className="text-xs text-slate-400 mt-0.5">{label}</div>
+      {sub && <div className="text-xs text-slate-500 mt-0.5 leading-tight">{sub}</div>}
+    </div>
+  );
+}
+
+function ETABar({ label, seconds, maxSeconds, color }) {
+  const pct = maxSeconds > 0 ? Math.min(100, (seconds / maxSeconds) * 100) : 0;
+  return (
+    <div className="flex items-center gap-3 text-xs">
+      <div className="w-32 shrink-0 text-slate-400 truncate">{label}</div>
+      <div className="flex-1 h-5 bg-slate-900 rounded overflow-hidden">
+        <div className="h-5 rounded flex items-center transition-all duration-500"
+          style={{ width: `${Math.max(pct, 1)}%`, background: color, opacity: 0.8 }} />
+      </div>
+      <div className="w-24 text-right font-mono text-slate-200 shrink-0">{fmtTime(seconds)}</div>
+    </div>
+  );
+}
+
+function PipelineTab() {
+  const { theme } = useTheme();
+  const cardBg = theme === 'light' ? '#f1f5f9' : '#0f172a';
+  const S = PIPELINE_STATS;
+  const defaultLinesPerRO = parseFloat(((S.partLines + S.laborLines) / S.uniqueROs).toFixed(2));
+  const defaultUniquePct  = parseFloat((S.totalUniqueCalls / (S.partLines + S.laborLines) * 100).toFixed(2));
+
+  const [targetROs,      setTargetROs]      = useState(100_000_000);
+  const [linesPerRO,     setLinesPerRO]     = useState(defaultLinesPerRO);
+  const [uniquePct,      setUniquePct]      = useState(defaultUniquePct);
+  const [selectedModel,  setSelectedModel]  = useState('qwen3-32b');
+  const [h100Cost,       setH100Cost]       = useState(4.29);
+  const [numH100s,       setNumH100s]       = useState(1);
+  const [concurrency,    setConcurrency]    = useState(40);
+  const [rpsManual,      setRpsManual]      = useState(null);
+  const [inputTokens,    setInputTokens]    = useState(200);
+  const [outputTokens,   setOutputTokens]   = useState(50);
+
+  const model         = MODEL_DEFS[selectedModel];
+  const totalLines    = targetROs * linesPerRO;
+  const uniqueCalls   = totalLines * (uniquePct / 100);
+  const cacheHitPct   = 100 - uniquePct;
+  const BASE_GB       = 32; // Qwen3-32B = reference model
+
+  const perGpuRPS = model.type === 'h100'
+    ? Math.max(1, Math.round(model.baseRPS * (BASE_GB / model.sizeGB) * concurrency / 8))
+    : model.baseRPS;
+  const perGpuRPSeff  = rpsManual !== null ? rpsManual : perGpuRPS;
+  const totalRPS      = model.type === 'h100' ? perGpuRPSeff * numH100s : perGpuRPSeff;
+
+  const secsFor = (ros) => (ros * linesPerRO * (uniquePct / 100)) / totalRPS;
+  const totalSecs100M = secsFor(targetROs);
+  const totalSecs1B   = secsFor(1_500_000_000);
+  const scale1B       = 1_500_000_000 / Math.max(targetROs, 1);
+
+  // Total cost is invariant to numH100s: N GPUs run N× faster but cost N× more per hour
+  const costFor = (ros) => {
+    const calls = ros * linesPerRO * (uniquePct / 100);
+    if (model.type === 'h100') return (calls / perGpuRPSeff / 3600) * h100Cost;
+    const perCall = (inputTokens * model.inputCostPer1M + outputTokens * model.outputCostPer1M) / 1_000_000;
+    return calls * perCall;
+  };
+  const cost100M      = costFor(targetROs);
+  const cost1B        = costFor(1_500_000_000);
+  const hourlySpend   = model.type === 'h100' ? h100Cost * numH100s : null;
+
+  // How many H100s needed to finish within a target window (10-day POC default)
+  const pocTargetDays = 8;
+  const gpusFor10Days = model.type === 'h100'
+    ? Math.ceil(uniqueCalls / (perGpuRPSeff * pocTargetDays * 86400))
+    : null;
+
+  // All-model ETA comparison — scales with numH100s for H100 models
+  const allCalcs = Object.entries(MODEL_DEFS).map(([id, m]) => {
+    const perGpu = m.type === 'h100' ? Math.max(1, Math.round(m.baseRPS * (BASE_GB / m.sizeGB) * concurrency / 8)) : m.baseRPS;
+    const rps = m.type === 'h100' ? perGpu * numH100s : perGpu;
+    return { id, ...m, rps, secs: uniqueCalls / rps, secs1B: uniqueCalls * scale1B / rps };
+  });
+  const maxSecs = Math.max(...allCalcs.map(m => m.secs));
+
+  return (
+    <div className="space-y-4">
+      <PipelineDiagram uniqueCalls={uniqueCalls} totalLines={totalLines} />
+
+      <div className="grid grid-cols-5 gap-4">
+
+        {/* ── Config ── */}
+        <div className="col-span-2 bg-slate-800 rounded-xl p-4 border border-slate-700 space-y-4">
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Configuration</div>
+
+          {/* Scale presets */}
+          <div>
+            <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-2">Scale</div>
+            <div className="flex gap-1.5 mb-3">
+              {[[100_000_000,'100M'],[476_637_015,'476M (actual)'],[1_500_000_000,'1.5B']].map(([n, lbl]) => (
+                <button key={n} onClick={() => setTargetROs(n)}
+                  className={`flex-1 py-1.5 rounded text-xs font-medium border transition-colors ${
+                    targetROs === n ? 'border-blue-500 bg-blue-950 text-blue-300' : 'border-slate-600 text-slate-400 hover:border-slate-500'
+                  }`}>{lbl}</button>
+              ))}
+            </div>
+            <div className="space-y-2.5">
+              <SliderRow label="Target ROs" hint="repair orders" value={targetROs} min={10_000_000} max={1_500_000_000} step={10_000_000} onChange={setTargetROs} fmt={v => fmtBig(v)} />
+              <SliderRow label="Lines / RO" hint="labor + parts avg" value={linesPerRO} min={1} max={8} step={0.1} onChange={setLinesPerRO} fmt={v => v.toFixed(1)} />
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-slate-400">Unique call % <span className="text-slate-600">(after cache)</span></span>
+                  <div className="flex gap-1">
+                    <button onClick={() => setUniquePct(defaultUniquePct)}
+                      className={`text-xs px-1.5 py-0.5 rounded border transition-colors ${Math.abs(uniquePct - defaultUniquePct) < 0.1 ? 'border-blue-500 bg-blue-950 text-blue-300' : 'border-slate-600 text-slate-500 hover:border-slate-500'}`}>
+                      Smart cache
+                    </button>
+                    <button onClick={() => setUniquePct(100)}
+                      className={`text-xs px-1.5 py-0.5 rounded border transition-colors ${uniquePct === 100 ? 'border-amber-500 bg-amber-950 text-amber-300' : 'border-slate-600 text-slate-500 hover:border-slate-500'}`}>
+                      0% cache
+                    </button>
+                  </div>
+                </div>
+                <SliderRow label="" hint={`${cacheHitPct.toFixed(1)}% cache hit`} value={uniquePct} min={1} max={100} step={0.1} onChange={setUniquePct} fmt={v => v.toFixed(1) + '%'} />
+              </div>
+            </div>
+          </div>
+
+          {/* Model selector */}
+          <div>
+            <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-2">Model</div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {Object.entries(MODEL_DEFS).map(([id, m]) => (
+                <button key={id} onClick={() => setSelectedModel(id)}
+                  className="p-2 rounded-lg text-left border transition-all"
+                  style={selectedModel === id
+                    ? { borderColor: m.color, background: m.color + '15' }
+                    : { borderColor: '#334155' }}>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-xs font-semibold" style={{ color: selectedModel === id ? m.color : '#94a3b8' }}>{m.name}</span>
+                    <span className="text-xs px-1.5 rounded" style={{ background: m.color + '25', color: m.color }}>{m.tag}</span>
+                  </div>
+                  <div className="text-xs text-slate-500 leading-tight">{m.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* H100 params */}
+          {model.type === 'h100' && (
+            <div className="space-y-2.5">
+              <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide">H100 Config</div>
+              <SliderRow label="# H100 GPUs" hint="parallel VMs" value={numH100s} min={1} max={32} step={1} onChange={setNumH100s} fmt={v => v + ' GPU' + (v > 1 ? 's' : '')} />
+              <SliderRow label="VM cost" hint="per GPU · LambdaLabs" value={h100Cost} min={1} max={20} step={0.01} onChange={setH100Cost} fmt={v => '$' + v.toFixed(2) + '/hr'} />
+              <SliderRow label="Concurrency" hint="vLLM batch size" value={concurrency} min={1} max={64} step={1} onChange={setConcurrency} fmt={v => v + ' req'} />
+              <div className="text-xs bg-slate-900 rounded px-3 py-2 space-y-1">
+                <div className="text-slate-500">
+                  Model: <span className="text-slate-300">{model.sizeGB} GB FP8</span> · {80 - model.sizeGB} GB VRAM free · {numH100s} × H100 80GB
+                </div>
+                <div className="text-slate-500">
+                  Total throughput: <span className="text-slate-300">{totalRPS} RPS</span>
+                  <span className="text-slate-600"> ({perGpuRPSeff} × {numH100s})</span>
+                </div>
+                <div className="text-slate-500">
+                  Hourly spend: <span className="text-slate-300">${(h100Cost * numH100s).toFixed(2)}/hr</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Foundry params */}
+          {model.type === 'foundry' && (
+            <div className="space-y-2.5">
+              <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide">Token Config</div>
+              <SliderRow label="Input tokens" hint="per NER call" value={inputTokens} min={50} max={600} step={10} onChange={setInputTokens} fmt={v => v + ' tok'} />
+              <SliderRow label="Output tokens" hint="per NER call" value={outputTokens} min={20} max={200} step={5} onChange={setOutputTokens} fmt={v => v + ' tok'} />
+              <div className="flex gap-4 text-xs text-slate-500 bg-slate-900 rounded px-3 py-1.5">
+                <span>In: <span className="text-slate-300">${model.inputCostPer1M}/1M</span></span>
+                <span>Out: <span className="text-slate-300">${model.outputCostPer1M}/1M</span></span>
+              </div>
+            </div>
+          )}
+
+          {/* RPS override */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide">Throughput</div>
+              {rpsManual !== null && (
+                <button onClick={() => setRpsManual(null)} className="text-xs text-blue-400 hover:text-blue-300">↺ auto ({perGpuRPS} RPS)</button>
+              )}
+            </div>
+            <SliderRow label={rpsManual !== null ? 'RPS (manual)' : 'RPS (auto)'}
+              hint={rpsManual === null ? 'derived from model + concurrency' : 'override active'}
+              value={rpsManual !== null ? rpsManual : perGpuRPS}
+              min={1} max={200} step={1}
+              onChange={v => setRpsManual(v)}
+              fmt={v => v + ' req/s'} />
+          </div>
+        </div>
+
+        {/* ── Results ── */}
+        <div className="col-span-3 flex flex-col gap-4">
+
+          {/* Key metrics row */}
+          <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              Pipeline Metrics · {fmtBig(targetROs)} ROs · {model.name}
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <MetricCard label="Total Lines" value={fmtBig(totalLines)} sub={`${linesPerRO.toFixed(1)} lines/RO`} color="#64748b" />
+              <MetricCard label="Unique NER Calls" value={fmtBig(uniqueCalls)} sub={`${cacheHitPct.toFixed(1)}% saved by cache`} color="#3b82f6" />
+              <MetricCard label="Total Throughput" value={totalRPS + ' RPS'} sub={model.type === 'h100' ? `${numH100s} GPU${numH100s>1?'s':''} × ${perGpuRPSeff} RPS` : 'API parallelism'} color={model.color} />
+            </div>
+          </div>
+
+          {/* Cost breakdown */}
+          <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Cost Breakdown</div>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="rounded-lg p-4" style={{ background: cardBg, border: `1px solid ${model.color}50` }}>
+                <div className="text-3xl font-bold font-mono mb-1" style={{ color: model.color }}>{fmtCost(cost100M)}</div>
+                <div className="text-xs text-slate-400">{fmtBig(targetROs)} ROs total</div>
+                <div className="text-xs text-slate-500 mt-1">per RO: {fmtCost(cost100M / Math.max(targetROs, 1))}</div>
+                {model.type === 'h100'
+                  ? <div className="text-xs text-slate-500">{fmtTime(totalSecs100M)} compute</div>
+                  : <div className="text-xs text-slate-500">{fmtBig(uniqueCalls * inputTokens)} in · {fmtBig(uniqueCalls * outputTokens)} out tokens</div>
+                }
+              </div>
+              <div className="rounded-lg p-4" style={{ background: cardBg, border: '1px solid #f59e0b40' }}>
+                <div className="text-3xl font-bold font-mono mb-1 text-amber-400">{fmtCost(cost1B)}</div>
+                <div className="text-xs text-slate-400">1.5 Billion ROs (projected)</div>
+                <div className="text-xs text-slate-500 mt-1">per RO: {fmtCost(cost1B / 1_500_000_000)}</div>
+                {model.type === 'h100'
+                  ? <div className="text-xs text-slate-500">{fmtTime(totalSecs1B)} compute</div>
+                  : <div className="text-xs text-slate-500">{fmtBig(uniqueCalls * scale1B * inputTokens)} in tokens</div>
+                }
+              </div>
+            </div>
+
+            {/* Detail breakdown */}
+            {model.type === 'h100' ? (
+              <div className="grid grid-cols-4 gap-2 text-xs">
+                {[
+                  ['GPUs',          numH100s + ' × H100',                                  '$' + (h100Cost * numH100s).toFixed(2) + '/hr total'],
+                  ['Per GPU cost',  '$' + h100Cost.toFixed(2) + '/hr',                     'H100 80GB · LambdaLabs'],
+                  ['Wall-clock',    fmtTime(totalSecs100M),                                 'at ' + totalRPS + ' total RPS'],
+                  ['Total cost',    fmtCost(cost100M),                                      'invariant to GPU count'],
+                ].map(([k, v, s]) => (
+                  <div key={k} className="bg-slate-900 rounded p-2">
+                    <div className="text-slate-500">{k}</div>
+                    <div className="text-slate-200 font-mono font-semibold">{v}</div>
+                    <div className="text-slate-600">{s}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {[
+                  ['Input cost',  fmtCost(uniqueCalls * inputTokens * model.inputCostPer1M / 1_000_000),
+                    fmtBig(uniqueCalls * inputTokens) + ' tok × $' + model.inputCostPer1M + '/1M'],
+                  ['Output cost', fmtCost(uniqueCalls * outputTokens * model.outputCostPer1M / 1_000_000),
+                    fmtBig(uniqueCalls * outputTokens) + ' tok × $' + model.outputCostPer1M + '/1M'],
+                ].map(([k, v, s]) => (
+                  <div key={k} className="bg-slate-900 rounded p-2">
+                    <div className="text-slate-500">{k}</div>
+                    <div className="text-slate-200 font-mono font-semibold">{v}</div>
+                    <div className="text-slate-600">{s}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ETA section */}
+          <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">ETA Projection</div>
+
+            {/* Your config — live, reflects numH100s + concurrency */}
+            <div className="rounded-lg p-3 mb-4" style={{ background: cardBg, border: `1px solid ${model.color}50` }}>
+              <div className="text-xs text-slate-500 mb-2 uppercase tracking-wide font-semibold">Your Configuration</div>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div className="text-lg font-bold font-mono" style={{ color: model.color }}>{fmtTime(totalSecs100M)}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{fmtBig(targetROs)} ROs</div>
+                </div>
+                <div>
+                  <div className="text-lg font-bold font-mono text-amber-400">{fmtTime(totalSecs1B)}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">1.5B ROs projected</div>
+                </div>
+                <div>
+                  <div className="text-lg font-bold font-mono text-slate-300">{totalRPS} RPS</div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {model.type === 'h100'
+                      ? `${numH100s} GPU${numH100s > 1 ? 's' : ''} × ${perGpuRPSeff} RPS`
+                      : 'API parallelism'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Model comparison — fixed 1 GPU, for cross-model reference */}
+            <div className="text-xs text-slate-500 mb-2 uppercase tracking-wide font-semibold">
+              Model Comparison <span className="normal-case font-normal text-slate-600">— {numH100s} GPU{numH100s > 1 ? 's' : ''} · concurrency={concurrency} · {fmtBig(uniqueCalls)} unique calls</span>
+            </div>
+            <div className="space-y-2 mb-4">
+              {allCalcs.map(m => (
+                <ETABar key={m.id} label={m.name} seconds={m.secs} maxSeconds={maxSecs} color={m.color} />
+              ))}
+            </div>
+            <div className="border-t border-slate-700 pt-3 grid grid-cols-2 gap-6 text-xs">
+              <div>
+                <div className="text-slate-400 font-semibold mb-2">{fmtBig(targetROs)} ROs · {numH100s} GPU{numH100s > 1 ? 's' : ''}</div>
+                {allCalcs.map(m => (
+                  <div key={m.id} className="flex justify-between py-0.5 border-b border-slate-800">
+                    <span style={{ color: m.color }}>{m.name}</span>
+                    <span className="font-mono text-slate-300">{fmtTime(m.secs)}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className="text-amber-400 font-semibold mb-2">1.5B ROs · {numH100s} GPU{numH100s > 1 ? 's' : ''}</div>
+                {allCalcs.map(m => (
+                  <div key={m.id} className="flex justify-between py-0.5 border-b border-slate-800">
+                    <span style={{ color: m.color }}>{m.name}</span>
+                    <span className="font-mono text-slate-300">{fmtTime(m.secs1B)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── StrategyTab ─────────────────────────────────────────────────────────────
+
+const PROCESSING_MODES = [
+  {
+    id: 'daily',
+    label: 'Daily Batch',
+    cadence: 'Every 24 hrs',
+    color: '#3b82f6',
+    icon: '📥',
+    desc: 'New RO lines arriving continuously. Olympus detects new records, checks smart cache, runs NER only on uncached unique lines, normalizes against taxonomy, then aggregates and appends to MongoDB.',
+    stages: [
+      { label: 'New ROs',            sub: 'incremental delta',           icon: '📋', color: '#64748b' },
+      { label: 'Cache Check',        sub: 'Olympus dedup · skip cached', icon: '⚡', color: '#64748b' },
+      { label: 'NER Extraction',     sub: 'symptoms · repair jobs · parts · DTCs', icon: '🧠', color: '#3b82f6' },
+      { label: 'Taxonomy Normalize', sub: 'map to canonical terms · AI gap fill', icon: '🏷️', color: '#818cf8' },
+      { label: 'Aggregation',        sub: 'Top-N · frequency · YMME grouping', icon: '📊', color: '#3b82f6' },
+      { label: 'MongoDB',            sub: 'append enriched records',     icon: '🗄️', color: '#64748b' },
+      { label: 'API',                sub: 'live Suretrack feed',         icon: '📡', color: '#f59e0b' },
+    ],
+    stats: [
+      ['Est. daily ROs', '~500K new'],
+      ['Cache hit rate', '~85–90%'],
+      ['NER calls/day', '~75K unique'],
+      ['Latency target', '< 4 hrs end-to-end'],
+    ],
+  },
+  {
+    id: 'incremental',
+    label: 'Monthly Incremental',
+    cadence: 'Every 30 days',
+    color: '#3b82f6',
+    icon: '🔄',
+    desc: 'Monthly aggregation refresh over the rolling window. New lines are extracted, normalized against the current taxonomy, re-aggregated for Top-N clusters, and merged into MongoDB. Existing records untouched.',
+    stages: [
+      { label: 'Delta ROs',          sub: 'since last run',              icon: '📋', color: '#64748b' },
+      { label: 'Olympus Scheduler',  sub: '30-day window detection',     icon: '🔭', color: '#64748b' },
+      { label: 'NER Extraction',     sub: 'new lines only · H100',       icon: '🧠', color: '#3b82f6' },
+      { label: 'Taxonomy Normalize', sub: 'current taxonomy version',    icon: '🏷️', color: '#818cf8' },
+      { label: 'Top-N Aggregation',  sub: 'symptoms · repairs · DTCs by YMME', icon: '📊', color: '#3b82f6' },
+      { label: 'MongoDB',            sub: 'merge aggregation update',    icon: '🗄️', color: '#64748b' },
+      { label: 'API',                sub: 'refreshed rankings',          icon: '📡', color: '#f59e0b' },
+    ],
+    stats: [
+      ['Est. monthly ROs', '~5M new'],
+      ['Processing window', '30-day delta'],
+      ['Re-processing', 'new lines only'],
+      ['SLA target', '< 3 days'],
+    ],
+  },
+  {
+    id: 'taxonomy',
+    label: '6-Month Taxonomy Refresh',
+    cadence: 'Every 6 months',
+    color: '#818cf8',
+    icon: '🏷️',
+    desc: 'Taxonomy resource files updated. Olympus diffs the new taxonomy version, detects which MongoDB records used changed entries, re-runs NER + normalization on only those lines, re-aggregates impacted clusters, and updates selectively.',
+    stages: [
+      { label: 'Taxonomy Diff',      sub: 'new vs. previous version',   icon: '🏷️', color: '#818cf8' },
+      { label: 'Impact Detection',   sub: 'Olympus scans MongoDB · flags affected records', icon: '🔍', color: '#818cf8' },
+      { label: 'NER Re-run',         sub: 'impacted lines only',        icon: '🧠', color: '#3b82f6' },
+      { label: 'Taxonomy Normalize', sub: 're-map to updated taxonomy', icon: '🔄', color: '#818cf8' },
+      { label: 'Re-Aggregation',     sub: 'rebuild Top-N for impacted YMME clusters', icon: '📊', color: '#3b82f6' },
+      { label: 'MongoDB',            sub: 'selective record update',    icon: '🗄️', color: '#64748b' },
+      { label: 'API',                sub: 'updated taxonomy signals',   icon: '📡', color: '#f59e0b' },
+    ],
+    stats: [
+      ['Trigger', 'taxonomy version bump'],
+      ['Scope', 'impacted lines only'],
+      ['Est. re-process', '2–8% of corpus'],
+      ['Duration', '< 5 days'],
+    ],
+  },
+];
+
+const OLYMPUS_CAPABILITIES = [
+  { icon: '⚡', label: 'Smart Caching', desc: '476M lines → 31.4M unique NER calls. Deduplication at ingest prevents redundant LLM spend.' },
+  { icon: '🎯', label: 'Incremental Processing', desc: 'Processes only new or changed lines. Full re-runs never required unless taxonomy changes.' },
+  { icon: '🔍', label: 'Taxonomy Impact Detection', desc: 'Scans corpus for lines matching updated taxonomy entries. Targeted re-processing without full pipeline execution.' },
+  { icon: '📊', label: 'Real-time Monitoring', desc: 'Per-stage throughput, error rates, completion estimates, and alerting via Predii Olympus.' },
+];
+
+const LICENSE_MODULES = [
+  {
+    id: 'pipeline',
+    icon: '🔬',
+    label: 'Pipeline',
+    desc: 'NER extraction — symptoms, repair jobs, parts & DTCs from raw RO text via LLM',
+    color: '#3b82f6',
+    tiers: ['platform', 'managed'],
+  },
+  {
+    id: 'clustering',
+    icon: '🔗',
+    label: 'Clustering',
+    desc: 'Top-N entity clustering, co-occurrence analysis, and Sankey relationship graphs',
+    color: '#3b82f6',
+    tiers: ['platform', 'managed'],
+  },
+  {
+    id: 'ai_review',
+    icon: '🤖',
+    label: 'AI Review',
+    desc: 'Batch AI review of customer RO corpus — structured extraction at scale (10M+ ROs)',
+    color: '#3b82f6',
+    tiers: ['managed'],
+    addon: true,
+  },
+  {
+    id: 'argus',
+    icon: '🏷️',
+    label: 'Taxonomy Suggest',
+    subtitle: 'Argus',
+    desc: 'LLM-powered System › Sub-system taxonomy path suggestions per repair order',
+    color: '#818cf8',
+    tiers: ['managed'],
+    addon: true,
+  },
+  {
+    id: 'olympus',
+    icon: '🔭',
+    label: 'Olympus Orchestration',
+    subtitle: 'DevOps',
+    desc: 'Pipeline monitoring, error alerting, automatic retry, SLA tracking & Olympus dashboard',
+    color: '#f59e0b',
+    tiers: ['managed'],
+  },
+  {
+    id: 'incremental_ro',
+    icon: '🔄',
+    label: 'Incremental RO Processing',
+    desc: 'Monthly ingestion of new ROs — detect, deduplicate, extract, normalize, aggregate within SLA',
+    color: '#3b82f6',
+    tiers: ['managed'],
+  },
+  {
+    id: 'incremental_taxonomy',
+    icon: '📅',
+    label: 'Incremental Taxonomy Runs',
+    desc: 'Targeted re-processing on taxonomy version bumps — only impacted ROs re-run',
+    color: '#818cf8',
+    tiers: ['managed'],
+  },
+];
+
+const BUSINESS_TIERS = [
+  {
+    id: 'platform',
+    label: 'Platform License',
+    tag: 'Current',
+    tagColor: '#64748b',
+    color: '#3b82f6',
+    border: '#3b82f630',
+    bg: '#0c1a2e',
+    price: 'Annual License + Maintenance',
+    priceNote: '20% annual maintenance on license fee',
+    icon: '🏛️',
+    note: 'Self-managed infrastructure · Standard SLA · Predii360 API access · 94M RO corpus',
+  },
+  {
+    id: 'managed',
+    label: 'Predii Managed Service',
+    tag: 'New Add-on',
+    tagColor: '#3b82f6',
+    color: '#3b82f6',
+    border: '#3b82f640',
+    bg: '#0c1a2e',
+    price: 'Platform License + Managed Fee',
+    priceNote: 'Tiered by monthly RO volume + one-time onboarding',
+    icon: '🚀',
+    note: 'Predii-managed H100 / Foundry · Dedicated infra · Priority SLA · FDE team',
+    fdeNote: 'FDE rate TBD after first POC and hardware configuration.',
+  },
+];
+
+const MANAGED_TIERS = [
+  {
+    label: 'Monthly Incremental GPU Costs',
+    icon: '🔄',
+    color: '#3b82f6',
+    desc: 'New ROs ingested, processed, and available in API within committed SLA.',
+    specs: [
+      ['Volume', '1M–10M new ROs/month'],
+      ['SLA', '< 72 hrs end-to-end'],
+      ['Hardware', '1 × H100 80GB'],
+      ['Caching', 'Smart cache reduces marginal cost'],
+      ['Monthly cost', '~$3,600/month'],
+    ],
+    costNote: '~$3,600/month',
+    costNoteColor: '#3b82f6',
+    costNoteDetail: '1 H100 × $4.29/hr × 24 hrs × 30 days',
+  },
+  {
+    label: 'One-Time: 1.5B RO Processing GPU Costs',
+    icon: '⚡',
+    color: '#f59e0b',
+    desc: 'Full historical corpus processed once. 32 H100s provisioned, guaranteed delivery in 3 weeks.',
+    specs: [
+      ['Scale', '1.5 Billion ROs'],
+      ['Hardware', '32 × H100 80GB'],
+      ['Duration', '~21 days wall-clock'],
+      ['Total RPS', '320 req/s (32 × 10)'],
+      ['Hourly spend', '32 × $4.29 = $137.28/hr'],
+    ],
+    callout: true,
+  },
+  {
+    label: 'Storage + CPU Cluster',
+    icon: '🖥️',
+    color: '#818cf8',
+    desc: 'Managed storage and CPU cluster to serve 100–300 concurrent API consumers with SLA-backed availability.',
+    specs: [
+      ['Consumers', '100–300 concurrent'],
+      ['Storage', 'MongoDB + Blob (~42TB)'],
+      ['Compute', 'AKS CPU node pool'],
+      ['Availability', 'SLA-backed uptime'],
+      ['Monthly cost', '~$15,000/month'],
+    ],
+    costNote: '~$15K/month',
+    costNoteColor: '#818cf8',
+  },
+  {
+    label: 'AI Review — 10M RO Batch GPU Costs',
+    icon: '🤖',
+    color: '#3b82f6',
+    desc: 'One-time AI review of 10 million random ROs — NER extraction, taxonomy path suggestion, symptom canonicalization, and structured output delivery.',
+    specs: [
+      ['Volume', '10 Million ROs (random sample)'],
+      ['Output per RO', 'Symptoms · Repair Job · Parts · DTC Codes · Taxonomy'],
+      ['Hardware', '1 × H100 80GB (Qwen3-32B FP8)'],
+      ['Throughput', '10 RPS (vLLM)'],
+      ['Tokens / call', '~350 in · ~150 out (incl. taxonomy)'],
+      ['Cache hit est.', '0% (full processing, no cache)'],
+      ['Effective calls', '10M ROs (all unique)'],
+      ['Run time', '~278 hrs (~11.6 days)'],
+    ],
+    aiReview: true,
+  },
+];
+
+function ProcessingModeCard({ mode, active, onClick }) {
+  const { theme } = useTheme();
+  const cardBg    = theme === 'light' ? '#f1f5f9' : '#0f172a';
+  const inactiveText = theme === 'light' ? '#334155' : '#cbd5e1';
+  return (
+    <button onClick={onClick}
+      className="w-full text-left rounded-xl p-4 border transition-all"
+      style={active
+        ? { borderColor: mode.color, background: mode.color + '15' }
+        : { borderColor: theme === 'light' ? '#cbd5e1' : '#334155', background: cardBg }}>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{mode.icon}</span>
+          <span className="text-sm font-semibold" style={{ color: active ? mode.color : inactiveText }}>{mode.label}</span>
+        </div>
+        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+          style={{ background: mode.color + '20', color: mode.color }}>{mode.cadence}</span>
+      </div>
+      <div className="text-xs text-slate-500 leading-relaxed mt-1">{mode.desc}</div>
+    </button>
+  );
+}
+
+function ProcessingPipeline({ mode }) {
+  const { theme } = useTheme();
+  const cardBg = theme === 'light' ? '#f1f5f9' : '#0f172a';
+  return (
+    <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-base">{mode.icon}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: mode.color }}>{mode.label} — Pipeline Flow</span>
+        <span className="text-xs text-slate-500 ml-auto">{mode.cadence}</span>
+      </div>
+
+      {/* Stage flow */}
+      <div className="flex items-stretch gap-1.5 mb-4">
+        {mode.stages.map((s, i) => (
+          <React.Fragment key={s.label}>
+            <div className="flex-1 rounded-lg p-3 flex flex-col items-center justify-center gap-1 text-center"
+              style={{ background: cardBg, border: `1px solid ${(s.color || mode.color)}50` }}>
+              <div className="text-lg">{s.icon}</div>
+              <div className="text-xs font-semibold" style={{ color: s.color || '#cbd5e1' }}>{s.label}</div>
+              <div className="text-xs text-slate-500 leading-tight">{s.sub}</div>
+            </div>
+            {i < mode.stages.length - 1 && (
+              <div className="flex items-center text-slate-600 shrink-0">→</div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-2">
+        {mode.stats.map(([label, value]) => (
+          <div key={label} className="bg-slate-900 rounded-lg px-3 py-2 text-center">
+            <div className="text-xs font-semibold text-slate-200">{value}</div>
+            <div className="text-xs text-slate-500 mt-0.5">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Olympus note */}
+      <div className="mt-3 rounded-lg px-3 py-2 text-xs flex items-center gap-2"
+        style={{ background: cardBg, border: `1px solid ${mode.color}40` }}>
+        <span className="text-slate-400">🔭 <span className="font-semibold text-slate-300">Predii Olympus</span> orchestrates this run — real-time stage monitoring, error alerting, and automatic retry on failure.</span>
+      </div>
+    </div>
+  );
+}
+
+function StrategyTab() {
+  const { theme } = useTheme();
+  const cardBg      = theme === 'light' ? '#f1f5f9' : '#0f172a';
+  const tierBg      = theme === 'light' ? '#eff6ff' : '#0c1a2e';
+  const noIncludeBg = theme === 'light' ? '#fef2f2' : '#1e0a0a';
+  const noIncludeColor  = theme === 'light' ? '#dc2626' : '#f87171';
+  const noIncludeBorder = theme === 'light' ? '#fca5a5' : '#7f1d1d';
+  const [activeMode, setActiveMode] = useState('daily');
+  const mode = PROCESSING_MODES.find(m => m.id === activeMode);
+
+  // 1.5B cost: 32 H100s × $4.29/hr × 24 hrs × 21 days
+  const H100_COUNT = 32, H100_RATE = 4.29, RUN_DAYS = 21;
+  const oneBillionCost = H100_COUNT * H100_RATE * 24 * RUN_DAYS;
+
+  // 10M AI Review: 1 H100 × $4.29/hr, 10 RPS
+  const AI_ROS = 10_000_000, AI_RPS = 10, AI_H100_RATE = 4.29;
+  const aiReviewHoursFull = AI_ROS / AI_RPS / 3600;   // ~277.8 hrs (0% cache, full processing)
+  const aiReviewCostFull  = aiReviewHoursFull * AI_H100_RATE;
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Processing Strategy ── */}
+      <div className="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-sm font-semibold text-slate-200">Processing Strategy</div>
+          <div className="text-xs text-slate-500">Three operating cadences — all orchestrated by Predii Olympus</div>
+        </div>
+
+        {/* Timeline strip */}
+        <div className="flex items-center gap-0 mb-4 mt-3 rounded-xl overflow-hidden border border-slate-700">
+          {[
+            { label: 'Daily Batch',             sub: 'continuous incremental',        color: '#3b82f6', w: '20%' },
+            { label: 'Monthly Incremental',      sub: 'Top-N + aggregation refresh',   color: '#3b82f6', w: '25%' },
+            { label: '6-Month Taxonomy Refresh', sub: 'impacted ROs only',             color: '#818cf8', w: '55%' },
+          ].map((t, i) => (
+            <div key={t.label} className="flex flex-col items-center justify-center py-2.5 text-center"
+              style={{ width: t.w, background: t.color + '18', borderRight: i < 2 ? '1px solid #1e293b' : '' }}>
+              <div className="text-xs font-semibold" style={{ color: t.color }}>{t.label}</div>
+              <div className="text-xs text-slate-500">{t.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Mode selector + detail */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {PROCESSING_MODES.map(m => (
+            <ProcessingModeCard key={m.id} mode={m} active={activeMode === m.id} onClick={() => setActiveMode(m.id)} />
+          ))}
+        </div>
+
+        <ProcessingPipeline mode={mode} />
+      </div>
+
+      {/* ── Olympus Capabilities ── */}
+      <div className="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+          🔭 Predii Olympus — Platform Capabilities
+        </div>
+        <div className="grid grid-cols-4 gap-3">
+          {OLYMPUS_CAPABILITIES.map(c => (
+            <div key={c.label} className="rounded-lg p-3" style={{ background: cardBg, border: `1px solid ${theme === 'light' ? '#bfdbfe' : '#1e3a5f'}` }}>
+              <div className="text-lg mb-1">{c.icon}</div>
+              <div className="text-xs font-semibold text-blue-300 mb-1">{c.label}</div>
+              <div className="text-xs text-slate-500 leading-relaxed">{c.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Business Model ── */}
+      <div>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Licensing &amp; Modules</div>
+
+        {/* Module matrix */}
+        <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-4">
+          <div className="text-xs font-semibold text-slate-300 mb-4">Licensed Modules — toggle per license tier</div>
+          <div className="flex items-end gap-2 mb-3">
+            <div className="w-44 shrink-0" />
+            <div className="grid grid-cols-7 gap-2 flex-1">
+              {LICENSE_MODULES.map(m => (
+                <div key={m.id} className="text-center">
+                  <div className="text-lg mb-1">{m.icon}</div>
+                  <div className="text-xs font-semibold leading-tight" style={{ color: m.color }}>{m.label}</div>
+                  {m.subtitle && <div className="text-xs text-slate-500 mt-0.5">{m.subtitle}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tier rows */}
+          {BUSINESS_TIERS.map(tier => (
+            <div key={tier.id} className="flex items-center gap-2 rounded-lg px-3 py-2.5 mb-2 border"
+              style={{ background: tierBg, borderColor: tier.border }}>
+              {/* Tier label */}
+              <div className="w-44 shrink-0 flex items-center gap-2">
+                <span>{tier.icon}</span>
+                <div>
+                  <div className="text-xs font-semibold" style={{ color: tier.color }}>{tier.label}</div>
+                  <div className="text-xs text-slate-500">{tier.price}</div>
+                </div>
+              </div>
+              {/* Module toggles */}
+              <div className="grid grid-cols-7 gap-2 flex-1">
+                {LICENSE_MODULES.map(m => {
+                  const on = m.tiers.includes(tier.id);
+                  return (
+                    <div key={m.id} className="flex justify-center">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
+                        style={on
+                          ? { background: m.color + '25', color: m.color, border: `1px solid ${m.color}50` }
+                          : { background: noIncludeBg, color: noIncludeColor, border: `1px solid ${noIncludeBorder}` }}>
+                        {on ? '✓' : '✕'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {/* Module descriptions */}
+          <div className="flex gap-2 mt-3 pt-3 border-t border-slate-700">
+            <div className="w-44 shrink-0" />
+            <div className="grid grid-cols-7 gap-2 flex-1">
+              {LICENSE_MODULES.map(m => (
+                <div key={m.id} className="text-xs text-slate-500 leading-snug">{m.desc}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Managed Service tiers */}
+        <div className="mt-3 rounded-xl p-5 border border-emerald-900 bg-emerald-950/30">
+          <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3">
+            Predii Managed Service — Delivery Tiers — Cloud Cost Estimates
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {MANAGED_TIERS.map(tier => (
+              <div key={tier.label} className="rounded-xl p-4 border"
+                style={{ background: cardBg, borderColor: tier.color + '50' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">{tier.icon}</span>
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: tier.color }}>{tier.label}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{tier.desc}</div>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-1.5">
+                  {tier.specs.map(([k, v]) => (
+                    <div key={k} className="flex justify-between text-xs border-b border-slate-800 pb-1">
+                      <span className="text-slate-500">{k}</span>
+                      <span className="font-semibold text-slate-200">{v}</span>
+                    </div>
+                  ))}
+                </div>
+                {tier.callout && (
+                  <div className="mt-3 rounded-lg px-3 py-2 text-xs text-center"
+                    style={{ background: '#f59e0b15', border: '1px solid #f59e0b40' }}>
+                    <span className="text-amber-400 font-semibold">{fmtCost(oneBillionCost)}</span>
+                    <span className="text-slate-400 ml-2">32 H100s × $4.29/hr × 24 hrs × 21 days</span>
+                  </div>
+                )}
+                {tier.costNote && (
+                  <div className="mt-3 rounded-lg px-3 py-2 text-xs text-center"
+                    style={{ background: tier.costNoteColor + '15', border: `1px solid ${tier.costNoteColor}40` }}>
+                    <span className="font-semibold" style={{ color: tier.costNoteColor }}>{tier.costNote}</span>
+                    <span className="text-slate-400 ml-2">
+                      {tier.costNoteDetail || 'per month · scales with consumer count'}
+                    </span>
+                  </div>
+                )}
+                {tier.aiReview && (
+                  <div className="mt-3 space-y-2">
+                    <div className="rounded-lg px-3 py-2 text-xs"
+                      style={{ background: '#3b82f615', border: '1px solid #3b82f640' }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-slate-400 font-medium">Full processing · 0% cache</span>
+                        <span className="text-sky-400 font-bold text-sm">{fmtCost(aiReviewCostFull)}</span>
+                      </div>
+                      <div className="text-slate-500">
+                        1 H100 × $4.29/hr × {aiReviewHoursFull.toFixed(1)} hrs
+                        <span className="ml-2 text-slate-600">(10M calls ÷ 10 RPS)</span>
+                      </div>
+                    </div>
+                    <div className="text-xs text-slate-600 text-center pt-1">
+                      per-RO cost: {fmtCost(aiReviewCostFull / AI_ROS)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="rounded-lg px-4 py-3 text-xs text-slate-500 border border-slate-700/50 bg-slate-800/40 flex items-start gap-2">
+        <span className="shrink-0 mt-0.5">⚠️</span>
+        <span>
+          <span className="text-slate-400 font-medium">Pricing Disclaimer:</span> All hardware costs are estimates only, based on{' '}
+          <span className="text-slate-400">LambdaLabs H100 80GB GPU pricing ($4.29/hr)</span>. Actual costs will vary depending on cloud provider (Azure, AWS, GCP), reserved vs. on-demand pricing, data egress, storage tiers, and contracted rates. Final pricing to be confirmed after POC hardware configuration.
+        </span>
+      </div>
+
+    </div>
+  );
+}
+
+// ─── ShopProfileTab ──────────────────────────────────────────────────────────
+
+function ShopTable({ columns, rows, emptyMsg = 'No data yet.' }) {
+  if (!rows.length) return <div className="text-slate-500 text-xs py-6 text-center">{emptyMsg}</div>;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="border-b border-slate-700">
+            {columns.map(col => (
+              <th key={col.key} className={`text-slate-500 uppercase tracking-wider font-semibold py-1.5 px-2 ${col.align === 'right' ? 'text-right' : 'text-left'}`}>
+                {col.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className="border-b border-slate-800">
+              {columns.map(col => (
+                <td key={col.key} className={`py-1.5 px-2 text-slate-300 ${col.align === 'right' ? 'text-right font-mono' : 'text-left'}`}>
+                  {col.render ? col.render(row) : row[col.key]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const SEASON_STYLE = {
+  Winter: { icon: '❄',  color: '#38bdf8', bg: 'rgba(56,189,248,0.08)' },
+  Spring: { icon: '🌱', color: '#4ade80', bg: 'rgba(74,222,128,0.08)' },
+  Summer: { icon: '☀',  color: '#fbbf24', bg: 'rgba(251,191,36,0.08)' },
+  Fall:   { icon: '🍂', color: '#fb923c', bg: 'rgba(251,146,60,0.08)' },
+};
+
+function SeasonCard({ season }) {
+  const style = SEASON_STYLE[season.name] || { icon: '', color: '#94a3b8', bg: 'transparent' };
+  return (
+    <div className="rounded-lg p-3 border border-slate-700" style={{ background: style.bg }}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm font-semibold" style={{ color: style.color }}>
+          {style.icon} {season.name} <span className="text-slate-500 font-normal">({season.range})</span>
+        </div>
+        <div className="text-xs text-slate-500">{season.ro_count} ROs</div>
+      </div>
+
+      {season.recommended_focus.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {season.recommended_focus.map((r, i) => (
+            <span key={i}
+              title={`${r.count} occurrences this season, ${r.index}× its year-round share`}
+              className="text-xs px-2 py-0.5 rounded-full border"
+              style={{ borderColor: `${style.color}60`, color: style.color, background: `${style.color}15` }}>
+              {r.type === 'part' ? '🔩' : '🛠'} {r.name} · {r.index}×
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 text-xs">
+        <div>
+          <div className="text-slate-500 uppercase tracking-wider text-xs font-semibold mb-1">Top Jobs</div>
+          {season.top_repair_jobs.slice(0, 5).map(j => (
+            <div key={j.job} className="flex justify-between gap-2 py-0.5 text-slate-300">
+              <span className="truncate">{j.job}</span>
+              <span className="text-slate-500 font-mono shrink-0">{j.count}</span>
+            </div>
+          ))}
+        </div>
+        <div>
+          <div className="text-slate-500 uppercase tracking-wider text-xs font-semibold mb-1">Top Parts</div>
+          {season.top_parts.slice(0, 5).map(p => (
+            <div key={p.name} className="flex justify-between gap-2 py-0.5 text-slate-300">
+              <span className="truncate">{p.name}</span>
+              <span className="text-slate-500 font-mono shrink-0">{p.qty_sold}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SeasonalProfileGrid({ data }) {
+  if (!data.length) return <div className="text-slate-500 text-xs py-6 text-center">No data yet.</div>;
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {data.map(season => <SeasonCard key={season.name} season={season} />)}
+    </div>
+  );
+}
+
+// ─── Shop Profile: "From Batch NER" client-side aggregation ─────────────────
+
+const CS_SEASON_DEFS = [
+  { name: 'Winter', range: 'Dec–Feb', months: new Set([12, 1, 2]) },
+  { name: 'Spring', range: 'Mar–May', months: new Set([3, 4, 5]) },
+  { name: 'Summer', range: 'Jun–Aug', months: new Set([6, 7, 8]) },
+  { name: 'Fall',   range: 'Sep–Nov', months: new Set([9, 10, 11]) },
+];
+const CS_MIN_SAMPLE_FOR_INDEX = 5;
+
+function countBy(items) {
+  const c = {};
+  items.forEach(v => { c[v] = (c[v] || 0) + 1; });
+  return c;
+}
+
+function monthOf(isoTs) {
+  // parse the month straight out of the ISO string — avoids `new Date()` shifting
+  // the day near midnight due to local-timezone interpretation of a naive timestamp
+  return isoTs ? parseInt(isoTs.slice(5, 7), 10) : null;
+}
+
+// LLM-normalized part names ("oil filter") rarely match the catalog's fuller
+// canonical names ("engine oil filter") exactly — fall back to a singular/plural
+// and substring match (picking the longest, most specific catalog hit) before
+// giving up and showing "—".
+function lookupPartPricing(name, partsCatalog) {
+  if (!partsCatalog) return {};
+  if (partsCatalog[name]) return partsCatalog[name];
+  const singular = name.endsWith('s') ? name.slice(0, -1) : name;
+  if (partsCatalog[singular]) return partsCatalog[singular];
+
+  let best = null;
+  for (const key of Object.keys(partsCatalog)) {
+    if (key.includes(singular) || singular.includes(key)) {
+      if (!best || key.length > best.length) best = key;
+    }
+  }
+  return best ? partsCatalog[best] : {};
+}
+
+function csTopParts(names, n, partsCatalog) {
+  return topN(names, n).map(d => {
+    const cat = lookupPartPricing(d.name, partsCatalog);
+    return {
+      name: d.name,
+      preferred_supplier: cat.preferred_supplier ?? '—',
+      avg_price: cat.avg_price ?? null,
+      margin_pct: cat.margin_pct ?? null,
+      qty_sold: d.value,
+    };
+  });
+}
+
+function csSeasonalLift(seasonItemsByType, totalCountByType, totalNByType) {
+  // seasonItemsByType / totalCountByType: {type: {name: count}}, totalNByType: {type: n}
+  const candidates = [];
+  for (const type of Object.keys(totalCountByType)) {
+    const seasonCounts = seasonItemsByType[type] || {};
+    Object.entries(totalCountByType[type]).forEach(([name, totalC]) => {
+      if (totalC < CS_MIN_SAMPLE_FOR_INDEX) return;
+      const seasonC = seasonCounts[name] || 0;
+      const overallShare = totalC / totalNByType[type];
+      const seasonShare = totalNByType[`${type}_season`] ? seasonC / totalNByType[`${type}_season`] : 0;
+      const index = overallShare ? seasonShare / overallShare : 0;
+      if (index > 1.15 && seasonC >= 2) {
+        candidates.push({ type, name, index: Math.round(index * 100) / 100, count: seasonC });
+      }
+    });
+  }
+  return candidates.sort((a, b) => b.index - a.index).slice(0, 5);
+}
+
+function buildBatchShopProfile(csResults, partsCatalog) {
+  const invoiceTotal = csResults.reduce((s, r) => s + (r.invoice_total || 0), 0);
+  const costTotal = csResults.reduce((s, r) => s + (r.total_cost || 0), 0);
+  const dates = csResults.map(r => r.check_in_ts).filter(Boolean).sort();
+
+  const overall = {
+    ro_count: csResults.length,
+    avg_ro_value: csResults.length ? invoiceTotal / csResults.length : 0,
+    overall_margin_pct: invoiceTotal ? ((invoiceTotal - costTotal) / invoiceTotal) * 100 : 0,
+    date_range: dates.length ? [dates[0].slice(0, 10), dates[dates.length - 1].slice(0, 10)] : ['—', '—'],
+  };
+
+  const jobsAll = csResults.flatMap(r => r.entities?.repair_job || []);
+  const top_repair_jobs = topN(jobsAll, 15).map(d => ({ job: d.name, count: d.value }));
+
+  const partsAll = csResults.flatMap(r => (r.entities?.repair || []).map(s => s.toLowerCase().trim()));
+  const top_parts = csTopParts(partsAll, 15, partsCatalog);
+
+  // Repeat customers, scoped to who actually shows up more than once in this batch sample
+  const byCustomer = {};
+  csResults.forEach(r => {
+    if (!r.customer_id) return;
+    byCustomer[r.customer_id] = byCustomer[r.customer_id] ||
+      { name: r.customer_name || r.customer_id, visit_count: 0, lifetime_spend: 0, ros: [] };
+    const c = byCustomer[r.customer_id];
+    c.visit_count += 1;
+    c.lifetime_spend += (r.invoice_total || 0);
+    c.ros.push(r);
+  });
+  const repeatIds = Object.keys(byCustomer).filter(id => byCustomer[id].visit_count >= 2);
+  overall.repeat_customer_count = repeatIds.length;
+  const top_repeat_customers = repeatIds
+    .map(id => byCustomer[id])
+    .sort((a, b) => b.lifetime_spend - a.lifetime_spend)
+    .slice(0, 15)
+    .map(c => ({ name: c.name, customer_since: '—', visit_count: c.visit_count, lifetime_spend: c.lifetime_spend }));
+
+  const repeatJobsAll = repeatIds.flatMap(id => byCustomer[id].ros.flatMap(r => r.entities?.repair_job || []));
+  const top_jobs_repeat_customers = topN(repeatJobsAll, 15).map(d => ({ job: d.name, count: d.value }));
+
+  // Seasonal profile — same lift-index idea as the Ground Truth backend, computed
+  // here over LLM-extracted entities instead of the dataset's ground-truth fields.
+  const bySeasonResults = {};
+  CS_SEASON_DEFS.forEach(s => { bySeasonResults[s.name] = []; });
+  csResults.forEach(r => {
+    const m = monthOf(r.check_in_ts);
+    const season = CS_SEASON_DEFS.find(s => s.months.has(m));
+    if (season) bySeasonResults[season.name].push(r);
+  });
+
+  const jobTotalCount = countBy(jobsAll);
+  const partTotalCount = countBy(partsAll);
+
+  const seasonal_profile = CS_SEASON_DEFS.map(s => {
+    const seasonResults = bySeasonResults[s.name];
+    const seasonJobs = seasonResults.flatMap(r => r.entities?.repair_job || []);
+    const seasonParts = seasonResults.flatMap(r => (r.entities?.repair || []).map(x => x.toLowerCase().trim()));
+
+    const recommended_focus = csSeasonalLift(
+      { job: countBy(seasonJobs), part: countBy(seasonParts) },
+      { job: jobTotalCount, part: partTotalCount },
+      { job: csResults.length, part: partsAll.length, job_season: seasonResults.length, part_season: seasonParts.length },
+    );
+
+    return {
+      name: s.name,
+      range: s.range,
+      ro_count: seasonResults.length,
+      top_repair_jobs: topN(seasonJobs, 5).map(d => ({ job: d.name, count: d.value })),
+      top_parts: csTopParts(seasonParts, 5, partsCatalog),
+      recommended_focus,
+    };
+  });
+
+  return { overall, top_repair_jobs, top_parts, top_repeat_customers, top_jobs_repeat_customers, seasonal_profile };
+}
+
+// ─── Shop Profile: shared render body (both modes) ──────────────────────────
+
+function ShopProfileBody({ overall, top_repair_jobs, top_parts, top_repeat_customers, top_jobs_repeat_customers, seasonal_profile }) {
+  const cardCls = "bg-slate-800 rounded-xl p-4 border border-slate-700";
+  const fmtMaybeCost = v => v == null ? '—' : fmtCost(v);
+  const fmtMaybePct = v => v == null ? '—' : `${v}%`;
+
+  return (
+    <div className="space-y-4">
+
+      {/* Overall metrics */}
+      <div className="grid grid-cols-5 gap-3">
+        <MetricCard label="Repair Orders" value={overall.ro_count.toLocaleString()} color="#38bdf8" />
+        {overall.customer_count != null
+          ? <MetricCard label="Customers" value={overall.customer_count.toLocaleString()} color="#a78bfa" />
+          : <MetricCard label="Repeat Customers" value={overall.repeat_customer_count ?? 0} color="#a78bfa" />}
+        <MetricCard label="Avg RO Value" value={fmtCost(overall.avg_ro_value)} color="#34d399" />
+        <MetricCard label="Overall Margin" value={`${Math.round(overall.overall_margin_pct * 10) / 10}%`} color="#fbbf24" />
+        <MetricCard label="Date Range" value={overall.date_range[0]} sub={`→ ${overall.date_range[1]}`} color="#94a3b8" />
+      </div>
+
+      {/* Top repair jobs / top parts */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className={cardCls}>
+          <div className="text-xs font-semibold text-sky-400 mb-3">Top Repair Jobs</div>
+          <HBar data={top_repair_jobs.map(j => ({ name: j.job, value: j.count }))} color="#38bdf8" emptyMsg="No repair jobs yet." />
+        </div>
+        <div className={cardCls}>
+          <div className="text-xs font-semibold text-amber-400 mb-3">Top Parts — Supplier, Price &amp; Margin</div>
+          <ShopTable
+            emptyMsg="No parts data yet."
+            columns={[
+              { key: 'name', label: 'Part' },
+              { key: 'preferred_supplier', label: 'Preferred Supplier' },
+              { key: 'avg_price', label: 'Avg Price', align: 'right', render: r => fmtMaybeCost(r.avg_price) },
+              { key: 'margin_pct', label: 'Margin', align: 'right', render: r => fmtMaybePct(r.margin_pct) },
+            ]}
+            rows={top_parts}
+          />
+        </div>
+      </div>
+
+      {/* Top repeat customers / top jobs by repeat customers */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className={cardCls}>
+          <div className="text-xs font-semibold text-violet-400 mb-3">Top Repeat Customers</div>
+          <ShopTable
+            emptyMsg="No repeat customers yet."
+            columns={[
+              { key: 'name', label: 'Customer' },
+              { key: 'customer_since', label: 'Since' },
+              { key: 'visit_count', label: 'Visits', align: 'right' },
+              { key: 'lifetime_spend', label: 'Lifetime Spend', align: 'right', render: r => fmtCost(r.lifetime_spend) },
+            ]}
+            rows={top_repeat_customers}
+          />
+        </div>
+        <div className={cardCls}>
+          <div className="text-xs font-semibold text-emerald-400 mb-3">Top Jobs by Repeat Customers</div>
+          <HBar data={top_jobs_repeat_customers.map(j => ({ name: j.job, value: j.count }))} color="#34d399" emptyMsg="No repeat-customer jobs yet." />
+        </div>
+      </div>
+
+      {/* Seasonal trends */}
+      <div className={cardCls}>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Seasonal Trends — top jobs, parts &amp; recommended focus by season</div>
+        <div className="text-xs text-slate-500 mb-3">
+          Recommended focus = jobs/parts that occur disproportionately more often in that season than their year-round average (e.g. "2.5×" means 2.5x more common in that season).
+        </div>
+        <SeasonalProfileGrid data={seasonal_profile} />
+      </div>
+
+    </div>
+  );
+}
+
+function ShopProfileTab({ batchResults }) {
+  const [mode, setMode] = useState('batch_ner'); // 'ground_truth' | 'batch_ner'
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/shop_profile')
+      .then(r => r.json())
+      .then(setProfile)
+      .catch(() => setProfile({ shop: null }))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const csResults = useMemo(() => batchResults.filter(r => r.datasource === 'cornerstone'), [batchResults]);
+  const batchProfile = useMemo(() => buildBatchShopProfile(csResults, profile?.parts_catalog), [csResults, profile]);
+
+  if (loading) {
+    return <div className="text-slate-500 text-sm text-center py-20">Loading shop profile…</div>;
+  }
+  if (!profile || !profile.shop) {
+    return (
+      <div className="text-slate-500 text-sm text-center py-20">
+        No shop-profile dataset found. Run <code className="text-slate-400">build_shop_synthetic.py</code> to generate one.
+      </div>
+    );
+  }
+
+  const { shop } = profile;
+  const cardCls = "bg-slate-800 rounded-xl p-4 border border-slate-700";
+
+  return (
+    <div className="space-y-4">
+
+      {/* Shop header */}
+      <div className={`${cardCls} flex items-center justify-between flex-wrap gap-3`}>
+        <div>
+          <div className="text-slate-100 text-base font-semibold">🏪 {shop.name}</div>
+          <div className="text-xs text-slate-500 mt-0.5">
+            {shop.address}, {shop.city}, {shop.state} {shop.zip} · {shop.phone} · {shop.hours}
+          </div>
+        </div>
+        <div className="text-xs text-slate-500">
+          {shop.bays.length} bays · {shop.technicians.length} technicians
+        </div>
+      </div>
+
+      {/* Mode toggle */}
+      <div className="flex rounded-lg overflow-hidden border border-slate-700 text-xs font-semibold w-fit">
+        {[['ground_truth', '✅ Ground Truth'], ['batch_ner', '🤖 From Batch NER']].map(([m, lbl]) => (
+          <button key={m} onClick={() => setMode(m)}
+            className={`px-4 py-1.5 transition-colors ${mode === m ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>
+            {lbl}
+          </button>
+        ))}
+      </div>
+
+      {mode === 'ground_truth' && (
+        <ShopProfileBody
+          overall={profile.overall}
+          top_repair_jobs={profile.top_repair_jobs}
+          top_parts={profile.top_parts}
+          top_repeat_customers={profile.top_repeat_customers}
+          top_jobs_repeat_customers={profile.top_jobs_repeat_customers}
+          seasonal_profile={profile.seasonal_profile}
+        />
+      )}
+
+      {mode === 'batch_ner' && (
+        csResults.length === 0 ? (
+          <div className="text-slate-500 text-sm text-center py-20">
+            No data yet — run a Batch from the Batch tab (select the <code className="text-slate-400">cornerstone</code> datasource)
+            to compute this from actual LLM extraction.
+          </div>
+        ) : (
+          <>
+            <div className="text-xs text-slate-500 -mt-2">
+              Computed from {csResults.length.toLocaleString()} Cornerstone samples run through the LLM in the Batch tab — not the dataset's ground-truth labels.
+            </div>
+            <ShopProfileBody {...batchProfile} />
+          </>
+        )
+      )}
+
+    </div>
+  );
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+
+const TABS = [
+  { id: 'live',          label: '⚡ Live NER + Forecast' },
+  { id: 'batch',         label: '⚙ Batch' },
+  { id: 'analytics',     label: '📊 Analytics' },
+  { id: 'parts_forecast_analytics', label: '📈 Parts Forecast Analytics' },
+  { id: 'technician_skill', label: '🔧 Technician Skill Model' },
+  { id: 'relationships', label: '🕸 Top N Clusters' },
+  { id: 'pipeline',      label: '🔬 Pipeline & Cost' },
+  { id: 'strategy',      label: '🗺 Strategy' },
+  { id: 'shop',          label: '🏪 Shop Profile' },
+];
+
+// ─── DatasourceDropdown ───────────────────────────────────────────────────────
+// Shared multi-select dropdown for choosing active datasources. Collapsed by
+// default, showing a summary ("All datasources" / id / "N datasources");
+// click to open a checklist, click outside to close.
+
+function DatasourceDropdown({ availableDs, selectedDs, toggleDs, clearDs }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [open]);
+
+  const summary = selectedDs.size === 0
+    ? 'All datasources'
+    : selectedDs.size === 1
+      ? [...selectedDs][0]
+      : `${selectedDs.size} datasources`;
+
+  return (
+    <div className="relative inline-block" ref={wrapRef}>
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className="text-xs px-3 py-1.5 rounded-lg border border-slate-600 bg-slate-900 text-slate-300 hover:border-blue-500 hover:text-blue-300 font-mono flex items-center gap-2">
+        <span>{summary}</span>
+        <span className="text-slate-500">▾</span>
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-2">
+          {availableDs.length === 0 && (
+            <div className="text-xs text-slate-600 italic px-2 py-1">No datasources loaded.</div>
+          )}
+          <div className="max-h-64 overflow-y-auto space-y-1">
+            {availableDs.map(ds => {
+              const checked = selectedDs.has(ds.id);
+              return (
+                <label key={ds.id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleDs(ds.id)}
+                    className="w-3.5 h-3.5 rounded accent-blue-500"
+                  />
+                  <span className={`text-xs font-mono flex-1 ${checked ? 'text-slate-200' : 'text-slate-400'}`}>
+                    {ds.id}
+                  </span>
+                  <span className="text-[10px] text-slate-600">
+                    {ds.count >= 1000 ? `${(ds.count / 1000).toFixed(0)}k` : ds.count}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {selectedDs.size > 0 && (
+            <button onClick={clearDs} className="mt-2 w-full text-left text-xs text-slate-500 hover:text-slate-300 underline px-2">
+              Clear selection (use all)
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── SettingsPanel ────────────────────────────────────────────────────────────
+
+function SettingsPanel({ open, onClose, availableDs, selectedDs, toggleDs, clearDs }) {
+  if (!open) return null;
+  return (
+    <>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 40 }} />
+      {/* Panel */}
+      <div style={{
+        position: 'fixed', top: 0, right: 0, bottom: 0, width: 320, zIndex: 50,
+        background: '#1e293b', borderLeft: '1px solid #334155',
+        display: 'flex', flexDirection: 'column',
+      }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700">
+          <span className="text-sm font-semibold text-slate-200">Settings</span>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-200 text-lg leading-none">✕</button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+
+          {/* Datasources */}
+          <div>
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Datasources</div>
+            <div className="text-xs text-slate-500 mb-3">
+              Select which datasources are active. Applies to both Live NER and Batch tabs.
+              All unselected = all datasources used.
+            </div>
+            <DatasourceDropdown availableDs={availableDs} selectedDs={selectedDs} toggleDs={toggleDs} clearDs={clearDs} />
+          </div>
+
+        </div>
+      </div>
+    </>
+  );
+}
+
+// Deep-link support: ?ds=cornerstone (or ?datasource=cornerstone, comma-separated
+// for multiple) pre-selects datasource(s) on load; ?tab=live picks the starting tab.
+// Lets another app link straight into e.g. /?ds=cornerstone&tab=live.
+function getUrlParams() {
+  const p = new URLSearchParams(window.location.search);
+  const dsParam = p.get('ds') || p.get('datasource') || '';
+  return {
+    tab: p.get('tab') || 'live',
+    ds: dsParam ? dsParam.split(',').map(s => s.trim()).filter(Boolean) : [],
+  };
+}
+
+function App() {
+  const urlParams = useMemo(() => getUrlParams(), []);
+  const [tab, setTab] = useState(urlParams.tab);
+  const [health, setHealth] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { theme, toggle: toggleTheme } = useTheme();
+
+  // Global datasource state — shared across Live + Batch tabs
+  const [availableDs, setAvailableDs] = useState([]);
+  const [selectedDs, setSelectedDs] = useState(() => new Set(urlParams.ds));
+
+  const toggleDs = (id) => setSelectedDs(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const clearDs = () => setSelectedDs(new Set());
+
+  // Batch state lives here so the stream loop survives tab switches
+  const [batchResults,  setBatchResults]  = useState([]);
+  const [batchRunning,  setBatchRunning]  = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ completed: 0, total: 0 });
+  const batchAbortRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/health').then(r => r.json()).then(setHealth).catch(() => {});
+    fetch('/api/datasources').then(r => r.json()).then(setAvailableDs).catch(() => {});
+  }, []);
+
+  const pct = batchProgress.total ? Math.round((batchProgress.completed / batchProgress.total) * 100) : 0;
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="bg-slate-800 border-b border-slate-700 px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img src="/predii_logo.png" alt="Predii" style={{ height: '28px', width: 'auto' }} />
+          <div className="text-slate-600 text-lg">|</div>
+          <div className="text-slate-200 text-sm font-medium">Predii360 Pipeline for Repair Orders</div>
+        </div>
+        <div className="flex items-center gap-6 text-xs text-slate-400">
+          {batchRunning && (
+            <span className="flex items-center gap-2 text-blue-400">
+              <span className="spinner" />
+              {batchProgress.completed} / {batchProgress.total} ({pct}%)
+            </span>
+          )}
+          {health && (
+            <>
+              <span>{health.samples?.toLocaleString()} samples loaded</span>
+              <span className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${health.llm_ok ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                LLM {health.llm_ok ? 'online' : 'offline'} · {health.llm_url}
+              </span>
+            </>
+          )}
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+            style={{ fontSize: 16 }}
+          >{theme === 'dark' ? '☀' : '🌙'}</button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            title="Settings"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+            style={{ fontSize: 18 }}
+          >⚙</button>
+        </div>
+      </header>
+      <SettingsPanel
+        open={settingsOpen} onClose={() => setSettingsOpen(false)}
+        availableDs={availableDs} selectedDs={selectedDs}
+        toggleDs={toggleDs} clearDs={clearDs}
+      />
+
+      {/* Tab nav */}
+      <nav className="bg-slate-800 border-b border-slate-700 px-6 flex gap-1 pt-2 overflow-x-auto">
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 -mb-px flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap ${
+              tab === t.id
+                ? 'border-blue-400 text-blue-300 bg-slate-900'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-700'
+            }`}
+          >
+            {t.label}
+            {t.id === 'batch' && batchRunning && (
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+            )}
+            {(t.id === 'analytics' || t.id === 'relationships') && batchRunning && (
+              <span className="text-xs font-mono text-blue-500">{batchResults.length}</span>
+            )}
+            {t.id === 'shop' && batchRunning && (
+              <span className="text-xs font-mono text-blue-500">
+                {batchResults.filter(r => r.datasource === 'cornerstone').length}
+              </span>
+            )}
+          </button>
+        ))}
+      </nav>
+
+      {/* Content */}
+      <main className="flex-1 p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 96px)' }}>
+        {tab === 'live'          && <LiveTab selectedDs={selectedDs} availableDs={availableDs} toggleDs={toggleDs} clearDs={clearDs} defaultMode={urlParams.ds.length ? 'raw' : 'demo'} />}
+        {tab === 'batch'         && <BatchTab
+                                      running={batchRunning}    setRunning={setBatchRunning}
+                                      progress={batchProgress}  setProgress={setBatchProgress}
+                                      results={batchResults}    setResults={setBatchResults}
+                                      abortRef={batchAbortRef}
+                                      selectedDs={selectedDs}   availableDs={availableDs} />}
+        {tab === 'analytics'     && <AnalyticsTab batchResults={batchResults} />}
+        {tab === 'parts_forecast_analytics' && <PartsForecastAnalyticsTab batchResults={batchResults} />}
+        {tab === 'technician_skill' && <TechnicianSkillModelTab batchResults={batchResults} />}
+        {tab === 'relationships' && <RelationshipsTab batchResults={batchResults} />}
+        {tab === 'pipeline'      && <PipelineTab />}
+        {tab === 'strategy'      && <StrategyTab />}
+        {tab === 'shop'          && <ShopProfileTab batchResults={batchResults} />}
+      </main>
+    </div>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<ThemeProvider><App /></ThemeProvider>);
+</script>
+</body>
+</html>

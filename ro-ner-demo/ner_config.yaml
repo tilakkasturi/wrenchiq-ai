@@ -1,0 +1,72 @@
+# NER Benchmarking Pipeline Configuration
+# Entities: symptoms, repair_jobs, repairs (replaced parts), dtc_codes
+
+endpoints:
+  fe:
+    # Predii360 feature extraction / p360 API
+    base_url: http://dev-parts.predii.ai
+  llm:
+    # vLLM inference endpoint for NER extraction
+    base_url: http://192.222.55.177:8081
+    model: Firworks/gemma-4-26B-A4B-it-fp8
+    max_tokens: 1024
+    temperature: 0
+    top_p: 1.0
+
+# Live MongoDB augmentation for the cornerstone datasource — reads the
+# WrenchIQ.ai app's own RepairOrder collection (shopId: cornerstone) in
+# addition to the local datasources/cornerstone/*.jsonl corpus, so this
+# tool's cornerstone counts stay in sync with what WrenchIQ's own
+# "Historical ROs" screen shows, instead of two disconnected datasets that
+# happen to share a name.
+mongo:
+  enabled: true
+  uri: mongodb://172.16.80.7:27017
+  db: wrenchiq
+  collection: RepairOrder
+  shop_id: cornerstone
+
+data:
+  datasources_dir: ./datasources
+  datasources:
+    - id: ro-m
+      label: "ro-m"
+      enabled: true
+    - id: ro-m-predii-examples
+      label: "Predii RO Examples"
+      enabled: true
+      min_count: 1
+    - id: synthetic
+      label: "Synthetic ROs"
+      enabled: true
+      min_count: 1
+    - id: cornerstone
+      label: "Cornerstone Auto Group"
+      enabled: true
+      min_count: 1
+    - id: cd
+      label: "CD DMS Export"
+      enabled: true
+      min_count: 1
+  files:
+    work_requested: unique_labor_workrequested.tsv
+    work_performed: unique_labor_workperformed.tsv
+    parts: unique_part_workperformed.tsv
+    combined: unique_labor_wr_wp.tsv
+  sample_size: 50000     # rows per datasource to use for benchmarking
+  min_count: 100         # skip rows with count below this threshold
+  concurrency: 40        # parallel LLM workers
+
+output:
+  dir: ./ner_output
+  predictions_file: ner_predictions.jsonl
+  metrics_file: ner_metrics.json
+  failed_file: ner_failed.jsonl
+
+sme:
+  quorum: 3          # accepts needed before a pattern is promoted to learned rules
+  prompt_cap: 10     # max learned examples injected per entity type into the LLM prompt
+
+logging:
+  level: INFO
+  file: ./ner_output/ner_pipeline.log

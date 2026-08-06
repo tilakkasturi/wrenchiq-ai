@@ -1,0 +1,55 @@
+{
+  "shop_id": "SHOP-0001",
+  "name": "Cornerstone Auto Group",
+  "address": "654 Jason Track",
+  "city": "Palo Alto",
+  "state": "CA",
+  "zip": "94301",
+  "phone": "(650) 854-2824",
+  "bays": [
+    {
+      "bay_id": "BAY-1",
+      "name": "Bay 1"
+    },
+    {
+      "bay_id": "BAY-2",
+      "name": "Bay 2"
+    },
+    {
+      "bay_id": "BAY-3",
+      "name": "Bay 3"
+    },
+    {
+      "bay_id": "BAY-4",
+      "name": "Bay 4"
+    }
+  ],
+  "hours": "Mon-Sat 07:00-18:00, closed Sunday",
+  "technicians": [
+    {
+      "tech_id": "TECH-1",
+      "name": "Allison Hill",
+      "hired_date": "2020-02-12"
+    },
+    {
+      "tech_id": "TECH-2",
+      "name": "Megan Mcclain",
+      "hired_date": "2019-03-01"
+    },
+    {
+      "tech_id": "TECH-3",
+      "name": "Allen Robinson",
+      "hired_date": "2022-02-02"
+    },
+    {
+      "tech_id": "TECH-4",
+      "name": "Cristian Santos",
+      "hired_date": "2022-05-14"
+    },
+    {
+      "tech_id": "TECH-5",
+      "name": "Kevin Pacheco",
+      "hired_date": "2018-08-07"
+    }
+  ]
+}

@@ -65,17 +65,23 @@ router.post('/', async (req, res) => {
   const resolvedShopId = shopId || ro.shopId || 'shop-001';
 
   try {
-    const [result, shopConfig, aroTarget] = await Promise.all([
-      runROAdvisorAgent({
-        ro,
-        customer: customer || null,
-        vehicle:  vehicle  || null,
-        shopId:   resolvedShopId,
-        db:       req.db   || null,
-      }),
+    // Fetched first (not in parallel with the agent) so the same shopConfig
+    // used for marginCheck below is also what the agent sees as its shop
+    // profile context — one query, one source of truth, instead of the
+    // agent independently re-fetching shop_config for itself.
+    const [shopConfig, aroTarget] = await Promise.all([
       fetchShopConfig(resolvedShopId, req.db),
       fetchAroTarget(req.db),
     ]);
+
+    const result = await runROAdvisorAgent({
+      ro,
+      customer: customer || null,
+      vehicle:  vehicle  || null,
+      shopId:   resolvedShopId,
+      db:       req.db   || null,
+      shopProfile: shopConfig,
+    });
 
     const marginCheck = computeMarginCheck(ro, shopConfig);
     const aroGap = computeAroGap(ro, aroTarget, result.serviceRecommendations);

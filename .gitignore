@@ -66,3 +66,8 @@ releases/
 
 # start.sh/stop.sh process tracking + logs
 .run/
+
+# ro-ner-demo runtime output/cache (regenerated on first run)
+ro-ner-demo/ro/
+ro-ner-demo/ner_output/*
+!ro-ner-demo/ner_output/.gitkeep

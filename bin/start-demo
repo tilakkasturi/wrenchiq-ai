@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# bin/start-demo — Start the WrenchIQ demo (backend + Tauri Sidecar app)
+# bin/start-demo — Start the WrenchIQ demo (ro-ner-demo + backend + Tauri
+# Sidecar app)
 #
 # Usage:
 #   bin/start-demo
@@ -7,9 +8,13 @@
 # Requires the Predii VPN to be connected — MongoDB is only reachable at
 # 172.16.80.7 (dst) / 172.16.80.16 (src) over the VPN.
 #
-# This just wraps bin/tauri-app, which already starts the API server and
-# Vite dev server (via `tauri dev`'s beforeDevCommand) before opening the
-# Sidecar window — no separate backend process needed here.
+# This wraps bin/tauri-app, which already starts the API server and Vite dev
+# server (via `tauri dev`'s beforeDevCommand) before opening the Sidecar
+# window. The one thing it doesn't cover is ro-ner-demo (Predii Learn's live
+# NER/Shop Profile backend) — a separate Python process, started here first
+# so it's already up by the time the Sidecar/admin UI asks for it. Not
+# fatal if it fails to start (Predii Learn just falls back to the persisted
+# snapshot) — see ro-ner-demo/README.md.
 
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -17,6 +22,19 @@ cd "$(dirname "$0")"
 if ! ifconfig | grep -q "172\.16\."; then
   echo "warning: Predii VPN does not appear to be connected." >&2
   echo "         MongoDB (172.16.80.7 / 172.16.80.16) will be unreachable without it." >&2
+fi
+
+if ./ro-ner-demo --check >/dev/null 2>&1; then
+  echo "ro-ner-demo already running."
+else
+  echo "Starting ro-ner-demo..."
+  nohup ./ro-ner-demo > /tmp/wrenchiq-ro-ner-demo.log 2>&1 &
+  disown
+  sleep 1
+  if ! ./ro-ner-demo --check >/dev/null 2>&1; then
+    echo "warning: ro-ner-demo did not come up — Predii Learn will fall back to the persisted Shop Profile snapshot." >&2
+    echo "         See /tmp/wrenchiq-ro-ner-demo.log" >&2
+  fi
 fi
 
 exec ./tauri-app

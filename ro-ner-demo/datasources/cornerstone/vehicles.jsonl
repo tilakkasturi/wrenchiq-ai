@@ -1,0 +1,744 @@
+{"vehicle_id": "VEH-00001", "customer_id": "CUST-00001", "vin": "USRJGF4CBFPR9BN3R", "plate": "ZRX 327", "year": 2021, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00002", "customer_id": "CUST-00002", "vin": "AL4YUKPYGF1GZZTC6", "plate": "UFZ 691", "year": 2017, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00003", "customer_id": "CUST-00003", "vin": "V0NECRVFRG1U60L0Z", "plate": "1S 7182C", "year": 2023, "make": "dazon", "model": "dz 200 mc 5 con cabina"}
+{"vehicle_id": "VEH-00004", "customer_id": "CUST-00004", "vin": "ELSL61URXDRCX2UEP", "plate": "GRE-997", "year": 2019, "make": "toyota", "model": "yaris r"}
+{"vehicle_id": "VEH-00005", "customer_id": "CUST-00005", "vin": "XP826KTJST420RJ98", "plate": "RAC 326", "year": 2015, "make": "dodge", "model": "grand caravan"}
+{"vehicle_id": "VEH-00006", "customer_id": "CUST-00006", "vin": "KL4E116TAHUYHV4L6", "plate": "91B 699", "year": 2016, "make": "chrysler", "model": "town country"}
+{"vehicle_id": "VEH-00007", "customer_id": "CUST-00007", "vin": "M9GW9NK0LAX8BH0WS", "plate": "IDD8244", "year": 2015, "make": "toyota", "model": "hilux"}
+{"vehicle_id": "VEH-00008", "customer_id": "CUST-00008", "vin": "8EJJ7LT4PNW2055HS", "plate": "3V 15869", "year": 2021, "make": "lexus", "model": "lc500h"}
+{"vehicle_id": "VEH-00009", "customer_id": "CUST-00009", "vin": "RRAEDRECYE9SU8PJ7", "plate": "6UQ 850", "year": 2023, "make": "dodge", "model": "challenger"}
+{"vehicle_id": "VEH-00010", "customer_id": "CUST-00010", "vin": "3NGG4Z436DGD2YGSN", "plate": "JRE-3662", "year": 2015, "make": "boss", "model": "stone 300"}
+{"vehicle_id": "VEH-00011", "customer_id": "CUST-00011", "vin": "4MU6SE5GDAFSL387P", "plate": "AB 3791", "year": 2021, "make": "honda", "model": "trx420fe1 fourtrax rancher 4x4 es"}
+{"vehicle_id": "VEH-00012", "customer_id": "CUST-00012", "vin": "L1A1T6V48KNVPDDXD", "plate": "873YY", "year": 2023, "make": "volkswagen", "model": "crafter van"}
+{"vehicle_id": "VEH-00013", "customer_id": "CUST-00013", "vin": "LD9FMEES2HSCF3XTP", "plate": "6562", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00014", "customer_id": "CUST-00014", "vin": "ST2JW6XEA6GEP9TJZ", "plate": "E27-19H", "year": 2015, "make": "chevrolet", "model": "silverado 3500 hd"}
+{"vehicle_id": "VEH-00015", "customer_id": "CUST-00015", "vin": "0VL5WAWGJTHGKUVPY", "plate": "DNL-726", "year": 2015, "make": "chevrolet", "model": "equinox"}
+{"vehicle_id": "VEH-00016", "customer_id": "CUST-00016", "vin": "8TDF4UCAYJTL54AHE", "plate": "7X 8377N", "year": 2024, "make": "nissan", "model": "frontier"}
+{"vehicle_id": "VEH-00017", "customer_id": "CUST-00017", "vin": "KC0K4JCW0CZPSGZ3K", "plate": "08F J24", "year": 2021, "make": "honda", "model": "cb190r repsol"}
+{"vehicle_id": "VEH-00018", "customer_id": "CUST-00018", "vin": "LM3BMY3SULG1C7RN6", "plate": "9-9938N", "year": 2017, "make": "chevrolet", "model": "express pasajeros"}
+{"vehicle_id": "VEH-00019", "customer_id": "CUST-00019", "vin": "BN2YUEUZ92YBHTMTC", "plate": "3I 6Z1ZUS", "year": 2023, "make": "ford", "model": "mustang mach e"}
+{"vehicle_id": "VEH-00020", "customer_id": "CUST-00020", "vin": "X49H1NTC4AN04EYXH", "plate": "2-7874Y", "year": 2024, "make": "chevrolet", "model": "silverado 3500 hd"}
+{"vehicle_id": "VEH-00021", "customer_id": "CUST-00021", "vin": "9W3X2VJN31MW2AWVP", "plate": "3-4824B", "year": 2019, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00022", "customer_id": "CUST-00022", "vin": "55P97LFV9YFSWRNKB", "plate": "972XJS", "year": 2020, "make": "jeep", "model": "compass"}
+{"vehicle_id": "VEH-00023", "customer_id": "CUST-00023", "vin": "E63N182SKAG4RM6DS", "plate": "6VR5780", "year": 2015, "make": "toyota", "model": "prius c"}
+{"vehicle_id": "VEH-00024", "customer_id": "CUST-00024", "vin": "6J6X5945L75TSU8SU", "plate": "VA 74821", "year": 2017, "make": "nissan", "model": "x trail"}
+{"vehicle_id": "VEH-00025", "customer_id": "CUST-00025", "vin": "UYXFJKR1KPE33Y63D", "plate": "210Y4", "year": 2023, "make": "infiniti", "model": "qx60"}
+{"vehicle_id": "VEH-00026", "customer_id": "CUST-00026", "vin": "B17AZW13R8RU48B1Y", "plate": "496 VXV", "year": 2019, "make": "ford", "model": "flex"}
+{"vehicle_id": "VEH-00027", "customer_id": "CUST-00027", "vin": "2L6JB2BF4J6MDT1XP", "plate": "LGO 735", "year": 2023, "make": "nissan", "model": "maxima"}
+{"vehicle_id": "VEH-00028", "customer_id": "CUST-00028", "vin": "1U3TF7BDZRECBSNBK", "plate": "ZF 10205", "year": 2021, "make": "ford", "model": "f 150"}
+{"vehicle_id": "VEH-00029", "customer_id": "CUST-00029", "vin": "HP6T0LHLWGBW12NES", "plate": "15-C921", "year": 2020, "make": "peugeot", "model": "3008"}
+{"vehicle_id": "VEH-00030", "customer_id": "CUST-00030", "vin": "HCZ40E9YA38G406K4", "plate": "BSR-851", "year": 2016, "make": "infiniti", "model": "qx80"}
+{"vehicle_id": "VEH-00031", "customer_id": "CUST-00031", "vin": "764UXSFU5S61YB8XM", "plate": "612-018", "year": 2014, "make": "volkswagen", "model": "tiguan"}
+{"vehicle_id": "VEH-00032", "customer_id": "CUST-00032", "vin": "TYUUANFS38S785BFV", "plate": "3J 24451", "year": 2023, "make": "nissan", "model": "maxima"}
+{"vehicle_id": "VEH-00033", "customer_id": "CUST-00033", "vin": "07Z4YZ6UWTRHNXHMN", "plate": "QC5 M3J", "year": 2015, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00034", "customer_id": "CUST-00034", "vin": "VGNVR0MWAJUCDVJ8G", "plate": "JZI-9058", "year": 2015, "make": "chrysler", "model": "200"}
+{"vehicle_id": "VEH-00035", "customer_id": "CUST-00035", "vin": "V775YMDT7HE28EDKK", "plate": "515ZUU", "year": 2020, "make": "triumph", "model": "tiger 800 xcx"}
+{"vehicle_id": "VEH-00036", "customer_id": "CUST-00036", "vin": "FSH3R155W4WDGPPTF", "plate": "059-YRXQ", "year": 2023, "make": "lincoln", "model": "nautilus"}
+{"vehicle_id": "VEH-00037", "customer_id": "CUST-00037", "vin": "ELA357VCRVV6ERTN4", "plate": "124-QDJ", "year": 2016, "make": "jeep", "model": "cherokee"}
+{"vehicle_id": "VEH-00038", "customer_id": "CUST-00038", "vin": "KUKEDLWV5H6W2U985", "plate": "O04-TAC", "year": 2014, "make": "chrysler", "model": "town & country"}
+{"vehicle_id": "VEH-00039", "customer_id": "CUST-00039", "vin": "XTBFRBUCM75UM48F7", "plate": "5CQ18", "year": 2023, "make": "gmc", "model": "sierra"}
+{"vehicle_id": "VEH-00040", "customer_id": "CUST-00040", "vin": "GLY38V2C6FXTXH29A", "plate": "874 JQM", "year": 2015, "make": "chevrolet", "model": "express pasajeros"}
+{"vehicle_id": "VEH-00041", "customer_id": "CUST-00041", "vin": "63DN085DPUJV58HBS", "plate": "70-L596", "year": 2021, "make": "honda", "model": "trx250te fourtrax recon es"}
+{"vehicle_id": "VEH-00042", "customer_id": "CUST-00042", "vin": "A3FRH6HK8V9U377S6", "plate": "2786", "year": 2015, "make": "hyundai", "model": "sonata"}
+{"vehicle_id": "VEH-00043", "customer_id": "CUST-00043", "vin": "9JEU3Y9UAVW8K57ZY", "plate": "146 7TC", "year": 2024, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00044", "customer_id": "CUST-00044", "vin": "XNS1R3CX711K8CJ9Y", "plate": "IEU-4981", "year": 2018, "make": "chevrolet", "model": "traverse"}
+{"vehicle_id": "VEH-00045", "customer_id": "CUST-00045", "vin": "G6AK3KE7TY2FY1X8C", "plate": "HON 773", "year": 2018, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00046", "customer_id": "CUST-00046", "vin": "VRF4GG5LWBCXDVZ04", "plate": "0S L0479", "year": 2023, "make": "jeep", "model": "wagoneer"}
+{"vehicle_id": "VEH-00047", "customer_id": "CUST-00047", "vin": "MLMF1S8KR6T6TA6VL", "plate": "QB2 B5B", "year": 2024, "make": "infiniti", "model": "q50"}
+{"vehicle_id": "VEH-00048", "customer_id": "CUST-00048", "vin": "W4T6WN17GS1ZVVB2U", "plate": "UXT 6230", "year": 2022, "make": "honda", "model": "cr v"}
+{"vehicle_id": "VEH-00049", "customer_id": "CUST-00049", "vin": "8VRZRNTJGCW5C0JFV", "plate": "WPK 758", "year": 2023, "make": "nissan", "model": "rogue"}
+{"vehicle_id": "VEH-00050", "customer_id": "CUST-00050", "vin": "NJ09ULT7VYH6EKR20", "plate": "1U HB657", "year": 2021, "make": "honda", "model": "monkey abs"}
+{"vehicle_id": "VEH-00051", "customer_id": "CUST-00051", "vin": "TH60T10GR7BXRE6W3", "plate": "47D K88", "year": 2022, "make": "chevrolet", "model": "tornado van"}
+{"vehicle_id": "VEH-00052", "customer_id": "CUST-00052", "vin": "W8HGSJ1603K3G83UC", "plate": "9JS0453", "year": 2017, "make": "toyota", "model": "prius"}
+{"vehicle_id": "VEH-00053", "customer_id": "CUST-00053", "vin": "55S0G0ZD2UNH6FPBD", "plate": "EFK-871", "year": 2020, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00054", "customer_id": "CUST-00054", "vin": "JPEPPRYKAUKJTMHBJ", "plate": "8V251", "year": 2015, "make": "chevrolet", "model": "equinox"}
+{"vehicle_id": "VEH-00055", "customer_id": "CUST-00055", "vin": "XBMTDJ3HE7509G59R", "plate": "9B-EQJH", "year": 2022, "make": "chevrolet", "model": "cheyenne"}
+{"vehicle_id": "VEH-00056", "customer_id": "CUST-00056", "vin": "W6BD724G85EFXKEJU", "plate": "517-HIG", "year": 2023, "make": "gmc", "model": "canyon"}
+{"vehicle_id": "VEH-00057", "customer_id": "CUST-00057", "vin": "V694GHP45R3Y623GX", "plate": "LJI 587", "year": 2023, "make": "honda", "model": "crf250r"}
+{"vehicle_id": "VEH-00058", "customer_id": "CUST-00058", "vin": "K7EFFF4G0JDYH3Z4D", "plate": "010 UBQ", "year": 2020, "make": "toyota", "model": "prius"}
+{"vehicle_id": "VEH-00059", "customer_id": "CUST-00059", "vin": "WZG9PK7RGZ0HUR4BU", "plate": "EHG 9845", "year": 2022, "make": "gmc", "model": "sierra 1500"}
+{"vehicle_id": "VEH-00060", "customer_id": "CUST-00060", "vin": "WYZAMK2EKBFP136YL", "plate": "KKA 392", "year": 2019, "make": "toyota", "model": "yaris r"}
+{"vehicle_id": "VEH-00061", "customer_id": "CUST-00061", "vin": "FDKLDFU54853UP9HZ", "plate": "629 RM6", "year": 2018, "make": "lexus", "model": "lc500"}
+{"vehicle_id": "VEH-00062", "customer_id": "CUST-00062", "vin": "8WCR2DAPWPJTVXHA8", "plate": "61JN839", "year": 2019, "make": "honda", "model": "cr-v"}
+{"vehicle_id": "VEH-00063", "customer_id": "CUST-00063", "vin": "J1R9ZE2C4B6EX423V", "plate": "9-U2459", "year": 2021, "make": "honda", "model": "monkey abs"}
+{"vehicle_id": "VEH-00064", "customer_id": "CUST-00064", "vin": "L60F4GS42F2WYRYLE", "plate": "OTP-968", "year": 2022, "make": "toyota", "model": "rav4"}
+{"vehicle_id": "VEH-00065", "customer_id": "CUST-00065", "vin": "9NZZKSGKTNMKEM865", "plate": "LAP 146", "year": 2015, "make": "ford", "model": "flex"}
+{"vehicle_id": "VEH-00066", "customer_id": "CUST-00066", "vin": "XXK5E75WUDZ9EW65C", "plate": "FFU-6609", "year": 2017, "make": "ford", "model": "transit connect"}
+{"vehicle_id": "VEH-00067", "customer_id": "CUST-00067", "vin": "F916C5NX79KD5GYF9", "plate": "286 FLW", "year": 2022, "make": "hyundai", "model": "ioniq 5"}
+{"vehicle_id": "VEH-00068", "customer_id": "CUST-00068", "vin": "55L00V13YDYEYG1VT", "plate": "7R JF978", "year": 2015, "make": "ford", "model": "transit 350 hd"}
+{"vehicle_id": "VEH-00069", "customer_id": "CUST-00069", "vin": "KYFKZW2JFW1YJF490", "plate": "JJS4812", "year": 2023, "make": "jeep", "model": "gladiator"}
+{"vehicle_id": "VEH-00070", "customer_id": "CUST-00070", "vin": "PY8NRJKEVG9CYJ1KL", "plate": "IKJ-5892", "year": 2015, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00071", "customer_id": "CUST-00071", "vin": "5C30S5V5RSW7N056V", "plate": "VOA 051", "year": 2024, "make": "jeep", "model": "compass"}
+{"vehicle_id": "VEH-00072", "customer_id": "CUST-00072", "vin": "3LNJTD70GHVFLU59K", "plate": "13I 8999", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00073", "customer_id": "CUST-00073", "vin": "R5ZB3D290S1F0RBXG", "plate": "666-JUWQ", "year": 2018, "make": "ram", "model": "promaster 1500"}
+{"vehicle_id": "VEH-00074", "customer_id": "CUST-00074", "vin": "YKJCV7J75AFBTPK4H", "plate": "QZX 425", "year": 2016, "make": "jeep", "model": "wrangler"}
+{"vehicle_id": "VEH-00075", "customer_id": "CUST-00075", "vin": "WHDS36EH8B9SKV4AZ", "plate": "L08-MEF", "year": 2020, "make": "chevrolet", "model": "aveo"}
+{"vehicle_id": "VEH-00076", "customer_id": "CUST-00076", "vin": "F0E99B17C10TBZEZS", "plate": "RYZ 320", "year": 2016, "make": "ford", "model": "special service police sedan"}
+{"vehicle_id": "VEH-00077", "customer_id": "CUST-00077", "vin": "GYJCZYM67MJE6CVNC", "plate": "KZ6 5574", "year": 2024, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00078", "customer_id": "CUST-00078", "vin": "XW927TCNVZDYUH042", "plate": "420 BVJ", "year": 2017, "make": "ford", "model": "f 150"}
+{"vehicle_id": "VEH-00079", "customer_id": "CUST-00079", "vin": "YM880UF4F4MVXGFXV", "plate": "B29 6OB", "year": 2017, "make": "kia", "model": "sorento"}
+{"vehicle_id": "VEH-00080", "customer_id": "CUST-00080", "vin": "5Z5CZ4UDE209LBK5C", "plate": "64P-LSQK", "year": 2021, "make": "kia", "model": "forte"}
+{"vehicle_id": "VEH-00081", "customer_id": "CUST-00081", "vin": "001CK5005EJ02XUSH", "plate": "010 JFP", "year": 2019, "make": "islo", "model": "kangur 150"}
+{"vehicle_id": "VEH-00082", "customer_id": "CUST-00082", "vin": "1HTT5PV8NHJE5M5FX", "plate": "KWR 953", "year": 2015, "make": "toyota", "model": "hilux"}
+{"vehicle_id": "VEH-00083", "customer_id": "CUST-00083", "vin": "EVWLM09RHNJS8B006", "plate": "6AB 762", "year": 2016, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00084", "customer_id": "CUST-00084", "vin": "JFEW2733EJXE56ZJM", "plate": "MNW 884", "year": 2014, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00085", "customer_id": "CUST-00085", "vin": "49DHKWLLXRZVFTNUJ", "plate": "HI9 0211", "year": 2016, "make": "subaru", "model": "legacy"}
+{"vehicle_id": "VEH-00086", "customer_id": "CUST-00086", "vin": "LKLYCBFCTP3B8VW7S", "plate": "KX1 1686", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00087", "customer_id": "CUST-00087", "vin": "2W6EDL5376PYKXXZ2", "plate": "505XPI", "year": 2016, "make": "infiniti", "model": "qx80"}
+{"vehicle_id": "VEH-00088", "customer_id": "CUST-00088", "vin": "GXS6HU5SKGDV13SLX", "plate": "457LWG", "year": 2024, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00089", "customer_id": "CUST-00089", "vin": "XNL8968W8BF296SPZ", "plate": "072 AYY", "year": 2024, "make": "jeep", "model": "compass"}
+{"vehicle_id": "VEH-00090", "customer_id": "CUST-00090", "vin": "7VAG4JT020C2DN0VE", "plate": "52M 074", "year": 2017, "make": "acura", "model": "tlx"}
+{"vehicle_id": "VEH-00091", "customer_id": "CUST-00091", "vin": "UHJG20Y0KN929CCCJ", "plate": "B91-USS", "year": 2017, "make": "chevrolet", "model": "cruze"}
+{"vehicle_id": "VEH-00092", "customer_id": "CUST-00092", "vin": "76K9JXXL2WY998W7B", "plate": "835-MAB", "year": 2020, "make": "kia", "model": "soul"}
+{"vehicle_id": "VEH-00093", "customer_id": "CUST-00093", "vin": "WB7TRD7L1KSCHNB5X", "plate": "ZDL 064", "year": 2021, "make": "gmc", "model": "yukon xl"}
+{"vehicle_id": "VEH-00094", "customer_id": "CUST-00094", "vin": "P397DJPX71XM6YZT7", "plate": "GLW 642", "year": 2021, "make": "honda", "model": "cb190r repsol"}
+{"vehicle_id": "VEH-00095", "customer_id": "CUST-00095", "vin": "WRWVP8X7ZUVH12ZKV", "plate": "155X", "year": 2023, "make": "bmw", "model": "r 18 100 years"}
+{"vehicle_id": "VEH-00096", "customer_id": "CUST-00096", "vin": "5T7PNUUJGSSDRRDG3", "plate": "993Q5", "year": 2018, "make": "audi", "model": "rs3"}
+{"vehicle_id": "VEH-00097", "customer_id": "CUST-00097", "vin": "JAL377NVXVDFRCM3M", "plate": "OKD-7016", "year": 2019, "make": "honda", "model": "sxs10s2r talon 1000r"}
+{"vehicle_id": "VEH-00098", "customer_id": "CUST-00098", "vin": "28MVCAWGYV68J96UN", "plate": "EWX-6149", "year": 2024, "make": "ford", "model": "f 250 super duty"}
+{"vehicle_id": "VEH-00099", "customer_id": "CUST-00099", "vin": "L6TMAYVNM249XF2GM", "plate": "6934 QM", "year": 2022, "make": "chevrolet", "model": "express 2500"}
+{"vehicle_id": "VEH-00100", "customer_id": "CUST-00100", "vin": "XSAT1S5UYWAT0SDH6", "plate": "NVX8460", "year": 2017, "make": "chevrolet", "model": "corvette"}
+{"vehicle_id": "VEH-00101", "customer_id": "CUST-00101", "vin": "9WHV0RRJ7K6037PSF", "plate": "W59 8WU", "year": 2024, "make": "toyota", "model": "land cruiser"}
+{"vehicle_id": "VEH-00102", "customer_id": "CUST-00102", "vin": "HD9NKLX5HP8F95D6J", "plate": "98V JP5", "year": 2023, "make": "dazon", "model": "dz 200 mc 5 con cabina"}
+{"vehicle_id": "VEH-00103", "customer_id": "CUST-00103", "vin": "D6WB2TAPEC4ZEDE7C", "plate": "408 MIR", "year": 2017, "make": "ford", "model": "transit connect"}
+{"vehicle_id": "VEH-00104", "customer_id": "CUST-00104", "vin": "J301511FJZHM2JRAB", "plate": "6I 6N5MOU", "year": 2017, "make": "lexus", "model": "is350"}
+{"vehicle_id": "VEH-00105", "customer_id": "CUST-00105", "vin": "41RS6ZKUNHC3BSPEG", "plate": "RRC 435", "year": 2016, "make": "nissan", "model": "nv3500"}
+{"vehicle_id": "VEH-00106", "customer_id": "CUST-00106", "vin": "DSC25RPDJ9VRXXSWK", "plate": "949 POK", "year": 2019, "make": "toyota", "model": "corolla"}
+{"vehicle_id": "VEH-00107", "customer_id": "CUST-00107", "vin": "R3WUDM48DZ1X33KW1", "plate": "4B R8872", "year": 2022, "make": "subaru", "model": "impreza"}
+{"vehicle_id": "VEH-00108", "customer_id": "CUST-00108", "vin": "RWK6D33J1STPYF50F", "plate": "ZLM 770", "year": 2015, "make": "isuzu", "model": "elf 200"}
+{"vehicle_id": "VEH-00109", "customer_id": "CUST-00109", "vin": "U1CENP7PYWAPNH7SP", "plate": "51HN7", "year": 2020, "make": "chevrolet", "model": "cheyenne"}
+{"vehicle_id": "VEH-00110", "customer_id": "CUST-00110", "vin": "XV16ZWT0986G7XP0X", "plate": "9YF 842", "year": 2016, "make": "jeep", "model": "cherokee"}
+{"vehicle_id": "VEH-00111", "customer_id": "CUST-00111", "vin": "KBT3VKNYR1S8YT886", "plate": "637 BWQ", "year": 2023, "make": "dodge", "model": "challenger"}
+{"vehicle_id": "VEH-00112", "customer_id": "CUST-00112", "vin": "J8MDCEDA3JREKAP96", "plate": "NSL-946", "year": 2016, "make": "honda", "model": "odyssey"}
+{"vehicle_id": "VEH-00113", "customer_id": "CUST-00113", "vin": "8BA3ABUVB94MGGKSN", "plate": "849-MTU", "year": 2021, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00114", "customer_id": "CUST-00114", "vin": "ZU2F026SRWFCF2117", "plate": "MOM 904", "year": 2017, "make": "lincoln", "model": "mkc"}
+{"vehicle_id": "VEH-00115", "customer_id": "CUST-00115", "vin": "LF84YGCRP7UCEUCMX", "plate": "VX8 K2C", "year": 2019, "make": "toyota", "model": "yaris r"}
+{"vehicle_id": "VEH-00116", "customer_id": "CUST-00116", "vin": "K2EWLS1Y1JF9ZDG4R", "plate": "0Y SE867", "year": 2022, "make": "honda", "model": "cr v"}
+{"vehicle_id": "VEH-00117", "customer_id": "CUST-00117", "vin": "2XBU58RZ14M1FVSEF", "plate": "8D 6X6IZH", "year": 2023, "make": "honda", "model": "dio 110"}
+{"vehicle_id": "VEH-00118", "customer_id": "CUST-00118", "vin": "K1X0GFAW50UGJFM45", "plate": "URF 455", "year": 2019, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00119", "customer_id": "CUST-00119", "vin": "BFZFX1AV31FSL1LJU", "plate": "1V 3261I", "year": 2016, "make": "nissan", "model": "gt r"}
+{"vehicle_id": "VEH-00120", "customer_id": "CUST-00120", "vin": "EL4U3W7E0TS8N6GJW", "plate": "KST 796", "year": 2019, "make": "honda", "model": "sxs700m2 pioneer 700 deluxe"}
+{"vehicle_id": "VEH-00121", "customer_id": "CUST-00121", "vin": "1Y5Y4JWXN7XM2XV8S", "plate": "M41 6MH", "year": 2021, "make": "honda", "model": "accord"}
+{"vehicle_id": "VEH-00122", "customer_id": "CUST-00122", "vin": "20HNMB6P5VE38JWST", "plate": "56PG475", "year": 2015, "make": "honda", "model": "odyssey"}
+{"vehicle_id": "VEH-00123", "customer_id": "CUST-00123", "vin": "41E57293C0FGSZLC2", "plate": "365VGD", "year": 2023, "make": "lamborghini", "model": "huracan"}
+{"vehicle_id": "VEH-00124", "customer_id": "CUST-00124", "vin": "4GAGTR9R50269KZB7", "plate": "WOR-487", "year": 2022, "make": "lexus", "model": "ux250h"}
+{"vehicle_id": "VEH-00125", "customer_id": "CUST-00125", "vin": "HKZWY6P7Z7G55XEWC", "plate": "TJK 651", "year": 2021, "make": "lexus", "model": "lc500h"}
+{"vehicle_id": "VEH-00126", "customer_id": "CUST-00126", "vin": "BYGLSMLY46R2MM42B", "plate": "014Q", "year": 2016, "make": "bmw", "model": "x5"}
+{"vehicle_id": "VEH-00127", "customer_id": "CUST-00127", "vin": "541APPUEGM0XN6HT8", "plate": "659 NYU", "year": 2016, "make": "ford", "model": "f-150"}
+{"vehicle_id": "VEH-00128", "customer_id": "CUST-00128", "vin": "12HZZ6MWFJXHSWHM0", "plate": "44H 1969", "year": 2021, "make": "mini", "model": "cooper clubman"}
+{"vehicle_id": "VEH-00129", "customer_id": "CUST-00129", "vin": "13J14M8ML8VJMX5DZ", "plate": "799VXM", "year": 2021, "make": "dodge", "model": "challenger"}
+{"vehicle_id": "VEH-00130", "customer_id": "CUST-00130", "vin": "JN19838358LFBRVCU", "plate": "5NN53", "year": 2015, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00131", "customer_id": "CUST-00131", "vin": "689HHU0C5P4GSWC5T", "plate": "9AM80", "year": 2018, "make": "honda", "model": "crf250l rally abs"}
+{"vehicle_id": "VEH-00132", "customer_id": "CUST-00132", "vin": "HSPZ4LJPPDZULXVVU", "plate": "MXF-055", "year": 2018, "make": "toyota", "model": "prius"}
+{"vehicle_id": "VEH-00133", "customer_id": "CUST-00133", "vin": "GJ3DUJJSKXS28KU31", "plate": "SFK 188", "year": 2024, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00134", "customer_id": "CUST-00134", "vin": "9U068XAF6ZE2P4P8U", "plate": "PEF-330", "year": 2020, "make": "hyundai", "model": "santa fe"}
+{"vehicle_id": "VEH-00135", "customer_id": "CUST-00135", "vin": "J8YDCG6BHL56A4NJW", "plate": "YUB 347", "year": 2022, "make": "land rover", "model": "defender 90"}
+{"vehicle_id": "VEH-00136", "customer_id": "CUST-00136", "vin": "0TF0LD2WR4FGAP7EJ", "plate": "OUL1868", "year": 2018, "make": "buick", "model": "enclave"}
+{"vehicle_id": "VEH-00137", "customer_id": "CUST-00137", "vin": "AYH4J7ER1FGGX0WJ1", "plate": "7G 7671S", "year": 2023, "make": "chevrolet", "model": "tracker"}
+{"vehicle_id": "VEH-00138", "customer_id": "CUST-00138", "vin": "JKEAL5ZPK35PFGJH1", "plate": "1681 LM", "year": 2017, "make": "chevrolet", "model": "suburban 3500 hd"}
+{"vehicle_id": "VEH-00139", "customer_id": "CUST-00139", "vin": "JSUFSVBWP9N2VDS81", "plate": "55N NB8", "year": 2015, "make": "chevrolet", "model": "silverado 3500 hd"}
+{"vehicle_id": "VEH-00140", "customer_id": "CUST-00140", "vin": "EA0XJ130M7EBEATPC", "plate": "551 GSV", "year": 2017, "make": "dodge", "model": "durango"}
+{"vehicle_id": "VEH-00141", "customer_id": "CUST-00141", "vin": "29V9342FKUFWF9PKX", "plate": "JYK 2182", "year": 2024, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00142", "customer_id": "CUST-00142", "vin": "4SDSF4H6DWMHAJAL8", "plate": "ZCJ 958", "year": 2015, "make": "hyundai", "model": "sonata"}
+{"vehicle_id": "VEH-00143", "customer_id": "CUST-00143", "vin": "TL0JUHBY4UETE8690", "plate": "LM2 5577", "year": 2022, "make": "subaru", "model": "impreza"}
+{"vehicle_id": "VEH-00144", "customer_id": "CUST-00144", "vin": "LTGHR9ACASC701KMC", "plate": "197 WHF", "year": 2020, "make": "ford", "model": "ecosport"}
+{"vehicle_id": "VEH-00145", "customer_id": "CUST-00145", "vin": "XS3XUE0H9DMRC2E6V", "plate": "651J9", "year": 2014, "make": "chevrolet", "model": "ss"}
+{"vehicle_id": "VEH-00146", "customer_id": "CUST-00146", "vin": "XF6A0NVWS608NSKA3", "plate": "JVE 201", "year": 2015, "make": "hyundai", "model": "sonata"}
+{"vehicle_id": "VEH-00147", "customer_id": "CUST-00147", "vin": "AYA1WGPS38DKUFCR3", "plate": "CEX 847", "year": 2017, "make": "ford", "model": "explorer"}
+{"vehicle_id": "VEH-00148", "customer_id": "CUST-00148", "vin": "6FG9J2ED4JSVTX2XX", "plate": "ZXT 047", "year": 2022, "make": "honda", "model": "cargo 150"}
+{"vehicle_id": "VEH-00149", "customer_id": "CUST-00149", "vin": "NJGKGL56X3HZP5W6T", "plate": "2V 3950O", "year": 2018, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00150", "customer_id": "CUST-00150", "vin": "LWCPXKFSZ29DWTMB2", "plate": "938-HXV", "year": 2022, "make": "honda", "model": "civic"}
+{"vehicle_id": "VEH-00151", "customer_id": "CUST-00151", "vin": "SG6GJHADRJN20FTEB", "plate": "921 2MV", "year": 2017, "make": "jeep", "model": "compass"}
+{"vehicle_id": "VEH-00152", "customer_id": "CUST-00152", "vin": "5JFYHC6DL428B14MZ", "plate": "006 PEU", "year": 2019, "make": "honda", "model": "sxs700m4 pioneer 700 4 deluxe"}
+{"vehicle_id": "VEH-00153", "customer_id": "CUST-00153", "vin": "U5KCSV837DFU1J3NS", "plate": "4-3280Y", "year": 2021, "make": "toyota", "model": "sequoia"}
+{"vehicle_id": "VEH-00154", "customer_id": "CUST-00154", "vin": "Z78Z9X1UMBXRBUD7Z", "plate": "APT 032", "year": 2016, "make": "infiniti", "model": "qx60"}
+{"vehicle_id": "VEH-00155", "customer_id": "CUST-00155", "vin": "LGSSUDR1ZMMSXZBZK", "plate": "58-2739F", "year": 2023, "make": "infiniti", "model": "qx60"}
+{"vehicle_id": "VEH-00156", "customer_id": "CUST-00156", "vin": "8WM8CFDRRB7AYNJYM", "plate": "L88-37Y", "year": 2015, "make": "chevrolet", "model": "traverse"}
+{"vehicle_id": "VEH-00157", "customer_id": "CUST-00157", "vin": "DBKKH0E02GYWXJL48", "plate": "53-1531G", "year": 2015, "make": "chevrolet", "model": "cruze"}
+{"vehicle_id": "VEH-00158", "customer_id": "CUST-00158", "vin": "ZRM1WVJMA2CMXRG8K", "plate": "ZYK 349", "year": 2016, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00159", "customer_id": "CUST-00159", "vin": "ZXLFY5ATPSEZTGAD1", "plate": "OP-3180", "year": 2023, "make": "toyota", "model": "corolla cross"}
+{"vehicle_id": "VEH-00160", "customer_id": "CUST-00160", "vin": "381Z1G7RL5ECVBXTG", "plate": "BQV-5016", "year": 2021, "make": "kia", "model": "forte"}
+{"vehicle_id": "VEH-00161", "customer_id": "CUST-00161", "vin": "LEFY7B4L4LDGYPN3T", "plate": "13-TL71", "year": 2020, "make": "toyota", "model": "prius"}
+{"vehicle_id": "VEH-00162", "customer_id": "CUST-00162", "vin": "SGD28KD0A4FV7NGBP", "plate": "8WQ77", "year": 2019, "make": "toyota", "model": "86"}
+{"vehicle_id": "VEH-00163", "customer_id": "CUST-00163", "vin": "7HW278TF1M010M5CT", "plate": "782 LEL", "year": 2022, "make": "ford", "model": "f 150 lightning"}
+{"vehicle_id": "VEH-00164", "customer_id": "CUST-00164", "vin": "UDKGFZ3RD137S7WF2", "plate": "87Y-IGAC", "year": 2022, "make": "subaru", "model": "legacy"}
+{"vehicle_id": "VEH-00165", "customer_id": "CUST-00165", "vin": "C9KH5MLPNJC4F4NKT", "plate": "7J 85196", "year": 2015, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00166", "customer_id": "CUST-00166", "vin": "12XU6A3H3KKGGGVZ3", "plate": "979-TXL", "year": 2024, "make": "lexus", "model": "is350"}
+{"vehicle_id": "VEH-00167", "customer_id": "CUST-00167", "vin": "7CMU2K2C2YSD7U0BY", "plate": "WLD-8952", "year": 2018, "make": "mazda", "model": "3"}
+{"vehicle_id": "VEH-00168", "customer_id": "CUST-00168", "vin": "WU8GRJW5XU3FN5P38", "plate": "H23 4EW", "year": 2023, "make": "land rover", "model": "discovery sport"}
+{"vehicle_id": "VEH-00169", "customer_id": "CUST-00169", "vin": "D9LEW92JBMNNDSC6D", "plate": "938 FQ9", "year": 2017, "make": "honda", "model": "trx500fa6 fourtrax foreman rubicon auto dct eps"}
+{"vehicle_id": "VEH-00170", "customer_id": "CUST-00170", "vin": "NU0692HBS085M7ZZL", "plate": "XBC-571", "year": 2022, "make": "jeep", "model": "gladiator"}
+{"vehicle_id": "VEH-00171", "customer_id": "CUST-00171", "vin": "FVB1DLPRRPU39BA7J", "plate": "XPI 994", "year": 2024, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00172", "customer_id": "CUST-00172", "vin": "TWU41Z6TP6W2GA90V", "plate": "347 7848", "year": 2015, "make": "ford", "model": "transit-150"}
+{"vehicle_id": "VEH-00173", "customer_id": "CUST-00173", "vin": "EYUXUTWNKSD2XJB8V", "plate": "500 YJ9", "year": 2015, "make": "jeep", "model": "renegade"}
+{"vehicle_id": "VEH-00174", "customer_id": "CUST-00174", "vin": "1CNYR7Z9WLMVG7JTM", "plate": "ZP-1357", "year": 2018, "make": "ford", "model": "transit 250"}
+{"vehicle_id": "VEH-00175", "customer_id": "CUST-00175", "vin": "FRZRW3Y0TV6H7DE7N", "plate": "8-V5366", "year": 2024, "make": "audi", "model": "a7 sportback"}
+{"vehicle_id": "VEH-00176", "customer_id": "CUST-00176", "vin": "W3DKJNY36KXMF8YMX", "plate": "1M 2303H", "year": 2015, "make": "ford", "model": "flex"}
+{"vehicle_id": "VEH-00177", "customer_id": "CUST-00177", "vin": "UPLL8FJ442471ACN0", "plate": "Y59 6ZK", "year": 2021, "make": "subaru", "model": "xv"}
+{"vehicle_id": "VEH-00178", "customer_id": "CUST-00178", "vin": "NBASRZWJG19WLECWV", "plate": "518-JUW", "year": 2017, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00179", "customer_id": "CUST-00179", "vin": "JY8ZNL2BRRJPB9LH0", "plate": "4MG5911", "year": 2017, "make": "honda", "model": "sxs1000m3 pioneer 1000 limited edition"}
+{"vehicle_id": "VEH-00180", "customer_id": "CUST-00180", "vin": "C1TDDGBDH351HT7KP", "plate": "EC5 2910", "year": 2022, "make": "sherco", "model": "300 sef racing enduro"}
+{"vehicle_id": "VEH-00181", "customer_id": "CUST-00181", "vin": "AW3GUJ3G9HVHG8NNT", "plate": "6G694", "year": 2018, "make": "chrysler", "model": "300"}
+{"vehicle_id": "VEH-00182", "customer_id": "CUST-00182", "vin": "Z3VLC8P7YSAAFH8KF", "plate": "4-E1502", "year": 2017, "make": "lexus", "model": "rx350"}
+{"vehicle_id": "VEH-00183", "customer_id": "CUST-00183", "vin": "GTR6VT6DGMCV0X4HG", "plate": "LFX 849", "year": 2018, "make": "chevrolet", "model": "malibu"}
+{"vehicle_id": "VEH-00184", "customer_id": "CUST-00184", "vin": "AJLYZ5UF0YMH226U1", "plate": "ZSE 304", "year": 2020, "make": "toyota", "model": "yaris r"}
+{"vehicle_id": "VEH-00185", "customer_id": "CUST-00185", "vin": "3LHJDLG375M1ZBJ78", "plate": "ZLT 266", "year": 2022, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00186", "customer_id": "CUST-00186", "vin": "CETXARYG4S7Z1KDAL", "plate": "722 DXV", "year": 2021, "make": "honda", "model": "trx250x"}
+{"vehicle_id": "VEH-00187", "customer_id": "CUST-00187", "vin": "LE8XSYUD9R12SF655", "plate": "220310", "year": 2017, "make": "acura", "model": "tlx"}
+{"vehicle_id": "VEH-00188", "customer_id": "CUST-00188", "vin": "XH8BG23CAFW9P6Y0D", "plate": "7XT V30", "year": 2016, "make": "chevrolet", "model": "aveo"}
+{"vehicle_id": "VEH-00189", "customer_id": "CUST-00189", "vin": "Y705HGRAYZV0GCL8J", "plate": "722329", "year": 2017, "make": "toyota", "model": "yaris"}
+{"vehicle_id": "VEH-00190", "customer_id": "CUST-00190", "vin": "3GTNNH2P6NYG3CH56", "plate": "QTV 107", "year": 2021, "make": "tracker", "model": "90"}
+{"vehicle_id": "VEH-00191", "customer_id": "CUST-00191", "vin": "J8AD479MMJG1X913S", "plate": "653-FCIL", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00192", "customer_id": "CUST-00192", "vin": "5JJ39WXPNPVZJM9XH", "plate": "66QJ8", "year": 2014, "make": "ford", "model": "edge"}
+{"vehicle_id": "VEH-00193", "customer_id": "CUST-00193", "vin": "73V4AGB1KDDNULVTK", "plate": "468 SIH", "year": 2021, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00194", "customer_id": "CUST-00194", "vin": "VPCZ5GR1S9VD113XD", "plate": "G86-OCL", "year": 2021, "make": "honda", "model": "cb190r repsol"}
+{"vehicle_id": "VEH-00195", "customer_id": "CUST-00195", "vin": "5R0NNV5MEMM9H1C4U", "plate": "702 LJJ", "year": 2022, "make": "lexus", "model": "es250"}
+{"vehicle_id": "VEH-00196", "customer_id": "CUST-00196", "vin": "TAY6KCKXDW8ZEXRME", "plate": "KRB 741", "year": 2023, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00197", "customer_id": "CUST-00197", "vin": "32FZRPYY0VP7AHZ5S", "plate": "1IC D82", "year": 2015, "make": "honda", "model": "civic"}
+{"vehicle_id": "VEH-00198", "customer_id": "CUST-00198", "vin": "SCX1H1TVB09958CVN", "plate": "861 7063", "year": 2022, "make": "chrysler", "model": "300"}
+{"vehicle_id": "VEH-00199", "customer_id": "CUST-00199", "vin": "LAEPP4GP4EKB6YCFE", "plate": "9LU G84", "year": 2022, "make": "toyota", "model": "prius prime"}
+{"vehicle_id": "VEH-00200", "customer_id": "CUST-00200", "vin": "ERT31524XB1HAECEZ", "plate": "CRA 715", "year": 2017, "make": "toyota", "model": "4runner"}
+{"vehicle_id": "VEH-00201", "customer_id": "CUST-00201", "vin": "VWFV512B7LRJ2VKW0", "plate": "992-192", "year": 2022, "make": "sherco", "model": "450 sef factory enduro"}
+{"vehicle_id": "VEH-00202", "customer_id": "CUST-00202", "vin": "KHCA2FWPZP39KLMRT", "plate": "MKC 903", "year": 2023, "make": "chevrolet", "model": "tracker"}
+{"vehicle_id": "VEH-00203", "customer_id": "CUST-00203", "vin": "D6EVETGN8YZJSGVEN", "plate": "512-BBM", "year": 2021, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00204", "customer_id": "CUST-00204", "vin": "WK0X4LAXSR4U0JY76", "plate": "456 7UQ", "year": 2019, "make": "ford", "model": "f 150"}
+{"vehicle_id": "VEH-00205", "customer_id": "CUST-00205", "vin": "GMFUJNTEEB9B2PCT7", "plate": "59W 959", "year": 2015, "make": "ford", "model": "transit 250"}
+{"vehicle_id": "VEH-00206", "customer_id": "CUST-00206", "vin": "02RVJ699F209ASL9J", "plate": "423 AGG", "year": 2021, "make": "chevrolet", "model": "corvette"}
+{"vehicle_id": "VEH-00207", "customer_id": "CUST-00207", "vin": "K7ZCR8RET0RCP0176", "plate": "MRM 559", "year": 2018, "make": "hyundai", "model": "elantra"}
+{"vehicle_id": "VEH-00208", "customer_id": "CUST-00208", "vin": "XGUTM110ET1R2ZZ87", "plate": "I90-SMU", "year": 2018, "make": "toyota", "model": "c hr"}
+{"vehicle_id": "VEH-00209", "customer_id": "CUST-00209", "vin": "9J5LRE9UPKML0HR3Y", "plate": "4I 8U8CLC", "year": 2021, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00210", "customer_id": "CUST-00210", "vin": "77PL3BSCJLJ9CKDLT", "plate": "82PU633", "year": 2015, "make": "jeep", "model": "renegade"}
+{"vehicle_id": "VEH-00211", "customer_id": "CUST-00211", "vin": "2BVFP577LR3KM9TLY", "plate": "EKS9996", "year": 2024, "make": "honda", "model": "prologue"}
+{"vehicle_id": "VEH-00212", "customer_id": "CUST-00212", "vin": "ER11JGBN93KGM7C9H", "plate": "716 ERN", "year": 2019, "make": "honda", "model": "trx90x"}
+{"vehicle_id": "VEH-00213", "customer_id": "CUST-00213", "vin": "A430C4R71ZG4JT7RF", "plate": "KNH 296", "year": 2019, "make": "buick", "model": "envision"}
+{"vehicle_id": "VEH-00214", "customer_id": "CUST-00214", "vin": "NAAHA1PX30GK4TT40", "plate": "W76 5VX", "year": 2022, "make": "infiniti", "model": "qx80"}
+{"vehicle_id": "VEH-00215", "customer_id": "CUST-00215", "vin": "P37M07TWZ2JHR5LGP", "plate": "8W B3708", "year": 2019, "make": "hyundai", "model": "tucson"}
+{"vehicle_id": "VEH-00216", "customer_id": "CUST-00216", "vin": "DL1AFK74FETR0FC12", "plate": "GTG-8661", "year": 2015, "make": "acura", "model": "tlx"}
+{"vehicle_id": "VEH-00217", "customer_id": "CUST-00217", "vin": "DM85ANVNC9RLC0SAL", "plate": "683 TSO", "year": 2019, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00218", "customer_id": "CUST-00218", "vin": "2Z22NAEFVZZURN62A", "plate": "ZNU 403", "year": 2019, "make": "islo", "model": "kangur 150"}
+{"vehicle_id": "VEH-00219", "customer_id": "CUST-00219", "vin": "GE9VYH9TT517SY66B", "plate": "423 3629", "year": 2020, "make": "chevrolet", "model": "suburban"}
+{"vehicle_id": "VEH-00220", "customer_id": "CUST-00220", "vin": "1RRX3ZATSVF2YEM7X", "plate": "732-CKE", "year": 2019, "make": "nissan", "model": "micra"}
+{"vehicle_id": "VEH-00221", "customer_id": "CUST-00221", "vin": "N8NSSTPRNSZKGHF8A", "plate": "E72 4IT", "year": 2019, "make": "lincoln", "model": "navigator"}
+{"vehicle_id": "VEH-00222", "customer_id": "CUST-00222", "vin": "C70X8U8M9U2RJD47C", "plate": "6DC8646", "year": 2021, "make": "honda", "model": "trx250te fourtrax recon es"}
+{"vehicle_id": "VEH-00223", "customer_id": "CUST-00223", "vin": "M6H6XAAP1GX0TMTSU", "plate": "09BI013", "year": 2024, "make": "toyota", "model": "land cruiser"}
+{"vehicle_id": "VEH-00224", "customer_id": "CUST-00224", "vin": "M84P3002U5MJRGUS4", "plate": "5057 AU", "year": 2017, "make": "audi", "model": "a6 quattro"}
+{"vehicle_id": "VEH-00225", "customer_id": "CUST-00225", "vin": "KK7AM38JX8WTD2GLD", "plate": "7X IV128", "year": 2021, "make": "ford", "model": "escape"}
+{"vehicle_id": "VEH-00226", "customer_id": "CUST-00226", "vin": "G5YT00TZB3HZNMVZX", "plate": "KYL 289", "year": 2018, "make": "toyota", "model": "sienna"}
+{"vehicle_id": "VEH-00227", "customer_id": "CUST-00227", "vin": "5F1V6KLY32EFLYRXX", "plate": "865 VFA", "year": 2015, "make": "ford", "model": "transit 250"}
+{"vehicle_id": "VEH-00228", "customer_id": "CUST-00228", "vin": "U2U5053LMBJSTFPL2", "plate": "015F7", "year": 2016, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00229", "customer_id": "CUST-00229", "vin": "DB2FGTKF1WRSV5JJL", "plate": "LMP 649", "year": 2016, "make": "chevrolet", "model": "cruze ng"}
+{"vehicle_id": "VEH-00230", "customer_id": "CUST-00230", "vin": "76U5JM64WZ7RF5W03", "plate": "CDQ4582", "year": 2017, "make": "subaru", "model": "crosstrek"}
+{"vehicle_id": "VEH-00231", "customer_id": "CUST-00231", "vin": "AJZV7A87WA4VRA0N3", "plate": "FMO 146", "year": 2023, "make": "chevrolet", "model": "tracker"}
+{"vehicle_id": "VEH-00232", "customer_id": "CUST-00232", "vin": "2SL11RTF4SUVU3NEM", "plate": "KQX 497", "year": 2017, "make": "chevrolet", "model": "express 2500"}
+{"vehicle_id": "VEH-00233", "customer_id": "CUST-00233", "vin": "65U8NXBKDBMGVUJ5A", "plate": "72-7578W", "year": 2018, "make": "toyota", "model": "yaris"}
+{"vehicle_id": "VEH-00234", "customer_id": "CUST-00234", "vin": "8PY3W806CYFKDU2E7", "plate": "RXL-3890", "year": 2022, "make": "chevrolet", "model": "tornado van"}
+{"vehicle_id": "VEH-00235", "customer_id": "CUST-00235", "vin": "1AHS15SCN6GP71WXL", "plate": "5TO4510", "year": 2023, "make": "hyundai", "model": "creta grand"}
+{"vehicle_id": "VEH-00236", "customer_id": "CUST-00236", "vin": "HT7WN0DPHS4XALUH2", "plate": "134 WG0", "year": 2021, "make": "ford", "model": "explorer"}
+{"vehicle_id": "VEH-00237", "customer_id": "CUST-00237", "vin": "C7K0FSL8FYDDZKGJ8", "plate": "3-9282N", "year": 2023, "make": "chevrolet", "model": "tracker"}
+{"vehicle_id": "VEH-00238", "customer_id": "CUST-00238", "vin": "5NB1ZJTC85V8NMZX6", "plate": "PBQ 604", "year": 2015, "make": "boss", "model": "stone 300"}
+{"vehicle_id": "VEH-00239", "customer_id": "CUST-00239", "vin": "K5VT06A91MB0SXE1N", "plate": "910-CDE", "year": 2016, "make": "chrysler", "model": "200"}
+{"vehicle_id": "VEH-00240", "customer_id": "CUST-00240", "vin": "KVX3XHGECJMCNG8NG", "plate": "036-788", "year": 2017, "make": "chevrolet", "model": "cruze"}
+{"vehicle_id": "VEH-00241", "customer_id": "CUST-00241", "vin": "8TD0REAP8F6D030DU", "plate": "1R 05955", "year": 2017, "make": "mercedes-benz", "model": "glc300"}
+{"vehicle_id": "VEH-00242", "customer_id": "CUST-00242", "vin": "WEPGGR1NNSM3GZ64G", "plate": "LOF 239", "year": 2021, "make": "cadillac", "model": "escalade esv"}
+{"vehicle_id": "VEH-00243", "customer_id": "CUST-00243", "vin": "29YL5ZXX034XSP1T0", "plate": "TAZ-0185", "year": 2015, "make": "scion", "model": "xb"}
+{"vehicle_id": "VEH-00244", "customer_id": "CUST-00244", "vin": "2ACVBJWAWRPXBU9KG", "plate": "314 PFD", "year": 2016, "make": "chevrolet", "model": "aveo"}
+{"vehicle_id": "VEH-00245", "customer_id": "CUST-00245", "vin": "JT0SRTWF2PEX7M8GW", "plate": "421-DSN", "year": 2019, "make": "volkswagen", "model": "amarok"}
+{"vehicle_id": "VEH-00246", "customer_id": "CUST-00246", "vin": "DYZ43HRA1DWCXKX9R", "plate": "2LLY472", "year": 2023, "make": "dazon", "model": "dz 200 mc 5 con cabina"}
+{"vehicle_id": "VEH-00247", "customer_id": "CUST-00247", "vin": "9FR4V2KJYF7D2TF29", "plate": "AJD 200", "year": 2016, "make": "ford", "model": "f-250 super duty"}
+{"vehicle_id": "VEH-00248", "customer_id": "CUST-00248", "vin": "J7N82NSSEU4XFH340", "plate": "N11 1GI", "year": 2021, "make": "ford", "model": "f 150"}
+{"vehicle_id": "VEH-00249", "customer_id": "CUST-00249", "vin": "BWLZ5K5CRN0KFHDSK", "plate": "QGK 652", "year": 2023, "make": "jeep", "model": "renegade"}
+{"vehicle_id": "VEH-00250", "customer_id": "CUST-00250", "vin": "VAYHW57BYPPPT7KB1", "plate": "9V-MHGT", "year": 2018, "make": "ford", "model": "transit connect"}
+{"vehicle_id": "VEH-00251", "customer_id": "CUST-00251", "vin": "LDVNUD6AE1U0GBV1R", "plate": "69J M27", "year": 2015, "make": "chevrolet", "model": "equinox"}
+{"vehicle_id": "VEH-00252", "customer_id": "CUST-00252", "vin": "GX8FMN96BCSWY82LB", "plate": "YNG 651", "year": 2015, "make": "ford", "model": "f 350"}
+{"vehicle_id": "VEH-00253", "customer_id": "CUST-00253", "vin": "WS9UDT1BURKY2JF1R", "plate": "GVI 2016", "year": 2017, "make": "volkswagen", "model": "gol"}
+{"vehicle_id": "VEH-00254", "customer_id": "CUST-00254", "vin": "WY5JPJNJWJ4KLXEHM", "plate": "S33 6DB", "year": 2015, "make": "honda", "model": "trx420te1 fourtrax rancher es"}
+{"vehicle_id": "VEH-00255", "customer_id": "CUST-00255", "vin": "BX33W5UKNGJMBURRR", "plate": "VNU 491", "year": 2016, "make": "gmc", "model": "sierra 2500 hd"}
+{"vehicle_id": "VEH-00256", "customer_id": "CUST-00256", "vin": "F7J970M187JLNRC3A", "plate": "JZ6 3060", "year": 2016, "make": "scion", "model": "im"}
+{"vehicle_id": "VEH-00257", "customer_id": "CUST-00257", "vin": "RNPEM58X6S42C1X2C", "plate": "9-A2098", "year": 2016, "make": "chevrolet", "model": "colorado"}
+{"vehicle_id": "VEH-00258", "customer_id": "CUST-00258", "vin": "CS2C1DNV52WV6L4VD", "plate": "DPZ 061", "year": 2018, "make": "chevrolet", "model": "traverse"}
+{"vehicle_id": "VEH-00259", "customer_id": "CUST-00259", "vin": "65F9HMJ23X5BM6N6F", "plate": "731 5II", "year": 2020, "make": "honda", "model": "trx420tm1 fourtrax rancher"}
+{"vehicle_id": "VEH-00260", "customer_id": "CUST-00260", "vin": "HFH50F19L11CLYKLK", "plate": "8NJ T56", "year": 2024, "make": "jeep", "model": "wagoneer l"}
+{"vehicle_id": "VEH-00261", "customer_id": "CUST-00261", "vin": "WW5VMHJNATA688A8S", "plate": "G 077046", "year": 2019, "make": "chrysler", "model": "300"}
+{"vehicle_id": "VEH-00262", "customer_id": "CUST-00262", "vin": "35FASUPDMKDZCKCWY", "plate": "4K-PTBM", "year": 2017, "make": "toyota", "model": "yaris"}
+{"vehicle_id": "VEH-00263", "customer_id": "CUST-00263", "vin": "G3MLVM60CFWX01E4E", "plate": "25D\u2022296", "year": 2016, "make": "ford", "model": "f-150"}
+{"vehicle_id": "VEH-00264", "customer_id": "CUST-00264", "vin": "UY3PPDGF7V4XTZJ88", "plate": "KGS Y88", "year": 2021, "make": "mitsubishi", "model": "outlander phev"}
+{"vehicle_id": "VEH-00265", "customer_id": "CUST-00265", "vin": "RVNAHB6HP33CYZPAN", "plate": "R63 2CL", "year": 2014, "make": "jeep", "model": "cherokee"}
+{"vehicle_id": "VEH-00266", "customer_id": "CUST-00266", "vin": "EWW9XAHYY2BMNYY77", "plate": "HX-4732", "year": 2016, "make": "dodge", "model": "journey"}
+{"vehicle_id": "VEH-00267", "customer_id": "CUST-00267", "vin": "J7K6Y63DWXBPYZEKU", "plate": "388 SVJ", "year": 2023, "make": "honda", "model": "cb1000r black edition"}
+{"vehicle_id": "VEH-00268", "customer_id": "CUST-00268", "vin": "1L1MHWXCU3F8S05WP", "plate": "D87 8IU", "year": 2022, "make": "land rover", "model": "defender 90"}
+{"vehicle_id": "VEH-00269", "customer_id": "CUST-00269", "vin": "0CNF59B79KNY7WXKG", "plate": "740SDB", "year": 2019, "make": "acura", "model": "rlx"}
+{"vehicle_id": "VEH-00270", "customer_id": "CUST-00270", "vin": "JPC61HAWCFY6CGWBW", "plate": "782 CJS", "year": 2024, "make": "honda", "model": "prologue"}
+{"vehicle_id": "VEH-00271", "customer_id": "CUST-00271", "vin": "NNVUX5HUKLUHA9GPZ", "plate": "10B\u2022415", "year": 2016, "make": "chevrolet", "model": "silverado 3500"}
+{"vehicle_id": "VEH-00272", "customer_id": "CUST-00272", "vin": "VSLEWY5DJB7DG1DF4", "plate": "7DJM238", "year": 2014, "make": "chevrolet", "model": "cruze"}
+{"vehicle_id": "VEH-00273", "customer_id": "CUST-00273", "vin": "ZWYNF6JF6G6W67RRK", "plate": "OXO4025", "year": 2014, "make": "volkswagen", "model": "tiguan"}
+{"vehicle_id": "VEH-00274", "customer_id": "CUST-00274", "vin": "T02MYX68BE7HZ76LV", "plate": "7DP53", "year": 2014, "make": "volkswagen", "model": "tiguan"}
+{"vehicle_id": "VEH-00275", "customer_id": "CUST-00275", "vin": "J9G2GXEW623SSL71E", "plate": "HNQ 319", "year": 2019, "make": "buick", "model": "envision"}
+{"vehicle_id": "VEH-00276", "customer_id": "CUST-00276", "vin": "4YSME8H6XG5MW2EG1", "plate": "50R 344", "year": 2017, "make": "ford", "model": "transit 350 hd"}
+{"vehicle_id": "VEH-00277", "customer_id": "CUST-00277", "vin": "PJAKK5V15NPXWW4ZF", "plate": "ZST-051", "year": 2017, "make": "buick", "model": "encore"}
+{"vehicle_id": "VEH-00278", "customer_id": "CUST-00278", "vin": "VD0DAZHVBS42X1214", "plate": "RED 719", "year": 2015, "make": "jeep", "model": "patriot"}
+{"vehicle_id": "VEH-00279", "customer_id": "CUST-00279", "vin": "JN103KVJJAEBK84JF", "plate": "LHO-4584", "year": 2014, "make": "infiniti", "model": "q60"}
+{"vehicle_id": "VEH-00280", "customer_id": "CUST-00280", "vin": "4M69451ZRM4A8S9U3", "plate": "66M PA7", "year": 2018, "make": "chevrolet", "model": "traverse"}
+{"vehicle_id": "VEH-00281", "customer_id": "CUST-00281", "vin": "0CC70H7FKU6FFS7EW", "plate": "4E 4138A", "year": 2017, "make": "toyota", "model": "highlander"}
+{"vehicle_id": "VEH-00282", "customer_id": "CUST-00282", "vin": "A7697Y3ZVVLCWTD7L", "plate": "229 0HU", "year": 2018, "make": "subaru", "model": "xv"}
+{"vehicle_id": "VEH-00283", "customer_id": "CUST-00283", "vin": "BV8FJ9EUTJUUTAHMK", "plate": "5NU7490", "year": 2015, "make": "boss", "model": "stone 300"}
+{"vehicle_id": "VEH-00284", "customer_id": "CUST-00284", "vin": "MTS8MCYFKK831S5LP", "plate": "435 IGS", "year": 2016, "make": "nissan", "model": "quest"}
+{"vehicle_id": "VEH-00285", "customer_id": "CUST-00285", "vin": "THDL627W7R117TK4A", "plate": "29-7327Q", "year": 2022, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00286", "customer_id": "CUST-00286", "vin": "XCGZ4UYUUGT26SNYM", "plate": "OXN-4722", "year": 2016, "make": "infiniti", "model": "qx60"}
+{"vehicle_id": "VEH-00287", "customer_id": "CUST-00287", "vin": "AEA3GG5ZRVTNCBFDP", "plate": "324IPO", "year": 2018, "make": "subaru", "model": "wrx"}
+{"vehicle_id": "VEH-00288", "customer_id": "CUST-00288", "vin": "HHFJ1MHMTV6E6U4XT", "plate": "1DL31", "year": 2017, "make": "dodge", "model": "durango"}
+{"vehicle_id": "VEH-00289", "customer_id": "CUST-00289", "vin": "D11YDTTM5E8N2M8GK", "plate": "320-PRT", "year": 2021, "make": "honda", "model": "cb250 twister"}
+{"vehicle_id": "VEH-00290", "customer_id": "CUST-00290", "vin": "G5TGCEET5B8KAC1UK", "plate": "TNV-304", "year": 2020, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00291", "customer_id": "CUST-00291", "vin": "A98742ERA17HZYW2D", "plate": "832QGL", "year": 2016, "make": "ford", "model": "e 350 super duty"}
+{"vehicle_id": "VEH-00292", "customer_id": "CUST-00292", "vin": "YF6VNMC1NW1GZ8F5N", "plate": "196-RTE", "year": 2023, "make": "honda", "model": "city"}
+{"vehicle_id": "VEH-00293", "customer_id": "CUST-00293", "vin": "S81EW85BCYDYC2HP6", "plate": "91-LP45", "year": 2019, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00294", "customer_id": "CUST-00294", "vin": "KRECK8B7CSJAMDWG6", "plate": "XXC-161", "year": 2017, "make": "honda", "model": "cbr300r"}
+{"vehicle_id": "VEH-00295", "customer_id": "CUST-00295", "vin": "GH8REN4Y2XHJXPCMY", "plate": "8EF 705", "year": 2023, "make": "hyundai", "model": "creta grand"}
+{"vehicle_id": "VEH-00296", "customer_id": "CUST-00296", "vin": "3L0L5SCJG1LB8FAAM", "plate": "92GC1", "year": 2014, "make": "chevrolet", "model": "cruze"}
+{"vehicle_id": "VEH-00297", "customer_id": "CUST-00297", "vin": "V37JPKU53SMCM8FWZ", "plate": "K13-JQY", "year": 2016, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00298", "customer_id": "CUST-00298", "vin": "HG09R6PUDNHK78MLC", "plate": "5JK D48", "year": 2021, "make": "toyota", "model": "land cruiser"}
+{"vehicle_id": "VEH-00299", "customer_id": "CUST-00299", "vin": "P4TY6CGDMLB89HES5", "plate": "905 IGU", "year": 2020, "make": "mazda", "model": "2"}
+{"vehicle_id": "VEH-00300", "customer_id": "CUST-00300", "vin": "NXRHXRGS3N1RE78D4", "plate": "971112", "year": 2018, "make": "honda", "model": "cbr250r"}
+{"vehicle_id": "VEH-00301", "customer_id": "CUST-00301", "vin": "10J6NZUNYJCDUJH66", "plate": "759558", "year": 2018, "make": "honda", "model": "trx420fa6 fourtrax rancher 4x4 auto dct irs eps"}
+{"vehicle_id": "VEH-00302", "customer_id": "CUST-00302", "vin": "VLLRF38P76UA4SSX4", "plate": "KWD5026", "year": 2015, "make": "boss", "model": "genesis 400 4x4"}
+{"vehicle_id": "VEH-00303", "customer_id": "CUST-00303", "vin": "A3CC79C427G58SFA3", "plate": "2824", "year": 2020, "make": "triumph", "model": "tiger 800 xcx"}
+{"vehicle_id": "VEH-00304", "customer_id": "CUST-00304", "vin": "ZVSFB7WL6B66J2M06", "plate": "5PF1786", "year": 2017, "make": "jeep", "model": "patriot"}
+{"vehicle_id": "VEH-00305", "customer_id": "CUST-00305", "vin": "E1YCV4UPFYD90DH10", "plate": "626 NCK", "year": 2016, "make": "jeep", "model": "cherokee"}
+{"vehicle_id": "VEH-00306", "customer_id": "CUST-00306", "vin": "0MEPJYSH7PRXZU94U", "plate": "26D Z86", "year": 2017, "make": "audi", "model": "a6 quattro"}
+{"vehicle_id": "VEH-00307", "customer_id": "CUST-00307", "vin": "589H7V50EN6FF2MVE", "plate": "RXM3218", "year": 2024, "make": "chevrolet", "model": "silverado 3500 hd"}
+{"vehicle_id": "VEH-00308", "customer_id": "CUST-00308", "vin": "K8KPBV3J7Z35BVNEB", "plate": "059 RZH", "year": 2019, "make": "acura", "model": "rlx"}
+{"vehicle_id": "VEH-00309", "customer_id": "CUST-00309", "vin": "Y3YX856WJWLTR70VD", "plate": "7KKL 27", "year": 2023, "make": "infiniti", "model": "qx60"}
+{"vehicle_id": "VEH-00310", "customer_id": "CUST-00310", "vin": "LLVMMKLSHCXJ5T0MP", "plate": "116 3MT", "year": 2018, "make": "chevrolet", "model": "traverse"}
+{"vehicle_id": "VEH-00311", "customer_id": "CUST-00311", "vin": "XZK05LWHB28K6XKA9", "plate": "2-1696O", "year": 2024, "make": "gmc", "model": "hummer ev suv"}
+{"vehicle_id": "VEH-00312", "customer_id": "CUST-00312", "vin": "VK5YH7CJHWB2R5ZFX", "plate": "7S 73973", "year": 2016, "make": "chevrolet", "model": "cruze ng"}
+{"vehicle_id": "VEH-00313", "customer_id": "CUST-00313", "vin": "RUNBF5F92N8X9D02K", "plate": "761-QUU", "year": 2021, "make": "chevrolet", "model": "cheyenne"}
+{"vehicle_id": "VEH-00314", "customer_id": "CUST-00314", "vin": "010AVZZW5FP535VL4", "plate": "544-294", "year": 2022, "make": "jeep", "model": "grand cherokee wk"}
+{"vehicle_id": "VEH-00315", "customer_id": "CUST-00315", "vin": "JFKPW7YE1FA3U3M6J", "plate": "5AV C34", "year": 2016, "make": "nissan", "model": "altima"}
+{"vehicle_id": "VEH-00316", "customer_id": "CUST-00316", "vin": "8CWW86RBAKTW7HV3M", "plate": "413 TIR", "year": 2021, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00317", "customer_id": "CUST-00317", "vin": "HU8E074T7H09BTLDK", "plate": "7ND 399", "year": 2019, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00318", "customer_id": "CUST-00318", "vin": "LDU03ZDVVE9NMGLXX", "plate": "2R313", "year": 2019, "make": "volkswagen", "model": "golf alltrack"}
+{"vehicle_id": "VEH-00319", "customer_id": "CUST-00319", "vin": "WU0GZKAJV083YLGPK", "plate": "2NLU740", "year": 2016, "make": "infiniti", "model": "qx80"}
+{"vehicle_id": "VEH-00320", "customer_id": "CUST-00320", "vin": "H36EHJB7ZW0J5YMWB", "plate": "741RL", "year": 2015, "make": "gmc", "model": "acadia"}
+{"vehicle_id": "VEH-00321", "customer_id": "CUST-00321", "vin": "RJKRWJPJF4HEB74CN", "plate": "ZBQ-085", "year": 2016, "make": "toyota", "model": "avanza"}
+{"vehicle_id": "VEH-00322", "customer_id": "CUST-00322", "vin": "HTCEWAGHPNMZBFKUZ", "plate": "624 AHK", "year": 2017, "make": "hyundai", "model": "santa fe"}
+{"vehicle_id": "VEH-00323", "customer_id": "CUST-00323", "vin": "EGAPNVLAGP970M5GM", "plate": "7G 1Y6LAE", "year": 2024, "make": "nissan", "model": "frontier"}
+{"vehicle_id": "VEH-00324", "customer_id": "CUST-00324", "vin": "4P9R3HXH6HJ80VCFX", "plate": "666 OAA", "year": 2023, "make": "chevrolet", "model": "groove nueva"}
+{"vehicle_id": "VEH-00325", "customer_id": "CUST-00325", "vin": "6W5R3V4NE70MA8G25", "plate": "7346", "year": 2017, "make": "chevrolet", "model": "trax"}
+{"vehicle_id": "VEH-00326", "customer_id": "CUST-00326", "vin": "K22GLE0NYN2HR48UU", "plate": "7WD79", "year": 2015, "make": "gmc", "model": "yukon"}
+{"vehicle_id": "VEH-00327", "customer_id": "CUST-00327", "vin": "2Z7289UK6GHT88RJB", "plate": "F 020326", "year": 2020, "make": "toyota", "model": "86"}
+{"vehicle_id": "VEH-00328", "customer_id": "CUST-00328", "vin": "E8BM1XKWGE86NV889", "plate": "476-JEL", "year": 2015, "make": "ford", "model": "transit custom"}
+{"vehicle_id": "VEH-00329", "customer_id": "CUST-00329", "vin": "BC4H15X156CCMWL84", "plate": "1JA 484", "year": 2017, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00330", "customer_id": "CUST-00330", "vin": "H877L9D2T81ZVXDBC", "plate": "JQD 973", "year": 2015, "make": "ford", "model": "transit 250"}
+{"vehicle_id": "VEH-00331", "customer_id": "CUST-00331", "vin": "BY1G4ZZ3ZDSSSWFEW", "plate": "73DW973", "year": 2018, "make": "audi", "model": "rs3"}
+{"vehicle_id": "VEH-00332", "customer_id": "CUST-00332", "vin": "XC6493UB7BX11XG8G", "plate": "NZA 745", "year": 2015, "make": "lexus", "model": "rx350"}
+{"vehicle_id": "VEH-00333", "customer_id": "CUST-00333", "vin": "Y89YLW04N8EPVTDW2", "plate": "PLK7522", "year": 2016, "make": "ford", "model": "f-150"}
+{"vehicle_id": "VEH-00334", "customer_id": "CUST-00334", "vin": "FGYUE74PZEW9W4XN3", "plate": "7IA33", "year": 2018, "make": "chevrolet", "model": "suburban 3500 hd"}
+{"vehicle_id": "VEH-00335", "customer_id": "CUST-00335", "vin": "MBM8P6U4DN06KSKW4", "plate": "8921 WH", "year": 2021, "make": "cadillac", "model": "xt6"}
+{"vehicle_id": "VEH-00336", "customer_id": "CUST-00336", "vin": "P3UVLTS2SHKNBSW68", "plate": "GVO 484", "year": 2015, "make": "kia", "model": "sorento"}
+{"vehicle_id": "VEH-00337", "customer_id": "CUST-00337", "vin": "CNLUJBTUMC8BDFXWE", "plate": "KFD4526", "year": 2016, "make": "dodge", "model": "dart"}
+{"vehicle_id": "VEH-00338", "customer_id": "CUST-00338", "vin": "0F2JSH9HT8FSHXY1S", "plate": "2L D9592", "year": 2018, "make": "infiniti", "model": "q70l"}
+{"vehicle_id": "VEH-00339", "customer_id": "CUST-00339", "vin": "KGMPU53TD80HX47SU", "plate": "237-KHL", "year": 2020, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00340", "customer_id": "CUST-00340", "vin": "070WBCDST1W0HS51A", "plate": "BQB-3149", "year": 2024, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00341", "customer_id": "CUST-00341", "vin": "TWFSWPL5X3CUF873Y", "plate": "526 JAH", "year": 2015, "make": "lincoln", "model": "mkx"}
+{"vehicle_id": "VEH-00342", "customer_id": "CUST-00342", "vin": "GLT9EZ3X6BDM5JA2N", "plate": "246-FRK", "year": 2016, "make": "jeep", "model": "compass"}
+{"vehicle_id": "VEH-00343", "customer_id": "CUST-00343", "vin": "FHLSJ3X57JTMXVNF3", "plate": "9KB 025", "year": 2017, "make": "toyota", "model": "highlander"}
+{"vehicle_id": "VEH-00344", "customer_id": "CUST-00344", "vin": "RBBRF6NTLD24TKF0L", "plate": "DV 3060", "year": 2015, "make": "honda", "model": "odyssey"}
+{"vehicle_id": "VEH-00345", "customer_id": "CUST-00345", "vin": "A468HRPNUV81J4PPV", "plate": "FL 06420", "year": 2023, "make": "ford", "model": "mustang"}
+{"vehicle_id": "VEH-00346", "customer_id": "CUST-00346", "vin": "3M3KBVTS5S06FA7JX", "plate": "D49-RUO", "year": 2019, "make": "buick", "model": "regal tourx"}
+{"vehicle_id": "VEH-00347", "customer_id": "CUST-00347", "vin": "P14TEGDDYS7ZCAT91", "plate": "15BK532", "year": 2019, "make": "nissan", "model": "sentra"}
+{"vehicle_id": "VEH-00348", "customer_id": "CUST-00348", "vin": "0JCMTL98Y6JFX4KTH", "plate": "2PM P09", "year": 2021, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00349", "customer_id": "CUST-00349", "vin": "U04VTTX4LX8K5DNKD", "plate": "MQI 807", "year": 2015, "make": "toyota", "model": "hilux"}
+{"vehicle_id": "VEH-00350", "customer_id": "CUST-00350", "vin": "TL64H8C5Z868HKHZF", "plate": "3IR 744", "year": 2023, "make": "lamborghini", "model": "huracan"}
+{"vehicle_id": "VEH-00351", "customer_id": "CUST-00351", "vin": "L9UPAM3ES8GYBVH20", "plate": "330-CAN", "year": 2019, "make": "honda", "model": "cgl125 tool"}
+{"vehicle_id": "VEH-00352", "customer_id": "CUST-00352", "vin": "XKBF676UAYC5XJPDV", "plate": "5N I3804", "year": 2018, "make": "chevrolet", "model": "traverse"}
+{"vehicle_id": "VEH-00353", "customer_id": "CUST-00353", "vin": "E1F2TMS2FBPL12VKH", "plate": "XY 6602", "year": 2021, "make": "ford", "model": "explorer"}
+{"vehicle_id": "VEH-00354", "customer_id": "CUST-00354", "vin": "WJZG09N8517U4F40M", "plate": "5LDC794", "year": 2019, "make": "gmc", "model": "canyon"}
+{"vehicle_id": "VEH-00355", "customer_id": "CUST-00355", "vin": "C9Y6RK8FV64F7WKJW", "plate": "P85 9ZI", "year": 2018, "make": "buick", "model": "enclave"}
+{"vehicle_id": "VEH-00356", "customer_id": "CUST-00356", "vin": "4VDEC9G943G6TZTF9", "plate": "83I-KPKT", "year": 2024, "make": "ford", "model": "transit 350 hd"}
+{"vehicle_id": "VEH-00357", "customer_id": "CUST-00357", "vin": "M2CF3WX65TYMPMFTG", "plate": "1EK A05", "year": 2015, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00358", "customer_id": "CUST-00358", "vin": "2HAL7628W02WFJJAN", "plate": "6QNU281", "year": 2021, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00359", "customer_id": "CUST-00359", "vin": "NBP7KS4NFW6K74BHL", "plate": "280 FMG", "year": 2014, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00360", "customer_id": "CUST-00360", "vin": "587B5SNV2DYAG438V", "plate": "394 LOB", "year": 2022, "make": "toyota", "model": "avalon"}
+{"vehicle_id": "VEH-00361", "customer_id": "CUST-00361", "vin": "98RDB4XEU37H8Z54B", "plate": "365LGU", "year": 2015, "make": "chevrolet", "model": "volt"}
+{"vehicle_id": "VEH-00362", "customer_id": "CUST-00362", "vin": "Z5R9RY6JV1307LPVF", "plate": "144 7BV", "year": 2017, "make": "hyundai", "model": "santa fe"}
+{"vehicle_id": "VEH-00363", "customer_id": "CUST-00363", "vin": "MNL8G38WSPDBZTZLM", "plate": "VY 7865", "year": 2016, "make": "subaru", "model": "legacy"}
+{"vehicle_id": "VEH-00364", "customer_id": "CUST-00364", "vin": "CEY4HRHR8TYZCUK9G", "plate": "VMH 956", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00365", "customer_id": "CUST-00365", "vin": "6HGGC9GLHP0LV598G", "plate": "56J 534", "year": 2017, "make": "ford", "model": "ecosport"}
+{"vehicle_id": "VEH-00366", "customer_id": "CUST-00366", "vin": "JHN53AS7YV9LFU030", "plate": "B73-KJR", "year": 2015, "make": "hyundai", "model": "sonata"}
+{"vehicle_id": "VEH-00367", "customer_id": "CUST-00367", "vin": "3RJ43360B5KAEFYX2", "plate": "FYM 042", "year": 2022, "make": "bmw", "model": "r nine t pure"}
+{"vehicle_id": "VEH-00368", "customer_id": "CUST-00368", "vin": "4D2CKDV32WXZAUK25", "plate": "219-HEDA", "year": 2021, "make": "kia", "model": "forte"}
+{"vehicle_id": "VEH-00369", "customer_id": "CUST-00369", "vin": "Z2NWFCY1JVPF9WYLB", "plate": "268-PGD", "year": 2017, "make": "bmw", "model": "320i xdrive"}
+{"vehicle_id": "VEH-00370", "customer_id": "CUST-00370", "vin": "W49HD0T9ZHDH5WA6Y", "plate": "239 NUY", "year": 2015, "make": "isuzu", "model": "elf 200"}
+{"vehicle_id": "VEH-00371", "customer_id": "CUST-00371", "vin": "RZWVJ1SGXN06GK43F", "plate": "35Q 539", "year": 2015, "make": "boss", "model": "stone 300"}
+{"vehicle_id": "VEH-00372", "customer_id": "CUST-00372", "vin": "7P5E022T84583LK9J", "plate": "1EIT 41", "year": 2016, "make": "subaru", "model": "legacy"}
+{"vehicle_id": "VEH-00373", "customer_id": "CUST-00373", "vin": "9HP67CL0H3HH0VCKH", "plate": "IEZ-163", "year": 2016, "make": "subaru", "model": "legacy"}
+{"vehicle_id": "VEH-00374", "customer_id": "CUST-00374", "vin": "V8BKK3DWVPM8AHZEC", "plate": "3-79223H", "year": 2023, "make": "land rover", "model": "discovery sport"}
+{"vehicle_id": "VEH-00375", "customer_id": "CUST-00375", "vin": "5Y17JJ9655KXF31R2", "plate": "343 LMI", "year": 2024, "make": "infiniti", "model": "q50"}
+{"vehicle_id": "VEH-00376", "customer_id": "CUST-00376", "vin": "5UFLBWHFNDN79BHMB", "plate": "CQ 47242", "year": 2020, "make": "peugeot", "model": "3008"}
+{"vehicle_id": "VEH-00377", "customer_id": "CUST-00377", "vin": "5FX2C8BY4M3BX1TFH", "plate": "RFH 052", "year": 2024, "make": "audi", "model": "q5 sportback"}
+{"vehicle_id": "VEH-00378", "customer_id": "CUST-00378", "vin": "LVKMTFKW3LDXMBDW1", "plate": "7MQ 859", "year": 2021, "make": "honda", "model": "trx250te fourtrax recon es"}
+{"vehicle_id": "VEH-00379", "customer_id": "CUST-00379", "vin": "XT1HDNSS8991HUDX6", "plate": "UZJ6320", "year": 2016, "make": "chevrolet", "model": "colorado"}
+{"vehicle_id": "VEH-00380", "customer_id": "CUST-00380", "vin": "B3RBUGSJW35F9PK0L", "plate": "8385", "year": 2020, "make": "dodge", "model": "neon"}
+{"vehicle_id": "VEH-00381", "customer_id": "CUST-00381", "vin": "45CA6VLAD7UT1ZP9V", "plate": "GNS3626", "year": 2021, "make": "keeway", "model": "patagonian eagle 250"}
+{"vehicle_id": "VEH-00382", "customer_id": "CUST-00382", "vin": "F2HJU4P9XYT5USXYP", "plate": "847K", "year": 2019, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00383", "customer_id": "CUST-00383", "vin": "JA7AAM382FEB5HZ1Z", "plate": "5514", "year": 2024, "make": "dodge", "model": "attitude"}
+{"vehicle_id": "VEH-00384", "customer_id": "CUST-00384", "vin": "60N5ARBUZNFWRR80C", "plate": "LVS-1024", "year": 2020, "make": "honda", "model": "cb160f dlx"}
+{"vehicle_id": "VEH-00385", "customer_id": "CUST-00385", "vin": "N2HU98LNMEJEJTRUN", "plate": "44-LQ66", "year": 2022, "make": "honda", "model": "crf1100l4 africa twin adventure sports es dct"}
+{"vehicle_id": "VEH-00386", "customer_id": "CUST-00386", "vin": "T6A4DX43UH680CRDU", "plate": "627BZI", "year": 2015, "make": "dodge", "model": "grand caravan"}
+{"vehicle_id": "VEH-00387", "customer_id": "CUST-00387", "vin": "5XA2NYFBR4ESNLYWE", "plate": "KV 8486", "year": 2015, "make": "nissan", "model": "370z"}
+{"vehicle_id": "VEH-00388", "customer_id": "CUST-00388", "vin": "74BYTSG7SYDYSE5G5", "plate": "AQ3 0373", "year": 2019, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00389", "customer_id": "CUST-00389", "vin": "C1XEJD5DW4EGDDV12", "plate": "HNG 251", "year": 2019, "make": "jeep", "model": "renegade"}
+{"vehicle_id": "VEH-00390", "customer_id": "CUST-00390", "vin": "A6164GYB6YNGGAENJ", "plate": "Z11-22Z", "year": 2023, "make": "infiniti", "model": "qx60"}
+{"vehicle_id": "VEH-00391", "customer_id": "CUST-00391", "vin": "375MSJCDJW49ZWKK7", "plate": "MAS 505", "year": 2017, "make": "volkswagen", "model": "gol"}
+{"vehicle_id": "VEH-00392", "customer_id": "CUST-00392", "vin": "0AKDS9D4ZNNNEYN76", "plate": "44C P60", "year": 2016, "make": "ford", "model": "f-250 super duty"}
+{"vehicle_id": "VEH-00393", "customer_id": "CUST-00393", "vin": "YW3YLG6C8RARR6PS7", "plate": "0-46154", "year": 2023, "make": "nissan", "model": "armada"}
+{"vehicle_id": "VEH-00394", "customer_id": "CUST-00394", "vin": "Y1P2MA0AEZBHKV5N0", "plate": "849 HNA", "year": 2017, "make": "lincoln", "model": "mkc"}
+{"vehicle_id": "VEH-00395", "customer_id": "CUST-00395", "vin": "NVMRTMYSMNBMTGBJ1", "plate": "LUS 132", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00396", "customer_id": "CUST-00396", "vin": "YPW6S00L4EHKJNN10", "plate": "74HP6", "year": 2019, "make": "acura", "model": "rlx"}
+{"vehicle_id": "VEH-00397", "customer_id": "CUST-00397", "vin": "SCNVKXSDUJ98PF7EL", "plate": "037-HOE", "year": 2017, "make": "ford", "model": "explorer"}
+{"vehicle_id": "VEH-00398", "customer_id": "CUST-00398", "vin": "6MX0787U2CPRN5S2P", "plate": "LDX 464", "year": 2022, "make": "sunl", "model": "mini pocket 49 infantil"}
+{"vehicle_id": "VEH-00399", "customer_id": "CUST-00399", "vin": "L0TFJFV5ZRC69Y456", "plate": "HXG3510", "year": 2018, "make": "mazda", "model": "3"}
+{"vehicle_id": "VEH-00400", "customer_id": "CUST-00400", "vin": "8XU1BM5RTEZFV99FU", "plate": "20-RW19", "year": 2020, "make": "kia", "model": "soul"}
+{"vehicle_id": "VEH-00401", "customer_id": "CUST-00401", "vin": "HE0CNYNYTWUNJTAWV", "plate": "RFV6112", "year": 2017, "make": "husqvarna", "model": "fe501s"}
+{"vehicle_id": "VEH-00402", "customer_id": "CUST-00402", "vin": "22A79K2RRP7R66YFX", "plate": "RDR-7692", "year": 2014, "make": "chevrolet", "model": "malibu"}
+{"vehicle_id": "VEH-00403", "customer_id": "CUST-00403", "vin": "3P55B0JJWA8ZYR342", "plate": "7-2450K", "year": 2016, "make": "buick", "model": "encore"}
+{"vehicle_id": "VEH-00404", "customer_id": "CUST-00404", "vin": "WXBCJKY21P2E1N7GY", "plate": "FYJ 890", "year": 2021, "make": "honda", "model": "cb190r repsol"}
+{"vehicle_id": "VEH-00405", "customer_id": "CUST-00405", "vin": "WFLGMC8BMNE1VPRVE", "plate": "9-87950T", "year": 2017, "make": "dodge", "model": "durango"}
+{"vehicle_id": "VEH-00406", "customer_id": "CUST-00406", "vin": "ALX32LHJ37E1PJPW4", "plate": "4VX64", "year": 2021, "make": "nissan", "model": "altima"}
+{"vehicle_id": "VEH-00407", "customer_id": "CUST-00407", "vin": "7LWN96UNAK5E2SY86", "plate": "031 SQQ", "year": 2017, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00408", "customer_id": "CUST-00408", "vin": "FV6ZW2M3SM461MG2C", "plate": "87O 180", "year": 2015, "make": "gmc", "model": "savana 2500"}
+{"vehicle_id": "VEH-00409", "customer_id": "CUST-00409", "vin": "VEP83H0EG9X35LTP9", "plate": "MKP 744", "year": 2019, "make": "dodge", "model": "grand caravan"}
+{"vehicle_id": "VEH-00410", "customer_id": "CUST-00410", "vin": "61Y2N2CATHJX686EF", "plate": "4NCC 04", "year": 2016, "make": "chrysler", "model": "200"}
+{"vehicle_id": "VEH-00411", "customer_id": "CUST-00411", "vin": "5J7ULLBGMVH2LEAUK", "plate": "345-GDF", "year": 2016, "make": "lamborghini", "model": "aventador"}
+{"vehicle_id": "VEH-00412", "customer_id": "CUST-00412", "vin": "CP5DG1W5DAD1NS0SN", "plate": "15X DB7", "year": 2020, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00413", "customer_id": "CUST-00413", "vin": "AYNERGLLC39GXXNP2", "plate": "932-312", "year": 2019, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00414", "customer_id": "CUST-00414", "vin": "RPGZXMA2XA1P6REU0", "plate": "1NV 299", "year": 2015, "make": "acura", "model": "ilx"}
+{"vehicle_id": "VEH-00415", "customer_id": "CUST-00415", "vin": "W8GLTGX1JYMX7EYB5", "plate": "027 IUB", "year": 2016, "make": "chrysler", "model": "town & country"}
+{"vehicle_id": "VEH-00416", "customer_id": "CUST-00416", "vin": "ARBHWS4SFDJ08VNK1", "plate": "777IA", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00417", "customer_id": "CUST-00417", "vin": "5YJUXC3VBRYYSPDSR", "plate": "356 LWF", "year": 2023, "make": "toyota", "model": "corolla cross"}
+{"vehicle_id": "VEH-00418", "customer_id": "CUST-00418", "vin": "XM5AE8ENDKPJFMPS9", "plate": "2KB 648", "year": 2022, "make": "subaru", "model": "impreza"}
+{"vehicle_id": "VEH-00419", "customer_id": "CUST-00419", "vin": "LNS4MSWV5NU7F021L", "plate": "63X-VTOH", "year": 2019, "make": "chevrolet", "model": "silverado 3500 hd"}
+{"vehicle_id": "VEH-00420", "customer_id": "CUST-00420", "vin": "4K7B14FWKMT16W6V1", "plate": "505V8", "year": 2024, "make": "nissan", "model": "frontier"}
+{"vehicle_id": "VEH-00421", "customer_id": "CUST-00421", "vin": "YJ7NKNAA908232018", "plate": "48W 424", "year": 2016, "make": "chrysler", "model": "200"}
+{"vehicle_id": "VEH-00422", "customer_id": "CUST-00422", "vin": "CH1LN4TZ980D14SS7", "plate": "687 ETS", "year": 2016, "make": "hyundai", "model": "tucson"}
+{"vehicle_id": "VEH-00423", "customer_id": "CUST-00423", "vin": "BKT6KTSLAHF12FN4L", "plate": "MOS 6325", "year": 2023, "make": "jeep", "model": "wagoneer"}
+{"vehicle_id": "VEH-00424", "customer_id": "CUST-00424", "vin": "W91W3FGZKUP2WAL8A", "plate": "186 DHQ", "year": 2015, "make": "volkswagen", "model": "crossfox"}
+{"vehicle_id": "VEH-00425", "customer_id": "CUST-00425", "vin": "3V4LM0MJN8M9H5PMN", "plate": "1325 KG", "year": 2019, "make": "suzuki", "model": "en125 2a"}
+{"vehicle_id": "VEH-00426", "customer_id": "CUST-00426", "vin": "NT35GLFVF1HUEYBS7", "plate": "885 6HQ", "year": 2017, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00427", "customer_id": "CUST-00427", "vin": "DUACGPA1U87Y4Y0YX", "plate": "KAE 000", "year": 2023, "make": "chevrolet", "model": "tracker"}
+{"vehicle_id": "VEH-00428", "customer_id": "CUST-00428", "vin": "21DZYGA62JBHUS057", "plate": "Z46 2OX", "year": 2024, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00429", "customer_id": "CUST-00429", "vin": "XB0CX5R82FZ47G1VN", "plate": "8W 75082", "year": 2023, "make": "ford", "model": "lobo"}
+{"vehicle_id": "VEH-00430", "customer_id": "CUST-00430", "vin": "9CJ8FW6L5H7SSPLFG", "plate": "GSU 920", "year": 2016, "make": "chevrolet", "model": "express 2500"}
+{"vehicle_id": "VEH-00431", "customer_id": "CUST-00431", "vin": "X1URT7HJ8FYREY114", "plate": "JHA 954", "year": 2023, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00432", "customer_id": "CUST-00432", "vin": "THVFHFYNH0JX1AWDN", "plate": "1-25608", "year": 2015, "make": "ford", "model": "transit-150"}
+{"vehicle_id": "VEH-00433", "customer_id": "CUST-00433", "vin": "X0JRG2A6XKVR86KVK", "plate": "9X 10292", "year": 2015, "make": "gmc", "model": "savana 3500"}
+{"vehicle_id": "VEH-00434", "customer_id": "CUST-00434", "vin": "CXW9HU7P8V1DYKPRD", "plate": "11Y X16", "year": 2018, "make": "ford", "model": "police interceptor sedan"}
+{"vehicle_id": "VEH-00435", "customer_id": "CUST-00435", "vin": "M82WLB2Y47Z22EVVN", "plate": "QEK-0952", "year": 2021, "make": "lexus", "model": "gx460"}
+{"vehicle_id": "VEH-00436", "customer_id": "CUST-00436", "vin": "2GJXDW6LJ57VKPPNA", "plate": "1A I2027", "year": 2017, "make": "buick", "model": "verano"}
+{"vehicle_id": "VEH-00437", "customer_id": "CUST-00437", "vin": "K14LDGZ7MDH9Y4K2S", "plate": "PS7 Y5U", "year": 2018, "make": "jeep", "model": "wrangler"}
+{"vehicle_id": "VEH-00438", "customer_id": "CUST-00438", "vin": "8WM1F61U50AHHFH89", "plate": "QBR 081", "year": 2015, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00439", "customer_id": "CUST-00439", "vin": "GM174WJGXEM2B28EH", "plate": "625-885", "year": 2019, "make": "dodge", "model": "grand caravan"}
+{"vehicle_id": "VEH-00440", "customer_id": "CUST-00440", "vin": "HMMA5XHCJPLFTCFH9", "plate": "SAY-1107", "year": 2019, "make": "ford", "model": "mustang"}
+{"vehicle_id": "VEH-00441", "customer_id": "CUST-00441", "vin": "ASWCV5J8XZ9PGCSCN", "plate": "PUH 1379", "year": 2016, "make": "dodge", "model": "dart"}
+{"vehicle_id": "VEH-00442", "customer_id": "CUST-00442", "vin": "PZUJ4ETT1L26FT4KP", "plate": "37EA0", "year": 2023, "make": "ford", "model": "mustang mach e"}
+{"vehicle_id": "VEH-00443", "customer_id": "CUST-00443", "vin": "N09L3KX41BSEUHH3E", "plate": "O83 9LQ", "year": 2015, "make": "nissan", "model": "nv350 urvan"}
+{"vehicle_id": "VEH-00444", "customer_id": "CUST-00444", "vin": "YUKRUAG1R1GHMW8GZ", "plate": "OXY 697", "year": 2024, "make": "toyota", "model": "mirai"}
+{"vehicle_id": "VEH-00445", "customer_id": "CUST-00445", "vin": "UGDLX1MZ27JTA9KJK", "plate": "4MR H96", "year": 2019, "make": "beta", "model": "evo 80 jr"}
+{"vehicle_id": "VEH-00446", "customer_id": "CUST-00446", "vin": "0S36M5Z69VU4RWFW3", "plate": "MP2 8799", "year": 2021, "make": "bmw", "model": "alpina xb7"}
+{"vehicle_id": "VEH-00447", "customer_id": "CUST-00447", "vin": "FESFLDFV8A49J789H", "plate": "EID-9165", "year": 2022, "make": "honda", "model": "civic"}
+{"vehicle_id": "VEH-00448", "customer_id": "CUST-00448", "vin": "A4ZSC5LRME0J9ZD48", "plate": "RN9 8939", "year": 2024, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00449", "customer_id": "CUST-00449", "vin": "YSHVW7VTPA2PW9C68", "plate": "YYR-636", "year": 2015, "make": "honda", "model": "mrt2604f montesa cota 4rt260"}
+{"vehicle_id": "VEH-00450", "customer_id": "CUST-00450", "vin": "6YWZGAZM2ZAG48NF9", "plate": "2-I0456", "year": 2024, "make": "lincoln", "model": "nautilus"}
+{"vehicle_id": "VEH-00451", "customer_id": "CUST-00451", "vin": "H8AKTR720W04MUG55", "plate": "HFD 224", "year": 2016, "make": "chrysler", "model": "town & country"}
+{"vehicle_id": "VEH-00452", "customer_id": "CUST-00452", "vin": "4AZNHNVCJ23YCLN7U", "plate": "C 299570", "year": 2016, "make": "ford", "model": "expedition"}
+{"vehicle_id": "VEH-00453", "customer_id": "CUST-00453", "vin": "8JX291JHGBJKZ9ASD", "plate": "YHQ 545", "year": 2015, "make": "scion", "model": "xb"}
+{"vehicle_id": "VEH-00454", "customer_id": "CUST-00454", "vin": "4A47VV8F4SK9MSUHT", "plate": "MVF-175", "year": 2023, "make": "chevrolet", "model": "bolt ev"}
+{"vehicle_id": "VEH-00455", "customer_id": "CUST-00455", "vin": "4N7G9MNKRHJ2CUNK4", "plate": "444-NLF", "year": 2022, "make": "nissan", "model": "qashqai"}
+{"vehicle_id": "VEH-00456", "customer_id": "CUST-00456", "vin": "D13WRRY47D94DWHU0", "plate": "271 PSW", "year": 2017, "make": "buick", "model": "encore"}
+{"vehicle_id": "VEH-00457", "customer_id": "CUST-00457", "vin": "3SXDMCADXPV7UG4MT", "plate": "B23 2DA", "year": 2019, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00458", "customer_id": "CUST-00458", "vin": "YWHGAJY000SUP1FGJ", "plate": "823NZ", "year": 2018, "make": "acura", "model": "mdx"}
+{"vehicle_id": "VEH-00459", "customer_id": "CUST-00459", "vin": "NN5GEYW7NKCJN3TZ0", "plate": "16-RK99", "year": 2020, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00460", "customer_id": "CUST-00460", "vin": "E739BLUJVCDN289EL", "plate": "257 ZSN", "year": 2023, "make": "ford", "model": "f 150"}
+{"vehicle_id": "VEH-00461", "customer_id": "CUST-00461", "vin": "12UPMALPA969TWRVU", "plate": "12J\u2022746", "year": 2021, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00462", "customer_id": "CUST-00462", "vin": "CSVCKUJUDSPHAZ0XF", "plate": "90P A01", "year": 2015, "make": "ford", "model": "transit-150"}
+{"vehicle_id": "VEH-00463", "customer_id": "CUST-00463", "vin": "TJ3VXDAZRUMTBG1TP", "plate": "UWY-011", "year": 2014, "make": "honda", "model": "odyssey"}
+{"vehicle_id": "VEH-00464", "customer_id": "CUST-00464", "vin": "XUP2K5R40K7F8M6MM", "plate": "ZS 8769", "year": 2019, "make": "toyota", "model": "yaris r"}
+{"vehicle_id": "VEH-00465", "customer_id": "CUST-00465", "vin": "MVBWLM2NEKE4S62GJ", "plate": "83O I52", "year": 2016, "make": "gmc", "model": "sierra 2500 hd"}
+{"vehicle_id": "VEH-00466", "customer_id": "CUST-00466", "vin": "AG11BHACJSFUKAAGY", "plate": "LOT 551", "year": 2015, "make": "boss", "model": "stone 300"}
+{"vehicle_id": "VEH-00467", "customer_id": "CUST-00467", "vin": "NJ75LWY7KSDUHBCGV", "plate": "206VWF", "year": 2024, "make": "chevrolet", "model": "equinox ev"}
+{"vehicle_id": "VEH-00468", "customer_id": "CUST-00468", "vin": "ARBR41KZVR1H8LHRG", "plate": "732BPD", "year": 2014, "make": "chevrolet", "model": "cruze"}
+{"vehicle_id": "VEH-00469", "customer_id": "CUST-00469", "vin": "ZEYH0FCKM4YM4KWVZ", "plate": "8TTF 55", "year": 2019, "make": "beta", "model": "evo 80 jr"}
+{"vehicle_id": "VEH-00470", "customer_id": "CUST-00470", "vin": "80TEAKKXK157EH4UK", "plate": "44GS9", "year": 2018, "make": "chevrolet", "model": "malibu"}
+{"vehicle_id": "VEH-00471", "customer_id": "CUST-00471", "vin": "1ZX8473YJS1388R1F", "plate": "5Z HJ110", "year": 2019, "make": "lincoln", "model": "navigator"}
+{"vehicle_id": "VEH-00472", "customer_id": "CUST-00472", "vin": "RFS0APB07JHDZ0JV6", "plate": "64-26033", "year": 2021, "make": "volvo", "model": "v90 cross country"}
+{"vehicle_id": "VEH-00473", "customer_id": "CUST-00473", "vin": "PRDJHK1B40DGE7LBK", "plate": "58FC1", "year": 2015, "make": "chevrolet", "model": "equinox"}
+{"vehicle_id": "VEH-00474", "customer_id": "CUST-00474", "vin": "EA3KM7JW73Y5AVHKD", "plate": "QSP 284", "year": 2024, "make": "audi", "model": "q5 sportback"}
+{"vehicle_id": "VEH-00475", "customer_id": "CUST-00475", "vin": "M9LA246T9WR4LUF1J", "plate": "GWA2020", "year": 2023, "make": "nissan", "model": "x trail"}
+{"vehicle_id": "VEH-00476", "customer_id": "CUST-00476", "vin": "DR2ME67X21LD04NUG", "plate": "HEY-102", "year": 2021, "make": "jeep", "model": "renegade"}
+{"vehicle_id": "VEH-00477", "customer_id": "CUST-00477", "vin": "YBSVLGEPAWNNCSUFC", "plate": "OYB 636", "year": 2016, "make": "ford", "model": "f-150"}
+{"vehicle_id": "VEH-00478", "customer_id": "CUST-00478", "vin": "DXFWAZV29NX2ZJGY3", "plate": "IG 6258", "year": 2020, "make": "toyota", "model": "yaris r"}
+{"vehicle_id": "VEH-00479", "customer_id": "CUST-00479", "vin": "G9KB17CVLK6FFRPKL", "plate": "HCC 587", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00480", "customer_id": "CUST-00480", "vin": "Y5JYV04C1SPEK8GAK", "plate": "481 5KT", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00481", "customer_id": "CUST-00481", "vin": "F8G6XLVLEU0ZFEM6T", "plate": "079 GWZ", "year": 2023, "make": "byd", "model": "tang ev"}
+{"vehicle_id": "VEH-00482", "customer_id": "CUST-00482", "vin": "5JH8C0V23J509X0F3", "plate": "865A2", "year": 2015, "make": "chevrolet", "model": "equinox"}
+{"vehicle_id": "VEH-00483", "customer_id": "CUST-00483", "vin": "CDSAKGV1L2ER16FZ6", "plate": "731-JFK", "year": 2018, "make": "volvo", "model": "xc90"}
+{"vehicle_id": "VEH-00484", "customer_id": "CUST-00484", "vin": "FMG24N2YEXY8P7HU6", "plate": "332 TLV", "year": 2016, "make": "chrysler", "model": "town country"}
+{"vehicle_id": "VEH-00485", "customer_id": "CUST-00485", "vin": "KPXC1D047PDPB4UTM", "plate": "AP-1261", "year": 2023, "make": "lamborghini", "model": "huracan"}
+{"vehicle_id": "VEH-00486", "customer_id": "CUST-00486", "vin": "2FW53PTMDF4YWLNZ3", "plate": "2XS22", "year": 2021, "make": "toyota", "model": "sequoia"}
+{"vehicle_id": "VEH-00487", "customer_id": "CUST-00487", "vin": "4Z1ANEKXXAK6K8XH3", "plate": "8M-FMVB", "year": 2017, "make": "bmw", "model": "320i xdrive"}
+{"vehicle_id": "VEH-00488", "customer_id": "CUST-00488", "vin": "J5GCPN3L1PZPNA00B", "plate": "070 ZF2", "year": 2016, "make": "honda", "model": "xr150l"}
+{"vehicle_id": "VEH-00489", "customer_id": "CUST-00489", "vin": "H8633ZZ4YHM640ML4", "plate": "98K\u2022897", "year": 2018, "make": "chevrolet", "model": "silverado 1500"}
+{"vehicle_id": "VEH-00490", "customer_id": "CUST-00490", "vin": "VGFGFB3G8G59CV3PR", "plate": "687-BAE", "year": 2015, "make": "kia", "model": "sorento"}
+{"vehicle_id": "VEH-00491", "customer_id": "CUST-00491", "vin": "1HN7HZ632A0R9VUTW", "plate": "529-DUS", "year": 2017, "make": "dodge", "model": "charger"}
+{"vehicle_id": "VEH-00492", "customer_id": "CUST-00492", "vin": "3SA3CABK0XYL4S2N2", "plate": "414-HJW", "year": 2015, "make": "gmc", "model": "acadia"}
+{"vehicle_id": "VEH-00493", "customer_id": "CUST-00493", "vin": "4J1M2XL4RGJ9H2TLX", "plate": "UYQ-941", "year": 2018, "make": "ford", "model": "police interceptor sedan"}
+{"vehicle_id": "VEH-00494", "customer_id": "CUST-00494", "vin": "4AKBF1BJ6ZMSRWNS1", "plate": "02H SB5", "year": 2019, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00495", "customer_id": "CUST-00495", "vin": "DUFKBGH6HGKVTMFE8", "plate": "2J 36220", "year": 2021, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00496", "customer_id": "CUST-00496", "vin": "2G8B3E8EP31X5LMWA", "plate": "238 GKB", "year": 2018, "make": "toyota", "model": "highlander"}
+{"vehicle_id": "VEH-00497", "customer_id": "CUST-00497", "vin": "CHYZ7ALTHNBB9KP0H", "plate": "711 6750", "year": 2021, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00498", "customer_id": "CUST-00498", "vin": "XJRFJUU7NFZV68492", "plate": "507 6JB", "year": 2019, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00499", "customer_id": "CUST-00499", "vin": "MNU2GWLP8454UXG14", "plate": "4-4823R", "year": 2015, "make": "smart", "model": "fortwo"}
+{"vehicle_id": "VEH-00500", "customer_id": "CUST-00500", "vin": "E5LC9T3VZ2BHMX4MZ", "plate": "WL 29517", "year": 2017, "make": "honda", "model": "trx500fa6 fourtrax foreman rubicon auto dct eps"}
+{"vehicle_id": "VEH-00501", "customer_id": "CUST-00501", "vin": "00KXHAXAYP6XRE1VP", "plate": "020O", "year": 2023, "make": "jeep", "model": "gladiator"}
+{"vehicle_id": "VEH-00502", "customer_id": "CUST-00502", "vin": "UE34XXNND88CU3HH5", "plate": "294 SXF", "year": 2014, "make": "chevrolet", "model": "cruze"}
+{"vehicle_id": "VEH-00503", "customer_id": "CUST-00503", "vin": "1SBVBA6VJ2CCYBE7G", "plate": "0U RY049", "year": 2021, "make": "nissan", "model": "nv2500"}
+{"vehicle_id": "VEH-00504", "customer_id": "CUST-00504", "vin": "WUXZ2FX8D2W68H0GB", "plate": "778-FSQ", "year": 2021, "make": "gmc", "model": "yukon xl"}
+{"vehicle_id": "VEH-00505", "customer_id": "CUST-00505", "vin": "GX4RLFN0ADTCHDWET", "plate": "4TT T98", "year": 2019, "make": "chevrolet", "model": "colorado"}
+{"vehicle_id": "VEH-00506", "customer_id": "CUST-00506", "vin": "LJ6HJXK35HS78UX7R", "plate": "838H", "year": 2018, "make": "chevrolet", "model": "malibu"}
+{"vehicle_id": "VEH-00507", "customer_id": "CUST-00507", "vin": "FZSPEE8DPAP61N8GY", "plate": "D62 6UR", "year": 2019, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00508", "customer_id": "CUST-00508", "vin": "W6K9GJR0159N2NEU4", "plate": "IHY 192", "year": 2017, "make": "toyota", "model": "4runner"}
+{"vehicle_id": "VEH-00509", "customer_id": "CUST-00509", "vin": "GK6GHSB6MUB75ZTHF", "plate": "HKK 394", "year": 2014, "make": "ford", "model": "f-150"}
+{"vehicle_id": "VEH-00510", "customer_id": "CUST-00510", "vin": "2949YD5U0GD14NVN2", "plate": "41Z Q67", "year": 2022, "make": "bmw", "model": "r nine t pure"}
+{"vehicle_id": "VEH-00511", "customer_id": "CUST-00511", "vin": "84GDSHRHDCUSEGUR2", "plate": "LQ 13088", "year": 2015, "make": "ford", "model": "flex"}
+{"vehicle_id": "VEH-00512", "customer_id": "CUST-00512", "vin": "U8PLPZVVAGM97WSLX", "plate": "5T-LUGA", "year": 2015, "make": "boss", "model": "genesis 400 4x4"}
+{"vehicle_id": "VEH-00513", "customer_id": "CUST-00513", "vin": "MY6KA74YBMTELAZ7A", "plate": "67B 456", "year": 2021, "make": "kia", "model": "forte"}
+{"vehicle_id": "VEH-00514", "customer_id": "CUST-00514", "vin": "HCBVR9LKGGWY58ZT8", "plate": "845 PMJ", "year": 2016, "make": "buick", "model": "enclave"}
+{"vehicle_id": "VEH-00515", "customer_id": "CUST-00515", "vin": "ZWY7HUBK3RKZ8BS40", "plate": "FNY-4883", "year": 2015, "make": "hyundai", "model": "tucson"}
+{"vehicle_id": "VEH-00516", "customer_id": "CUST-00516", "vin": "1GU5MTZY23UWNCYH4", "plate": "417 OQX", "year": 2016, "make": "toyota", "model": "yaris r"}
+{"vehicle_id": "VEH-00517", "customer_id": "CUST-00517", "vin": "ZVHA8K6KVLW8VEVA6", "plate": "A 486251", "year": 2018, "make": "hyundai", "model": "elantra"}
+{"vehicle_id": "VEH-00518", "customer_id": "CUST-00518", "vin": "HD8WA4ZADTJZV9KFU", "plate": "900TSS", "year": 2023, "make": "toyota", "model": "sienna"}
+{"vehicle_id": "VEH-00519", "customer_id": "CUST-00519", "vin": "FVRC7ZS142GTWWM4X", "plate": "217 SBF", "year": 2023, "make": "gmc", "model": "sierra"}
+{"vehicle_id": "VEH-00520", "customer_id": "CUST-00520", "vin": "NTJ3NWWFW6M14GJ5X", "plate": "781 4HT", "year": 2024, "make": "cadillac", "model": "xt6"}
+{"vehicle_id": "VEH-00521", "customer_id": "CUST-00521", "vin": "Z46336BB3FJWS90JV", "plate": "011M9", "year": 2017, "make": "hyundai", "model": "santa fe"}
+{"vehicle_id": "VEH-00522", "customer_id": "CUST-00522", "vin": "2A66DFDUGYGV7YDH9", "plate": "873-KWZ", "year": 2024, "make": "ford", "model": "police interceptor utility"}
+{"vehicle_id": "VEH-00523", "customer_id": "CUST-00523", "vin": "PK8JRKWWA8NHEAKHG", "plate": "MJ-3690", "year": 2021, "make": "bmw", "model": "alpina xb7"}
+{"vehicle_id": "VEH-00524", "customer_id": "CUST-00524", "vin": "B952DHW27MST5H4KB", "plate": "GVR8027", "year": 2016, "make": "chevrolet", "model": "cruze ng"}
+{"vehicle_id": "VEH-00525", "customer_id": "CUST-00525", "vin": "9N77VVG80U21G634K", "plate": "8Y 7271K", "year": 2016, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00526", "customer_id": "CUST-00526", "vin": "1AWC5CZJ66UALZ99P", "plate": "602 LGQ", "year": 2022, "make": "mazda", "model": "cx 30"}
+{"vehicle_id": "VEH-00527", "customer_id": "CUST-00527", "vin": "EMKZY6JUW2E717M9T", "plate": "P94-12W", "year": 2024, "make": "toyota", "model": "grand highlander"}
+{"vehicle_id": "VEH-00528", "customer_id": "CUST-00528", "vin": "Z2ECBLRGG87XRSGM1", "plate": "WM-3070", "year": 2022, "make": "chevrolet", "model": "cheyenne"}
+{"vehicle_id": "VEH-00529", "customer_id": "CUST-00529", "vin": "EDTHCE50BMXG51JNN", "plate": "73AZ971", "year": 2019, "make": "chrysler", "model": "300"}
+{"vehicle_id": "VEH-00530", "customer_id": "CUST-00530", "vin": "VRNL4NFBGPCJA03EY", "plate": "02N 3442", "year": 2018, "make": "jeep", "model": "wrangler"}
+{"vehicle_id": "VEH-00531", "customer_id": "CUST-00531", "vin": "P79ZZJE541EFJWGH8", "plate": "2RA 455", "year": 2024, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00532", "customer_id": "CUST-00532", "vin": "RVT1ZELVES9W2DH7T", "plate": "819-HOV", "year": 2015, "make": "dodge", "model": "grand caravan"}
+{"vehicle_id": "VEH-00533", "customer_id": "CUST-00533", "vin": "Y3TNYDJPYDS8ECZE3", "plate": "237-AFC", "year": 2023, "make": "nissan", "model": "x trail"}
+{"vehicle_id": "VEH-00534", "customer_id": "CUST-00534", "vin": "7JUCGC89RZ47WRBDB", "plate": "2-32737", "year": 2017, "make": "dodge", "model": "charger"}
+{"vehicle_id": "VEH-00535", "customer_id": "CUST-00535", "vin": "N1B7D11J44JH5H0ZN", "plate": "IKQ 294", "year": 2015, "make": "scion", "model": "fr s"}
+{"vehicle_id": "VEH-00536", "customer_id": "CUST-00536", "vin": "RFAR3CASDEDJ5MVCX", "plate": "402 OTY", "year": 2014, "make": "cadillac", "model": "cts"}
+{"vehicle_id": "VEH-00537", "customer_id": "CUST-00537", "vin": "J27HEETP8ZR5W0VSU", "plate": "923 BBO", "year": 2020, "make": "lincoln", "model": "aviator"}
+{"vehicle_id": "VEH-00538", "customer_id": "CUST-00538", "vin": "Z38UFPJRWPH0KCS56", "plate": "FEO 634", "year": 2023, "make": "honda", "model": "wave 110s"}
+{"vehicle_id": "VEH-00539", "customer_id": "CUST-00539", "vin": "8CUU1WFDU18B115CR", "plate": "6WZ 224", "year": 2023, "make": "dodge", "model": "challenger"}
+{"vehicle_id": "VEH-00540", "customer_id": "CUST-00540", "vin": "4DWCZBYTPBY44DG1V", "plate": "649 ECK", "year": 2021, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00541", "customer_id": "CUST-00541", "vin": "64TL16SJAUUFSVY2C", "plate": "BF-1254", "year": 2018, "make": "subaru", "model": "xv"}
+{"vehicle_id": "VEH-00542", "customer_id": "CUST-00542", "vin": "TAHWXTM56B5A6CZ7P", "plate": "7D 1978Y", "year": 2015, "make": "dodge", "model": "vision"}
+{"vehicle_id": "VEH-00543", "customer_id": "CUST-00543", "vin": "XE5MTUT8JRMKDRHCM", "plate": "616-HOD", "year": 2015, "make": "chrysler", "model": "200"}
+{"vehicle_id": "VEH-00544", "customer_id": "CUST-00544", "vin": "XCRDTTBZCSZGE95H9", "plate": "MZY 236", "year": 2018, "make": "chrysler", "model": "pacifica"}
+{"vehicle_id": "VEH-00545", "customer_id": "CUST-00545", "vin": "03E4VKBX0Y307VBL0", "plate": "84B U24", "year": 2017, "make": "subaru", "model": "crosstrek"}
+{"vehicle_id": "VEH-00546", "customer_id": "CUST-00546", "vin": "BGPX99ZP1CK1FER93", "plate": "MWZ 339", "year": 2021, "make": "nissan", "model": "nv2500"}
+{"vehicle_id": "VEH-00547", "customer_id": "CUST-00547", "vin": "D75XUNVSYS0R6XHS5", "plate": "6LIE 09", "year": 2015, "make": "subaru", "model": "xv crosstrek"}
+{"vehicle_id": "VEH-00548", "customer_id": "CUST-00548", "vin": "0FZ9E07R53RJS3JTV", "plate": "PK-4380", "year": 2016, "make": "hyundai", "model": "tucson"}
+{"vehicle_id": "VEH-00549", "customer_id": "CUST-00549", "vin": "339K8NM6ALH3T7GJC", "plate": "2G713", "year": 2022, "make": "ford", "model": "f 150 lightning"}
+{"vehicle_id": "VEH-00550", "customer_id": "CUST-00550", "vin": "LEJ914ZJ2SVHYYGCE", "plate": "159 7NX", "year": 2020, "make": "jeep", "model": "renegade"}
+{"vehicle_id": "VEH-00551", "customer_id": "CUST-00551", "vin": "5354V7JM9FKA061X5", "plate": "FFU2711", "year": 2019, "make": "mazda", "model": "mx 5 miata"}
+{"vehicle_id": "VEH-00552", "customer_id": "CUST-00552", "vin": "GRW8YD94VX1XMKCP4", "plate": "8-01426S", "year": 2016, "make": "hyundai", "model": "elantra"}
+{"vehicle_id": "VEH-00553", "customer_id": "CUST-00553", "vin": "ZVLHVU85RLVTGRUKG", "plate": "HSI 763", "year": 2022, "make": "audi", "model": "rs q8"}
+{"vehicle_id": "VEH-00554", "customer_id": "CUST-00554", "vin": "CNA8B0PV45J6VHH54", "plate": "BEN 676", "year": 2019, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00555", "customer_id": "CUST-00555", "vin": "UHZFREXL9YU69EXC4", "plate": "ZFY 154", "year": 2023, "make": "ford", "model": "mustang mach e"}
+{"vehicle_id": "VEH-00556", "customer_id": "CUST-00556", "vin": "CASJ1RNT7K8M8VJNF", "plate": "JWZ-393", "year": 2024, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00557", "customer_id": "CUST-00557", "vin": "PA4E8PMC3T1SZ7MWR", "plate": "GC4 P9O", "year": 2022, "make": "kingway mx", "model": "kw250zh g8paq"}
+{"vehicle_id": "VEH-00558", "customer_id": "CUST-00558", "vin": "882Z7VGRHV35XS4HM", "plate": "O30 0ZY", "year": 2016, "make": "ram", "model": "promaster city"}
+{"vehicle_id": "VEH-00559", "customer_id": "CUST-00559", "vin": "HZ2J783SBVU9P3DXT", "plate": "247 9254", "year": 2017, "make": "mazda", "model": "6"}
+{"vehicle_id": "VEH-00560", "customer_id": "CUST-00560", "vin": "2542TDU8RYCW53RLP", "plate": "0-I8585", "year": 2016, "make": "chrysler", "model": "town & country"}
+{"vehicle_id": "VEH-00561", "customer_id": "CUST-00561", "vin": "YJBB1FYZEDP0NL2RV", "plate": "639 OFR", "year": 2020, "make": "toyota", "model": "yaris"}
+{"vehicle_id": "VEH-00562", "customer_id": "CUST-00562", "vin": "Y3PSACBG928CLVWBR", "plate": "2-G1740", "year": 2017, "make": "honda", "model": "trx500fa6 fourtrax foreman rubicon auto dct eps"}
+{"vehicle_id": "VEH-00563", "customer_id": "CUST-00563", "vin": "UH12JUFEE93BAKG2N", "plate": "76-2643B", "year": 2015, "make": "ford", "model": "escape"}
+{"vehicle_id": "VEH-00564", "customer_id": "CUST-00564", "vin": "X49BWU6NGT71V4FR3", "plate": "137-LIJ", "year": 2017, "make": "ford", "model": "taurus"}
+{"vehicle_id": "VEH-00565", "customer_id": "CUST-00565", "vin": "9S1B820G5RB2R507G", "plate": "YPF-345", "year": 2014, "make": "mitsubishi", "model": "outlander sport"}
+{"vehicle_id": "VEH-00566", "customer_id": "CUST-00566", "vin": "FGLP8SFK27RD8T3WY", "plate": "9009 YS", "year": 2015, "make": "hyundai", "model": "santa fe sport"}
+{"vehicle_id": "VEH-00567", "customer_id": "CUST-00567", "vin": "X3AUP88XSX679FG4E", "plate": "XTS 002", "year": 2024, "make": "ford", "model": "f 250 super duty"}
+{"vehicle_id": "VEH-00568", "customer_id": "CUST-00568", "vin": "HLN5HC48L8J32AVH4", "plate": "30-V671", "year": 2023, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00569", "customer_id": "CUST-00569", "vin": "UX0LKVP0T76PYJL7A", "plate": "6IUR186", "year": 2024, "make": "jeep", "model": "wagoneer l"}
+{"vehicle_id": "VEH-00570", "customer_id": "CUST-00570", "vin": "7EAWNNG6YGD6LEZRZ", "plate": "08X\u2022649", "year": 2022, "make": "bmw", "model": "r nine t pure"}
+{"vehicle_id": "VEH-00571", "customer_id": "CUST-00571", "vin": "V4W02TNEKGPUMTGJ1", "plate": "302-YIV", "year": 2021, "make": "toyota", "model": "sequoia"}
+{"vehicle_id": "VEH-00572", "customer_id": "CUST-00572", "vin": "7PLARPFKKL7AXEDJ9", "plate": "64E 070", "year": 2015, "make": "boss", "model": "stone 300"}
+{"vehicle_id": "VEH-00573", "customer_id": "CUST-00573", "vin": "7XW9HS2117ZWXFPLU", "plate": "ME0 A8R", "year": 2015, "make": "chevrolet", "model": "volt"}
+{"vehicle_id": "VEH-00574", "customer_id": "CUST-00574", "vin": "58TH4ZMB06Z4PN10M", "plate": "49FR760", "year": 2017, "make": "chevrolet", "model": "express 2500"}
+{"vehicle_id": "VEH-00575", "customer_id": "CUST-00575", "vin": "N50NAWYG0T9AUCU72", "plate": "977 EDL", "year": 2023, "make": "chevrolet", "model": "tracker"}
+{"vehicle_id": "VEH-00576", "customer_id": "CUST-00576", "vin": "DB768M7GC0BKMJF3H", "plate": "96S\u2022235", "year": 2021, "make": "toyota", "model": "sequoia"}
+{"vehicle_id": "VEH-00577", "customer_id": "CUST-00577", "vin": "GUNBYXL0A23DEN9KU", "plate": "T 839122", "year": 2015, "make": "chevrolet", "model": "silverado 3500 hd"}
+{"vehicle_id": "VEH-00578", "customer_id": "CUST-00578", "vin": "UN93MAWUZHY6F6FHF", "plate": "AKT 208", "year": 2015, "make": "mercedes-benz", "model": "s550"}
+{"vehicle_id": "VEH-00579", "customer_id": "CUST-00579", "vin": "XBLAP06FSWNJWD1VM", "plate": "4-04347", "year": 2022, "make": "chevrolet", "model": "trax"}
+{"vehicle_id": "VEH-00580", "customer_id": "CUST-00580", "vin": "RNUNMVT5TF8Z0Z5LC", "plate": "34B\u2022244", "year": 2016, "make": "nissan", "model": "altima"}
+{"vehicle_id": "VEH-00581", "customer_id": "CUST-00581", "vin": "1KP4ZVPY9UF9PTP6T", "plate": "634L", "year": 2017, "make": "toyota", "model": "corolla"}
+{"vehicle_id": "VEH-00582", "customer_id": "CUST-00582", "vin": "M7J6X01CXGZAL37YY", "plate": "403 JDR", "year": 2024, "make": "honda", "model": "prologue"}
+{"vehicle_id": "VEH-00583", "customer_id": "CUST-00583", "vin": "ZWL6MB56427ST0Y72", "plate": "3G 56230", "year": 2017, "make": "smart", "model": "forfour"}
+{"vehicle_id": "VEH-00584", "customer_id": "CUST-00584", "vin": "9G34U2BL9LWNJJYDF", "plate": "8RI5805", "year": 2023, "make": "mazda", "model": "cx 30"}
+{"vehicle_id": "VEH-00585", "customer_id": "CUST-00585", "vin": "Z62L6AKNMWWFMSP4F", "plate": "TSK-394", "year": 2018, "make": "ford", "model": "police interceptor sedan"}
+{"vehicle_id": "VEH-00586", "customer_id": "CUST-00586", "vin": "0A7LZG72P716SG1JX", "plate": "164 0XQ", "year": 2024, "make": "gmc", "model": "sierra ev"}
+{"vehicle_id": "VEH-00587", "customer_id": "CUST-00587", "vin": "2XV42EZ8BRMS00Y9A", "plate": "NBE-757", "year": 2017, "make": "ford", "model": "taurus"}
+{"vehicle_id": "VEH-00588", "customer_id": "CUST-00588", "vin": "RJ8NCPW4FY1M4KVW1", "plate": "603KWN", "year": 2016, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00589", "customer_id": "CUST-00589", "vin": "CT3ML2G6FZG2ALXJ9", "plate": "KN-0587", "year": 2018, "make": "gmc", "model": "yukon"}
+{"vehicle_id": "VEH-00590", "customer_id": "CUST-00590", "vin": "824DW4TH5907Y0HM4", "plate": "KMD 833", "year": 2023, "make": "chevrolet", "model": "tracker"}
+{"vehicle_id": "VEH-00591", "customer_id": "CUST-00591", "vin": "FKAYTN964D6VCH860", "plate": "2Z V3964", "year": 2024, "make": "jeep", "model": "renegade"}
+{"vehicle_id": "VEH-00592", "customer_id": "CUST-00592", "vin": "4YVBUMVZ3B5XWCHZC", "plate": "28G HY4", "year": 2019, "make": "volvo", "model": "xc60"}
+{"vehicle_id": "VEH-00593", "customer_id": "CUST-00593", "vin": "MFGJK84UZ6S6CEX0C", "plate": "LYY 622", "year": 2018, "make": "ford", "model": "transit 350 hd"}
+{"vehicle_id": "VEH-00594", "customer_id": "CUST-00594", "vin": "9FYW42BMTF4HNTW9S", "plate": "LSA6200", "year": 2014, "make": "subaru", "model": "forester"}
+{"vehicle_id": "VEH-00595", "customer_id": "CUST-00595", "vin": "07P4UMU9C2MVUA3PB", "plate": "32W 664", "year": 2016, "make": "ford", "model": "f-150"}
+{"vehicle_id": "VEH-00596", "customer_id": "CUST-00596", "vin": "JUU6XGRRBXREV63Y1", "plate": "882-WPCQ", "year": 2023, "make": "jeep", "model": "gladiator"}
+{"vehicle_id": "VEH-00597", "customer_id": "CUST-00597", "vin": "YXZ5K68PL1T2CF8ZF", "plate": "ZDB 809", "year": 2017, "make": "ford", "model": "transit custom"}
+{"vehicle_id": "VEH-00598", "customer_id": "CUST-00598", "vin": "VX56BKLZ43BV8S1J1", "plate": "051 6JV", "year": 2023, "make": "lincoln", "model": "nautilus"}
+{"vehicle_id": "VEH-00599", "customer_id": "CUST-00599", "vin": "2PPHVML23ZP3UX0GX", "plate": "386 ZIE", "year": 2022, "make": "volkswagen", "model": "gti"}
+{"vehicle_id": "VEH-00600", "customer_id": "CUST-00600", "vin": "286V5LM2VAY6MG133", "plate": "6-74809", "year": 2021, "make": "toyota", "model": "rav4 prime"}
+{"vehicle_id": "VEH-00601", "customer_id": "CUST-00601", "vin": "RJ9F3BXSL7F0B19NL", "plate": "77-V486", "year": 2023, "make": "toyota", "model": "sienna"}
+{"vehicle_id": "VEH-00602", "customer_id": "CUST-00602", "vin": "7NXJVEBP66S5SM69H", "plate": "QGD 730", "year": 2021, "make": "honda", "model": "monkey abs"}
+{"vehicle_id": "VEH-00603", "customer_id": "CUST-00603", "vin": "YLS6EAC371E3THB57", "plate": "ZYN5487", "year": 2023, "make": "indian", "model": "chieftain dark horse"}
+{"vehicle_id": "VEH-00604", "customer_id": "CUST-00604", "vin": "V2C02954HGKTHL03Y", "plate": "GQI-8876", "year": 2019, "make": "jeep", "model": "renegade"}
+{"vehicle_id": "VEH-00605", "customer_id": "CUST-00605", "vin": "7PTGYE68STYV5Y5TU", "plate": "0-1079T", "year": 2015, "make": "gmc", "model": "acadia"}
+{"vehicle_id": "VEH-00606", "customer_id": "CUST-00606", "vin": "VBR00VWLW75VKJKV1", "plate": "DYF-3155", "year": 2017, "make": "ford", "model": "transit-350"}
+{"vehicle_id": "VEH-00607", "customer_id": "CUST-00607", "vin": "PWKAT0927LZK9X018", "plate": "56-D891", "year": 2019, "make": "ford", "model": "transit 150"}
+{"vehicle_id": "VEH-00608", "customer_id": "CUST-00608", "vin": "71AEYRWPRKUHNZ86A", "plate": "5D 97572", "year": 2021, "make": "honda", "model": "monkey abs"}
+{"vehicle_id": "VEH-00609", "customer_id": "CUST-00609", "vin": "RN0C2GY9EUFD5SSTM", "plate": "IMF1595", "year": 2014, "make": "kia", "model": "soul"}
+{"vehicle_id": "VEH-00610", "customer_id": "CUST-00610", "vin": "SR6MCUUFNEJWDPRS7", "plate": "286 4SZ", "year": 2016, "make": "ford", "model": "edge"}
+{"vehicle_id": "VEH-00611", "customer_id": "CUST-00611", "vin": "EN7H5F7NGP8WA4H5N", "plate": "13S RB7", "year": 2021, "make": "nissan", "model": "nv350 urvan"}
+{"vehicle_id": "VEH-00612", "customer_id": "CUST-00612", "vin": "T3U8MY979VWTSYU9W", "plate": "726 RMH", "year": 2016, "make": "gmc", "model": "terrain"}
+{"vehicle_id": "VEH-00613", "customer_id": "CUST-00613", "vin": "M8AX978LME4WG5YMN", "plate": "733 1AJ", "year": 2015, "make": "lincoln", "model": "mkx"}
+{"vehicle_id": "VEH-00614", "customer_id": "CUST-00614", "vin": "RPW9WX7GWPKXLN2LL", "plate": "ZLQ 0018", "year": 2015, "make": "ford", "model": "edge"}
+{"vehicle_id": "VEH-00615", "customer_id": "CUST-00615", "vin": "73URT7W0KWYZX5W42", "plate": "306 IFW", "year": 2017, "make": "subaru", "model": "crosstrek"}
+{"vehicle_id": "VEH-00616", "customer_id": "CUST-00616", "vin": "2D3ZJ6UBNPTV0BX41", "plate": "BKH9222", "year": 2021, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00617", "customer_id": "CUST-00617", "vin": "P95UGESLX77C18SU1", "plate": "4EG2864", "year": 2023, "make": "nissan", "model": "maxima"}
+{"vehicle_id": "VEH-00618", "customer_id": "CUST-00618", "vin": "YU05VH7JEX3KKWNF5", "plate": "KMM 559", "year": 2017, "make": "dodge", "model": "durango"}
+{"vehicle_id": "VEH-00619", "customer_id": "CUST-00619", "vin": "VBJEX05PMX6R60YNT", "plate": "9-85324E", "year": 2017, "make": "jeep", "model": "compass"}
+{"vehicle_id": "VEH-00620", "customer_id": "CUST-00620", "vin": "H3428DD90B4C9X8VY", "plate": "8-16153", "year": 2017, "make": "honda", "model": "cbr1000rr abs"}
+{"vehicle_id": "VEH-00621", "customer_id": "CUST-00621", "vin": "FHL9F6NE4U65KYEMY", "plate": "42Y-OMFK", "year": 2022, "make": "mv agusta", "model": "turismo veloce rosso 800"}
+{"vehicle_id": "VEH-00622", "customer_id": "CUST-00622", "vin": "2VA1BARX4KTRX6NZK", "plate": "6833", "year": 2023, "make": "dodge", "model": "challenger"}
+{"vehicle_id": "VEH-00623", "customer_id": "CUST-00623", "vin": "WMGBCJZEXXRPNWL4U", "plate": "TGB-1481", "year": 2016, "make": "ford", "model": "f-150"}
+{"vehicle_id": "VEH-00624", "customer_id": "CUST-00624", "vin": "ZBJ5H1B5P1D552NP1", "plate": "BWP 917", "year": 2020, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00625", "customer_id": "CUST-00625", "vin": "M9HLPH8ZX3NPF907T", "plate": "93-67857", "year": 2017, "make": "kia", "model": "soul ev"}
+{"vehicle_id": "VEH-00626", "customer_id": "CUST-00626", "vin": "A132GZ0WE4WRF17BU", "plate": "7410 FY", "year": 2023, "make": "chevrolet", "model": "captiva"}
+{"vehicle_id": "VEH-00627", "customer_id": "CUST-00627", "vin": "CKSMAJKJ7CDPV03L3", "plate": "EFO 172", "year": 2015, "make": "chevrolet", "model": "cruze"}
+{"vehicle_id": "VEH-00628", "customer_id": "CUST-00628", "vin": "M0HLB8PW20TXBBYB7", "plate": "ZGQ 115", "year": 2021, "make": "faw", "model": "elam 1102d"}
+{"vehicle_id": "VEH-00629", "customer_id": "CUST-00629", "vin": "C1LLGAZRF3EH7635J", "plate": "MKY 722", "year": 2018, "make": "infiniti", "model": "q70l"}
+{"vehicle_id": "VEH-00630", "customer_id": "CUST-00630", "vin": "AW77TJX0G78NJR9JK", "plate": "4-4786D", "year": 2017, "make": "toyota", "model": "tacoma"}
+{"vehicle_id": "VEH-00631", "customer_id": "CUST-00631", "vin": "G2VGSRTMWY6UJX40K", "plate": "36-I990", "year": 2021, "make": "ford", "model": "explorer"}
+{"vehicle_id": "VEH-00632", "customer_id": "CUST-00632", "vin": "1DNMAKCSL2XA77ZN2", "plate": "368149", "year": 2015, "make": "jeep", "model": "wrangler"}
+{"vehicle_id": "VEH-00633", "customer_id": "CUST-00633", "vin": "T5HU9YYMTY86GYTE0", "plate": "6KH9158", "year": 2024, "make": "chevrolet", "model": "montana"}
+{"vehicle_id": "VEH-00634", "customer_id": "CUST-00634", "vin": "JGR6HHVJZW54F9M29", "plate": "2B IA966", "year": 2021, "make": "honda", "model": "trx250te fourtrax recon es"}
+{"vehicle_id": "VEH-00635", "customer_id": "CUST-00635", "vin": "BNZKD0RL0LGLRK4NU", "plate": "0-31392", "year": 2021, "make": "lexus", "model": "gx460"}
+{"vehicle_id": "VEH-00636", "customer_id": "CUST-00636", "vin": "1376XJWAETWPED3JK", "plate": "4MWW 71", "year": 2024, "make": "dodge", "model": "durango"}
+{"vehicle_id": "VEH-00637", "customer_id": "CUST-00637", "vin": "S2L32NSZERUJ2HKP5", "plate": "V 911776", "year": 2017, "make": "chevrolet", "model": "cruze"}
+{"vehicle_id": "VEH-00638", "customer_id": "CUST-00638", "vin": "XAHWG7R5WH6KEYUC1", "plate": "3K 22371", "year": 2017, "make": "toyota", "model": "4runner"}
+{"vehicle_id": "VEH-00639", "customer_id": "CUST-00639", "vin": "H64L8VRGF0S843DGU", "plate": "66UQ9", "year": 2015, "make": "chevrolet", "model": "equinox"}
+{"vehicle_id": "VEH-00640", "customer_id": "CUST-00640", "vin": "UT9Y3TZFAG8S8R4UG", "plate": "245-ZEP", "year": 2015, "make": "acura", "model": "rdx"}
+{"vehicle_id": "VEH-00641", "customer_id": "CUST-00641", "vin": "811CGGGHS032CZ56C", "plate": "0DE6276", "year": 2024, "make": "jeep", "model": "compass"}
+{"vehicle_id": "VEH-00642", "customer_id": "CUST-00642", "vin": "4BPMBYGV3B6TZZZSU", "plate": "070 DQJ", "year": 2017, "make": "lincoln", "model": "mkc"}
+{"vehicle_id": "VEH-00643", "customer_id": "CUST-00643", "vin": "6TLPX2ZM8FYZRXWGF", "plate": "833 3MI", "year": 2022, "make": "toyota", "model": "rav4"}
+{"vehicle_id": "VEH-00644", "customer_id": "CUST-00644", "vin": "8M1NT8ZY50LLXBHNW", "plate": "0L B1154", "year": 2014, "make": "jeep", "model": "grand cherokee"}
+{"vehicle_id": "VEH-00645", "customer_id": "CUST-00645", "vin": "VM2ENFF2TKYZ2J1GV", "plate": "A85 6DM", "year": 2015, "make": "hyundai", "model": "ix35"}
+{"vehicle_id": "VEH-00646", "customer_id": "CUST-00646", "vin": "R5CSKUB8RRSR5PKAV", "plate": "B58-XKA", "year": 2022, "make": "chevrolet", "model": "tornado van"}
+{"vehicle_id": "VEH-00647", "customer_id": "CUST-00647", "vin": "753N3M21T0T400SXZ", "plate": "6RI6879", "year": 2019, "make": "volkswagen", "model": "golf r"}
+{"vehicle_id": "VEH-00648", "customer_id": "CUST-00648", "vin": "SJG97XGRZR6UD6584", "plate": "7ZR3089", "year": 2014, "make": "kia", "model": "forte"}
+{"vehicle_id": "VEH-00649", "customer_id": "CUST-00649", "vin": "5DZ7KEZEUTB84J2P5", "plate": "777LXV", "year": 2015, "make": "dodge", "model": "grand caravan"}
+{"vehicle_id": "VEH-00650", "customer_id": "CUST-00650", "vin": "R93KXADZHEE3LNSMM", "plate": "Y 793221", "year": 2021, "make": "acura", "model": "rdx"}
+{"vehicle_id": "VEH-00651", "customer_id": "CUST-00651", "vin": "HYFG21317JYMGWZM4", "plate": "5IO97", "year": 2016, "make": "gmc", "model": "sierra 2500 hd"}
+{"vehicle_id": "VEH-00652", "customer_id": "CUST-00652", "vin": "FMT2NRZFY5GTBDD0G", "plate": "KIS-272", "year": 2015, "make": "toyota", "model": "hilux"}
+{"vehicle_id": "VEH-00653", "customer_id": "CUST-00653", "vin": "X1WB0EMN8MPZGK0M5", "plate": "9BQ T31", "year": 2023, "make": "ford", "model": "lobo"}
+{"vehicle_id": "VEH-00654", "customer_id": "CUST-00654", "vin": "M9K5BCHWVGZMLG8NK", "plate": "4YS 747", "year": 2020, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00655", "customer_id": "CUST-00655", "vin": "615HEYS0KS8N2CZD7", "plate": "1-67671", "year": 2023, "make": "subaru", "model": "brz"}
+{"vehicle_id": "VEH-00656", "customer_id": "CUST-00656", "vin": "GFX2NVXJ5NV4241F8", "plate": "WGO-6165", "year": 2021, "make": "chevrolet", "model": "silverado 2500 hd"}
+{"vehicle_id": "VEH-00657", "customer_id": "CUST-00657", "vin": "71W8VDCNFWMXDBDW1", "plate": "YMK P89", "year": 2015, "make": "chevrolet", "model": "express pasajeros"}
+{"vehicle_id": "VEH-00658", "customer_id": "CUST-00658", "vin": "49M90CPG6MRXEP8PA", "plate": "3U 0A1YES", "year": 2015, "make": "chevrolet", "model": "silverado 2500"}
+{"vehicle_id": "VEH-00659", "customer_id": "CUST-00659", "vin": "HVASYM1R02CKKST4W", "plate": "ZF6 6249", "year": 2016, "make": "ford", "model": "f-150"}
+{"vehicle_id": "VEH-00660", "customer_id": "CUST-00660", "vin": "A331UN8TA2C5JREHH", "plate": "483-IQG", "year": 2016, "make": "hyundai", "model": "tucson"}
+{"vehicle_id": "VEH-00661", "customer_id": "CUST-00661", "vin": "MXLT2VVVTGH2NF8NJ", "plate": "92X B84", "year": 2014, "make": "chevrolet", "model": "malibu"}
+{"vehicle_id": "VEH-00662", "customer_id": "CUST-00662", "vin": "7GHRC1MFES405K5C9", "plate": "A02 8JK", "year": 2017, "make": "hyundai", "model": "santa fe"}
+{"vehicle_id": "VEH-00663", "customer_id": "CUST-00663", "vin": "PXCAKYTMZ6ND21KV9", "plate": "251M0", "year": 2015, "make": "ford", "model": "transit custom"}
+{"vehicle_id": "VEH-00664", "customer_id": "CUST-00664", "vin": "NY5B5ESVLKXDHE3BL", "plate": "575626", "year": 2024, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00665", "customer_id": "CUST-00665", "vin": "0CKGRA1AD1HRCEB71", "plate": "673 1VW", "year": 2014, "make": "kia", "model": "forte"}
+{"vehicle_id": "VEH-00666", "customer_id": "CUST-00666", "vin": "S8TZ67K60RKVM1TL0", "plate": "299 1154", "year": 2015, "make": "chevrolet", "model": "caprice"}
+{"vehicle_id": "VEH-00667", "customer_id": "CUST-00667", "vin": "WKC63R2JZP2336551", "plate": "81-GF62", "year": 2023, "make": "gmc", "model": "sierra"}
+{"vehicle_id": "VEH-00668", "customer_id": "CUST-00668", "vin": "2JPSPNN0630WP2K7G", "plate": "0IIK020", "year": 2017, "make": "subaru", "model": "crosstrek"}
+{"vehicle_id": "VEH-00669", "customer_id": "CUST-00669", "vin": "3DNPYL14M5BP1MUK2", "plate": "2EO10", "year": 2019, "make": "toyota", "model": "camry"}
+{"vehicle_id": "VEH-00670", "customer_id": "CUST-00670", "vin": "3X6SJ8XCGEFBADYFX", "plate": "173-690", "year": 2022, "make": "bmw", "model": "r nine t pure"}
+{"vehicle_id": "VEH-00671", "customer_id": "CUST-00671", "vin": "NKPWE0X57YMVWGLKL", "plate": "72N T96", "year": 2019, "make": "volkswagen", "model": "golf alltrack"}
+{"vehicle_id": "VEH-00672", "customer_id": "CUST-00672", "vin": "7USHK5GCJ1717LB05", "plate": "223-XJB", "year": 2020, "make": "yamaha", "model": "yz250x"}
+{"vehicle_id": "VEH-00673", "customer_id": "CUST-00673", "vin": "B8ZYF0EMJW2KHNXVF", "plate": "9RS M87", "year": 2016, "make": "chevrolet", "model": "aveo"}
+{"vehicle_id": "VEH-00674", "customer_id": "CUST-00674", "vin": "3L0TN9UB8XLDSWT54", "plate": "830PD", "year": 2024, "make": "dodge", "model": "attitude"}
+{"vehicle_id": "VEH-00675", "customer_id": "CUST-00675", "vin": "6FYCJABW1N711CU1Y", "plate": "5W631", "year": 2016, "make": "jeep", "model": "grand cherokee"}
+{"vehicle_id": "VEH-00676", "customer_id": "CUST-00676", "vin": "YJZTN8VUF5FX9HBJG", "plate": "2W163", "year": 2018, "make": "infiniti", "model": "q70l"}
+{"vehicle_id": "VEH-00677", "customer_id": "CUST-00677", "vin": "EKSFEAAYEK6YGHDJN", "plate": "2RY D74", "year": 2017, "make": "honda", "model": "trx500fa6 fourtrax foreman rubicon auto dct eps"}
+{"vehicle_id": "VEH-00678", "customer_id": "CUST-00678", "vin": "MFFA4RPDF1XN7N8M7", "plate": "79YZ685", "year": 2015, "make": "chevrolet", "model": "tahoe"}
+{"vehicle_id": "VEH-00679", "customer_id": "CUST-00679", "vin": "M9AFMNTKNHENMXRL2", "plate": "2W JA422", "year": 2018, "make": "toyota", "model": "yaris r"}
+{"vehicle_id": "VEH-00680", "customer_id": "CUST-00680", "vin": "39VP4TZSATVLEDE8Z", "plate": "1WC 861", "year": 2016, "make": "ford", "model": "escape"}
+{"vehicle_id": "VEH-00681", "customer_id": "CUST-00681", "vin": "4F5AFX0ETX5Z708W8", "plate": "023 7SF", "year": 2019, "make": "jeep", "model": "renegade"}
+{"vehicle_id": "VEH-00682", "customer_id": "CUST-00682", "vin": "LCZ366X2665KK13BJ", "plate": "893Q3", "year": 2015, "make": "jeep", "model": "cherokee"}
+{"vehicle_id": "VEH-00683", "customer_id": "CUST-00683", "vin": "K20A4MKMPGB27KUYN", "plate": "69HS645", "year": 2023, "make": "honda", "model": "crf250r"}
+{"vehicle_id": "VEH-00684", "customer_id": "CUST-00684", "vin": "WURN8844L8DZGEX7V", "plate": "4BC 971", "year": 2020, "make": "yamaha", "model": "yz250x"}
+{"vehicle_id": "VEH-00685", "customer_id": "CUST-00685", "vin": "P38AWLYW4HJVY0J07", "plate": "37N-NWSZ", "year": 2018, "make": "ford", "model": "police interceptor sedan"}
+{"vehicle_id": "VEH-00686", "customer_id": "CUST-00686", "vin": "3SPXRX7UYYNJXRSS8", "plate": "3-8493Y", "year": 2016, "make": "nissan", "model": "quest"}
+{"vehicle_id": "VEH-00687", "customer_id": "CUST-00687", "vin": "9G1KXF86UE51NUK0D", "plate": "036-KNE", "year": 2015, "make": "chevrolet", "model": "silverado 3500 hd"}
+{"vehicle_id": "VEH-00688", "customer_id": "CUST-00688", "vin": "AXZ7KUX8XNNHVDN9V", "plate": "MHM7850", "year": 2015, "make": "nissan", "model": "nv350 urvan"}
+{"vehicle_id": "VEH-00689", "customer_id": "CUST-00689", "vin": "AWTPKVBB3F06K51L5", "plate": "514 9753", "year": 2016, "make": "dodge", "model": "dart"}
+{"vehicle_id": "VEH-00690", "customer_id": "CUST-00690", "vin": "U6UN6VLJXBHDX70KX", "plate": "103 4XC", "year": 2022, "make": "ford", "model": "transit"}
+{"vehicle_id": "VEH-00691", "customer_id": "CUST-00691", "vin": "B4X2MXCVXC9DJ8EEJ", "plate": "6UZ82", "year": 2020, "make": "toyota", "model": "prius"}
+{"vehicle_id": "VEH-00692", "customer_id": "CUST-00692", "vin": "SF0ZYF3YE82D32KFP", "plate": "FEC 405", "year": 2016, "make": "lamborghini", "model": "aventador"}
+{"vehicle_id": "VEH-00693", "customer_id": "CUST-00693", "vin": "TRSDBDR7CCRRKJ9XX", "plate": "H86 6LC", "year": 2015, "make": "ford", "model": "edge"}
+{"vehicle_id": "VEH-00694", "customer_id": "CUST-00694", "vin": "9V8B3ECNCPR8AZF09", "plate": "B98-41Z", "year": 2016, "make": "mazda", "model": "cx-5"}
+{"vehicle_id": "VEH-00695", "customer_id": "CUST-00695", "vin": "2PKAVU091LNTYNXT2", "plate": "KJF 195", "year": 2021, "make": "lincoln", "model": "navigator"}
+{"vehicle_id": "VEH-00696", "customer_id": "CUST-00696", "vin": "B592PMHC1GPNWPW06", "plate": "98X NL4", "year": 2020, "make": "ford", "model": "expedition"}
+{"vehicle_id": "VEH-00697", "customer_id": "CUST-00697", "vin": "TP9BWAPMYP81X62L8", "plate": "008224", "year": 2018, "make": "hyundai", "model": "elantra"}
+{"vehicle_id": "VEH-00698", "customer_id": "CUST-00698", "vin": "SEGABDAUAW51LGD0P", "plate": "U22 8LP", "year": 2015, "make": "honda", "model": "trx420fa2 fourtrax rancher 4x4 auto dct with eps"}
+{"vehicle_id": "VEH-00699", "customer_id": "CUST-00699", "vin": "0EU3BWCHWKT6PHB7M", "plate": "AN5 4747", "year": 2021, "make": "faw", "model": "elam 1102d"}
+{"vehicle_id": "VEH-00700", "customer_id": "CUST-00700", "vin": "S6UUB7EKPE21BC846", "plate": "229-VBN", "year": 2016, "make": "dodge", "model": "grand caravan"}
+{"vehicle_id": "VEH-00701", "customer_id": "CUST-00701", "vin": "CEUV7NUBUNS5AC48R", "plate": "72H J83", "year": 2017, "make": "toyota", "model": "highlander"}
+{"vehicle_id": "VEH-00702", "customer_id": "CUST-00702", "vin": "DV0F067L00KXZ3M20", "plate": "467 KNR", "year": 2021, "make": "tracker", "model": "90"}
+{"vehicle_id": "VEH-00703", "customer_id": "CUST-00703", "vin": "VK8304FTJYZ65LCY9", "plate": "4C862", "year": 2015, "make": "mini", "model": "cooper"}
+{"vehicle_id": "VEH-00704", "customer_id": "CUST-00704", "vin": "KYLJP2F3H9CGATLRY", "plate": "972-YXK", "year": 2017, "make": "toyota", "model": "mirai"}
+{"vehicle_id": "VEH-00705", "customer_id": "CUST-00705", "vin": "022RZ3GR6KNA9G8KE", "plate": "671 ZQM", "year": 2015, "make": "acura", "model": "rdx"}
+{"vehicle_id": "VEH-00706", "customer_id": "CUST-00706", "vin": "S2WPGNBBBVHPMEET5", "plate": "28-X502", "year": 2015, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00707", "customer_id": "CUST-00707", "vin": "Z2AWY10PW47C8C8XZ", "plate": "441 CES", "year": 2014, "make": "ford", "model": "escape"}
+{"vehicle_id": "VEH-00708", "customer_id": "CUST-00708", "vin": "1G4Z8B1C8F7TFFSG6", "plate": "9-22094Z", "year": 2023, "make": "nissan", "model": "maxima"}
+{"vehicle_id": "VEH-00709", "customer_id": "CUST-00709", "vin": "7CXW5P3GAJB95E9M6", "plate": "HKI U74", "year": 2015, "make": "isuzu", "model": "elf 200"}
+{"vehicle_id": "VEH-00710", "customer_id": "CUST-00710", "vin": "DTH8M5VLCVY4HKEN7", "plate": "07U-JOAJ", "year": 2018, "make": "ford", "model": "police interceptor sedan"}
+{"vehicle_id": "VEH-00711", "customer_id": "CUST-00711", "vin": "M1CWMRY8R5HGLJJB5", "plate": "490 7ZU", "year": 2019, "make": "honda", "model": "gl1800 gold wing tour airbag automatic dct"}
+{"vehicle_id": "VEH-00712", "customer_id": "CUST-00712", "vin": "0G37CU44EEFTZ729S", "plate": "3DY 901", "year": 2019, "make": "toyota", "model": "mirai"}
+{"vehicle_id": "VEH-00713", "customer_id": "CUST-00713", "vin": "HBLFMN50T7EM3HCRN", "plate": "637 FKF", "year": 2023, "make": "toyota", "model": "highlander"}
+{"vehicle_id": "VEH-00714", "customer_id": "CUST-00714", "vin": "2A0D9AHUAWJXS7PN7", "plate": "YYK 744", "year": 2016, "make": "ford", "model": "expedition"}
+{"vehicle_id": "VEH-00715", "customer_id": "CUST-00715", "vin": "M1EKJ9KE79ELS30RT", "plate": "CIM-2201", "year": 2023, "make": "ram", "model": "promaster 2500"}
+{"vehicle_id": "VEH-00716", "customer_id": "CUST-00716", "vin": "X2BN025RJ793LSV8E", "plate": "71-6217U", "year": 2023, "make": "gmc", "model": "canyon"}
+{"vehicle_id": "VEH-00717", "customer_id": "CUST-00717", "vin": "EFKC0U2U6YWXW7981", "plate": "7WY 034", "year": 2021, "make": "gmc", "model": "yukon xl"}
+{"vehicle_id": "VEH-00718", "customer_id": "CUST-00718", "vin": "J7YF8YETUUV9RXXSN", "plate": "0-88754", "year": 2018, "make": "ford", "model": "transit-350"}
+{"vehicle_id": "VEH-00719", "customer_id": "CUST-00719", "vin": "Y3UT4NJVN0XP6MHVS", "plate": "128 BZY", "year": 2021, "make": "toyota", "model": "land cruiser"}
+{"vehicle_id": "VEH-00720", "customer_id": "CUST-00720", "vin": "80S27U6YKTETH12AE", "plate": "895 ZHY", "year": 2023, "make": "honda", "model": "crf450r"}
+{"vehicle_id": "VEH-00721", "customer_id": "CUST-00721", "vin": "6U93NUD48G741XHJM", "plate": "4DYA 84", "year": 2017, "make": "acura", "model": "tlx"}
+{"vehicle_id": "VEH-00722", "customer_id": "CUST-00722", "vin": "EUGUJG4PCDAHYUV4S", "plate": "289 7226", "year": 2020, "make": "chevrolet", "model": "camaro"}
+{"vehicle_id": "VEH-00723", "customer_id": "CUST-00723", "vin": "ZSKBXRL1PBLFU8HGS", "plate": "95O\u2022703", "year": 2023, "make": "jeep", "model": "wrangler"}
+{"vehicle_id": "VEH-00724", "customer_id": "CUST-00724", "vin": "S6LMRUGASW415PRGF", "plate": "AMS4306", "year": 2019, "make": "ford", "model": "escape"}
+{"vehicle_id": "VEH-00725", "customer_id": "CUST-00725", "vin": "K11BUP84YXB8915P0", "plate": "ZAK 3764", "year": 2018, "make": "toyota", "model": "yaris r"}
+{"vehicle_id": "VEH-00726", "customer_id": "CUST-00726", "vin": "1L2PPXZ2USVR17BSE", "plate": "1P-FQPG", "year": 2022, "make": "gmc", "model": "sierra 1500"}
+{"vehicle_id": "VEH-00727", "customer_id": "CUST-00727", "vin": "Z01B8454F4TZRU0T7", "plate": "VF 0175", "year": 2019, "make": "honda", "model": "gl1800 gold wing tour airbag automatic dct"}
+{"vehicle_id": "VEH-00728", "customer_id": "CUST-00728", "vin": "NC10DRFLFDTFT5KVK", "plate": "EHW-8368", "year": 2017, "make": "toyota", "model": "corolla"}
+{"vehicle_id": "VEH-00729", "customer_id": "CUST-00729", "vin": "MR3WLERFDMV74LSBN", "plate": "9251", "year": 2023, "make": "bmw", "model": "r 18 100 years"}
+{"vehicle_id": "VEH-00730", "customer_id": "CUST-00730", "vin": "GUMH60MKMSAXLU9B9", "plate": "O92 0CJ", "year": 2019, "make": "nissan", "model": "micra"}
+{"vehicle_id": "VEH-00731", "customer_id": "CUST-00731", "vin": "JLD7KJS0U6S6MHSLC", "plate": "J54 9GU", "year": 2018, "make": "gmc", "model": "sierra 2500 hd"}
+{"vehicle_id": "VEH-00732", "customer_id": "CUST-00732", "vin": "AV68226Z2T3L98JCP", "plate": "MW2 Y2W", "year": 2023, "make": "ford", "model": "mustang mach e"}
+{"vehicle_id": "VEH-00733", "customer_id": "CUST-00733", "vin": "H311W0BX8NBP4K5JW", "plate": "C29 3QI", "year": 2019, "make": "toyota", "model": "86"}
+{"vehicle_id": "VEH-00734", "customer_id": "CUST-00734", "vin": "R5T82660P6J3DSKGV", "plate": "WUB6476", "year": 2019, "make": "ford", "model": "police interceptor sedan"}
+{"vehicle_id": "VEH-00735", "customer_id": "CUST-00735", "vin": "14EVZ97C7EZYNW9LA", "plate": "045 3MS", "year": 2020, "make": "jeep", "model": "compass"}
+{"vehicle_id": "VEH-00736", "customer_id": "CUST-00736", "vin": "UDB9P0B52Y6ZXV0DH", "plate": "03F\u2022350", "year": 2019, "make": "honda", "model": "sxs700m2 pioneer 700 deluxe"}
+{"vehicle_id": "VEH-00737", "customer_id": "CUST-00737", "vin": "849C9EK1Y5UKKNF1U", "plate": "807 8KH", "year": 2017, "make": "gmc", "model": "acadia"}
+{"vehicle_id": "VEH-00738", "customer_id": "CUST-00738", "vin": "WAJN3N3K4TPAELCT7", "plate": "VLW-635", "year": 2023, "make": "gmc", "model": "canyon"}
+{"vehicle_id": "VEH-00739", "customer_id": "CUST-00739", "vin": "6L8HF6Y07TYXKUSRB", "plate": "DRT-304", "year": 2015, "make": "chevrolet", "model": "colorado"}
+{"vehicle_id": "VEH-00740", "customer_id": "CUST-00740", "vin": "9W82DWTGKRRS6KG90", "plate": "723 VVJ", "year": 2019, "make": "ford", "model": "f 150"}
+{"vehicle_id": "VEH-00741", "customer_id": "CUST-00741", "vin": "YWFSL7EXD424K37BY", "plate": "85-LC71", "year": 2014, "make": "ford", "model": "e-150"}
+{"vehicle_id": "VEH-00742", "customer_id": "CUST-00742", "vin": "WS882P24SVSLYLX1F", "plate": "LJR P20", "year": 2016, "make": "toyota", "model": "avanza"}
+{"vehicle_id": "VEH-00743", "customer_id": "CUST-00743", "vin": "AK48FKDA7MCJV0ZFC", "plate": "3CJ 529", "year": 2023, "make": "nissan", "model": "maxima"}
+{"vehicle_id": "VEH-00744", "customer_id": "CUST-00744", "vin": "GCFCANL28GUVEVJE6", "plate": "LMX7712", "year": 2021, "make": "acura", "model": "rdx"}

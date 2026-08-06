@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import { usePrediiLearn } from "../context/PrediiLearnContext";
 import { useDemo } from "../context/DemoContext";
-import { fetchCannedJobs, persistShopProfile, fetchPersistedShopProfile } from "../services/prediiLearnService";
+import { fetchCannedJobs, persistShopProfile } from "../services/prediiLearnService";
 import { ENTITY_TYPES, buildEntityFreqs, topN } from "../utils/entityFreqs";
 
 const WINDOW_OPTIONS = [1, 2, 3];
@@ -83,7 +83,7 @@ function fillPartPricing(name) {
 const SUB_TABS = [
   { id: "live", label: "Live Download Analytics", icon: Download },
   { id: "clusters", label: "Top N Clusters", icon: Network },
-  { id: "shopProfile", label: "Shop Profile", icon: Building2 },
+  { id: "shopProfile", label: "Shop Intelligence", icon: Building2 },
   { id: "cannedJobs", label: "Canned Jobs", icon: Wrench },
 ];
 
@@ -717,19 +717,20 @@ function SeasonalTrendsSection({ seasonalProfile, liveNote }) {
 }
 
 function ShopProfileTabContent() {
-  const { shopProfile, shopProfileLoading, loadShopProfile, years, error, status, completed, total, results: allResults } = usePrediiLearn();
+  const {
+    shopProfile, shopProfileLoading, loadShopProfile, years, error, status, completed, total, results: allResults,
+    // Lives in PrediiLearnContext (not local state) specifically so it
+    // survives switching to another Predii Learn sub-tab and back — this
+    // component fully unmounts on every sub-tab navigation, so a fetch
+    // scoped to local state here re-ran (and could silently fail) on every
+    // single return visit. See PrediiLearnContext.jsx for the fetch itself.
+    persistedProfile, persistedLoading, persistedError, persistedSavedAt, refreshPersistedProfile,
+  } = usePrediiLearn();
   const { activeShopId } = useDemo();
   const [category, setCategory] = useState("all");
   // Follow-up: persist whatever this tab is currently showing so RO Chat
   // can ground answers in it without requiring a fresh Predii Learn run.
   const [persistState, setPersistState] = useState("idle"); // idle | saving | saved | error
-  const [lastSavedAt, setLastSavedAt] = useState(null);
-
-  useEffect(() => {
-    fetchPersistedShopProfile(activeShopId)
-      .then((data) => setLastSavedAt(data.savedAt || null))
-      .catch(() => {});
-  }, [activeShopId]);
 
   const results = useMemo(
     () => (category === "all" ? allResults : allResults.filter((r) => r.category === category)),
@@ -869,13 +870,17 @@ function ShopProfileTabContent() {
   // of this run's results (instead of showing an empty live state).
   const usingLive = allResults.length > 0;
 
-  if (status === "idle" && !shopProfile) return <EmptyState />;
   if (!usingLive) {
-    if (shopProfileLoading && !shopProfile) return <EmptyState message="Loading shop profile…" />;
-    if (!shopProfile || !shopProfile.shop) {
+    // Persisted (real, previously-saved) data takes priority over the
+    // external ro-ner-demo static profile when both happen to be present —
+    // it's actual data for this shop, not a separate service's snapshot.
+    if ((persistedLoading || shopProfileLoading) && !persistedProfile && !shopProfile) {
+      return <EmptyState message="Loading shop profile…" />;
+    }
+    if (!persistedProfile && (!shopProfile || !shopProfile.shop)) {
       return (
         <>
-          {error && <ErrorBanner message={error} />}
+          {(persistedError || error) && <ErrorBanner message={persistedError || error} />}
           <EmptyState />
         </>
       );
@@ -891,13 +896,13 @@ function ShopProfileTabContent() {
     );
   }
 
-  const { overall, top_repair_jobs, top_parts, top_repeat_customers, seasonal_profile } = usingLive ? liveProfile : shopProfile;
+  const { overall, top_repair_jobs, top_parts, top_repeat_customers, seasonal_profile } = usingLive ? liveProfile : (persistedProfile || shopProfile);
 
   async function handlePersist() {
     setPersistState("saving");
     try {
-      const doc = await persistShopProfile(activeShopId, { overall, top_repair_jobs, top_parts, top_repeat_customers, seasonal_profile });
-      setLastSavedAt(doc.savedAt);
+      await persistShopProfile(activeShopId, { overall, top_repair_jobs, top_parts, top_repeat_customers, seasonal_profile });
+      await refreshPersistedProfile(activeShopId);
       setPersistState("saved");
       setTimeout(() => setPersistState("idle"), 2000);
     } catch {
@@ -919,15 +924,15 @@ function ShopProfileTabContent() {
             </span>
           )}
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-            {lastSavedAt && (
+            {persistedSavedAt && (
               <span style={{ fontSize: 11, color: L.textMuted }}>
-                Persisted {new Date(lastSavedAt).toLocaleString()}
+                Persisted {new Date(persistedSavedAt).toLocaleString()}
               </span>
             )}
             <button
               onClick={handlePersist}
               disabled={persistState === "saving"}
-              title="Save this Shop Profile to the database so RO Chat can use it without a fresh Predii Learn run"
+              title="Save this Shop Intelligence profile to the database so RO Chat can use it without a fresh Predii Learn run"
               style={{
                 display: "flex", alignItems: "center", gap: 6,
                 background: persistState === "saved" ? "#ecfdf5" : L.accent,
@@ -938,7 +943,7 @@ function ShopProfileTabContent() {
               }}
             >
               {persistState === "saving" && <Spinner color="#fff" />}
-              {persistState === "saved" ? "Persisted ✓" : persistState === "error" ? "Failed — retry" : "Persist Shop Profile"}
+              {persistState === "saved" ? "Persisted ✓" : persistState === "error" ? "Failed — retry" : "Persist Shop Intelligence"}
             </button>
           </div>
         </div>
@@ -997,7 +1002,11 @@ function ShopProfileTabContent() {
                 { key: "margin", label: "Margin", align: "right" },
               ]}
               rows={(top_parts || []).slice(0, 8).map((p) => ({
-                name: p.name, supplier: p.preferred_supplier, qty: p.qty_sold,
+                // A snapshot persisted while a live run's results were showing
+                // carries `count` (see the live-mode columns above), not
+                // `qty_sold` — fall back to it so a persisted-live profile
+                // doesn't render a blank Qty column here.
+                name: p.name, supplier: p.preferred_supplier, qty: p.qty_sold ?? p.count,
                 price: `$${p.avg_price}`, margin: `${p.margin_pct}%`,
               }))}
             />
@@ -1164,7 +1173,7 @@ function CalibrationCompleteBanner({ shopName }) {
           Predii LLM is now calibrated for {shopName || "your shop"}
         </div>
         <div style={{ fontSize: 12, color: "#047857", marginTop: 2 }}>
-          This run's canned-job pricing, repeat-customer, and seasonal insights are feeding WrenchIQ's recommendations now — see Shop Profile and Canned Jobs below.
+          This run's canned-job pricing, repeat-customer, and seasonal insights are feeding WrenchIQ's recommendations now — see Shop Intelligence and Canned Jobs below.
         </div>
       </div>
     </div>

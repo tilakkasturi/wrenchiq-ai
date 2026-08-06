@@ -11,12 +11,13 @@
  * intelligence.
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Sparkles, AlertTriangle, Search, Settings, ExternalLink, Bell, BellOff, Clipboard, Send, Check, ClipboardCheck, Circle, CircleSlash, ChevronDown, Pencil, X, MessageCircle, Info, ArrowRightLeft, Home, FileText, DollarSign, Stethoscope, Layers, History, MessagesSquare } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 import { useDemo } from "../context/DemoContext";
 import { fetchStoryRO, updateStoryRO } from "../services/repairOrderService";
+import { fetchCannedJobs } from "../services/prediiLearnService";
 import { useInsightNotifier } from "../services/insightNotifier";
 import { openExternalUrl } from "../services/externalLink";
 import TransferSimulationModal from "../components/sidecar/TransferSimulationModal";
@@ -47,11 +48,37 @@ function splitIntoParagraphs(text, paragraphCount = 2) {
   return paragraphs;
 }
 
+// Real match against this shop's own priced canned-job catalog
+// (cannedJobsService.js / Predii Learn → Canned Jobs) — same substring-match
+// convention used server-side for alreadyOnRO checks (roAdvisorService.js).
+// When a recommendation's service name matches a canned job, its real labor
+// hours and priced parts replace the simulated lookup below entirely.
+function matchCannedJob(serviceName, cannedJobs) {
+  const svc = (serviceName || "").toLowerCase().trim();
+  if (!svc || !cannedJobs?.length) return null;
+  const job = cannedJobs.find((j) => {
+    const desc = (j.description || "").toLowerCase().trim();
+    return desc && (desc.includes(svc) || svc.includes(desc));
+  });
+  if (!job) return null;
+  const parts = (job.parts || []).map((p) => ({ description: p.description, lineCost: p.lineCost }));
+  return {
+    real: true,
+    sourceDescription: job.description,
+    laborHrs: job.laborHours,
+    laborCost: job.laborCost,
+    parts,
+    partCost: parts.reduce((s, p) => s + (p.lineCost || 0), 0),
+    totalPrice: job.totalPrice,
+  };
+}
+
 // Deterministic simulated parts/labor catalog match — stands in for a real
 // DE (parts/labor data) integration until one is scoped and identified (see
 // WrenchIQ Product Spec v3.0 §4/§7). Keyed off the service name so the
 // "match" is stable across renders/sessions rather than random — this is a
-// simulation, not a real search, and is disclosed as such in the UI.
+// simulation, not a real search, and is disclosed as such in the UI. Only
+// reached when matchCannedJob() above found nothing for this service.
 function simulateCatalogMatch(serviceName, estimatedCost) {
   let hash = 0;
   for (let i = 0; i < serviceName.length; i++) {
@@ -63,7 +90,11 @@ function simulateCatalogMatch(serviceName, estimatedCost) {
   const cost = estimatedCost || 50;
   const partCost = Math.round(cost * 0.6);
   const laborCost = Math.max(cost - partCost, 0);
-  return { candidateCount, laborHrs, partNumber, partCost, laborCost };
+  return {
+    real: false,
+    candidateCount, laborHrs, partNumber, partCost, laborCost,
+    parts: [{ description: `${serviceName} — ${partNumber}`, lineCost: partCost }],
+  };
 }
 
 function timeAgo(ts) {
@@ -114,6 +145,10 @@ export default function WrenchIQSidecarScreen() {
     setStoryRO(null);
     setAgentData(null);
     setRoScorePct(null);
+    // Always land back on Intelligence for a newly-selected RO — otherwise
+    // whichever tab was open on the *previous* RO (e.g. Chat) carries over,
+    // since activeTab is independent state that this effect never touched.
+    setActiveTab("intelligence");
 
     if (!roId) return;
 
@@ -462,14 +497,61 @@ function LoadingSkeleton() {
   );
 }
 
-function StagedCustomerText({ ro, agentData }) {
+// Tool/data sources the agent "pulls" while reasoning — purely cosmetic
+// (the real call is a single POST /api/ro-advisor), but makes the wait
+// feel like an active multi-step agent instead of a stalled spinner.
+const AGENT_TOOL_TARGETS = [
+  "service history", "open TSBs", "parts pricing", "labor time guide",
+  "warranty coverage", "shop margin targets", "DTC codes", "vehicle build data",
+];
+
+function pickTools(seed, count) {
+  const start = seed % AGENT_TOOL_TARGETS.length;
+  return Array.from({ length: count }, (_, i) => AGENT_TOOL_TARGETS[(start + i) % AGENT_TOOL_TARGETS.length]);
+}
+
+function AgentThinkingStatus({ roNumber, firstName }) {
+  const seed = String(roNumber || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const steps = useMemo(() => {
+    const [t1, t2, t3, t4] = pickTools(seed, 4);
+    const who = firstName || "the customer";
+    return [
+      `Agent is triggering tools to pull ${t1}, ${t2}…`,
+      `Cross-referencing ${t3} and ${t4}…`,
+      `PrediiLLM is now reasoning with the data, providing personalized recommendations for ${who}…`,
+    ];
+  }, [seed, firstName]);
+
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    setStep(0);
+    const interval = setInterval(() => {
+      setStep((s) => Math.min(s + 1, steps.length - 1));
+    }, 1400);
+    return () => clearInterval(interval);
+  }, [steps]);
+
+  return (
+    <span style={{ fontSize: 11, color: "#86EFAC", lineHeight: 1.4 }}>
+      {steps[step]}
+    </span>
+  );
+}
+
+function StagedCustomerText({ ro, agentData, agentLoading }) {
   const [status, setStatus] = useState(ro.agenticTextStatus || "staged");
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const originalMessage = agentData?.suggestedCustomerMessage || ro.agenticCustomerText;
+  // Only fall back to the RO's last saved/sent message once the agent call
+  // has actually finished — otherwise this shows a stale (or, for seeded
+  // demo ROs, entirely canned) message before the LLM has generated
+  // anything, which reads as the AI having already responded.
+  const originalMessage = agentData?.suggestedCustomerMessage
+    || (!agentLoading ? ro.agenticCustomerText : undefined);
   const [draft, setDraft] = useState(originalMessage);
 
   // Keep the draft in sync as the AI message arrives/changes — but never
@@ -477,6 +559,17 @@ function StagedCustomerText({ ro, agentData }) {
   useEffect(() => {
     if (!editing) setDraft(originalMessage);
   }, [originalMessage, editing]);
+
+  if (agentLoading && !originalMessage) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 10 }}>
+        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+          Generating suggested customer message…
+        </span>
+        <LoadingSkeleton />
+      </div>
+    );
+  }
 
   if (!draft) return null;
 
@@ -941,14 +1034,16 @@ function TalkTrackText({ ro, service, talkTrack }) {
 // job to the RO's repairJobs. Distinct from the bulk "Transfer to SE" button
 // above, which only simulates pushing everything to the SMS and never writes
 // to the story RO itself.
-function ServiceRecommendationCard({ ro, rec, accepted, onConfirm }) {
+function ServiceRecommendationCard({ ro, rec, accepted, onConfirm, cannedJobs }) {
   const [phase, setPhase] = useState("idle"); // idle | searching | resolved
   const [match, setMatch] = useState(null);
 
   function handleAccept() {
     setPhase("searching");
     setTimeout(() => {
-      setMatch(simulateCatalogMatch(rec.service, rec.estimatedCost));
+      // Real canned-job pricing wins when this service is on the shop's own
+      // menu; only simulate a parts/labor-guide lookup when it isn't.
+      setMatch(matchCannedJob(rec.service, cannedJobs) || simulateCatalogMatch(rec.service, rec.estimatedCost));
       setPhase("resolved");
     }, 700);
   }
@@ -1004,14 +1099,21 @@ function ServiceRecommendationCard({ ro, rec, accepted, onConfirm }) {
       ) : (
         <div style={{
           marginTop: 8, padding: "8px 9px", borderRadius: 6,
-          background: "rgba(147,197,253,0.08)", border: "1px solid rgba(147,197,253,0.2)",
+          background: match.real ? "rgba(74,222,128,0.08)" : "rgba(147,197,253,0.08)",
+          border: `1px solid ${match.real ? "rgba(74,222,128,0.25)" : "rgba(147,197,253,0.2)"}`,
         }}>
           <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.7)", lineHeight: 1.5, marginBottom: 6 }}>
-            Matched {match.candidateCount} candidate results → picked <strong>{match.partNumber}</strong> · {match.laborHrs} hrs labor
+            {match.real
+              ? <>Matched this shop's canned-job menu — <strong>{match.sourceDescription}</strong> · {match.laborHrs} hrs labor</>
+              : <>Matched {match.candidateCount} candidate results → picked <strong>{match.partNumber}</strong> · {match.laborHrs} hrs labor</>}
           </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "flex-start", fontSize: 9.5, color: "rgba(255,255,255,0.4)", lineHeight: 1.4, marginBottom: 8 }}>
-            <Info size={11} color="rgba(255,255,255,0.4)" style={{ flexShrink: 0, marginTop: 1 }} />
-            <span>Simulated match — no live parts/labor catalog integration exists yet.</span>
+          <div style={{ display: "flex", gap: 6, alignItems: "flex-start", fontSize: 9.5, color: match.real ? "#86EFAC" : "rgba(255,255,255,0.4)", lineHeight: 1.4, marginBottom: 8 }}>
+            {match.real ? <Check size={11} color="#86EFAC" style={{ flexShrink: 0, marginTop: 1 }} /> : <Info size={11} color="rgba(255,255,255,0.4)" style={{ flexShrink: 0, marginTop: 1 }} />}
+            <span>
+              {match.real
+                ? "Real pricing from this shop's Canned Jobs catalog (Predii Learn) — not simulated."
+                : "Simulated match — no live parts/labor catalog integration exists yet."}
+            </span>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <button
@@ -1043,12 +1145,24 @@ function ServiceRecommendationCard({ ro, rec, accepted, onConfirm }) {
 
 function IntelligencePanel({ ro, agentData, agentLoading }) {
   const cust = ro._customer;
-  const { smsName } = useDemo(); // shop's selected SMS/DMS (Settings → Learn → Integrations), defaults to Mitchell1 ShopManager SE
+  const { smsName, activeShopId } = useDemo(); // shop's selected SMS/DMS (Settings → Learn → Integrations), defaults to Mitchell1 ShopManager SE
   const [transferOpen, setTransferOpen] = useState(false);
   const [acceptedServices, setAcceptedServices] = useState(new Set());
   // Jobs added this session, kept locally so back-to-back accepts append onto
   // each other correctly without needing a refetch of `ro` between clicks.
   const [addedJobs, setAddedJobs] = useState([]);
+  // This shop's real priced canned-job menu — lets the Accept flow below use
+  // real labor hours + parts pricing when a recommendation is on the menu,
+  // instead of always falling back to the simulated catalog match.
+  const [cannedJobs, setCannedJobs] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCannedJobs(activeShopId)
+      .then((data) => { if (!cancelled) setCannedJobs(data.jobs || []); })
+      .catch(() => { if (!cancelled) setCannedJobs([]); });
+    return () => { cancelled = true; };
+  }, [activeShopId]);
 
   async function handleConfirmRecommendation(rec, match) {
     const newJob = {
@@ -1056,7 +1170,7 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
       laborHours: match.laborHrs,
       actualLaborHours: 0,
       lineCost: match.laborCost + match.partCost,
-      parts: [{ description: `${rec.service} — ${match.partNumber}`, lineCost: match.partCost }],
+      parts: match.parts,
       status: "pending",
     };
     const nextAddedJobs = [...addedJobs, newJob];
@@ -1101,16 +1215,18 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
           <Sparkles size={13} color="#4ADE80" style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 11, color: "#86EFAC", lineHeight: 1.4 }}>
-            {agentLoading
-              ? `AI Agent reviewing ${cust?.firstName || "the customer"}'s profile to make customized recommendations…`
-              : `AI Agent reviewed ${cust?.firstName || "the customer"}'s profile to make customized recommendations`}
-          </span>
+          {agentLoading ? (
+            <AgentThinkingStatus roNumber={ro.roNumber} firstName={cust?.firstName} />
+          ) : (
+            <span style={{ fontSize: 11, color: "#86EFAC", lineHeight: 1.4 }}>
+              {`AI Agent reviewed ${cust?.firstName || "the customer"}'s profile to make customized recommendations`}
+            </span>
+          )}
         </div>
 
         {agentLoading && !agentData && <LoadingSkeleton />}
 
-        <StagedCustomerText ro={ro} agentData={agentData} />
+        <StagedCustomerText ro={ro} agentData={agentData} agentLoading={agentLoading} />
 
         {agentData?.advisorBrief && (
           <div style={{
@@ -1217,6 +1333,7 @@ function IntelligencePanel({ ro, agentData, agentLoading }) {
                 rec={u}
                 accepted={acceptedServices.has(u.service)}
                 onConfirm={handleConfirmRecommendation}
+                cannedJobs={cannedJobs}
               />
             ))}
           </div>

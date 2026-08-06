@@ -1,0 +1,13 @@
+{"event": "accept", "token": "ECM-120D", "entity_type": "dtc_code", "accept_count": 1, "promoted": false, "ts": "2026-06-22T21:36:54.362745+00:00"}
+{"event": "accept", "token": "ECM-120D", "entity_type": "dtc_code", "accept_count": 2, "promoted": false, "ts": "2026-06-22T21:36:54.423460+00:00"}
+{"event": "accept", "token": "ECM-120D", "entity_type": "dtc_code", "accept_count": 3, "promoted": true, "ts": "2026-06-22T21:36:54.482448+00:00"}
+{"event": "reject", "token": "ECM-120D", "was_learned": true, "ts": "2026-06-22T21:37:05.378126+00:00"}
+{"event": "accept", "token": "SPN-4567", "entity_type": "dtc_code", "accept_count": 1, "promoted": false, "ts": "2026-06-22T21:37:17.718442+00:00"}
+{"event": "accept", "token": "SPN-4567", "entity_type": "dtc_code", "accept_count": 2, "promoted": false, "ts": "2026-06-22T21:37:17.772313+00:00"}
+{"event": "accept", "token": "SPN-4567", "entity_type": "dtc_code", "accept_count": 3, "promoted": true, "ts": "2026-06-22T21:37:17.817991+00:00"}
+{"event": "reject", "token": "SPN-4567", "was_learned": true, "ts": "2026-06-22T21:37:18.904528+00:00"}
+{"event": "accept", "token": "C0DES", "entity_type": "dtc_code", "accept_count": 1, "promoted": false, "ts": "2026-06-22T22:09:39.351787+00:00"}
+{"event": "accept", "token": "C0DES", "entity_type": "dtc_code", "accept_count": 2, "promoted": false, "ts": "2026-06-22T22:09:50.398341+00:00"}
+{"event": "reject", "token": "P0SSIBLY", "was_learned": false, "ts": "2026-06-22T22:10:05.203056+00:00"}
+{"event": "accept", "token": "C0DES", "entity_type": "dtc_code", "accept_count": 3, "promoted": true, "ts": "2026-06-23T01:56:33.739332+00:00"}
+{"event": "reject", "token": "C0DES", "was_learned": true, "ts": "2026-06-23T02:11:52.368115+00:00"}

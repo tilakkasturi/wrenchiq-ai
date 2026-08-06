@@ -2,9 +2,12 @@
  * WrenchIQ — RO Advisor Agent
  *
  * Tool-calling agent that briefs a human service advisor on a specific RO.
- * Consults customer history, shop ings/objectives, and mileage-appropriate
- * services, then produces concrete, evidence-based service recommendations
- * (canned jobs and maintenance recommendations) with advisor talk tracks.
+ * Consults customer history, shop ings/objectives, mileage-appropriate
+ * services, the shop's own priced canned-job menu, and this shop's own
+ * seasonal repair-job patterns — grounded in the shop's labor-rate/margin
+ * profile — then produces concrete, evidence-based service recommendations
+ * (canned jobs, maintenance, and seasonal recommendations) with advisor
+ * talk tracks.
  *
  * Called every time an advisor selects an RO in the queue.
  *
@@ -12,6 +15,15 @@
  *   get_customer_history(customerId)       — past ROs from MongoDB (fallback: demo data)
  *   get_shop_objectives(shopId)            — active ings from tribal_notes collection
  *   get_mileage_services(make, model, mileage) — standard interval services due at this mileage
+ *   get_canned_jobs()                      — shop's priced canned-job menu (cannedJobsService.js)
+ *   get_seasonal_trends()                  — this shop's own top repair jobs for the current
+ *                                             season, from its persisted Predii Learn Shop
+ *                                             Profile (shopProfileSnapshotService.js)
+ *
+ * The shop profile (labor cost/hr, parts margin target — the same
+ * `shop_config` values roAdvisor.js uses for marginCheck) is injected
+ * directly into the system prompt as static context rather than a tool,
+ * since it's small and always relevant to how recommendations are priced.
  *
  * Returns:
  *   { advisorBrief, serviceRecommendations[], ings[], alerts[], confidence, generatedAt }
@@ -19,6 +31,8 @@
 
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
 import { LLM_SKIP_TOOLS } from '../config.js';
+import { getCannedJobs } from './cannedJobsService.js';
+import { getShopProfileSnapshot } from './shopProfileSnapshotService.js';
 
 // ── Fallback data (used when MongoDB is unreachable) ─────────────────────────
 
@@ -108,6 +122,47 @@ async function fetchShopObjectives(shopId, db) {
   }
 }
 
+// Same `shop_config` collection/defaults roAdvisor.js reads for marginCheck
+// (see DEFAULT_MARGIN_CONFIG there) — kept as its own fallback here so this
+// agent stays self-sufficient for any caller that doesn't already have it.
+const DEFAULT_SHOP_PROFILE = { laborCost: 85, partsMarginTarget: 53 };
+
+async function fetchShopProfile(shopId, db) {
+  if (!db) return DEFAULT_SHOP_PROFILE;
+  try {
+    const doc = await db.collection('shop_config').findOne({ shopId });
+    return doc ? { ...DEFAULT_SHOP_PROFILE, ...doc } : DEFAULT_SHOP_PROFILE;
+  } catch {
+    return DEFAULT_SHOP_PROFILE;
+  }
+}
+
+const SEASON_MONTHS = {
+  Winter: [12, 1, 2],
+  Spring: [3, 4, 5],
+  Summer: [6, 7, 8],
+  Fall:   [9, 10, 11],
+};
+
+function getCurrentSeasonName(date = new Date()) {
+  const month = date.getMonth() + 1;
+  return Object.keys(SEASON_MONTHS).find(name => SEASON_MONTHS[name].includes(month)) || 'Fall';
+}
+
+// seasonal_profile comes from the shop's persisted Predii Learn Shop Profile
+// (PrediiLearnScreen.jsx's "Persist Shop Profile" action) — empty until an
+// advisor has run that at least once for this shop, same as the fallback
+// pattern for tribal_notes/canned jobs above.
+async function fetchSeasonalTrends(shopId, db) {
+  if (!db) return [];
+  try {
+    const snapshot = await getShopProfileSnapshot(db, shopId);
+    return snapshot?.profile?.seasonal_profile || [];
+  } catch {
+    return [];
+  }
+}
+
 // Standard automotive maintenance intervals — domain knowledge, not shop logic.
 // `category: 'year_round'` marks items that recur on a mileage/time interval
 // year-round (e.g. oil + filter) as opposed to `'seasonal'` items tied to a
@@ -164,6 +219,47 @@ function filterExistingServices(result, ro) {
       rec => !isAlreadyOnRO(rec.service, existingNames)
     ),
   };
+}
+
+// Matches a stray list-numbering artifact the LLM sometimes leaves behind —
+// a bare "50." / "4)" marker, either on its own line or inline mid-sentence
+// (e.g. "...for you. 50) to keep everything lubricated.") — from drafting
+// the recommendations as a numbered list internally and having a fragment
+// of that leak into the final prose. Deliberately requires a preceding
+// boundary (start of string/line or whitespace after a word) so it never
+// matches a real price like "$50." or a decimal like "12.5".
+const STRAY_LIST_MARKER = /(^|[\s.])\d{1,3}[.)](?=\s|$)/;
+
+// Builds a plain, deterministic customer message straight from the
+// structured serviceRecommendations — used as a safety-net replacement when
+// the LLM's own prose came back with a stray list-marker artifact, since at
+// that point the surrounding words may also have been dropped/garbled and
+// patching the string in place would still read broken.
+function buildFallbackCustomerMessage(result, ro) {
+  const recs = result.serviceRecommendations || [];
+  const firstName = (ro.customerName || '').split(' ')[0] || 'there';
+  const advisorFirstName = (ro.advisorName || '').split(' ')[0];
+  const signOff = advisorFirstName ? `— ${advisorFirstName}` : '— the team';
+
+  if (!recs.length) {
+    return `Hi ${firstName}, we're taking a look at your vehicle for you. Let me know if you'd like the technician to check anything else while it's in the shop.\n\n${signOff}`;
+  }
+
+  const items = recs.map((r) => `${r.service} (${r.confidence === 'high' ? 'worth doing soon' : 'can wait until your next visit'})`);
+  const itemList = items.length > 1
+    ? `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`
+    : items[0];
+
+  return `Hi ${firstName}, we're taking a look at ${ro.customerConcern ? `"${ro.customerConcern}"` : 'your vehicle'} for you. While we're at it, a few maintenance items are worth mentioning: ${itemList}. Let me know if you'd like the technician to take care of any of these while it's in the shop.\n\n${signOff}`;
+}
+
+function cleanCustomerMessage(result, ro) {
+  if (!result || typeof result.suggestedCustomerMessage !== 'string') return result;
+  if (STRAY_LIST_MARKER.test(result.suggestedCustomerMessage)) {
+    console.warn('[roAdvisor] stray list-marker artifact in suggestedCustomerMessage — rebuilding from serviceRecommendations');
+    return { ...result, suggestedCustomerMessage: buildFallbackCustomerMessage(result, ro) };
+  }
+  return result;
 }
 
 // ── Tool definitions (OpenAI format) ─────────────────────────────────────────
@@ -226,16 +322,50 @@ const RO_TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'get_canned_jobs',
+      description:
+        'Fetch this shop\'s priced canned-job menu (labor price + priced parts package per job) — ' +
+        'the shop\'s real, on-file pricing, not an estimate. Each result has an "alreadyOnRO" flag — ' +
+        'never recommend one where alreadyOnRO is true. When a recommendation matches one of these jobs, ' +
+        'use its exact totalPrice as estimatedCost instead of guessing.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_seasonal_trends',
+      description:
+        'Fetch this shop\'s own historical top repair jobs for the CURRENT season (e.g. AC repairs ' +
+        'spiking in summer, coolant flushes in fall), from its persisted Predii Learn Shop Profile — ' +
+        'real ROs this shop has closed in that season, not a generic seasonal assumption. Use this to ' +
+        'ground a "seasonal" category recommendation in this shop\'s own pattern. Each job has an ' +
+        '"alreadyOnRO" flag — never recommend one where alreadyOnRO is true. Returns an empty list if ' +
+        'this shop hasn\'t persisted a Shop Profile yet (Settings → Predii Learn) — in that case, fall ' +
+        'back to general domain knowledge for seasonal items instead.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
 ];
 
 // ── System prompt ─────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(ro, vehicle, shopName) {
+function buildSystemPrompt(ro, vehicle, shopName, shopProfile) {
   const vehicleStr = vehicle
     ? `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''} — ${(vehicle.mileage || 0).toLocaleString()} miles`
     : 'vehicle details not available';
 
   const existingServiceNames = getExistingServiceNames(ro);
+  const profile = shopProfile || DEFAULT_SHOP_PROFILE;
 
   return `You are WrenchIQ Intelligence, an AI agent briefing a human service advisor before they walk out to greet a customer.
 
@@ -247,6 +377,11 @@ Current RO:
   Shop:     ${shopName || 'Cornerstone Auto Group'}
   Advisor:  ${ro.advisorName || 'not on file'}
 
+Shop profile (Settings → ARO & Margin — for your situational awareness only, not something to quote to the customer):
+  Labor rate:          $${profile.laborCost}/hr (the shop's internal cost basis, NOT the price billed to the customer)
+  Parts margin target: ${profile.partsMarginTarget}%
+Use this only to judge whether a service you're about to recommend is realistically priced for this shop — never state these numbers directly to the customer, and never treat the labor rate as a price to charge.
+
 Line items already on this RO's job list (do NOT recommend any of these, or anything that describes the same work in different words — e.g. don't re-recommend "AC diagnostic" if "A/C System Diagnosis & Pressure Test" is already listed):
 ${existingServiceNames.length ? existingServiceNames.map(s => `  - ${s}`).join('\n') : '  (none)'}
 
@@ -254,16 +389,20 @@ Your job:
 1. Call get_customer_history to understand this customer's visit history and any declined services.
 2. Call get_shop_objectives to get today's active ings and promotions.
 3. Call get_mileage_services to identify what's due at this vehicle's mileage.
-4. Cross-reference all three sources to produce a prioritized, non-redundant recommendation set.
+4. Call get_canned_jobs to see the shop's real priced job menu.
+5. Call get_seasonal_trends to see what's historically busy at this shop right now.
+6. Cross-reference all five sources to produce a prioritized, non-redundant recommendation set.
 
 Rules:
 - If the customer declined a service in the last 12 months, flag it as an alert — don't recommend it as a fresh service recommendation.
 - Only surface ings that apply to this specific vehicle (honor triggerType filters: vehicle_make, mileage_range, any_ro).
 - Talk tracks must sound natural — written in first-person for the advisor to say to the customer.
 - Confidence = high if backed by specific data (declined service, exact mileage overdue), medium if mileage-based estimate.
-- Service recommendations must be evidence-based — backed by the RO, customer history, or mileage interval — covering both canned jobs and maintenance recommendations, not just incremental upsell. Keep to the 4 most impactful. Do not recommend more than 4.
-- NEVER recommend a service that is already a line item on the current RO (see "Line items already on this RO" above, or any due service flagged alreadyOnRO) — the recommendation engine must exclude anything already on this RO's job list, even if you'd word it differently.
-- category = "year_round" for anything that recurs on a mileage/time interval regardless of season — this always includes oil changes, lube/oil filter service, and engine oil filter jobs. Never classify these as "seasonal" and never invent a MOTOR-sourced "Oil Service" seasonal line item. category = "seasonal" only for genuinely calendar-season-driven work (e.g. AC performance check before summer, coolant/antifreeze check before winter).
+- Service recommendations must be evidence-based — backed by the RO, customer history, mileage interval, or this shop's own seasonal pattern — covering canned jobs, maintenance recommendations, and seasonal jobs, not just incremental upsell. Keep to the 4 most impactful. Do not recommend more than 4.
+- When a recommendation matches an entry from get_canned_jobs, use that job's exact totalPrice as estimatedCost — this is the shop's real on-file price, never estimate one for something already on the menu. Only estimate a cost for items with no canned-job match (e.g. a mileage-interval item not on the menu).
+- A "seasonal" recommendation should cite get_seasonal_trends data when it returns real jobs for the current season (reference the shop's own historical count in the reason) — only fall back to generic seasonal domain knowledge (e.g. AC before summer) when that tool comes back empty.
+- NEVER recommend a service that is already a line item on the current RO (see "Line items already on this RO" above, or any due service/canned job/seasonal job flagged alreadyOnRO) — the recommendation engine must exclude anything already on this RO's job list, even if you'd word it differently.
+- category = "year_round" for anything that recurs on a mileage/time interval regardless of season — this always includes oil changes, lube/oil filter service, and engine oil filter jobs. Never classify these as "seasonal" and never invent a MOTOR-sourced "Oil Service" seasonal line item. category = "seasonal" only for genuinely calendar-season-driven work (e.g. AC performance check before summer, coolant/antifreeze check before winter, or anything surfaced by get_seasonal_trends).
 
 Gold Standard tone for suggestedCustomerMessage — this is a text/SMS the advisor sends directly to the customer, so it must read as warm and human, never salesy:
 - Warm, first-name, plain language — no jargon, no exclamation-point energy.
@@ -272,6 +411,7 @@ Gold Standard tone for suggestedCustomerMessage — this is a text/SMS the advis
 - Explain the "why" behind each item in a short clause (root cause, not just "it's due") so the customer understands, not just complies.
 - Do NOT oversell: no exclamation points, no "don't miss out," no bundling everything as equally urgent, no piling on adjectives. State each item plainly and let the customer decide. If a declined-service alert exists, do not re-push it here — that's a separate conversation.
 - Frame urgency truthfully — safety issues get real urgency, everything else gets "worth doing" or "can wait" framing, never scare tactics or artificial pressure.
+- Write it as flowing prose sentences, never as a numbered or bulleted list — do not include any bare list marker like "1.", "2)", etc. anywhere in the text, even mid-sentence. Weave each item into a sentence instead of enumerating it.
 - State prices as estimates, and end with one easy, low-pressure way to say yes or no to all of it.
 - Sign off with the advisor's actual first name from "Advisor" above (e.g. "— James"). If the advisor isn't on file, sign off as "— the team at ${shopName || 'the shop'}" instead. Never write a placeholder like "[Advisor Name]" or "[Your Name]".
 
@@ -282,7 +422,7 @@ Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
     {
       "service":       string,     // service name, 3-6 words
       "reason":        string,     // why this applies — specific data point
-      "estimatedCost": number,     // integer USD
+      "estimatedCost": number,     // integer USD — exact canned-job totalPrice when matched, otherwise a reasonable estimate
       "confidence":    "high" | "medium",
       "category":      "year_round" | "seasonal",  // year_round for mileage/time-interval items (oil + filter, etc.); seasonal only for calendar-season work
       "talkTrack":     string      // what the advisor says to the customer, first person, 2-3 sentences
@@ -346,6 +486,39 @@ function executeTool(name, args, preloaded) {
       };
     }
 
+    case 'get_canned_jobs': {
+      const existing = getExistingServiceNames(preloaded.ro);
+      return {
+        jobs: (preloaded.cannedJobs || []).map(j => ({
+          description: j.description,
+          category:    j.category,
+          laborHours:  j.laborHours,
+          laborCost:   j.laborCost,
+          parts:       (j.parts || []).map(p => ({ description: p.description, cost: p.lineCost })),
+          totalPrice:  j.totalPrice,
+          // Flag items already on this RO so the LLM never re-recommends them
+          // (WrenchIQ Product Spec v3.0 — requirement S3).
+          alreadyOnRO: isAlreadyOnRO(j.description, existing),
+        })),
+      };
+    }
+
+    case 'get_seasonal_trends': {
+      const existing = getExistingServiceNames(preloaded.ro);
+      const seasonData = (preloaded.seasonalTrends || []).find(s => s.name === preloaded.currentSeason);
+      return {
+        season: preloaded.currentSeason,
+        roCountThisSeasonHistorically: seasonData?.ro_count ?? 0,
+        // Flag items already on this RO so the LLM never re-recommends them
+        // (WrenchIQ Product Spec v3.0 — requirement S3).
+        topRepairJobs: (seasonData?.top_repair_jobs || []).map(j => ({
+          job:         j.job,
+          count:       j.count,
+          alreadyOnRO: isAlreadyOnRO(j.job, existing),
+        })),
+      };
+    }
+
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -353,7 +526,7 @@ function executeTool(name, args, preloaded) {
 
 // ── Single-pass fallback (for LLMs that don't support tool_calls) ─────────────
 
-async function runSinglePassAgent(ro, vehicle, shopName, preloaded) {
+async function runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile) {
   const history    = preloaded.history.map(r => ({
     date: r.dateIn?.toString().slice(0, 10),
     services: (r.services || []).map(s => s.name),
@@ -365,8 +538,21 @@ async function runSinglePassAgent(ro, vehicle, shopName, preloaded) {
   const existingServiceNames = getExistingServiceNames(ro);
   const dueServices = getMileageServices(vehicle?.make, vehicle?.model, mileage)
     .map(s => ({ ...s, alreadyOnRO: isAlreadyOnRO(s.service, existingServiceNames) }));
+  const cannedJobs = (preloaded.cannedJobs || []).map(j => ({
+    description: j.description,
+    category:    j.category,
+    totalPrice:  j.totalPrice,
+    alreadyOnRO: isAlreadyOnRO(j.description, existingServiceNames),
+  }));
+  const currentSeason = preloaded.currentSeason;
+  const seasonData = (preloaded.seasonalTrends || []).find(s => s.name === currentSeason);
+  const seasonalTopJobs = (seasonData?.top_repair_jobs || []).map(j => ({
+    job: j.job,
+    count: j.count,
+    alreadyOnRO: isAlreadyOnRO(j.job, existingServiceNames),
+  }));
 
-  const prompt = `${buildSystemPrompt(ro, vehicle, shopName)}
+  const prompt = `${buildSystemPrompt(ro, vehicle, shopName, shopProfile)}
 
 DATA ALREADY LOADED (no tool calls needed):
 
@@ -378,6 +564,12 @@ ${JSON.stringify(objectives, null, 2)}
 
 Mileage-appropriate services (vehicle at ${mileage.toLocaleString()} miles):
 ${JSON.stringify(dueServices, null, 2)}
+
+Shop's priced canned-job menu (use totalPrice as estimatedCost for any match):
+${JSON.stringify(cannedJobs, null, 2)}
+
+Shop's own top repair jobs for the current season (${currentSeason}, ${seasonData?.ro_count ?? 0} ROs historically — empty means no Shop Profile persisted yet, fall back to general seasonal domain knowledge):
+${JSON.stringify(seasonalTopJobs, null, 2)}
 
 Services already on this RO (do NOT recommend any of these — see alreadyOnRO flag above and Rules):
 ${JSON.stringify(existingServiceNames, null, 2)}
@@ -406,9 +598,12 @@ Now produce the JSON recommendation object.`;
  * @param {object} vehicle   - Vehicle record
  * @param {string} shopId
  * @param {object} db        - MongoDB db handle (may be null if not connected)
+ * @param {object} [shopProfile] - Pre-fetched shop_config (laborCost, partsMarginTarget). If
+ *   omitted (e.g. no caller has already fetched it), fetched internally so this agent stays
+ *   self-sufficient. roAdvisor.js passes its own already-fetched shopConfig to avoid a duplicate query.
  * @returns {Promise<{ advisorBrief, serviceRecommendations, ings, alerts, generatedAt }>}
  */
-export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-001', db }) {
+export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-001', db, shopProfile }) {
   const customerId = customer?.id || customer?.customerId || ro?.customerId;
   const shopName   = 'Cornerstone Auto Group';
 
@@ -418,19 +613,25 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
   // real number instead of silently defaulting to 0.
   vehicle = vehicle ? { ...vehicle, mileage: vehicle.mileage ?? vehicle.odometer ?? 0 } : vehicle;
 
+  const currentSeason = getCurrentSeasonName();
+
   // Pre-fetch data in parallel — each is tolerant of failure
-  const [history, objectives] = await Promise.all([
+  const [history, objectives, cannedJobs, resolvedShopProfile, seasonalTrends] = await Promise.all([
     fetchCustomerHistory(customerId, db),
     fetchShopObjectives(shopId, db),
+    getCannedJobs(db, shopId),
+    shopProfile ? Promise.resolve(shopProfile) : fetchShopProfile(shopId, db),
+    fetchSeasonalTrends(shopId, db),
   ]);
+  shopProfile = resolvedShopProfile;
 
-  const preloaded = { history, objectives, ro };
+  const preloaded = { history, objectives, cannedJobs, seasonalTrends, currentSeason, ro };
 
   // If the LLM server doesn't support tool_calls, go straight to single-pass
   if (LLM_SKIP_TOOLS) {
     console.log('[roAdvisor] LLM_SKIP_TOOLS=true — using single-pass prompt');
-    const result = filterExistingServices(await runSinglePassAgent(ro, vehicle, 'Cornerstone Auto Group', preloaded), ro);
-    return { ...result, generatedAt: new Date().toISOString(), dataSourced: { historyVisits: history.length, objectivesCount: objectives.length } };
+    const result = cleanCustomerMessage(filterExistingServices(await runSinglePassAgent(ro, vehicle, 'Cornerstone Auto Group', preloaded, shopProfile), ro), ro);
+    return { ...result, generatedAt: new Date().toISOString(), dataSourced: { historyVisits: history.length, objectivesCount: objectives.length, cannedJobsCount: cannedJobs.length, seasonalTrendsAvailable: seasonalTrends.length > 0 } };
   }
 
   const messages = [
@@ -447,7 +648,7 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
     let data;
     try {
       data = await callAzureOpenAI({
-        system:     buildSystemPrompt(ro, vehicle, shopName),
+        system:     buildSystemPrompt(ro, vehicle, shopName, shopProfile),
         messages,
         max_tokens: 1200,
         tools:      RO_TOOLS,
@@ -455,7 +656,7 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
       });
     } catch (err) {
       console.warn('[roAdvisor] LLM call failed, trying single-pass fallback:', err.message);
-      result = await runSinglePassAgent(ro, vehicle, shopName, preloaded);
+      result = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
       break;
     }
 
@@ -477,7 +678,7 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
         result = JSON.parse(json);
       } catch {
         // LLM didn't produce valid JSON — run single-pass with data injected
-        result = await runSinglePassAgent(ro, vehicle, shopName, preloaded);
+        result = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
       }
       break;
     }
@@ -499,15 +700,15 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
     }
 
     // Unknown finish reason — fall back to single-pass
-    result = await runSinglePassAgent(ro, vehicle, shopName, preloaded);
+    result = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
     break;
   }
 
   if (!result) {
-    result = await runSinglePassAgent(ro, vehicle, shopName, preloaded);
+    result = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
   }
 
-  result = filterExistingServices(result, ro);
+  result = cleanCustomerMessage(filterExistingServices(result, ro), ro);
 
   return {
     ...result,
@@ -515,6 +716,8 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
     dataSourced: {
       historyVisits:   history.length,
       objectivesCount: objectives.length,
+      cannedJobsCount: cannedJobs.length,
+      seasonalTrendsAvailable: seasonalTrends.length > 0,
     },
   };
 }

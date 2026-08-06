@@ -15,6 +15,7 @@ const STORAGE_KEY = "wrenchiq_demo_config";
 
 const SMS_OPTIONS = [
   "Mitchell1 ShopManager SE",
+  "ALLDATA Shop Manager Pro",
   "Protractor",
   "Tekmetric",
   "Shop-Ware",
@@ -25,7 +26,8 @@ const SMS_OPTIONS = [
 
 // Per-vendor Predii co-branding config
 export const SMS_VENDOR_CONFIG = {
-  mitchell1:   { displayName: "Mitchell1 ShopManager SE", poweredByPredii: true },
+  mitchell1:   { displayName: "Mitchell1 ShopManager SE",    poweredByPredii: true },
+  alldata:     { displayName: "ALLDATA Shop Manager Pro",    poweredByPredii: true },
   protractor:  { displayName: "Protractor",  poweredByPredii: true },
   tekmetric:   { displayName: "Tekmetric",   poweredByPredii: true },
   shopware:    { displayName: "Shop-Ware",   poweredByPredii: true },
@@ -38,6 +40,7 @@ export const SMS_VENDOR_CONFIG = {
 export function smsNameToProvider(name = "") {
   const n = name.toLowerCase().replace(/[^a-z0-9]/g, "");
   if (n === "mitchellone" || n.startsWith("mitchell")) return "mitchell1";
+  if (n === "alldata") return "alldata";
   if (n === "shopware" || n === "shopware") return "shopware";
   if (n === "autoleap") return "autoleap";
   if (n === "shopmonkey") return "shopmonkey";

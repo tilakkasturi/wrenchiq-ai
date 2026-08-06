@@ -15,6 +15,7 @@ Built by [Predii, Inc.](https://predii.com) — CONFIDENTIAL.
 | Node.js | 24 | Everything. At `/opt/homebrew/opt/node@24/bin/node` if not on PATH. |
 | MongoDB access | — | The API server (`172.16.80.7:27017`, see below) |
 | Rust toolchain | stable | **Only** if you're building/running the Tauri desktop app (Surface B). Install via [rustup](https://rustup.rs): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh -s -- -y --profile minimal`, then `source "$HOME/.cargo/env"`. Not needed for any of the web surfaces. |
+| Python 3 | 3.9+ | `ro-ner-demo/` — Predii Learn's live NER + Shop Profile backend, a packaged subset of the separate `ro-ner-demo` repo. One-time: `pip install -r ro-ner-demo/requirements.txt`. Not fatal if skipped — Predii Learn falls back to its persisted Shop Profile snapshot. |
 
 > **Node path:** prefix commands with `PATH="/opt/homebrew/opt/node@24/bin:$PATH"` if `node`/`npm` is not found in your shell.
 
@@ -225,7 +226,11 @@ bin/demo-ready              # pre-demo environment prep for both real shops (cor
 
 ```
 bin/
+  start-demo      Start everything (ro-ner-demo + backend + Vite + Tauri Sidecar window)
+  stop-demo       Stop everything start-demo started
   server          Start the WrenchIQ API server (port $API_PORT, default 3001)
+  tauri-app       Start/stop just the Tauri Sidecar app + its dev servers
+  ro-ner-demo     Start the packaged ro-ner-demo service (port $RO_NER_PORT, default 8090)
   package         Build + package a versioned release tarball
   deploy          Build → package → deploy to wrenchiq-demo in one step
   seed-batch      Seed a batch of demo repair orders into MongoDB

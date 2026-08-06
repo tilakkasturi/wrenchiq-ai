@@ -18,6 +18,15 @@
  * Usage:
  *   node scripts/seedSeasonalGapCornerstone.js            # dry run (prints plan + sample docs)
  *   node scripts/seedSeasonalGapCornerstone.js --apply     # actually insert
+ *   node scripts/seedSeasonalGapCornerstone.js --cleanup   # delete any already-inserted
+ *                                                            gap-fill RO with a future dateIn
+ *
+ * IMPORTANT: this script backfills PAST visit history — every generated RO must have
+ * dateIn <= the real clock at run time. TARGET_MONTHS below is filtered against
+ * `new Date()` for exactly this reason (see the 2026-08 incident: hardcoding months
+ * through November assumed "today" would already be past that point by the time this
+ * ran; it wasn't, so ~370 customers got a "most recent visit" dated months in the
+ * future — surfaced via RO Chat's customer-history summary before anyone caught it).
  */
 
 import { MongoClient } from 'mongodb';
@@ -39,6 +48,7 @@ for (const f of ['.env.local', '.env']) {
 }
 
 const APPLY        = process.argv.includes('--apply');
+const CLEANUP      = process.argv.includes('--cleanup');
 const MONGODB_URI  = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const DB_NAME      = process.env.MONGODB_DB  || 'wrenchiq';
 const COLLECTION   = 'RepairOrder';
@@ -48,7 +58,12 @@ const SOURCE_TAG   = 'seasonal-gap-fill-synthetic';
 // ── Target months + volume ────────────────────────────────────────────────
 // Continues cornerstone's existing ~100-150/month cadence, with a mild bump
 // in peak-driving-season months (pre-summer road trips, back-to-school).
-const TARGET_MONTHS = [
+//
+// Filtered against the real clock at run time — never generate a month that
+// hasn't happened yet. This is what let ~370 customers end up with a "most
+// recent visit" dated months in the future (see file header).
+const now = new Date();
+const ALL_TARGET_MONTHS = [
   { year: 2026, month: 5,  count: 120 }, // May
   { year: 2026, month: 6,  count: 125 }, // Jun
   { year: 2026, month: 7,  count: 120 }, // Jul
@@ -57,6 +72,9 @@ const TARGET_MONTHS = [
   { year: 2026, month: 10, count: 120 }, // Oct
   { year: 2026, month: 11, count: 115 }, // Nov
 ];
+const TARGET_MONTHS = ALL_TARGET_MONTHS.filter(({ year, month }) =>
+  year < now.getFullYear() || (year === now.getFullYear() && month <= now.getMonth() + 1)
+);
 
 // ── Northern California seasonality weights per serviceCategory ────────────
 // Relative weight by calendar month (1=Jan..12=Dec). Reflects Bay Area
@@ -108,6 +126,20 @@ async function main() {
   const db   = client.db(DB_NAME);
   const coll = db.collection(COLLECTION);
 
+  // ── Remediation for the 2026-08 future-dated-RO incident: delete any
+  // already-inserted gap-fill RO whose dateIn is still in the future,
+  // regardless of which run created it.
+  if (CLEANUP) {
+    const result = await coll.deleteMany({
+      shopId: SHOP_ID,
+      source: SOURCE_TAG,
+      dateIn: { $gt: now.toISOString() },
+    });
+    console.log(`Deleted ${result.deletedCount} future-dated gap-fill RO(s) (dateIn > ${now.toISOString()}).`);
+    await client.close();
+    return;
+  }
+
   // ── Load templates per category from the existing ro-ner-demo corpus ─────
   const jobTemplatesByCategory = {};
   for (const cat of CATEGORIES) {
@@ -152,7 +184,12 @@ async function main() {
       const { customer, vehicle, vehicleOrigin } = pick(custVehDocs);
       const tech = pick(TECHS);
 
-      const dateIn  = randomBusinessDateIn(year, month);
+      const dateIn = randomBusinessDateIn(year, month);
+      // Safety net for the current month specifically — TARGET_MONTHS already
+      // excludes months entirely in the future, but a random day/hour within
+      // the current month can still land later today than "now". Skip rather
+      // than clamp so this doesn't skew the business-hours distribution.
+      if (dateIn.getTime() > now.getTime()) continue;
       const dateOut = new Date(dateIn.getTime() + (20 + Math.floor(Math.random() * 70)) * 60 * 1000);
       // Deterministic, content-derived id (month + index-within-month) rather
       // than "1 + current max in DB" — that scheme produced a fresh, non-
