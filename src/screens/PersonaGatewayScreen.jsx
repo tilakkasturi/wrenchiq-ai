@@ -36,7 +36,7 @@ const AM_PERSONAS = [
     iconBg: "#E8F5E9",
   },
   {
-    id: "gwgCorporate", label: "GWG Corporate", tagline: "Network Objectives & Location Health",
+    id: "ewgCorporate", label: "EWG Corporate", tagline: "Network Objectives & Location Health",
     detail: "Set performance targets · Monitor 100 locations · Track compliance by job type",
     iconBg: "#E8EAF0",
   },
@@ -46,7 +46,7 @@ const LIVE_SIGNALS = {
   cornerstone: {
     advisor:      "3 approvals pending · $920 waiting",
     owner:        "2 AI alerts · Bay 3 idle 45 min",
-    gwgCorporate: "3C compliance Off-Track — 36 locations",
+    ewgCorporate: "3C compliance Off-Track — 36 locations",
   },
   ridgeline: {
     advisor: "2 service recommendations staged · $803 opportunity",
@@ -653,7 +653,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
           {/* AM persona cards — clean light design */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 480 }}>
             {AM_PERSONAS
-              .filter(p => p.id !== "gwgCorporate" || activeShopId === "cornerstone")
+              .filter(p => p.id !== "ewgCorporate" || activeShopId === "cornerstone")
               .map((p) => {
                 const isHov = hoveredPersona === p.id;
                 const isSelected = p.isDefault;
@@ -662,7 +662,7 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
                 // Icon per persona
                 let PersonaIcon = Wrench;
                 if (p.id === "owner") PersonaIcon = BarChart3;
-                if (p.id === "gwgCorporate") PersonaIcon = Building2;
+                if (p.id === "ewgCorporate") PersonaIcon = Building2;
 
                 const iconColor = p.id === "advisor" ? "#FF6B35" : p.id === "owner" ? "#16A34A" : "#6B7280";
 

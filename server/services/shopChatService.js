@@ -9,40 +9,9 @@
  * anything" surface, not the per-RO power-user tool.
  */
 
-import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
 import { RO_CHAT_MAX_TOKENS } from '../config.js';
-
-function formatCannedJobsList(cannedJobs) {
-  if (!cannedJobs || cannedJobs.length === 0) return 'none on file';
-  return cannedJobs.map((j) => {
-    const parts = (j.parts || []).map((p) => `${p.description} $${p.lineCost}`).join(', ') || 'no parts';
-    const total = j.totalPrice ?? ((j.laborCost || 0) + (j.parts || []).reduce((s, p) => s + (p.lineCost || 0), 0));
-    return `- ${j.description} (${j.category || 'uncategorized'}): labor $${j.laborCost} (${j.laborHours} hrs) + parts [${parts}] = $${total} total`;
-  }).join('\n');
-}
-
-function formatShopProfileSummary(profile) {
-  if (!profile) return 'none on file yet — no Shop Profile has been persisted for this shop (Settings → Predii Learn → Shop Profile → Persist Shop Profile)';
-
-  const top5 = (list) => (list || []).slice(0, 5);
-  const jobs = top5(profile.top_repair_jobs).map((j) => `${j.job} (${j.count}x)`).join(', ') || 'none';
-  const parts = top5(profile.top_parts)
-    .map((p) => `${p.name}${p.avg_price != null ? ` ~$${p.avg_price}` : ''}${p.preferred_supplier ? ` via ${p.preferred_supplier}` : ''}`)
-    .join(', ') || 'none';
-  const customers = top5(profile.top_repeat_customers)
-    .map((c) => `${c.name} (${c.visit_count} visits, customer since ${c.customer_since || '?'}, $${c.lifetime_spend} lifetime)`)
-    .join(', ') || 'none';
-  const seasonal = (profile.seasonal_profile || [])
-    .map((s) => `${s.name} (${s.range}): top job ${s.top_repair_jobs?.[0]?.job || 'n/a'}${s.recommended_focus?.length ? `, focus: ${s.recommended_focus.map((f) => `${f.name} ${f.index}x`).join(', ')}` : ''}`)
-    .join('; ') || 'none';
-
-  const o = profile.overall || {};
-  return `Overall: ${o.ro_count ?? '?'} ROs, ${o.customer_count ?? '?'} customers, avg RO value $${o.avg_ro_value ?? '?'}, margin ${o.overall_margin_pct ?? '?'}%.
-Top repair jobs: ${jobs}
-Top parts: ${parts}
-Top repeat customers: ${customers}
-Seasonal patterns: ${seasonal}`;
-}
+import { formatCannedJobsList, formatShopProfileSummary } from './chatFormatters.js';
+import { runGroundedChatCompletion } from './chatSkill.js';
 
 function formatCustomerHistory(customerName, history) {
   if (!customerName) return null;
@@ -98,20 +67,15 @@ Rules:
 export async function runShopChatAgent({ message, history = [], shopName, cannedJobs, shopProfile, customerName, customerHistory, customerMatches }) {
   const system = buildShopChatSystemPrompt({ shopName, cannedJobs, shopProfile, customerName, customerHistory, customerMatches });
 
-  const messages = [
-    ...history.filter((m) => typeof m.text === 'string').slice(-8)
-      .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text })),
-    { role: 'user', content: message },
-  ];
-
   // Always the default Predii LLM profile — no frontier tier, no per-request override.
-  const data = await callAzureOpenAI({
+  const reply = await runGroundedChatCompletion({
     system,
-    messages,
-    max_tokens: RO_CHAT_MAX_TOKENS,
-    _route: '/api/shop-chat',
+    history,
+    message,
+    maxTokens: RO_CHAT_MAX_TOKENS,
+    route: '/api/shop-chat',
     useConfiguredProvider: true,
   });
 
-  return { reply: (getTextFromResponse(data) || '').trim() };
+  return { reply };
 }

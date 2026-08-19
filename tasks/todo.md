@@ -1,5 +1,5 @@
 # WrenchIQ Demo TODO — Two Demos, Friday April 18
-**Demos:** Taylor Mitchell (GWG / Protractor) · Brad Lewis (Mitchell1)
+**Demos:** Taylor Mitchell (EWG / Protractor) · Brad Lewis (Mitchell1)
 **Demo date:** Friday, April 18, 2026
 
 ---
@@ -75,8 +75,8 @@ If asked *"what happens if WrenchIQ gets the diagnosis wrong?"*:
 
 ## DEMO SHOP PERSONAS
 
-### SHOP A — Taylor Mitchell demo (GWG / Protractor)
-**Shop:** Cornerstone Auto Group · Fort Worth, TX · 4 locations · GWG network member
+### SHOP A — Taylor Mitchell demo (EWG / Protractor)
+**Shop:** Cornerstone Auto Group · Fort Worth, TX · 4 locations · EWG network member
 **Owner:** Dave Kowalski · `adv-002` · Labor rate $175
 **Lead Advisor:** James Kowalski (Dave's son) · `adv-001`
 **Location 3 problem:** Marcus Webb (`tech-001`) writing 3C scores of 34/100
@@ -292,12 +292,12 @@ aiInsights:
 ## LANDING PAGES & SKIN SWAP
 
 ### [ ] Taylor version: 3 cards + Protractor badge
-Cards: Service Advisor · Shop Owner · GWG Corporate
+Cards: Service Advisor · Shop Owner · EWG Corporate
 Badge: "Connected to: Protractor"
-Live signals: Advisor "3 ROs need attention · $1,140 waiting" · GWG "3C compliance Off-Track · Location 3"
+Live signals: Advisor "3 ROs need attention · $1,140 waiting" · EWG "3C compliance Off-Track · Location 3"
 
 ### [ ] Brad version: 2 cards + Mitchell1 Manager SE badge
-Cards: Service Advisor · Shop Owner (no GWG card)
+Cards: Service Advisor · Shop Owner (no EWG card)
 Badge: "Connected to: Mitchell1 Manager SE"
 Live signals: Advisor "2 upsells staged · $803 opportunity" · Owner "Luis — 3 comebacks this month"
 

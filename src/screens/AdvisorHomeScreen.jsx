@@ -1,8 +1,12 @@
 /**
- * AdvisorHomeScreen — SMS mock: 4-column kanban board (Queue / Diagnosing /
- * Approval / Pickup). Represents the shop's own RO board — WrenchIQ observes
- * it read-only via the Data Feed Model; it does not render WrenchIQ
- * intelligence itself (see WrenchIQSidecarScreen.jsx, Surface B, for that).
+ * AdvisorHomeScreen — SMS mock: 3-column kanban board (Diagnosing / Approval
+ * / Pickup) for ROs already in progress. The full RO queue (all ROs, full
+ * detail on click) is its own separate "RO Queue" nav section in
+ * SMSRepresentativeApp.jsx (RepairOrderViewerScreen.jsx) — kept distinct
+ * from this board rather than mixed into it.
+ * Represents the shop's own RO board — WrenchIQ observes it read-only via
+ * the Data Feed Model; it does not render WrenchIQ intelligence itself (see
+ * WrenchIQSidecarScreen.jsx, Surface B, for that).
  */
 
 import { useState } from "react";
@@ -13,8 +17,10 @@ import { customers, vehicles } from "../data/demoData";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
+// "In Queue" is deliberately not a kanban column here — newly checked-in
+// ROs get their own dedicated Queue screen (RepairOrderQueueScreen.jsx) so
+// the two views don't mix; this board only tracks ROs already in progress.
 const BOARD_COLUMNS = [
-  { id: "queue",    label: "In Queue",          color: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
   { id: "diagnosing", label: "Diagnosing",      color: "#F59E0B", bg: "#FFFBEB", border: "#FDE68A" },
   { id: "approval", label: "Awaiting Approval", color: "#FF6B35", bg: "#FFF7F4", border: "#FDCBB3" },
   { id: "pickup",   label: "Ready for Pickup",  color: "#22C55E", bg: "#F0FDF4", border: "#BBF7D0" },
@@ -303,7 +309,10 @@ export default function AdvisorHomeScreen({ onRoSelect, ros } = {}) {
   // Optional externally-driven RO list (e.g. a data feed simulator). Falls
   // back to the static demo board so this screen keeps working standalone
   // with zero behavior change when the prop isn't passed.
-  const BOARD_ROS = ros || STATIC_BOARD_ROS;
+  // "queue"-column ROs live exclusively in the separate Queue screen (see
+  // RepairOrderQueueScreen.jsx) — excluded here so the two views never show
+  // the same RO at the same time.
+  const BOARD_ROS = (ros || STATIC_BOARD_ROS).filter(r => r.column !== "queue");
 
   function selectRO(ro) {
     const next = selectedRoNum === ro?.roNum ? null : ro;

@@ -5,6 +5,10 @@
  *   Takes an inbound lead (social DM, SMS, etc.) and uses the LLM to extract
  *   structured repair intent: symptoms, recommended services, urgency, ARO estimate.
  *   Returns a prefill payload for NewROWizard.
+ *
+ * A single-call extraction skill, not an agent — fixed input, one completion,
+ * parsed output, no tool-calling or multi-step decision-making. See
+ * docs/wrenchiq-agent-architecture-consolidation-proposal.md.
  */
 
 import { Router } from 'express';

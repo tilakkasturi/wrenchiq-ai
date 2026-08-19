@@ -2,7 +2,7 @@
  * WrenchIQ — Demo Story Seed Script
  *
  * Seeds exactly 6 story ROs across 2 shops for the April 18, 2026 sales demos.
- *   shopId "cornerstone"  — Taylor Mitchell (GWG / Protractor) demo
+ *   shopId "cornerstone"  — Taylor Mitchell (EWG / Protractor) demo
  *   shopId "ridgeline"    — Brad Lewis (Mitchell1) demo
  *
  * Usage:
@@ -71,7 +71,7 @@ function daysAgo(numDays, hhmm) {
 const STORY_ROS = [
 
   // ══════════════════════════════════════════════════════════════════
-  //  SHOP: CORNERSTONE — Taylor Mitchell (GWG / Protractor) demo
+  //  SHOP: CORNERSTONE — Taylor Mitchell (EWG / Protractor) demo
   // ══════════════════════════════════════════════════════════════════
 
   // JOB 1 — Elena Vasquez / Highlander — Agentic Moment 1
@@ -183,7 +183,7 @@ const STORY_ROS = [
     bay: null,
     tech: { id: 'tech-003', name: 'Carlos Mendez' },
     advisor: { id: 'adv-001', name: 'James Kowalski' },
-    customerConcern: 'Brakes feel soft, slight squeal on left front when stopping.',
+    customerConcern: 'brakes feel kinda soft n theres a sqeaky noise on the left front wen stoppin, prob nothing lol',
     dtcs: [],
     repairJobs: [
       {
@@ -242,7 +242,7 @@ const STORY_ROS = [
     agenticTextStatus: 'staged',
 
     threeCScore: null,
-    threeCConcern: 'Brakes feel soft, slight squeal on left front when stopping.',
+    threeCConcern: 'brakes feel kinda soft n theres a sqeaky noise on the left front wen stoppin, prob nothing lol',
     threeCDiagnosis: '',
     threeCCorrection: '',
     threeCRewriteSuggestion: null,
@@ -279,7 +279,7 @@ const STORY_ROS = [
     bay: 3,
     tech: { id: 'tech-001', name: 'Marcus Webb' },  // Location 3 problem child
     advisor: { id: 'adv-001', name: 'James Kowalski' },
-    customerConcern: 'Customer states noise.',  // Marcus wrote this — fails 3C at 31/100
+    customerConcern: 'car go tick tick. idk maybe bad??',  // Marcus wrote this — fails 3C at 31/100
     dtcs: [],
     repairJobs: [
       {
@@ -306,7 +306,7 @@ const STORY_ROS = [
 
     // 3C scoring — Marcus's failure
     threeCScore: 31,
-    threeCConcern: 'Customer states noise.',
+    threeCConcern: 'car go tick tick. idk maybe bad??',
     threeCDiagnosis: '',
     threeCCorrection: '',
 
@@ -320,7 +320,7 @@ const STORY_ROS = [
     },
 
     aiInsights: [
-      '3C ALERT — Complaint quality: 31/100. Single-line complaint fails GWG 3C compliance standard (minimum 75).',
+      '3C ALERT — Complaint quality: 31/100. Single-line complaint fails EWG 3C compliance standard (minimum 75).',
       'TSB-22-2346: Cold-start cam phaser tick on Ford 5.0L Coyote is documented at 40–50K miles. Cite in concern for warranty coverage.',
       'Rewrite drafted — 89/100 score. Click "Apply Rewrite" to replace Marcus\'s narrative before sending to tech.',
       'Marcus Webb\'s 3C avg this month: 34/100. This is the 4th sub-40 complaint from Location 3 this week.',
@@ -359,7 +359,7 @@ const STORY_ROS = [
     bay: null,
     tech: { id: 'tech-003', name: 'Tony Archer' },
     advisor: { id: 'adv-001', name: 'James Kowalski' },
-    customerConcern: "A/C blows warm air above 80°F ambient. Compressor clutch cycles on then immediately cuts out.",
+    customerConcern: "ac blowin hot wen its actually hot out lol figures, n sumtimes it just quits blowin cold altogether",
     dtcs: ['4B75', '4B73'],
     repairJobs: [
       {
@@ -416,7 +416,7 @@ const STORY_ROS = [
     agenticCustomerText: "Hi Gary, your X3 A/C is in. Scan pulled codes 4B75 and 4B73 from the IHKA module — both point to low refrigerant pressure. We found a slow leak at the evaporator outlet fitting; BMW issued a TSB on this exact pattern for your engine. Not the compressor. Repair: ~$912, should have you out by 4 PM. Also noticed your cabin filter is 28K past interval — $87 add-on if you'd like. — James @ Cornerstone",
     agenticTextStatus: 'staged',
     threeCScore: null,
-    threeCConcern: "Customer states A/C not cooling — blows warm air when ambient temperature exceeds 80°F. Compressor clutch audibly cycles on and immediately cuts out. Condition has worsened progressively over 3 weeks.",
+    threeCConcern: "ac blowin hot wen its actually hot out lol figures, n sumtimes it just quits blowin cold altogether. been like this bout 3 wks, gettin worse",
     threeCDiagnosis: "Chassis/HVAC scan retrieved DTCs 4B75 (IHKA — A/C refrigerant pressure switch: signal below minimum threshold) and 4B73 (IHKA — A/C high-pressure switch: signal implausible). Both codes confirm refrigerant charge critically low. Low-side pressure measured: 15 PSI (OEM spec: 28–35 PSI). UV dye injected; leak confirmed at evaporator outlet line fitting. Per TSB 64 13 24 (BMW — B48 engine: A/C evaporator outlet fitting O-ring leak on 2018-2022 X3/X1 at 55–75K mi), DTCs 4B75 and 4B73 are the documented fault signature for this O-ring failure pattern. Compressor tested — cycles normally under adequate pressure, consistent with pressure-cutoff behavior, not compressor failure.",
     threeCCorrection: '',
     threeCRewriteSuggestion: {
@@ -457,7 +457,7 @@ const STORY_ROS = [
     bay: 4,
     tech: { id: 'tech-002', name: 'DeShawn Carter' },
     advisor: { id: 'adv-002', name: 'Dave Kowalski' },
-    customerConcern: "Grinding noise from rear brakes when stopping. Pedal feels spongy at low speed.",
+    customerConcern: "rear brakes soundin like a monster truck wen i stop, n pedal feels kinda mushy goin slow",
     dtcs: [],
     repairJobs: [
       {
@@ -516,7 +516,7 @@ const STORY_ROS = [
     agenticCustomerText: null,
     agenticTextStatus: null,
     threeCScore: null,
-    threeCConcern: "Customer reports grinding noise from rear brakes during stops and pedal sponginess at low speed. Noise began approximately 3 weeks ago and has worsened progressively.",
+    threeCConcern: "rear brakes soundin like a monster truck wen i stop, n pedal feels kinda mushy goin slow. startd bout 3 wks ago n keeps gettin worse, never had brakes done here b4",
     threeCDiagnosis: '',
     threeCCorrection: '',
     threeCRewriteSuggestion: null,
@@ -551,7 +551,7 @@ const STORY_ROS = [
     bay: 6,
     tech: { id: 'tech-001', name: 'Marcus Webb' },
     advisor: { id: 'adv-001', name: 'James Kowalski' },
-    customerConcern: "Clunking and knocking from front suspension over bumps and speed bumps. Slight pull to the left.",
+    customerConcern: "clunk clunk over bumps n speed bumps, n it pulls left a lil on flat road. prob nothin lol",
     dtcs: ['C1611', 'C1604'],
     repairJobs: [
       {
@@ -606,7 +606,7 @@ const STORY_ROS = [
     agenticCustomerText: null,
     agenticTextStatus: null,
     threeCScore: null,
-    threeCConcern: "Customer reports clunking and knocking noise from front suspension over bumps and speed bumps. Vehicle also pulls slightly to the left on a flat, straight road.",
+    threeCConcern: "clunk clunk over bumps n speed bumps n bad roads, n it pulls left a lil goin straight on flat road. prob nothin lol",
     threeCDiagnosis: "Chassis/ESC scan retrieved DTCs C1611 (Steering Angle Sensor — offset value not learned) and C1604 (Steering Angle Sensor — signal error) from the ESC/ESP module. Both codes are secondary effects of strut mount-induced alignment drift: left front toe measured at -0.4° (OEM spec: 0° ± 0.15°), causing the steering angle sensor to lose its calibrated straight-ahead reference. Physical inspection per TSB 54-ST-013H (Hyundai — 2022-2024 Tucson: front strut mount creak/clunk under 30,000 miles, revised OEM mount hardware issued) confirmed cracked strut mount bearing LH and RH with excessive lateral compliance. Front sway bar end links: excessive lateral play measured on both sides. Strut mount failure is confirmed root cause of alignment drift, clunking, left pull, and DTCs C1611/C1604.",
     threeCCorrection: '',
     threeCRewriteSuggestion: {
@@ -647,7 +647,7 @@ const STORY_ROS = [
     bay: 5,
     tech: { id: 'tech-002', name: 'DeShawn Carter' },
     advisor: { id: 'adv-001', name: 'James Kowalski' },
-    customerConcern: "Scheduled 60K service per Toyota maintenance schedule. No complaints. Mileage: 60,200.",
+    customerConcern: "here 4 the 60k thing, no issues jus checkin boxes",
     dtcs: [],
     repairJobs: [
       {
@@ -748,7 +748,7 @@ const STORY_ROS = [
     agenticCustomerText: null,
     agenticTextStatus: null,
     threeCScore: null,
-    threeCConcern: "Customer states vehicle is due for scheduled 60,000-mile maintenance per Toyota maintenance schedule. No performance complaints. Customer tracks OEM service intervals closely.",
+    threeCConcern: "here 4 the 60k thing, no issues jus checkin boxes. i track my service stuff pretty close fyi",
     threeCDiagnosis: '',
     threeCCorrection: '',
     threeCRewriteSuggestion: null,
@@ -783,7 +783,7 @@ const STORY_ROS = [
     bay: null,
     tech: { id: 'tech-002', name: 'DeShawn Carter' },
     advisor: { id: 'adv-002', name: 'Dave Kowalski' },
-    customerConcern: "Check engine light on for 2 weeks. Hesitation under acceleration. Rough idle on cold start.",
+    customerConcern: "check engine light on 4ever (like 2 wks), truck hesitates wen i punch it, n rough start wen its cold out",
     dtcs: [
       { code: 'P0016', description: 'Crankshaft/Camshaft Position Correlation — Bank 1 Sensor A' },
       { code: 'P0017', description: 'Crankshaft/Camshaft Position Correlation — Bank 1 Sensor B (Exhaust)' },
@@ -852,7 +852,7 @@ const STORY_ROS = [
       },
     ],
     threeCScore: 89,
-    threeCConcern: "Customer states check engine light has been on for approximately 2 weeks. Reports noticeable hesitation under hard acceleration and occasional rough idle on cold start.",
+    threeCConcern: "check engine light on 4ever (like 2 wks), truck hesitates wen i punch it hard, n rough start wen its cold out. oil level looks fine 2 me",
     threeCDiagnosis: "DTCs P0016 and P0017 retrieved — Crankshaft-Camshaft Position Correlation Bank 1 Sensor A and B. MIL/CEL illuminated. Physical timing chain inspection confirmed stretch beyond OEM tolerance per TSB PIP5765G (GM Gen V 5.3L EcoTec3). Intake VVT solenoid response time measured at 380ms (spec ≤200ms) — clogged from oil sludge accumulation.",
     threeCCorrection: 'Timing chain kit (primary + secondary) and both VVT solenoids replaced per TSB PIP5765G. Post-repair DTC scan confirmed P0016 and P0017 cleared. Road test performed — no hesitation, CEL off.',
     threeCRewriteSuggestion: {
@@ -1329,7 +1329,7 @@ const HISTORICAL_ROS = [
     bay: null,
     tech: { id: 'tech-003', name: 'Tony Archer' },
     advisor: { id: 'adv-001', name: 'James Kowalski' },
-    customerConcern: 'Annual service; battery testing low at last inspection.',
+    customerConcern: 'Annual service; shop mentioned my battery was getting weak last time in.',
     dtcs: [],
     repairJobs: [
       { description: 'Annual Service — Oil, Filters, Multi-Point Inspection', laborHours: 1.5, actualLaborHours: 1.5, lineCost: 260, parts: [{ description: 'Oil Filter + 6qt 5W-30 + Cabin/Air Filters', lineCost: 40 }], status: 'completed' },

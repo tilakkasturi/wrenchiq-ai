@@ -2,7 +2,7 @@
 
 Two demos. Two audiences. Same core story, different shop context.
 
-**Taylor Mitchell** — GWG network, runs Protractor, thinks in locations and compliance
+**Taylor Mitchell** — EWG network, runs Protractor, thinks in locations and compliance
 **Brad Lewis** — Mitchell1 shop, single location, thinks in technician performance and revenue
 
 The job is the same for both: by the time you leave, they should have said — or thought — *"it already knew."*
@@ -24,7 +24,7 @@ Do not wing the timing. Both arcs should run under 10 minutes.
 ---
 
 # DEMO A — TAYLOR MITCHELL
-### GWG / Protractor · Cornerstone Auto Group · Fort Worth TX · 4 locations
+### EWG / Protractor · Cornerstone Auto Group · Fort Worth TX · 4 locations
 
 ---
 
@@ -35,7 +35,7 @@ Do not wing the timing. Both arcs should run under 10 minutes.
 Land on the **Persona Gateway** — Taylor sees:
 - Service Advisor (James Kowalski)
 - Shop Owner (Dave Kowalski)
-- GWG Corporate
+- EWG Corporate
 
 The "Connected to: Protractor" badge is visible. Don't explain it yet — let him notice it.
 
@@ -106,9 +106,9 @@ Then the action chips appear below the answer:
 
 ---
 
-## GWG CORPORATE VIEW (1 min — only if Taylor is engaged)
+## EWG CORPORATE VIEW (1 min — only if Taylor is engaged)
 
-Switch to the **GWG Corporate** card.
+Switch to the **EWG Corporate** card.
 
 > "For the network view — Taylor, this is where you live. Four locations, one dashboard. WrenchIQ surfaces the 3C compliance issue at Location 3 without you having to pull a report. It tells you which location is lagging and why — before it becomes a QBR conversation."
 

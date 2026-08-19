@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import AIInsightsStrip from "../components/AIInsightsStrip";
-import { GWG_DISTRICTS, GWG_LOCATIONS } from "../data/demoData";
+import { EWG_DISTRICTS, EWG_LOCATIONS } from "../data/demoData";
 
 // ─── Location generation ──────────────────────────────────────
 const DISTRICT_CITIES = {
@@ -30,7 +30,7 @@ function generateLocations() {
   let locNum = 1;
   const all = [];
 
-  for (const district of GWG_DISTRICTS) {
+  for (const district of EWG_DISTRICTS) {
     const cities = DISTRICT_CITIES[district.id] || [];
     for (let i = 0; i < district.count; i++) {
       const city = cities[i % cities.length];
@@ -74,8 +74,8 @@ function generateLocations() {
 
 const ALL_LOCATIONS = generateLocations();
 
-// Convert GWG_LOCATIONS (real Cornerstone data) to screen format
-const CORNERSTONE_LOCATIONS = GWG_LOCATIONS.map((loc, i) => ({
+// Convert EWG_LOCATIONS (real Cornerstone data) to screen format
+const CORNERSTONE_LOCATIONS = EWG_LOCATIONS.map((loc, i) => ({
   id: loc.id,
   number: `C${i + 1}`,
   city: loc.name,
@@ -102,7 +102,7 @@ const CORNERSTONE_LOCATIONS = GWG_LOCATIONS.map((loc, i) => ({
   comebackRate: loc.status === "flagship" ? 1.2 : loc.status === "strong" ? 2.1 : loc.status === "coaching" ? 5.8 : 4.2,
   openIssues: loc.status === "coaching" ? 2 : 0,
   threeC_compliance: loc.status === "flagship" ? 94 : loc.status === "strong" ? 88 : loc.status === "coaching" ? 41 : 76,
-  networkId: "GWG-CA-007",
+  networkId: "EWG-CA-007",
 }));
 
 const STATUS_CONFIG = {
@@ -154,7 +154,7 @@ function CorporateKPIs() {
 function DistrictSummaryCards({ activeDistrict, onSelectDistrict }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-      {GWG_DISTRICTS.map(d => {
+      {EWG_DISTRICTS.map(d => {
         const locs = ALL_LOCATIONS.filter(l => l.district === d.id);
         const alerts = locs.filter(l => l.status === "alert").length;
         const avgHealth = Math.round(locs.reduce((s, l) => s + l.healthScore, 0) / (locs.length || 1));
@@ -216,7 +216,7 @@ function NorCalDistrict({ onSelectLocation }) {
       <div style={{ background: "linear-gradient(135deg, #0D3B45 0%, #1A5C6B 100%)", borderRadius: 14, padding: "16px 20px", color: "#fff", marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.8 }}>GWG District</div>
+            <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.8 }}>EWG District</div>
             <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Northern California</div>
             <div style={{ fontSize: 12, opacity: 0.7 }}>12 locations · District Director: Taylor Mitchell · Member since 2002</div>
           </div>
@@ -276,7 +276,7 @@ function NorCalDistrict({ onSelectLocation }) {
               3C Compliance Alert — {complianceAlert.city.replace("Cornerstone — ", "")} location
             </div>
             <div style={{ fontSize: 12, color: "#B91C1C" }}>
-              Manager {complianceAlert.gm} — 3C score {complianceAlert.threeC_compliance}% is below GWG minimum (75%).
+              Manager {complianceAlert.gm} — 3C score {complianceAlert.threeC_compliance}% is below EWG minimum (75%).
               {" "}Marcus Webb (lead tech) has an active RO with a 34/100 3C score. Coaching recommended.
             </div>
           </div>
@@ -300,7 +300,7 @@ function LocationHeatGrid({ locations, onSelectLocation }) {
   };
 
   // Group all locations by district, preserving district order
-  const byDistrict = GWG_DISTRICTS.map(d => ({
+  const byDistrict = EWG_DISTRICTS.map(d => ({
     district: d,
     locs: locations.filter(l => l.district === d.id),
   })).filter(g => g.locs.length > 0);
@@ -406,7 +406,7 @@ function AIMorningBrief() {
     {
       type: "win", color: "#059669", icon: CheckCircle,
       title: "Cornerstone Palo Alto — NorCal district leader · $535 avg RO",
-      body: `Health score 94/100. 3C compliance 94% — above GWG standard. GM James Kowalski's pre-arrival AI message workflow is driving 31% of new customers from digital channels. Recommended for district-wide rollout.`,
+      body: `Health score 94/100. 3C compliance 94% — above EWG standard. GM James Kowalski's pre-arrival AI message workflow is driving 31% of new customers from digital channels. Recommended for district-wide rollout.`,
       action: "Share Best Practice",
     },
     {
@@ -466,7 +466,7 @@ function LocationDetail({ location, onClose }) {
     { label: "Approval Rate", value: `${location.approvalRate}%`, trend: "+3%" },
     { label: "Tech Efficiency", value: `${location.techEfficiency}%`, trend: "+2%" },
     { label: "Comeback Rate", value: `${location.comebackRate}%`, trend: location.comebackRate > 5 ? "⚠ High" : "Good" },
-    { label: "3C Compliance", value: `${location.threeC_compliance}%`, trend: location.threeC_compliance >= 75 ? "GWG compliant" : "⚠ Below standard" },
+    { label: "3C Compliance", value: `${location.threeC_compliance}%`, trend: location.threeC_compliance >= 75 ? "EWG compliant" : "⚠ Below standard" },
   ] : [
     { label: "Weekly Revenue", value: `$${location.weekRevenue.toLocaleString()}`, trend: "+8%" },
     { label: "Google Rating", value: `${location.rating}★`, trend: location.rating >= 4.5 ? "+0.1" : "-0.2" },
@@ -652,7 +652,7 @@ export default function MultiLocationScreen() {
 
   const locationCount = activeDistrict === "all"
     ? 100
-    : GWG_DISTRICTS.find(d => d.id === activeDistrict)?.count ?? 0;
+    : EWG_DISTRICTS.find(d => d.id === activeDistrict)?.count ?? 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -667,7 +667,7 @@ export default function MultiLocationScreen() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px", color: COLORS.textPrimary }}>
-              Good Works Group (GWG) — Network Command
+              Expert Wrenchers Groups (EWG) — Network Command
             </h1>
             <p style={{ margin: 0, fontSize: 13, color: COLORS.textMuted }}>
               100 locations · 8 districts · Real-time operational intelligence

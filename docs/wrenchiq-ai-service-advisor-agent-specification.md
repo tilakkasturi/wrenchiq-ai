@@ -1,10 +1,327 @@
 # WrenchIQ AI Service Advisor Agent — Product Specification
 
 **Product:** WrenchIQ AI Service Advisor (Add-On)
-**Version:** 1.0
-**Date:** 2026-03-27
+**Version:** 1.0 (product vision) + Current Implementation Addendum
+**Date:** 2026-03-27 (updated 2026-08-11)
 **Owner:** Predii, Inc.
 **Classification:** PREDII CONFIDENTIAL
+
+---
+
+> **How this doc is organized.** Sections 1–13 are the original v1.0 product vision
+> (multi-SMS, phased rollout, autonomous 24/7 monitoring). That is the north star,
+> not what runs today. **Section 0** below is the current-state addendum: the exact
+> agentic flow that exists in this repo right now — trigger, tool calls, decision
+> logic, TSB integration, Shop Intelligence chat, and Transfer-to-SMS — each claim
+> cited to file:line. Read Section 0 first if you want "what actually happens when
+> an advisor opens an RO in the Sidecar today."
+
+---
+
+## 0. Current Implementation — Exact Agentic Flow (as of this repo, 2026-08-11)
+
+### 0.1 What exists today vs. the v1.0 vision
+
+The shipped system is a **single-shop, Tauri Sidecar app** (`WrenchIQSidecarScreen.jsx`),
+not the multi-SMS-adapter, autonomous-24/7 monitoring product described in Sections 1–13.
+There is no polling loop, no daily digest, no autonomous alert queue, and no live SMS
+write-back. The agent is **request/response**, triggered synchronously when an advisor
+opens an RO — not a background monitor.
+
+| Vision (Sections 1–13) | Reality (this repo) |
+|---|---|
+| Multi-SMS adapters (Tekmetric, Mitchell1, etc.) | One internal RO store (`RepairOrder` / `wrenchiq_ro` Mongo collections) |
+| Autonomous monitoring loop, every 5 min | Triggered once per advisor RO-selection (`WrenchIQSidecarScreen.jsx`) |
+| `send_customer_message`, `update_ro_status`, `create_appointment` write-back tools | No write-back tools exist. The agent only *reads* and *drafts text* |
+| "Transfer to SMS" implies a real DMS/SMS push | **Fully simulated** — an internal RO PATCH dressed up as a transfer (§0.6) |
+| Daily digest, insight catalog (REV/CX/OPS/VEH/FIN codes) | Not implemented. No insight-ID catalog exists in code |
+
+### 0.1a System context — where this agent sits (merged from Confluence orchestration doc)
+
+WrenchIQ runs **ten specialized agents** behind one shared LLM gateway
+(`server/services/azureOpenAI.js` → `callAzureOpenAI()`), all logged to Mongo's
+`llm_request_log`. Source: Confluence — [WrenchIQ — Agent Orchestration & Design
+(Implemented)](https://predii.atlassian.net/wiki/spaces/prediiv2/pages/4091412481).
+The RO Advisor Agent covered in this doc is **Agent 4** in that inventory:
+
+| Agent | Entry point | Pattern |
+|---|---|---|
+| 1. Managed Agent | `POST /api/agent/sessions` | In-memory session + SSE stream (name is a holdover — does not call Anthropic's Managed Agents API) |
+| 2. RO Agent | `POST /api/ro-agent/draft` | Single call, JSON-by-prompt-instruction |
+| 3. ARO Agent | `POST /api/aro-agent/run` | Pre-fetch + tool-calling loop |
+| **4. RO Advisor Agent (this doc)** | `POST /api/ro-advisor` | Pre-fetch + tool-calling loop, run in parallel with a deterministic margin/ARO calc |
+| 5. Knowledge Graph Q&A | `POST /api/knowledge-graph/ask` | Parallel DB queries + single LLM call |
+| 6. Recommendation Engine | `POST /api/recommendations` | Single call, 15-min Mongo TTL cache |
+| 7. 3C Story Writer | client-side pipeline | Progressive 7-stage pipeline |
+| 8. Entity Extractor | client-side, browser | 3-level fallback chain |
+| 9. Shop Chat (Ask WrenchIQ) | `POST /api/shop-chat` | Single call, no tool loop, always default Predii LLM |
+| 10. RO Chat | `POST /api/ro-chat` | Single call, no tool loop, optional frontier tier + PII guard |
+
+The RO Advisor Agent is the orchestration doc's canonical example of the
+**"agent + deterministic calc, run in parallel"** pattern: the LLM tool-calling loop
+produces judgment-based recommendations while `marginCheck.js`'s plain arithmetic
+checks the RO against the same `shop_config` numbers — neither branch waits on the
+other, and the LLM is only ever given the labor-rate/margin-target numbers as
+read-only pricing context, never asked to compute margin or ARO itself.
+
+**Token budget**: 1200 max tokens (JSON recommendation object, tool loop) — smaller
+than ARO Agent's 4096 (bigger analytics payload) but larger than RO Agent's 512
+(short triage JSON).
+
+**Two real chat surfaces reuse this agent's own data-access helpers and are now
+Agents 9 and 10 in the Confluence orchestration inventory** — "Ask WrenchIQ" (Shop
+Chat) and RO Chat, added there 2026-08-11 — see §0.7.
+
+**Related, separate, user-triggered agent on the same RO**: `roScoreAgent.js`
+(`runROScoreAgent()`) scores the RO against the shop's Gold Standard checklist,
+using the RO record, 3C conversation fields, staged/sent customer text, **and this
+agent's own prior output** (`advisorBrief`, `marginCheck`, `alerts`,
+`serviceRecommendations`) as additional evidence. Single-call JSON mode, no tool
+loop; only ever suggests `aiStatus`/`aiEvidence` — the advisor's own checklist status
+always wins. Runs on the Sidecar's "RO Score" tab, not automatically alongside the
+RO Advisor call.
+
+### 0.2 Trigger and entry point
+
+- Advisor selects a customer/RO in the Sidecar → `runAdvisorFetch(roId)` in
+  `WrenchIQSidecarScreen.jsx` fetches the RO detail (`GET /api/repair-orders/story-ro/:roId`)
+  and then calls `POST /api/ro-advisor` with `{ ro, customer, vehicle, shopId }`.
+- Server route `server/routes/roAdvisor.js` handles it. Header comment: *"Called every
+  time an advisor selects an RO in the queue."* (`roAdvisorService.js:12`)
+- The frontend guards against races with an incrementing `advisorRequestRef` so a stale
+  response never overwrites a newer RO's data. Refetch is also manually triggerable via
+  a refresh button in `IntelligencePanel`.
+
+### 0.3 Data gathering — parallel pre-fetch, then tool-calling loop
+
+`runROAdvisorAgent({ ro, customer, vehicle, shopId, db, shopProfile })`
+(`roAdvisorService.js:756`) does **not** let the LLM freely query the database. Instead
+it pre-fetches six data sources in one `Promise.all` (each individually fail-open,
+returns `[]`/fallback on error, never throws):
+
+1. **`fetchCustomerHistory`** — past ROs for this customer from Mongo (`RepairOrder` and
+   `wrenchiq_ro` collections), merged/normalized/sorted, capped to 8.
+2. **`fetchShopObjectives`** — active "ings" (tribal-knowledge action items) from the
+   `tribal_notes` collection, walking up the shop's `location_hierarchy` so
+   district/region-scoped notes apply too. Falls back to a hardcoded demo set if empty.
+3. **`getCannedJobs`** — shop's own priced canned-job menu (`cannedJobsService.js`).
+4. **`fetchShopProfile`** — `shop_config` doc, merged over `DEFAULT_SHOP_PROFILE =
+   {laborCost: 85, partsMarginTarget: 53}`. Skipped if the route already passed one in.
+5. **`fetchSeasonalTrends`** — this shop's own persisted "Predii Learn" seasonal profile
+   (`shopProfileSnapshotService.js`); empty if the shop hasn't run that workflow.
+6. **`fetchTSBs(make, model, year, db)`** — see §0.5.
+
+These pre-fetched results are then handed to the LLM as **tool results on demand** —
+the 6 tools (`get_customer_history`, `get_shop_objectives`, `get_mileage_services`,
+`get_canned_jobs`, `get_seasonal_trends`, `get_tsbs`) are executed synchronously against
+already-fetched data (`executeTool`, `roAdvisorService.js:557-649`); calling a "tool"
+does **not** trigger a new DB round-trip. The tool-calling shape exists so the LLM can
+selectively pull only what it needs into context, not because the data is fetched lazily.
+
+### 0.4 Decision logic — what's deterministic vs. LLM-driven
+
+Most of the "should we recommend this" judgment is delegated to the LLM via a large
+system prompt (`buildSystemPrompt`, `roAdvisorService.js:465-553`). But several pieces
+are hard-coded, non-LLM rules:
+
+- **Mileage-interval table** (`getMileageServices`, `:226-243`) — deterministic
+  thresholds, not DB- or LLM-driven: oil/filter ≥3,000 mi, engine air filter every
+  15–20k, cabin air filter ≥15,000 mi, brake fluid flush ≥30,000 mi, transmission
+  fluid ≥45,000 mi, battery test ≥50,000 mi, timing belt inspection ≥60,000 mi
+  (Honda/Acura/Toyota/Subaru only), spark plugs ≥75,000 mi, coolant flush ≥80,000 mi.
+  All tagged `category: 'year_round'` — never `'seasonal'` by design.
+- **"Already on this RO" exclusion** — `filterExistingServices` (`:283-300`) is a
+  **post-LLM filter**, applied to the final JSON regardless of whether the LLM obeyed
+  the "don't recommend what's already on the RO" instruction in the prompt.
+- **Customer-message sanitizer** — `cleanCustomerMessage` (`:334-341`) detects stray
+  numbered-list artifacts in the LLM's drafted SMS and replaces them with a
+  deterministic fallback message (`buildFallbackCustomerMessage`, `:316-332`) if found.
+- **marginCheck / aroGap** — computed in `roAdvisor.js`, not the LLM: `marginCheck.js`
+  compares the RO against `shop_config` labor cost/margin target; `aroGap` reads a
+  shop's average-RO-value target from `shop_goals` (intentionally read from the
+  network-aggregate sentinel shop `shop-001`, not the real active shop — matching the
+  convention already used by `SettingsScreen.jsx`'s ARO & Margin tab) and computes
+  `gapAmount = max(0, target - ro.totalEstimate)`.
+
+Everything else — which services to actually recommend, confidence level, whether a
+canned-job price should override an LLM estimate (canned-job price always wins when
+matched), TSB relevance framing, alerts, and the advisor talk track — is LLM output,
+constrained by explicit rules in the system prompt:
+
+- Anything the customer declined in the last 12 months → goes to `alerts`, never a
+  fresh recommendation.
+- Shop objectives are filtered by `triggerType` (`vehicle_make`, `mileage_range`, `any_ro`).
+- Cap of **4** combined `year_round` + `seasonal` recommendations. **TSB-category
+  recommendations are uncapped** and always surfaced — see §0.5.
+- `suggestedCustomerMessage` must read as warm, non-listy prose, mention every
+  non-TSB recommendation with a timing suggestion, never oversell, and sign off with
+  the advisor's real first name or "— the team at {shop}" (never a placeholder).
+
+### 0.4a Exact detector for the stray-list-marker bug (merged from Confluence deep-dive)
+
+The Confluence deep-dive page for this agent documents the precise root cause and
+fix (shipped 2026-08-05) for a real customer-facing defect: the LLM occasionally
+left a stray list-numbering artifact in `suggestedCustomerMessage` — e.g. a bare
+`"50."` on its own line, or `"50)"` dropped mid-sentence ("...for you. 50) to keep
+everything lubricated.") — from having internally drafted the 4 recommendations as
+a numbered list, with a fragment leaking into the final prose and sometimes eating
+the words around it.
+
+`STRAY_LIST_MARKER = /(^|[\s.])\d{1,3}[.)](?=\s|$)/` detects this — the leading
+boundary is deliberate so it never fires on a real price (`"$50."`) or a decimal
+(`"12.5"`). When it matches, the string is **not** patched in place (surrounding
+words may already be missing, so a regex patch would still read broken). Instead
+`buildFallbackCustomerMessage()` rebuilds the message from scratch from the
+structured `serviceRecommendations` array, signed with the real advisor's first
+name from the RO (or "— the team" if none on file). Same two-layer pattern as the
+"already on RO" filter: reduce the chance at the prompt level, then deterministically
+catch and repair what still gets through.
+
+### 0.5 TSB integration — exact flow
+
+Two independent entry points both call into `nhtsaTsbService.js`:
+
+1. **Standalone lookup**: `GET /api/tsbs?make=&model=&year=` (`server/routes/tsbLookup.js`)
+   — callable by any screen directly. Not currently called by the Sidecar screen.
+2. **Embedded in the RO Advisor**: `fetchTSBs(make, model, year, db)`
+   (`roAdvisorService.js:202-218`), part of the pre-fetch in §0.3, feeding the `get_tsbs` tool.
+
+**Lookup chain** (`nhtsaTsbService.js`):
+- Cache-first: Mongo `nhtsa_tsb_cache` collection, key `{year, make, model}`
+  (lowercased/trimmed), read with a `ttlExpiresAt: {$gt: now}` filter.
+- On miss/expiry: live call to NHTSA's public `manufacturerCommunications` endpoint
+  (params: `modelYear`, `make`, `model`, `issueType=t`) → `normalizeTSB()` reshapes each
+  result into `{id, nhtsaNumber, manufacturerNumber, component, summary,
+  dateCommunicationSent, documents[]}`. PDF URLs are synthesized client-side (NHTSA
+  doesn't return them inline).
+- Result written back to `nhtsa_tsb_cache` via `replaceOne(..., {upsert: true})` with a
+  TTL from `config.js`'s `NHTSA_TSB_CACHE_TTL_HOURS`. A Mongo TTL index on
+  `ttlExpiresAt` auto-deletes expired cache docs; a unique index on `{year, make, model}`
+  prevents duplicate cache rows.
+- **Fail-open**: any NHTSA fetch error returns `[]`, never throws.
+- Note: **VIN is not used anywhere in this path** — matching is by year/make/model only.
+- Code comment flags that the exact NHTSA endpoint path has been confirmed against the
+  live API (not a sandbox assumption) precisely because NHTSA has no clean dedicated
+  TSB-payload endpoint — this is the best available public source, not a guarantee of
+  completeness.
+
+**Curated fallback**: only inside `roAdvisorService.js`'s `fetchTSBs()` — if the NHTSA
+path returns empty, it falls back to a curated static list in `src/data/tsbData.js`,
+reshaped by `normalizeCuratedTSB()` to fold labor hours/parts estimate into the summary
+text. The standalone `/api/tsbs` route has no curated fallback.
+
+**How it reaches the advisor**: every TSB returned for the exact YMM is surfaced as a
+`category: "tsb"` recommendation — uncapped, and **regardless of relevance to the RO's
+stated concern** (an explicit, deliberate design choice stated in both the service
+header comment and the system prompt itself). Confidence is "high" only when the LLM
+ties the TSB directly to the RO's DTCs/stated concern; otherwise "medium," phrased as a
+proactive heads-up rather than a diagnosis. In the Sidecar UI, TSB recommendations
+render in their own "Technical Service Bulletins" sub-section under the blue Service
+Recommendations panel, separate from mileage/seasonal recs.
+
+### 0.6 Sidecar UI — how the output is surfaced, and "Transfer to SMS"
+
+`IntelligencePanel` in `WrenchIQSidecarScreen.jsx` renders the agent's output:
+customer-concern quote, advisor brief, `marginCheck` badge, `aroGap` note, `alerts`,
+the drafted customer SMS (`StagedCustomerText`), a blue **Service Recommendations**
+panel (mileage/seasonal recs plus the separate TSB sub-section), and a purple
+**Strategic Priorities** panel for the `ings[]` (shop objectives), sorted so
+currently-applicable items float to the top.
+
+**While loading** (shipped 2026-08-05): the "Live agent output" box shows
+`AgentThinkingStatus` — a cosmetic status line that cycles every 1.4s through 3
+lines seeded from the RO number (so the same RO always shows the same sequence):
+*"Agent is triggering tools to pull {toolA}, {toolB}…"* → *"Cross-referencing
+{toolC} and {toolD}…"* → *"PrediiLLM is now reasoning with the data, providing
+personalized recommendations for {customer's first name}…"*. The cycling tool
+names are drawn from a fixed cosmetic list (service history, open TSBs, parts
+pricing, labor time guide, warranty coverage, shop margin targets, DTC codes,
+vehicle build data) — this is purely a perceived-latency treatment. The real
+call is a single `POST /api/ro-advisor`, not literally 3 separate visible
+round-trips.
+
+**Accept a recommendation**: clicking Accept on a `ServiceRecommendationCard` simulates
+a 700 ms lookup, then resolves pricing/parts either via a real match against the shop's
+canned-job menu (`matchCannedJob`) or — if no canned job matches — via
+`simulateCatalogMatch`, a deterministic hash-based fake parts/labor lookup explicitly
+commented in code as *"stands in for a real DE (parts/labor data) integration until one
+is scoped."* Accepted jobs are appended to local state and best-effort PATCHed onto the
+story RO.
+
+**Transfer to SMS — confirmed simulated, not a real integration.** Once at least one
+recommendation is accepted, a "Transfer to {smsName}" button appears. Clicking it opens
+`TransferSimulationModal.jsx`, whose own name and header comment are explicit:
+
+> "Shows the payload that will be written to the shop's SMS/DMS... Once confirmed, the
+> parent marks these jobs 'transferred' and PATCHes the story RO; **no separate network
+> call happens here**."
+
+Concretely: the modal builds a JSON payload (`{repairOrderId, laborLines, partLines}`)
+purely for on-screen display — it is never sent as an HTTP request to a real
+Mitchell1/Tekmetric/DMS system. Confirming just calls back into the Sidecar's
+`confirmTransfer()`, which marks the accepted jobs `status: "transferred"`, recomputes
+the RO total, PATCHes the **story RO in this app's own Mongo**, and fires
+`notifyROUpdated(roId)` over a same-origin `BroadcastChannel`
+(`roUpdatesChannel.js`) so the separate SMS/DMS Representative window (Surface C)
+refetches immediately instead of waiting on its normal 60-second poll
+(`liveBoardFeed.js`'s `useLiveBoardROs`). There is no external SMS/DMS write-back
+anywhere in this flow — "Transfer to SMS" is an internal RO mutation plus a same-tab
+notification, and the modal discloses this to the user in its own copy ("part/labor
+details were resolved via WrenchIQ's simulated catalog search at accept time").
+The target SMS/DMS name shown in the button/modal comes from Settings → Predii
+Learn → Integrations (default: Mitchell1 ShopManager SE) — that setting only
+controls the display name, not an actual connection.
+
+### 0.7 Chat with Shop Intelligence
+
+There is no single feature literally named "Shop Intelligence" in the code — two real,
+LLM-backed chat surfaces exist in the Sidecar, both grounded in the same live Mongo data
+the RO Advisor uses:
+
+- **"Ask WrenchIQ"** (`ShopChatScreen`) — shop-wide chat, no RO required. Reached via
+  the message-square icon in the Sidecar header (tooltip: *"Ask WrenchIQ — shop-wide
+  chat grounded in canned jobs, Shop Profile, and any named customer's history"*).
+  Calls `POST /api/shop-chat` with `{message, history, shopId, shopName, customerId?,
+  customerName?}` → `server/routes/shopChat.js` → `runShopChatAgent()` in
+  `shopChatService.js`, which reuses `fetchCustomerHistory` from `roAdvisorService.js`
+  for the same real customer-history grounding as the RO Advisor.
+- **RO-scoped Chat tab** — narrower in purpose: a bilingual (EN/ES) rewrite assistant
+  scoped to the currently-open RO, turning an advisor's rough notes into "automotive
+  speak." Calls `POST /api/ro-chat` → `runROChatAgent()` in `roChatService.js`, same
+  customer-history grounding reuse.
+
+Neither chat surface can write back to the RO or trigger a transfer — both are
+read-only conversational tools layered on the same data the advisor brief uses.
+
+### 0.8 Supporting services — roles, not agent logic
+
+- `src/services/roTotals.js` — pure math (labor/parts/tax/grand total,
+  `PARTS_TAX_RATE = 0.0875` on parts only). Single source of truth for RO dollar totals
+  across the Sidecar and the SMS/DMS RO Viewer. No API calls, no agent involvement.
+- `src/services/roUpdatesChannel.js` — a same-origin `BroadcastChannel` used solely to
+  tell the SMS/DMS Representative window to refetch right after a Transfer confirms. It
+  is **not** how the Sidecar gets RO Advisor results — the advisor agent has no
+  relationship to this channel.
+- `src/services/externalLink.js` — window-tiling helper (opens/tiles the SMS/DMS
+  Representative window next to the Sidecar). Unrelated to the Transfer data flow.
+- `src/services/liveBoardFeed.js` — polling hook (`useLiveBoardROs`, 60 s interval +
+  BroadcastChannel nudge) used by the SMS/DMS Representative surface, not by the Sidecar
+  itself; the Sidecar drives RO selection through its own customer-selector context.
+
+### 0.9 Summary — real vs. simulated
+
+| Piece | Status |
+|---|---|
+| RO Advisor LLM recommendation generation | **Real** — Azure/Predii LLM, tool-calling loop, max 4 turns, single-pass fallback |
+| Customer history, shop objectives, canned jobs, seasonal trends | **Real** Mongo reads |
+| Mileage-interval "due services" | **Real deterministic rule table** — not LLM, not DB-driven |
+| TSB lookup | **Real** live NHTSA API + Mongo TTL cache; VIN not used (YMM only); falls back to a curated static file when NHTSA returns empty |
+| marginCheck / aroGap | **Real deterministic** computation from `shop_config` / `shop_goals` |
+| Parts/labor catalog match on Accept | **Simulated** when no canned-job match exists (hash-based fake data), disclosed to the user in the Transfer modal's own copy |
+| "Transfer to SMS/DMS" | **Fully simulated** — no external SMS/DMS API call; an internal RO PATCH plus a same-origin BroadcastChannel notification |
+| "Ask WrenchIQ" shop chat | **Real** LLM call, grounded in real data |
+| RO-scoped Chat tab | **Real** LLM call, narrow bilingual-rewrite scope |
+| Autonomous monitoring / daily digest / insight catalog (Sections 6–7 below) | **Not implemented** — vision only |
 
 ---
 
@@ -271,11 +588,22 @@ The agent maintains three tiers of memory, all stored in MongoDB:
 | `update_ro_status` | Write status back to source SMS | Phase 4 |
 | `create_appointment` | Book a follow-up in the SMS | Phase 4 |
 
+> **Current implementation note:** the tools actually implemented today
+> (`get_customer_history`, `get_shop_objectives`, `get_mileage_services`,
+> `get_canned_jobs`, `get_seasonal_trends`, `get_tsbs` — see §0.3) are a
+> narrower, differently-named set scoped to a single shop's own Mongo data.
+> None of the Phase 3/4 write-back tools in this table exist in code.
+
 ---
 
 ## 7. AI Insights Catalog — Ongoing Monitoring
 
 This is the complete catalog of insights the agent monitors. Each insight has a trigger condition, priority level, and default delivery target.
+
+> **Current implementation note:** none of the insight IDs below (`REV-*`, `CX-*`,
+> `OPS-*`, `VEH-*`, `FIN-*`, `DIG-*`) exist in code today. There is no autonomous
+> monitoring loop and no insight-ID system — this catalog remains the target design
+> for the v2 autonomous-monitoring product.
 
 ### Category A — Revenue Recovery (Highest ROI)
 
@@ -354,6 +682,10 @@ Delivered once per day (configurable: morning briefing or end-of-day summary):
 
 ## 8. SMS Adapter Specifications
 
+> **Current implementation note:** none of these adapters exist. "Transfer to SMS"
+> in the current Sidecar is a simulated internal RO mutation, not a call to any of
+> the platforms below — see §0.6.
+
 ### Supported SMS Platforms (v1.0)
 
 | Platform | Integration Method | Sync Mode | Write-Back |
@@ -427,6 +759,11 @@ Stored in MongoDB `shop_config` collection per shop:
 }
 ```
 
+> **Current implementation note:** the real `shop_config` collection today only
+> carries `laborCost` / `partsMarginTarget` (used by `roAdvisor.js` for marginCheck)
+> plus whatever `fetchShopProfile` in `roAdvisorService.js` merges in — the
+> alert-routing, insight-toggle, and digest fields above are not implemented.
+
 ---
 
 ## 10. Onboarding Flow (Time to First Insight)
@@ -495,3 +832,5 @@ Day 30    Pattern memory populated with 30 days of shop behavior
 | Customer-facing agent | Autonomous customer portal with RO status, approvals, and messaging | v2 |
 | OEM integration | Connect to OEM warranty and recall systems directly | v3 |
 | Insurance integration | Detect and initiate insurance claims for qualifying repairs | v3 |
+| **Real SMS/DMS transfer** | Replace the current simulated Transfer flow (§0.6) with a live write-back to the shop's actual SMS/DMS | v2 |
+| **Real parts/labor catalog** | Replace `simulateCatalogMatch` (§0.6) with a live DE (parts/labor data) integration | v2 |

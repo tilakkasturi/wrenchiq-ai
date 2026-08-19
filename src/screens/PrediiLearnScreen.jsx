@@ -8,6 +8,7 @@ import { usePrediiLearn } from "../context/PrediiLearnContext";
 import { useDemo } from "../context/DemoContext";
 import { fetchCannedJobs, persistShopProfile } from "../services/prediiLearnService";
 import { ENTITY_TYPES, buildEntityFreqs, topN } from "../utils/entityFreqs";
+import { SHOP, EWG_LOCATIONS, technicians, financials, SHOP_INTEL_FACTS } from "../data/demoData";
 
 const WINDOW_OPTIONS = [1, 2, 3];
 
@@ -728,6 +729,36 @@ function ShopProfileTabContent() {
   } = usePrediiLearn();
   const { activeShopId } = useDemo();
   const [category, setCategory] = useState("all");
+  const [view, setView] = useState("overview"); // overview | spotlight
+  const VIEW_OPTIONS = [
+    { id: "overview", label: "Overview" },
+    { id: "spotlight", label: "✨ Spotlight" },
+  ];
+
+  // LLM-generated Spotlight facts — grounded in this shop's real SHOP /
+  // EWG_LOCATIONS / technicians / financials data (see
+  // server/services/shopIntelFactsService.js). Falls back to the static
+  // SHOP_INTEL_FACTS list if the model/proxy is unavailable, so the tab
+  // never shows a dead end.
+  const [spotlightFacts, setSpotlightFacts] = useState(null);
+  const [spotlightLoading, setSpotlightLoading] = useState(false);
+  const [spotlightError, setSpotlightError] = useState(false);
+
+  useEffect(() => {
+    if (view !== "spotlight" || spotlightFacts || spotlightLoading) return;
+    setSpotlightLoading(true);
+    fetch(`${API_BASE}/api/shop-intel-facts`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ shopId: activeShopId, shop: SHOP, locations: EWG_LOCATIONS, technicians, financials }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`status ${r.status}`))))
+      .then((data) => setSpotlightFacts(data.facts || []))
+      .catch(() => setSpotlightError(true))
+      .finally(() => setSpotlightLoading(false));
+  }, [view, activeShopId, spotlightFacts, spotlightLoading]);
+
+  const displayedFacts = spotlightFacts || SHOP_INTEL_FACTS;
   // Follow-up: persist whatever this tab is currently showing so RO Chat
   // can ground answers in it without requiring a fresh Predii Learn run.
   const [persistState, setPersistState] = useState("idle"); // idle | saving | saved | error
@@ -870,6 +901,81 @@ function ShopProfileTabContent() {
   // of this run's results (instead of showing an empty live state).
   const usingLive = allResults.length > 0;
 
+  const viewToggle = (
+    <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+      {VIEW_OPTIONS.map((opt) => {
+        const active = view === opt.id;
+        return (
+          <button
+            key={opt.id}
+            onClick={() => setView(opt.id)}
+            style={{
+              cursor: "pointer",
+              padding: "6px 14px", borderRadius: 8,
+              border: `1px solid ${active ? L.navy : L.border}`,
+              background: active ? L.navy : L.card,
+              color: active ? "#fff" : L.textPrimary,
+              fontSize: 13, fontWeight: 600,
+            }}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  // Spotlight is static "fun facts" content (see SHOP_INTEL_FACTS) — it
+  // doesn't depend on a Predii Learn run or a persisted profile, so it's
+  // rendered before the overview's data-availability guards below rather
+  // than being blocked by them.
+  if (view === "spotlight") {
+    return (
+      <div>
+        {viewToggle}
+        <div style={cardStyle}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 16 }}>✨</span>
+            <div style={{ fontSize: 12, fontWeight: 700, color: L.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Shop Intelligence Spotlight
+            </div>
+            <span style={{ fontSize: 11, color: L.textMuted, fontWeight: 400, textTransform: "none", letterSpacing: "normal" }}>
+              — what Predii Learn dug up about {SHOP.name}
+            </span>
+            {spotlightLoading && <Spinner />}
+            {!spotlightLoading && spotlightFacts && (
+              <span style={{ fontSize: 10, fontWeight: 700, color: L.accent, background: "#eff6ff", padding: "2px 8px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Generated live
+              </span>
+            )}
+            {!spotlightLoading && !spotlightFacts && spotlightError && (
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#d97706", background: "#fffbeb", padding: "2px 8px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Model unavailable — showing saved facts
+              </span>
+            )}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            {displayedFacts.map((fact) => (
+              <div
+                key={fact.title}
+                style={{
+                  border: `1px solid ${L.border}`,
+                  borderRadius: 8,
+                  padding: 12,
+                  background: L.page,
+                }}
+              >
+                <div style={{ fontSize: 20, marginBottom: 6 }}>{fact.icon}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: L.textPrimary, marginBottom: 4 }}>{fact.title}</div>
+                <div style={{ fontSize: 12, color: L.textSecondary, lineHeight: 1.45 }}>{fact.detail}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!usingLive) {
     // Persisted (real, previously-saved) data takes priority over the
     // external ro-ner-demo static profile when both happen to be present —
@@ -912,6 +1018,7 @@ function ShopProfileTabContent() {
 
   return (
     <div>
+      {viewToggle}
       {usingLive && <CategoryFilterRow category={category} setCategory={setCategory} results={allResults} />}
 
       <div style={cardStyle}>

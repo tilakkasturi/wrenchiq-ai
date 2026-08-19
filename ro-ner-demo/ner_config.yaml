@@ -6,8 +6,10 @@ endpoints:
     # Predii360 feature extraction / p360 API
     base_url: http://dev-parts.predii.ai
   llm:
-    # vLLM inference endpoint for NER extraction
-    base_url: http://192.222.55.177:8081
+    # vLLM inference endpoint for NER extraction — 8081 was refused (nothing
+    # listening); 8080 is the same box's endpoint next-gen's own
+    # LLM_BASE_URL already uses, and has the same model loaded.
+    base_url: http://192.222.55.177:8080
     model: Firworks/gemma-4-26B-A4B-it-fp8
     max_tokens: 1024
     temperature: 0

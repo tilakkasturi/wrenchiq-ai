@@ -98,3 +98,24 @@ export const API_PORT =
 // Base URL of the ro-ner-demo FastAPI service (assumed already running).
 export const RO_NER_BASE_URL =
   process.env.RO_NER_BASE_URL || 'http://localhost:8090';
+
+// ── NHTSA TSB API ────────────────────────────────────────────────────────────
+// Free, public, no API key required. Configurable because this environment
+// has no outbound network access to verify the exact path segments against
+// NHTSA's current docs (https://www.nhtsa.gov/nhtsa-datasets-and-apis) — if
+// NHTSA's "Products" API layout differs from what's coded in
+// nhtsaTsbService.js, override the base URL here rather than editing code.
+export const NHTSA_TSB_API_BASE =
+  process.env.NHTSA_TSB_API_BASE || 'https://api.nhtsa.gov/products/vehicle';
+
+// Static document server — PDF for a given TSB DocumentId is always at
+// {STATIC_BASE}/{year}/{DocumentId}.pdf (confirmed real, e.g.
+// static.nhtsa.gov/odi/tsbs/2019/MC-10158141-0001.pdf).
+export const NHTSA_TSB_STATIC_BASE =
+  process.env.NHTSA_TSB_STATIC_BASE || 'https://static.nhtsa.gov/odi/tsbs';
+
+// How long a (year, make, model) TSB lookup is cached in Mongo before being
+// re-fetched from NHTSA — TSB filings change rarely, so this is much longer
+// than the 15-min recommendations cache (see models/Recommendation.js).
+export const NHTSA_TSB_CACHE_TTL_HOURS =
+  parseInt(process.env.NHTSA_TSB_CACHE_TTL_HOURS || '24', 10);

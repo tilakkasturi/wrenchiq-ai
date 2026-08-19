@@ -46,6 +46,12 @@ if os.environ.get("LLM_MODEL"):
     cfg["endpoints"]["llm"]["model"] = os.environ["LLM_MODEL"]
 LLM_BASE = cfg["endpoints"]["llm"]["base_url"]
 LLM_MODEL = cfg["endpoints"]["llm"].get("model", "llama3.2")
+# LLM_BASE_URL (from next-gen's .env.local) already includes a trailing
+# "/v1" — the yaml default doesn't. Normalize both directions here instead
+# of hardcoding "/v1/chat/completions" below, which silently 404'd as
+# "/v1/v1/chat/completions" whenever the env override was in effect.
+LLM_BASE_ROOT = LLM_BASE[:-3] if LLM_BASE.endswith("/v1") else LLM_BASE
+LLM_BASE_V1 = LLM_BASE if LLM_BASE.endswith("/v1") else f"{LLM_BASE}/v1"
 
 # ── SME store (singleton) ─────────────────────────────────────────────────────
 SME_STORE = _sme_module.get(cfg)
@@ -943,7 +949,7 @@ async def call_llm(client: httpx.AsyncClient, text: str) -> dict:
         "temperature": cfg["endpoints"]["llm"].get("temperature", 0),
     }
     resp = await client.post(
-        f"{LLM_BASE}/v1/chat/completions", json=payload, timeout=30
+        f"{LLM_BASE_V1}/chat/completions", json=payload, timeout=30
     )
     resp.raise_for_status()
     raw = resp.json()["choices"][0]["message"]["content"].strip()
@@ -1006,7 +1012,7 @@ async def index():
 async def health():
     try:
         async with httpx.AsyncClient() as c:
-            r = await c.get(f"{LLM_BASE}/health", timeout=5)
+            r = await c.get(f"{LLM_BASE_ROOT}/health", timeout=5)
             llm_ok = r.status_code == 200
     except Exception:
         llm_ok = False
@@ -1410,7 +1416,7 @@ async def summarize(req: SummarizeRequest):
     }
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.post(f"{LLM_BASE}/v1/chat/completions", json=payload, timeout=60)
+            resp = await client.post(f"{LLM_BASE_V1}/chat/completions", json=payload, timeout=60)
             resp.raise_for_status()
             text = resp.json()["choices"][0]["message"]["content"].strip()
             text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()

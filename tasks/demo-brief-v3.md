@@ -5,10 +5,10 @@
 
 ## NEW SCREENS / BUILDS
 
-- [ ] **GWG Set Objectives screen** — 4 editable job cards (Taylor configures targets before Network Objectives view); saving updates Network Objectives in real time
+- [ ] **EWG Set Objectives screen** — 4 editable job cards (Taylor configures targets before Network Objectives view); saving updates Network Objectives in real time
 - [ ] **Ask WrenchIQ bar** — persistent query bar at bottom of Shop & Target Monitoring Layer, NOT a nav item; 3 chip examples, open text, structured data card results (no chat bubbles)
-- [ ] **Persona switch transition overlay** — "Switching to: Service Advisor · James K. · Peninsula Precision Auto" camera-cut screen between GWG Admin → Advisor → Owner
-- [ ] **Mitchell1 / Snap-on variant** — same Shop & Target Monitoring screen but: (1) target cards editable by owner, (2) benchmarks from Mitchell1 network, (3) "Your Target" replaces "GWG Objective" label
+- [ ] **Persona switch transition overlay** — "Switching to: Service Advisor · James K. · Peninsula Precision Auto" camera-cut screen between EWG Admin → Advisor → Owner
+- [ ] **Mitchell1 / Snap-on variant** — same Shop & Target Monitoring screen but: (1) target cards editable by owner, (2) benchmarks from Mitchell1 network, (3) "Your Target" replaces "EWG Objective" label
 
 ---
 
@@ -34,5 +34,5 @@
 - [ ] Smart Scheduling
 - [ ] Parts Intelligence
 - [ ] AI Agent (standalone service advisor free-text chat view)
-- [ ] GWG Network Command (regional tabs: West, Southwest, Midwest…)
+- [ ] EWG Network Command (regional tabs: West, Southwest, Midwest…)
 - [ ] OEM / API tabs from landing

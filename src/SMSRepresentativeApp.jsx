@@ -21,7 +21,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { ClipboardList, Stethoscope, FileText, ShoppingCart, CheckSquare, AlertTriangle, ChevronDown, FileSearch, Home } from "lucide-react";
+import { ClipboardList, Columns3, Stethoscope, FileText, ShoppingCart, CheckSquare, AlertTriangle, ChevronDown, FileSearch, Home } from "lucide-react";
 import AdvisorHomeScreen from "./screens/AdvisorHomeScreen";
 import Job1IntakeScreen from "./screens/Job1IntakeScreen";
 import Job2ThreeCScreen from "./screens/Job2ThreeCScreen";
@@ -40,7 +40,8 @@ import { COLORS } from "./theme/colors";
 // sections render in the left nav; the rest stay mounted below (unrouted,
 // same convention as SocialInboxScreen) rather than deleted outright.
 const NAV_SECTIONS = [
-  { id: "advisorHome", label: "RO Kanban / Queue",  icon: ClipboardList, core: true },
+  { id: "roQueue",     label: "RO Queue",           icon: ClipboardList, core: true },
+  { id: "advisorHome", label: "RO Kanban",          icon: Columns3,      core: true },
   { id: "roViewer",    label: "Repair Order Viewer", icon: FileSearch },
   { id: "job1Intake",  label: "Intake & Diagnosis", icon: Stethoscope },
   { id: "job2ThreeC",  label: "3C Compliance",      icon: FileText },
@@ -210,14 +211,19 @@ function SMSRepresentativeShell({ smsName, shopName, smsHeaderColor, activeShopI
   const storyWriterROs  = liveFullROs?.length ? toStoryWriterROs(liveFullROs) : undefined;
 
   function renderActiveSection() {
+    // "RO Queue" and the (currently hidden, non-core) "Repair Order Viewer"
+    // section intentionally share this same screen — it already shows the
+    // full live RO list with full detail (and editable line items) on
+    // click, which is exactly what the Queue needs and what AdvisorHome's
+    // kanban board (Diagnosing/Approval/Pickup only) deliberately doesn't.
+    if (activeSection === "roQueue" || activeSection === "roViewer") {
+      if (feedLoading) return <FeedStatus text="Loading repair orders from the data feed…" />;
+      return <RepairOrderViewerScreen ros={liveFullROs || []} />;
+    }
     if (activeSection === "advisorHome") {
       if (feedLoading) return <FeedStatus text="Loading repair orders from the data feed…" />;
       if (feedUnavailable) return <FeedStatus icon={<AlertTriangle size={18} color={COLORS.textMuted} />} text="Data feed unavailable — no live repair orders to display." />;
       return <AdvisorHomeScreen ros={kanbanRos} />;
-    }
-    if (activeSection === "roViewer") {
-      if (feedLoading) return <FeedStatus text="Loading repair orders from the data feed…" />;
-      return <RepairOrderViewerScreen ros={liveFullROs || []} />;
     }
     if (activeSection === "job1Intake")  return <Job1IntakeScreen showIntelligencePanel={false} />;
     if (activeSection === "job2ThreeC")  return <Job2ThreeCScreen showIntelligencePanel={false} />;
@@ -256,12 +262,14 @@ function SMSRepresentativeShell({ smsName, shopName, smsHeaderColor, activeShopI
       </div>
 
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-        {/* Left side-nav — only core sections (F1: Kanban + auto queue, full stop) */}
+        {/* Left side-nav — only core sections (F1: Kanban + auto queue, full stop).
+            Icon-only rail (matches WrenchIQ's own 60px left nav convention)
+            since there are only two core sections; label shown as a tooltip. */}
         <div style={{
-          width: 190, flexShrink: 0,
+          width: 56, flexShrink: 0,
           background: "#111827",
-          display: "flex", flexDirection: "column",
-          padding: "10px 8px", gap: 4,
+          display: "flex", flexDirection: "column", alignItems: "center",
+          padding: "10px 6px", gap: 4,
         }}>
           {CORE_NAV_SECTIONS.map((s) => {
             const isActive = s.id === activeSection;
@@ -270,22 +278,18 @@ function SMSRepresentativeShell({ smsName, shopName, smsHeaderColor, activeShopI
               <button
                 key={s.id}
                 onClick={() => setActiveSection(s.id)}
+                title={s.label}
                 style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  padding: "9px 12px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: 40, height: 40,
                   borderRadius: 8,
                   border: "none",
                   cursor: "pointer",
                   background: isActive ? "rgba(255,255,255,0.12)" : "transparent",
                   color: isActive ? "#fff" : "rgba(255,255,255,0.6)",
-                  fontFamily: "'Inter', system-ui, sans-serif",
-                  fontSize: 13,
-                  fontWeight: isActive ? 700 : 500,
-                  textAlign: "left",
                 }}
               >
-                <Icon size={15} strokeWidth={isActive ? 2.4 : 2} />
-                {s.label}
+                <Icon size={17} strokeWidth={isActive ? 2.4 : 2} />
               </button>
             );
           })}

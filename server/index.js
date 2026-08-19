@@ -49,7 +49,11 @@ import prediiLearnRouter      from './routes/prediiLearn.js';
 import cannedJobsRouter       from './routes/cannedJobs.js';
 import shopProfileSnapshotRouter from './routes/shopProfileSnapshot.js';
 import shopChatRouter          from './routes/shopChat.js';
+import tsbLookupRouter          from './routes/tsbLookup.js';
+import threeCScoreRouter        from './routes/threeCScore.js';
+import shopIntelFactsRouter     from './routes/shopIntelFacts.js';
 import { ensureRecommendationIndexes } from './models/Recommendation.js';
+import { ensureTSBCacheIndexes } from './models/TSBCache.js';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const DB_NAME     = process.env.MONGODB_DB  || 'wrenchiq';
@@ -138,6 +142,9 @@ app.use('/api/predii-learn',    prediiLearnRouter);
 app.use('/api/canned-jobs',     cannedJobsRouter);
 app.use('/api/shop-profile-snapshot', shopProfileSnapshotRouter);
 app.use('/api/shop-chat',        shopChatRouter);
+app.use('/api/tsbs',             tsbLookupRouter);
+app.use('/api/three-c-score',    threeCScoreRouter);
+app.use('/api/shop-intel-facts', shopIntelFactsRouter);
 app.use('/api',                 recommendationsRouter);
 
 app.get('/api/health', (_req, res) => {
@@ -189,6 +196,7 @@ async function startServer() {
     const db = await connectMongo();
     await ensureIndexes(db);
     await ensureRecommendationIndexes(db);
+    await ensureTSBCacheIndexes(db);
     app.locals.db = db;
     await hydrateActiveProfile(db);
 

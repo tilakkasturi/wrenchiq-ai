@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchStoryRO } from "./repairOrderService";
+import { subscribeROUpdates } from "./roUpdatesChannel";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -51,6 +52,11 @@ export function useLiveBoardROs({ shopId, edition = "am", limit = 20, intervalMs
     pollRef.current = setInterval(fetchBoard, intervalMs);
     return () => clearInterval(pollRef.current);
   }, [fetchBoard, intervalMs]);
+
+  // Refetches immediately when another window (e.g. the Sidecar, after a
+  // Transfer) reports a story RO changed, instead of waiting up to
+  // intervalMs for the next scheduled poll.
+  useEffect(() => subscribeROUpdates(fetchBoard), [fetchBoard]);
 
   return { ros, loading };
 }

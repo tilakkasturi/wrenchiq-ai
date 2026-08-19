@@ -19,6 +19,16 @@
  *   get_seasonal_trends()                  — this shop's own top repair jobs for the current
  *                                             season, from its persisted Predii Learn Shop
  *                                             Profile (shopProfileSnapshotService.js)
+ *   get_tsbs(make, model, year)             — active Technical Service Bulletins for this
+ *                                             exact YMM. Tries the free public NHTSA API first
+ *                                             (nhtsaTsbService.js, cached in Mongo); NHTSA has
+ *                                             no clean TSB-payload endpoint (confirmed against
+ *                                             the live API, not just a sandbox assumption), so
+ *                                             an empty/failed NHTSA result falls back to this
+ *                                             repo's own curated set (src/data/tsbData.js).
+ *                                             Every TSB returned is surfaced as a recommendation
+ *                                             regardless of relevance to the RO's stated concern
+ *                                             — see the TSB rule in buildSystemPrompt below.
  *
  * The shop profile (labor cost/hr, parts margin target — the same
  * `shop_config` values roAdvisor.js uses for marginCheck) is injected
@@ -33,6 +43,14 @@ import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
 import { LLM_SKIP_TOOLS } from '../config.js';
 import { getCannedJobs } from './cannedJobsService.js';
 import { getShopProfileSnapshot } from './shopProfileSnapshotService.js';
+import { getTSBsForVehicle } from './nhtsaTsbService.js';
+// NHTSA has no clean public REST endpoint for TSB payloads (the manufacturer
+// Communications lookup 404s against their real API — verified live, not a
+// sandbox-network assumption) — nhtsaTsbService.js fails open to [] when that
+// happens, same as every other fetcher in this file. tsbData.js's curated set
+// is this repo's existing, deliberate substitute (see its own header comment)
+// — only reached on that empty/[] outcome, never overriding a real NHTSA hit.
+import { getTSBsForVehicle as getCuratedTSBs } from '../../src/data/tsbData.js';
 
 // ── Fallback data (used when MongoDB is unreachable) ─────────────────────────
 
@@ -163,6 +181,42 @@ async function fetchSeasonalTrends(shopId, db) {
   }
 }
 
+// Reshapes a curated tsbData.js entry into the same field names the NHTSA
+// path produces (nhtsaNumber/manufacturerNumber/component/summary/
+// dateCommunicationSent) so executeTool/runSinglePassAgent/the system prompt
+// never need to know which source a TSB came from. Labor hours and parts
+// estimate are folded into the summary text itself — get_tsbs' tool
+// description already tells the LLM to price a TSB off its summary/component
+// when there's no canned-job match, so this is what it reads for that.
+function normalizeCuratedTSB(t) {
+  const partsNote = t.partsNeeded?.length ? `, parts ~$${t.partsEstimate} (${t.partsNeeded.join(', ')})` : ', no parts';
+  return {
+    nhtsaNumber: t.bulletinNumber,
+    manufacturerNumber: t.bulletinNumber,
+    component: t.component,
+    summary: `${t.title}. ${t.description} Typical fix: ~${t.laborHours} labor hr${partsNote}.`,
+    dateCommunicationSent: t.publishDate,
+  };
+}
+
+async function fetchTSBs(make, model, year, db) {
+  if (!make || !model || !year) return [];
+  try {
+    const live = await getTSBsForVehicle(year, make, model, db);
+    if (live.length > 0) return live;
+  } catch (err) {
+    console.warn('[roAdvisor] fetchTSBs error:', err.message);
+  }
+  // Live NHTSA came back empty (or errored) — fall back to this repo's own
+  // curated TSB set rather than leaving get_tsbs empty for every vehicle.
+  try {
+    return getCuratedTSBs(make, model, year).map(normalizeCuratedTSB);
+  } catch (err) {
+    console.warn('[roAdvisor] curated TSB fallback error:', err.message);
+    return [];
+  }
+}
+
 // Standard automotive maintenance intervals — domain knowledge, not shop logic.
 // `category: 'year_round'` marks items that recur on a mileage/time interval
 // year-round (e.g. oil + filter) as opposed to `'seasonal'` items tied to a
@@ -209,15 +263,39 @@ function isAlreadyOnRO(serviceName, existingNames) {
   return existingNames.some(existing => existing.includes(svc) || svc.includes(existing));
 }
 
+// A shop objective/"ing" is a full sentence ("Check cabin air filter on
+// vehicles over 25K miles — 40 units in stock"), not a short service name, so
+// isAlreadyOnRO's plain substring check never matches it against a line item
+// like "Cabin Air Filter Replacement". Stripping the generic action word off
+// the existing line item first ("cabin air filter") and checking whether
+// that core noun phrase appears anywhere in the ing's note text catches this
+// — same pragmatic substring-match philosophy as isAlreadyOnRO, just applied
+// to prose instead of a short name.
+function ingAlreadyCovered(note, existingNames) {
+  const text = (note || '').toLowerCase();
+  if (!text) return false;
+  return existingNames.some(existing => {
+    const core = existing.replace(/\b(replacement|replace|service|serviced|flush|check|inspection|inspect|test|change)\b/g, '').replace(/\s+/g, ' ').trim();
+    return core.length > 3 && text.includes(core);
+  });
+}
+
 function filterExistingServices(result, ro) {
-  if (!result || !Array.isArray(result.serviceRecommendations)) return result;
+  if (!result) return result;
   const existingNames = getExistingServiceNames(ro);
   if (existingNames.length === 0) return result;
   return {
     ...result,
-    serviceRecommendations: result.serviceRecommendations.filter(
-      rec => !isAlreadyOnRO(rec.service, existingNames)
-    ),
+    serviceRecommendations: Array.isArray(result.serviceRecommendations)
+      ? result.serviceRecommendations.filter(rec => !isAlreadyOnRO(rec.service, existingNames))
+      : result.serviceRecommendations,
+    // Strategic Priorities (ings) get the same "don't re-suggest what's
+    // already on the RO" treatment — e.g. a standing "check cabin air filter"
+    // objective must not keep surfacing once a cabin air filter job is
+    // already a line item on this RO.
+    ings: Array.isArray(result.ings)
+      ? result.ings.filter(ing => !ingAlreadyCovered(ing.note, existingNames))
+      : result.ings,
   };
 }
 
@@ -355,6 +433,31 @@ const RO_TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'get_tsbs',
+      description:
+        'Fetch active NHTSA Technical Service Bulletins (Manufacturer Communications) filed for ' +
+        'this exact vehicle year/make/model — real manufacturer bulletins, not a generic guess. ' +
+        'Each result has a component, a summary of the condition/fix, and an "alreadyOnRO" flag — ' +
+        'never recommend one where alreadyOnRO is true. A TSB has no price on file: when it matches ' +
+        'an entry from get_canned_jobs use that price, otherwise estimate labor hours/cost from the ' +
+        'TSB\'s component and summary text (e.g. a software reflash is typically 0.3-1 hr, a part ' +
+        'replacement follows the scope described in the summary). Cite the TSB number in the reason ' +
+        'and set tsbNumber on the recommendation. Returns an empty list if NHTSA has nothing on file ' +
+        'for this vehicle, or if the lookup fails — in that case simply don\'t recommend a TSB fix.',
+      parameters: {
+        type: 'object',
+        properties: {
+          make:  { type: 'string', description: 'Vehicle make (e.g. Ford, Toyota)' },
+          model: { type: 'string', description: 'Vehicle model (e.g. F-150, Highlander)' },
+          year:  { type: 'number', description: 'Vehicle model year' },
+        },
+        required: ['make', 'model', 'year'],
+      },
+    },
+  },
 ];
 
 // ── System prompt ─────────────────────────────────────────────────────────────
@@ -391,22 +494,25 @@ Your job:
 3. Call get_mileage_services to identify what's due at this vehicle's mileage.
 4. Call get_canned_jobs to see the shop's real priced job menu.
 5. Call get_seasonal_trends to see what's historically busy at this shop right now.
-6. Cross-reference all five sources to produce a prioritized, non-redundant recommendation set.
+6. Call get_tsbs to check for active manufacturer Technical Service Bulletins filed for this exact vehicle year/make/model.
+7. Cross-reference all six sources to produce a prioritized, non-redundant recommendation set.
 
 Rules:
 - If the customer declined a service in the last 12 months, flag it as an alert — don't recommend it as a fresh service recommendation.
 - Only surface ings that apply to this specific vehicle (honor triggerType filters: vehicle_make, mileage_range, any_ro).
+- Every note returned by get_shop_objectives (both noteType "ing" and noteType "objective" — including time-bound campaigns) belongs only in the "ings" output array. Never restate one as an "alerts" entry — "alerts" is reserved strictly for declined/overdue/pattern/dtc findings about this specific customer or vehicle, not shop-wide objectives or promotions.
 - Talk tracks must sound natural — written in first-person for the advisor to say to the customer.
 - Confidence = high if backed by specific data (declined service, exact mileage overdue), medium if mileage-based estimate.
-- Service recommendations must be evidence-based — backed by the RO, customer history, mileage interval, or this shop's own seasonal pattern — covering canned jobs, maintenance recommendations, and seasonal jobs, not just incremental upsell. Keep to the 4 most impactful. Do not recommend more than 4.
+- Service recommendations must be evidence-based — backed by the RO, customer history, mileage interval, or this shop's own seasonal pattern — covering canned jobs, maintenance recommendations, and seasonal jobs, not just incremental upsell. Keep the year_round/seasonal recommendations to the 4 most impactful — do not produce more than 4 of those two categories combined. This cap does NOT apply to category "tsb" — see the TSB rule below.
 - When a recommendation matches an entry from get_canned_jobs, use that job's exact totalPrice as estimatedCost — this is the shop's real on-file price, never estimate one for something already on the menu. Only estimate a cost for items with no canned-job match (e.g. a mileage-interval item not on the menu).
 - A "seasonal" recommendation should cite get_seasonal_trends data when it returns real jobs for the current season (reference the shop's own historical count in the reason) — only fall back to generic seasonal domain knowledge (e.g. AC before summer) when that tool comes back empty.
-- NEVER recommend a service that is already a line item on the current RO (see "Line items already on this RO" above, or any due service/canned job/seasonal job flagged alreadyOnRO) — the recommendation engine must exclude anything already on this RO's job list, even if you'd word it differently.
+- Every TSB get_tsbs returns for this exact vehicle is real manufacturer guidance, not domain-knowledge guesswork — include ALL of them as "tsb"-category recommendations, uncapped and regardless of whether they relate to this RO's stated concern or DTCs. Do not filter a TSB out just because it's unrelated to why the car is in today — a known issue for this exact vehicle is worth surfacing on its own. If the TSB's own summary mentions a mileage/age threshold, only include it once this vehicle is at or near that point (use the "In for" mileage above); if it mentions no threshold, include it regardless of mileage. When a TSB *does* plausibly explain this RO's DTCs or concern, say so explicitly in reason and set confidence "high" instead of "medium" — otherwise phrase reason as a proactive heads-up (e.g. "known issue for this model at this mileage — not related to today's visit") and use confidence "medium". Set tsbNumber to the TSB's nhtsaNumber (fall back to manufacturerNumber if nhtsaNumber is absent) and cite the TSB number in reason (e.g. "per TSB 10214582 — reflash addresses reported MIL/P0300"). category = "tsb". Price it from get_canned_jobs if the described fix matches a menu item; otherwise estimate labor hours/cost from the TSB's own component and summary text (e.g. a software reflash is typically 0.3-1 hr labor with no parts; a component replacement follows the parts/labor scope the summary describes) — never invent a number unrelated to what the bulletin actually describes.
+- NEVER recommend a service that is already a line item on the current RO (see "Line items already on this RO" above, or any due service/canned job/seasonal job/TSB flagged alreadyOnRO) — the recommendation engine must exclude anything already on this RO's job list, even if you'd word it differently.
 - category = "year_round" for anything that recurs on a mileage/time interval regardless of season — this always includes oil changes, lube/oil filter service, and engine oil filter jobs. Never classify these as "seasonal" and never invent a MOTOR-sourced "Oil Service" seasonal line item. category = "seasonal" only for genuinely calendar-season-driven work (e.g. AC performance check before summer, coolant/antifreeze check before winter, or anything surfaced by get_seasonal_trends).
 
 Gold Standard tone for suggestedCustomerMessage — this is a text/SMS the advisor sends directly to the customer, so it must read as warm and human, never salesy:
 - Warm, first-name, plain language — no jargon, no exclamation-point energy.
-- Reference every item in serviceRecommendations by name (up to the 4 you produced) — the customer should see the full picture in this one message, not a partial teaser.
+- Reference every non-"tsb" item in serviceRecommendations by name (up to the 4 you produced) — the customer should see the full picture in this one message, not a partial teaser. A "tsb" item that's unrelated to today's concern is an internal advisor heads-up, not something to text the customer proactively — only mention a TSB here when it's the one explaining their actual concern (confidence "high" per the TSB rule above).
 - For each one, give a timing suggestion in plain terms: today/now, worth scheduling soon, or fine to wait until the next visit — based on its confidence and how overdue it is. Don't invent urgency that isn't in the data.
 - Explain the "why" behind each item in a short clause (root cause, not just "it's due") so the customer understands, not just complies.
 - Do NOT oversell: no exclamation points, no "don't miss out," no bundling everything as equally urgent, no piling on adjectives. State each item plainly and let the customer decide. If a declined-service alert exists, do not re-push it here — that's a separate conversation.
@@ -424,7 +530,8 @@ Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
       "reason":        string,     // why this applies — specific data point
       "estimatedCost": number,     // integer USD — exact canned-job totalPrice when matched, otherwise a reasonable estimate
       "confidence":    "high" | "medium",
-      "category":      "year_round" | "seasonal",  // year_round for mileage/time-interval items (oil + filter, etc.); seasonal only for calendar-season work
+      "category":      "year_round" | "seasonal" | "tsb",  // year_round for mileage/time-interval items (oil + filter, etc.); seasonal only for calendar-season work; tsb for a get_tsbs-driven fix
+      "tsbNumber":     string | null,  // NHTSA/manufacturer TSB number when category is "tsb", else null
       "talkTrack":     string      // what the advisor says to the customer, first person, 2-3 sentences
     }
   ],
@@ -519,6 +626,23 @@ function executeTool(name, args, preloaded) {
       };
     }
 
+    case 'get_tsbs': {
+      const existing = getExistingServiceNames(preloaded.ro);
+      return {
+        tsbs: (preloaded.tsbs || []).map(t => ({
+          nhtsaNumber:        t.nhtsaNumber,
+          manufacturerNumber: t.manufacturerNumber,
+          component:          t.component,
+          summary:            t.summary,
+          dateCommunicationSent: t.dateCommunicationSent,
+          // Flag if a fix already matching this TSB's component is already on
+          // the RO, so the LLM never re-recommends it (WrenchIQ Product Spec
+          // v3.0 — requirement S3, same convention as every other tool here).
+          alreadyOnRO: isAlreadyOnRO(t.component || '', existing),
+        })),
+      };
+    }
+
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -551,6 +675,13 @@ async function runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile)
     count: j.count,
     alreadyOnRO: isAlreadyOnRO(j.job, existingServiceNames),
   }));
+  const tsbs = (preloaded.tsbs || []).map(t => ({
+    nhtsaNumber:        t.nhtsaNumber,
+    manufacturerNumber: t.manufacturerNumber,
+    component:          t.component,
+    summary:            t.summary,
+    alreadyOnRO:        isAlreadyOnRO(t.component || '', existingServiceNames),
+  }));
 
   const prompt = `${buildSystemPrompt(ro, vehicle, shopName, shopProfile)}
 
@@ -571,6 +702,9 @@ ${JSON.stringify(cannedJobs, null, 2)}
 Shop's own top repair jobs for the current season (${currentSeason}, ${seasonData?.ro_count ?? 0} ROs historically — empty means no Shop Profile persisted yet, fall back to general seasonal domain knowledge):
 ${JSON.stringify(seasonalTopJobs, null, 2)}
 
+Active NHTSA Technical Service Bulletins for this exact vehicle year/make/model (empty means NHTSA has nothing on file, or the vehicle year/make/model is unknown — do not invent a TSB):
+${JSON.stringify(tsbs, null, 2)}
+
 Services already on this RO (do NOT recommend any of these — see alreadyOnRO flag above and Rules):
 ${JSON.stringify(existingServiceNames, null, 2)}
 
@@ -585,7 +719,23 @@ Now produce the JSON recommendation object.`;
 
   const raw  = getTextFromResponse(data) || '{}';
   const json = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
-  return JSON.parse(json);
+  return { result: JSON.parse(json), usage: addUsage(null, data.usage), model: data.model };
+}
+
+// ── Token usage tracking (for the Agent Trace / cost-projection UI) ──────────
+//
+// Accumulates prompt/completion/total tokens across every LLM call in a
+// single agent run — the tool-calling loop makes one call per turn (5 tool
+// rounds + 1 synthesis round is typical), so usage must be summed, not just
+// read off the last response.
+function addUsage(running, usage) {
+  const u = usage || {};
+  const base = running || { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+  return {
+    promptTokens:     base.promptTokens     + (u.prompt_tokens     || 0),
+    completionTokens: base.completionTokens + (u.completion_tokens || 0),
+    totalTokens:      base.totalTokens      + (u.total_tokens      || 0),
+  };
 }
 
 // ── Main agent runner ─────────────────────────────────────────────────────────
@@ -616,22 +766,30 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
   const currentSeason = getCurrentSeasonName();
 
   // Pre-fetch data in parallel — each is tolerant of failure
-  const [history, objectives, cannedJobs, resolvedShopProfile, seasonalTrends] = await Promise.all([
+  const [history, objectives, cannedJobs, resolvedShopProfile, seasonalTrends, tsbs] = await Promise.all([
     fetchCustomerHistory(customerId, db),
     fetchShopObjectives(shopId, db),
     getCannedJobs(db, shopId),
     shopProfile ? Promise.resolve(shopProfile) : fetchShopProfile(shopId, db),
     fetchSeasonalTrends(shopId, db),
+    fetchTSBs(vehicle?.make, vehicle?.model, vehicle?.year, db),
   ]);
   shopProfile = resolvedShopProfile;
 
-  const preloaded = { history, objectives, cannedJobs, seasonalTrends, currentSeason, ro };
+  const preloaded = { history, objectives, cannedJobs, seasonalTrends, tsbs, currentSeason, ro };
 
   // If the LLM server doesn't support tool_calls, go straight to single-pass
   if (LLM_SKIP_TOOLS) {
     console.log('[roAdvisor] LLM_SKIP_TOOLS=true — using single-pass prompt');
-    const result = cleanCustomerMessage(filterExistingServices(await runSinglePassAgent(ro, vehicle, 'Cornerstone Auto Group', preloaded, shopProfile), ro), ro);
-    return { ...result, generatedAt: new Date().toISOString(), dataSourced: { historyVisits: history.length, objectivesCount: objectives.length, cannedJobsCount: cannedJobs.length, seasonalTrendsAvailable: seasonalTrends.length > 0 } };
+    const single = await runSinglePassAgent(ro, vehicle, 'Cornerstone Auto Group', preloaded, shopProfile);
+    const result = cleanCustomerMessage(filterExistingServices(single.result, ro), ro);
+    return {
+      ...result,
+      generatedAt: new Date().toISOString(),
+      dataSourced: { historyVisits: history.length, objectivesCount: objectives.length, cannedJobsCount: cannedJobs.length, seasonalTrendsAvailable: seasonalTrends.length > 0, tsbCount: tsbs.length },
+      usage: single.usage,
+      model: single.model,
+    };
   }
 
   const messages = [
@@ -642,6 +800,8 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
   ];
 
   let result = null;
+  let usage  = null;
+  let model  = null;
 
   // Tool-calling loop (max 4 rounds)
   for (let turn = 0; turn < 4; turn++) {
@@ -656,9 +816,15 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
       });
     } catch (err) {
       console.warn('[roAdvisor] LLM call failed, trying single-pass fallback:', err.message);
-      result = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
+      const single = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
+      result = single.result;
+      usage  = addUsage(usage, { prompt_tokens: single.usage?.promptTokens, completion_tokens: single.usage?.completionTokens, total_tokens: single.usage?.totalTokens });
+      model  = model || single.model;
       break;
     }
+
+    usage = addUsage(usage, data.usage);
+    model = model || data.model;
 
     const choice       = data.choices?.[0];
     const finishReason = choice?.finish_reason;
@@ -678,7 +844,10 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
         result = JSON.parse(json);
       } catch {
         // LLM didn't produce valid JSON — run single-pass with data injected
-        result = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
+        const single = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
+        result = single.result;
+        usage  = addUsage(usage, { prompt_tokens: single.usage?.promptTokens, completion_tokens: single.usage?.completionTokens, total_tokens: single.usage?.totalTokens });
+        model  = model || single.model;
       }
       break;
     }
@@ -700,12 +869,18 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
     }
 
     // Unknown finish reason — fall back to single-pass
-    result = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
+    const single = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
+    result = single.result;
+    usage  = addUsage(usage, { prompt_tokens: single.usage?.promptTokens, completion_tokens: single.usage?.completionTokens, total_tokens: single.usage?.totalTokens });
+    model  = model || single.model;
     break;
   }
 
   if (!result) {
-    result = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
+    const single = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
+    result = single.result;
+    usage  = addUsage(usage, { prompt_tokens: single.usage?.promptTokens, completion_tokens: single.usage?.completionTokens, total_tokens: single.usage?.totalTokens });
+    model  = model || single.model;
   }
 
   result = cleanCustomerMessage(filterExistingServices(result, ro), ro);
@@ -718,6 +893,9 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
       objectivesCount: objectives.length,
       cannedJobsCount: cannedJobs.length,
       seasonalTrendsAvailable: seasonalTrends.length > 0,
+      tsbCount: tsbs.length,
     },
+    usage,
+    model,
   };
 }

@@ -30,8 +30,18 @@ else
   echo "Starting ro-ner-demo..."
   nohup ./ro-ner-demo > /tmp/wrenchiq-ro-ner-demo.log 2>&1 &
   disown
-  sleep 1
-  if ! ./ro-ner-demo --check >/dev/null 2>&1; then
+  # Loading ~2500 samples + the 16MB component taxonomy takes several
+  # seconds — a single 1s check here reliably fired a false "did not come
+  # up" warning even on a normal startup, so poll instead of a fixed sleep.
+  up=false
+  for _ in $(seq 1 20); do
+    if ./ro-ner-demo --check >/dev/null 2>&1; then
+      up=true
+      break
+    fi
+    sleep 1
+  done
+  if [[ "$up" != true ]]; then
     echo "warning: ro-ner-demo did not come up — Predii Learn will fall back to the persisted Shop Profile snapshot." >&2
     echo "         See /tmp/wrenchiq-ro-ner-demo.log" >&2
   fi

@@ -1,4 +1,4 @@
-// GWGCorporateScreen — Corporate admin view (corporateName from DemoContext)
+// EWGCorporateScreen — Corporate admin view (corporateName from DemoContext)
 // Shows Network Objectives (4 job cards) + Location Health grid (100 rooftops)
 
 import { useState } from "react";
@@ -112,7 +112,7 @@ const OBJECTIVES = [
   },
 ];
 
-export default function GWGCorporateScreen({ onExitPersona }) {
+export default function EWGCorporateScreen({ onExitPersona }) {
   const { smsName, corporateName } = useDemo();
   const [hoveredLocation, setHoveredLocation] = useState(null);
   const [hoveredObjective, setHoveredObjective] = useState(null);

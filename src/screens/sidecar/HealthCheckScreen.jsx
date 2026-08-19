@@ -40,7 +40,7 @@ const AVAILABLE_ON = [
 const STATUS_STYLE = {
   connected:     { label: "Connected",     color: "#4ADE80", bg: "rgba(74,222,128,0.12)" },
   degraded:      { label: "Degraded",      color: "#FBBF24", bg: "rgba(250,204,21,0.12)" },
-  not_connected: { label: "Not Connected", color: "rgba(255,255,255,0.45)", bg: "rgba(255,255,255,0.06)" },
+  not_connected: { label: "Not Connected", color: "rgba(255,255,255,0.8)", bg: "rgba(255,255,255,0.06)" },
   error:         { label: "Error",         color: "#F87171", bg: "rgba(248,113,113,0.12)" },
 };
 
@@ -55,7 +55,7 @@ export default function HealthCheckScreen({ onContinue }) {
   const [health, setHealth] = useState(null);
   const [checking, setChecking] = useState(true);
   const { customers, loading: customersLoading } = useSelectedCustomer();
-  const { shopName } = useDemo();
+  const { shopName, smsName } = useDemo();
 
   async function runCheck() {
     setChecking(true);
@@ -79,7 +79,7 @@ export default function HealthCheckScreen({ onContinue }) {
         <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", marginBottom: 2 }}>
           {shopName || "Your Shop"}
         </div>
-        <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.45)" }}>
+        <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.8)" }}>
           {today}
         </div>
       </div>
@@ -90,7 +90,7 @@ export default function HealthCheckScreen({ onContinue }) {
         <div style={{ fontSize: 12.5, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
           Checking WrenchIQ Connections
         </div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
           Here's exactly what's live before you start working a repair order.
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function HealthCheckScreen({ onContinue }) {
       />
       <HealthRow
         icon={Database}
-        label="Shop Management System (SMS)"
+        label={`Shop Management System — ${smsName || "SMS"}`}
         checking={checking}
         status={health?.sms?.status}
         detail={checking ? null : health?.sms?.note}
@@ -137,7 +137,7 @@ export default function HealthCheckScreen({ onContinue }) {
             display: "flex", alignItems: "center", justifyContent: "center",
             background: "transparent", border: "1px solid rgba(255,255,255,0.15)",
             borderRadius: 8, padding: "10px 12px", cursor: checking ? "default" : "pointer",
-            color: "rgba(255,255,255,0.5)",
+            color: "rgba(255,255,255,0.75)",
           }}
         >
           <RotateCw size={13} style={{ animation: checking ? "spin 0.8s linear infinite" : "none" }} />
@@ -160,7 +160,7 @@ function hoursSince(dateStr) {
 function ShopSnapshot({ customers, loading }) {
   if (loading && customers.length === 0) {
     return (
-      <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.35)" }}>Loading today's queue…</div>
+      <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.75)" }}>Loading today's queue…</div>
     );
   }
 
@@ -186,7 +186,7 @@ function ShopSnapshot({ customers, loading }) {
       borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10,
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
           Today's Queue
         </span>
         <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>{customers.length} ROs</span>
@@ -207,7 +207,7 @@ function ShopSnapshot({ customers, loading }) {
           );
         })}
         {customers.length === 0 && (
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>No active repair orders yet today.</span>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.75)" }}>No active repair orders yet today.</span>
         )}
       </div>
 
@@ -240,12 +240,12 @@ function SnapshotStat({ icon: Icon, label, value, sub }) {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
         <Icon size={11} color="rgba(255,255,255,0.4)" />
-        <span style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        <span style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           {label}
         </span>
       </div>
       <div style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>{value}</div>
-      <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.35)", marginTop: 1 }}>{sub}</div>
+      <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.75)", marginTop: 1 }}>{sub}</div>
     </div>
   );
 }
@@ -257,14 +257,14 @@ function AvailableOnStrip() {
       background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
       borderRadius: 8, padding: "9px 12px",
     }}>
-      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600, flexShrink: 0 }}>
+      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", fontWeight: 600, flexShrink: 0 }}>
         Same app, everywhere:
       </span>
       <div style={{ display: "flex", gap: 14, flexShrink: 0 }}>
         {AVAILABLE_ON.map(({ icon: Icon, label }) => (
           <div key={label} title={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
             <Icon size={13} color="rgba(255,255,255,0.55)" />
-            <span style={{ fontSize: 8.5, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{label}</span>
+            <span style={{ fontSize: 8.5, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{label}</span>
           </div>
         ))}
       </div>
@@ -284,7 +284,7 @@ function HealthRow({ icon: Icon, label, checking, status, detail }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#F1F5F9" }}>{label}</div>
         {detail && (
-          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.4)", marginTop: 2, lineHeight: 1.4 }}>{detail}</div>
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.8)", marginTop: 2, lineHeight: 1.4 }}>{detail}</div>
         )}
       </div>
       <span style={{

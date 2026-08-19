@@ -1,6 +1,6 @@
 // ============================================================
 // WrenchIQ Demo Data — Cornerstone Auto Group, Bay Area CA
-// GWG network member · Taylor Mitchell demo · Protractor SMS
+// EWG network member · Taylor Mitchell demo · Protractor SMS
 // ============================================================
 
 export const SHOP = {
@@ -17,16 +17,16 @@ export const SHOP = {
   targetElr: 182,
   bays: 8,
   locations: 4,
-  networkId: "GWG-CA-007",
-  network: "GWG",
-  networkFullName: "Good Works Group",
+  networkId: "EWG-CA-007",
+  network: "EWG",
+  networkFullName: "Expert Wrenchers Groups",
   hours: { open: "7:00 AM", close: "6:00 PM", days: "Mon–Fri" },
   satHours: { open: "8:00 AM", close: "3:00 PM" },
 };
 
-// ── GWG Districts ──────────────────────────────────────────
-export const GWG_DISTRICTS = [
-  { id: "norcal",    label: "Northern California", count: 12, director: "Taylor Mitchell", flagship: "GWG-CA-007" },
+// ── EWG Districts ──────────────────────────────────────────
+export const EWG_DISTRICTS = [
+  { id: "norcal",    label: "Northern California", count: 12, director: "Taylor Mitchell", flagship: "EWG-CA-007" },
   { id: "socal",     label: "Southern California", count: 14, director: "Patricia Holt" },
   { id: "pacific",   label: "Pacific Northwest",   count: 9,  director: "Kevin Okafor" },
   { id: "southwest", label: "Southwest",           count: 16, director: "Carlos Medina" },
@@ -36,8 +36,8 @@ export const GWG_DISTRICTS = [
   { id: "northeast", label: "Northeast",           count: 9,  director: "David Park" },
 ];
 
-// ── GWG Locations ──────────────────────────────────────────
-export const GWG_LOCATIONS = [
+// ── EWG Locations ──────────────────────────────────────────
+export const EWG_LOCATIONS = [
   {
     id: "loc-001",
     name: "Cornerstone — Palo Alto",
@@ -90,6 +90,68 @@ export const GWG_LOCATIONS = [
     techs: 2,
     rank: 4,
     status: "developing",
+  },
+];
+
+// ── Shop Intelligence: Fun Facts ────────────────────────────
+// Surfaced in the Predii Learn "Shop Intelligence" tab. Each fact is
+// derived from real fields elsewhere in this file (SHOP, EWG_DISTRICTS,
+// EWG_LOCATIONS, technicians, financials) rather than invented numbers —
+// keep in sync if those source values change.
+export const SHOP_INTEL_FACTS = [
+  {
+    icon: "🏆",
+    title: "Flagship of a 100-shop network",
+    detail:
+      "Cornerstone — Palo Alto is the #1-ranked location out of 4, and EWG's Northern California district (12 shops) is one of 8 districts making up exactly 100 shops nationwide.",
+  },
+  {
+    icon: "👨‍👦",
+    title: "A family name on both ends",
+    detail:
+      "Owner Dave Kowalski built the group in 2002 — the flagship Palo Alto shop is now run day-to-day by manager James Kowalski. 22+ years and counting.",
+  },
+  {
+    icon: "⚡",
+    title: "DeShawn Carter is the fastest wrench in the network",
+    detail:
+      "97% efficiency — the highest of any technician across all 100 EWG shops, not just Cornerstone's four. He also carries the highest average job value ($510) and a 4.9 customer rating.",
+  },
+  {
+    icon: "📝",
+    title: "Same team, opposite ends of the documentation scale",
+    detail:
+      "Tony Archer posts the shop's best 3C narrative quality (87/100 avg) while Marcus Webb — two bays over — posts the worst (34/100). Same pay scale, same customers, very different paper trail.",
+  },
+  {
+    icon: "🎓",
+    title: "The apprentice is already out-rating two Master Techs",
+    detail:
+      "Kayla Ruiz, still in training on ASE A1, holds a 4.4 customer rating — ahead of journeyman Marcus Webb's 4.2, on nothing but oil changes, tires, and basic brakes.",
+  },
+  {
+    icon: "🚧",
+    title: "The coaching shop is coached by the coaching problem",
+    detail:
+      "Mountain View is the network's lowest-ranked (#4) location for 3C compliance — and Marcus Webb, the tech with the shop's worst documentation score, is also its manager and lead technician.",
+  },
+  {
+    icon: "💰",
+    title: "Nobody's hitting the target ELR — not even the best tech",
+    detail:
+      "Cornerstone targets a $182/hr effective labor rate. Even DeShawn Carter, the network's top performer, posts $167.71 — $14.29 short. Apprentice Kayla Ruiz sits furthest off at $137.25, a $44.75/hr gap to target.",
+  },
+  {
+    icon: "📉",
+    title: "November came in $21.6K under target",
+    detail:
+      "After a strong May ($201K vs. a $195K target), revenue cooled into fall — November closed at $178.4K against a $200K target, the widest miss of the year.",
+  },
+  {
+    icon: "🔧",
+    title: "Labor is nearly a third more profitable than parts",
+    detail:
+      "Cornerstone runs a 68% labor margin vs. a 53% parts margin — on $2.148M in YTD revenue across 2,340 invoices, that spread is worth real money.",
   },
 ];
 
@@ -572,7 +634,7 @@ export const repairOrders = [
     promisedDate: "2026-04-18T14:00:00",
     serviceType: "Brake Inspection + Service",
     appointmentType: "appointment",
-    customerConcern: "Brakes feel soft, slight squeal on left front when stopping.",
+    customerConcern: "brakes feel kinda soft n theres a sqeaky noise on the left front wen stoppin, prob nothing lol",
     dtcs: [],
     services: [
       { name: "Brake System Diagnostic", laborHrs: 0.5, partsCost: 0, laborCost: 87.50, status: "pending" },
@@ -616,7 +678,7 @@ export const repairOrders = [
       "If Frank declines trans fluid today, flag for next visit — at 75K it becomes a safety conversation.",
     ],
     threeCScore: null,
-    threeCConcern: "Brakes feel soft, slight squeal on left front when stopping.",
+    threeCConcern: "brakes feel kinda soft n theres a sqeaky noise on the left front wen stoppin, prob nothing lol",
     threeCDiagnosis: "",
     threeCCorrection: "",
   },
@@ -637,7 +699,7 @@ export const repairOrders = [
     promisedDate: "2026-04-18T15:00:00",
     serviceType: "Engine Noise Investigation",
     appointmentType: "appointment",
-    customerConcern: "Customer states noise.",  // Marcus's terrible single-line complaint
+    customerConcern: "car go tick tick. idk maybe bad??",  // Marcus's terrible single-line complaint
     dtcs: [],
     services: [
       { name: "Engine Noise Diagnostic", laborHrs: 1.5, actualHrs: 1.72, clockIn: "2026-04-18T07:30:00", partsCost: 0, laborCost: 262.50, status: "in_progress" },
@@ -653,7 +715,7 @@ export const repairOrders = [
     laborTimeTracking: { totalFlatHrs: 1.5, totalActualHrs: 1.72, elr: 152.91, postedRate: 175 },
     // 3C scoring
     threeCScore: 31,
-    threeCConcern: "Customer states noise.",  // Marcus wrote this — fails 3C
+    threeCConcern: "car go tick tick. idk maybe bad??",  // Marcus wrote this — fails 3C
     threeCDiagnosis: "",
     threeCCorrection: "",
     // WrenchIQ rewrite (Agentic: agent drafted the improvement, advisor approves)
@@ -665,7 +727,7 @@ export const repairOrders = [
       status: "staged",  // WrenchIQ staged this — advisor hasn't approved yet
     },
     aiInsights: [
-      "3C ALERT — Complaint quality: 31/100. Single-line complaint fails GWG 3C compliance standard (minimum 75).",
+      "3C ALERT — Complaint quality: 31/100. Single-line complaint fails EWG 3C compliance standard (minimum 75).",
       "TSB-22-2346: Cold-start cam phaser tick on Ford 5.0L Coyote is documented at 40–50K miles. Cite in concern for warranty coverage.",
       "Rewrite drafted — 89/100 score. Click 'Apply Rewrite' to replace Marcus's narrative before sending to tech.",
       "Marcus Webb's 3C avg this month: 34/100. This is the 4th sub-40 complaint from Location 3 this week.",
@@ -686,7 +748,7 @@ export const repairOrders = [
     promisedDate: "2026-04-18T16:00:00",
     serviceType: "A/C System Diagnosis & Repair",
     appointmentType: "appointment",
-    customerConcern: "A/C blows warm air above 80°F ambient. Compressor clutch cycles on then immediately cuts out.",
+    customerConcern: "ac blowin hot wen its actually hot out lol figures, n sumtimes it just quits blowin cold altogether",
     dtcs: ["4B75", "4B73"],
     services: [
       { name: "A/C System Diagnosis & Pressure Test", laborHrs: 0.8, partsCost: 0, laborCost: 140, status: "pending" },
@@ -713,7 +775,7 @@ export const repairOrders = [
       "After recharge, perform 30-min bench performance test at 85°F — document vent temp (target ≤45°F) for the RO.",
     ],
     threeCScore: null,
-    threeCConcern: "Customer states A/C not cooling — blows warm air when ambient temperature exceeds 80°F. Compressor clutch audibly cycles on and immediately cuts out. Condition has worsened over past 3 weeks.",
+    threeCConcern: "ac blowin hot wen its actually hot out lol figures, n sumtimes it just quits blowin cold altogether. been like this bout 3 wks, gettin worse",
     threeCDiagnosis: "",
     threeCCorrection: "",
   },
@@ -733,7 +795,7 @@ export const repairOrders = [
     promisedDate: "2026-04-18T13:00:00",
     serviceType: "Rear Brake Service — Pads, Rotors & Fluid Flush",
     appointmentType: "appointment",
-    customerConcern: "Grinding noise from rear brakes when stopping. Pedal feels spongy at low speed.",
+    customerConcern: "rear brakes soundin like a monster truck wen i stop, n pedal feels kinda mushy goin slow",
     dtcs: [],
     services: [
       { name: "Brake System Diagnostic & Road Test", laborHrs: 0.5, partsCost: 0, laborCost: 87.50, status: "complete", actualHrs: 0.52, clockIn: "2026-04-18T07:30:00", clockOut: "2026-04-18T08:01:00" },
@@ -762,7 +824,7 @@ export const repairOrders = [
       "Denise is budget-aware. Frame as safety issue: grinding brakes on a 92K Subaru are a liability. She approves safety items.",
     ],
     threeCScore: null,
-    threeCConcern: "Customer reports grinding noise from rear brakes during stops and pedal sponginess at low speed. Noise began approximately 3 weeks ago and has worsened progressively. No prior brake service history at this shop.",
+    threeCConcern: "rear brakes soundin like a monster truck wen i stop, n pedal feels kinda mushy goin slow. startd bout 3 wks ago n keeps gettin worse, never had brakes done here b4",
     threeCDiagnosis: "",
     threeCCorrection: "",
   },
@@ -782,7 +844,7 @@ export const repairOrders = [
     promisedDate: "2026-04-18T15:30:00",
     serviceType: "Front Suspension Diagnosis & Repair",
     appointmentType: "appointment",
-    customerConcern: "Clunking and knocking from front suspension over bumps and speed bumps. Slight pull to the left.",
+    customerConcern: "clunk clunk over bumps n speed bumps, n it pulls left a lil on flat road. prob nothin lol",
     dtcs: ["C1611", "C1604"],
     services: [
       { name: "Suspension Diagnostic & Chassis Inspection", laborHrs: 0.8, partsCost: 0, laborCost: 140, status: "pending" },
@@ -811,7 +873,7 @@ export const repairOrders = [
       "Tom drove from Menlo Park. He is precise about pickup times — confirm parts on-hand before promising same-day.",
     ],
     threeCScore: null,
-    threeCConcern: "Customer reports clunking and knocking noise from front suspension when driving over bumps, speed bumps, and uneven road surfaces. Vehicle also pulls slightly to the left when driving straight on a flat road surface.",
+    threeCConcern: "clunk clunk over bumps n speed bumps n bad roads, n it pulls left a lil goin straight on flat road. prob nothin lol",
     threeCDiagnosis: "",
     threeCCorrection: "",
   },
@@ -834,7 +896,7 @@ export const repairOrders = [
     appointmentType: "appointment",
     isOemService: true,
     oemMilestone: "60,000 miles",
-    customerConcern: "Scheduled 60K service per Toyota maintenance schedule. No complaints. Mileage: 60,200.",
+    customerConcern: "here 4 the 60k thing, no issues jus checkin boxes",
     dtcs: [],
     services: [
       { name: "Engine Oil & Filter Change (0W-20 Full Synthetic, 4.8qt)", laborHrs: 0.5, partsCost: 0, laborCost: 87.50, status: "in_progress", actualHrs: 0.3, clockIn: "2026-04-18T08:10:00" },
@@ -871,7 +933,7 @@ export const repairOrders = [
       "Post-service: 4-wheel alignment measurement recommended at 60K to catch any wear-induced drift. Quick upsell — $105.",
     ],
     threeCScore: null,
-    threeCConcern: "Customer states vehicle is due for scheduled 60,000-mile maintenance per Toyota maintenance schedule. No performance complaints. Customer tracks service intervals closely.",
+    threeCConcern: "here 4 the 60k thing, no issues jus checkin boxes. i track my service stuff pretty close fyi",
     threeCDiagnosis: "",
     threeCCorrection: "",
   },
@@ -893,7 +955,7 @@ export const repairOrders = [
     promisedDate: "2026-04-19T17:00:00",
     serviceType: "Engine Diagnostic — Check Engine Light / Timing Chain",
     appointmentType: "drop_off",
-    customerConcern: "Check engine light on for 2 weeks. Hesitation under acceleration. Rough idle on cold start.",
+    customerConcern: "check engine light on 4ever (like 2 wks), truck hesitates wen i punch it, n rough start wen its cold out",
     dtcs: ["P0016", "P0017"],
     services: [
       { name: "Engine Diagnostic & DTC Analysis", laborHrs: 1.0, partsCost: 0, laborCost: 175, status: "complete", actualHrs: 1.1, clockIn: "2026-04-17T14:05:00", clockOut: "2026-04-17T15:10:00" },
@@ -923,7 +985,7 @@ export const repairOrders = [
       "Estimate sent 4/17 at 4:30 PM. No response yet — suggest follow-up call this morning. Ray likes to talk shop.",
     ],
     threeCScore: null,
-    threeCConcern: "Customer states check engine light has been on for approximately 2 weeks. Reports noticeable hesitation under hard acceleration and occasional rough idle on cold start. No change in oil level reported by customer.",
+    threeCConcern: "check engine light on 4ever (like 2 wks), truck hesitates wen i punch it hard, n rough start wen its cold out. oil level looks fine 2 me",
     threeCDiagnosis: "DTCs P0016 and P0017 retrieved — Crankshaft-Camshaft Position Correlation Bank 1 Sensor A and B. Physical timing chain inspection confirmed stretch exceeds OEM tolerance per TSB PIP5765G. Intake VVT solenoid response time measured at 380ms (OEM spec: ≤200ms) — clogged from oil sludge accumulation consistent with extended drain intervals.",
     threeCCorrection: "",
   },

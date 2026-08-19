@@ -9,6 +9,10 @@
  *
  * Results are cached in localStorage so each unique ing text is only
  * processed once. No hardcoded trigger logic — the LLM owns the parsing.
+ *
+ * A single-call extraction skill, not an agent — the 3-level fallback chain
+ * is transport failover, not decision-making. See
+ * docs/wrenchiq-agent-architecture-consolidation-proposal.md.
  */
 
 // ── LLM endpoint config ───────────────────────────────────────────────────────

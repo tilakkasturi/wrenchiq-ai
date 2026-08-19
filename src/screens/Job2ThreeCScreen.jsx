@@ -1,6 +1,6 @@
 /**
  * Job2ThreeCScreen.jsx
- * WrenchIQ demo screen — GWG Job 2: 3C Narrative Quality
+ * WrenchIQ demo screen — EWG Job 2: 3C Narrative Quality
  *
  * Split-screen layout:
  *   Left 65% — SMS panel (before / after 3C narrative states)
@@ -433,7 +433,7 @@ export default function Job2ThreeCScreen({ showIntelligencePanel = true }) {
               }}
             >
               {isAfter
-                ? "Narrative meets GWG compliance standard. TSB referenced. Part number documented. Test verification included."
+                ? "Narrative meets EWG compliance standard. TSB referenced. Part number documented. Test verification included."
                 : "Narrative incomplete — missing complaint context, DTC reference, TSB citation, part numbers, and test verification. Risk: warranty rejection."}
             </p>
           </div>
@@ -665,7 +665,7 @@ export default function Job2ThreeCScreen({ showIntelligencePanel = true }) {
                   fontWeight: 600,
                 }}
               >
-                {isAfter ? "GWG Compliant" : "Below threshold (80)"}
+                {isAfter ? "EWG Compliant" : "Below threshold (80)"}
               </span>
             </div>
 
@@ -839,12 +839,12 @@ export default function Job2ThreeCScreen({ showIntelligencePanel = true }) {
               }}
             >
               At 200 ROs/month, a 60%→85% compliance lift prevents ~$1,800/month
-              in rejected warranty claims. GWG network average at top locations:{" "}
+              in rejected warranty claims. EWG network average at top locations:{" "}
               <strong style={{ color: "#FCD34D" }}>82%+</strong>
             </p>
           </div>
 
-          {/* GWG Objective */}
+          {/* EWG Objective */}
           <div
             style={{
               background: "rgba(255,107,53,0.1)",
@@ -868,7 +868,7 @@ export default function Job2ThreeCScreen({ showIntelligencePanel = true }) {
                   marginBottom: 4,
                 }}
               >
-                GWG Objective — Job 2
+                EWG Objective — Job 2
               </div>
               <p
                 style={{
@@ -879,7 +879,7 @@ export default function Job2ThreeCScreen({ showIntelligencePanel = true }) {
                 }}
               >
                 All brake / diagnostic ROs must achieve ≥ 80% 3C score with TSB
-                references to qualify for GWG certification renewal.
+                references to qualify for EWG certification renewal.
               </p>
             </div>
           </div>

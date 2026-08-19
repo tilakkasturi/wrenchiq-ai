@@ -347,7 +347,7 @@ export default function Job3UpsellScreen({ showIntelligencePanel = true }) {
               }}
             >
               <CheckCircle size={16} color="#22C55E" />
-              +$239.99 added to RO &nbsp;&middot;&nbsp; ARO lift: +$240 &nbsp;&middot;&nbsp; GWG target: +$75 ✓
+              +$239.99 added to RO &nbsp;&middot;&nbsp; ARO lift: +$240 &nbsp;&middot;&nbsp; EWG target: +$75 ✓
             </div>
           ) : (
             <div style={{ fontSize: 13, color: COLORS.textSecondary, paddingLeft: 2 }}>
@@ -740,11 +740,11 @@ export default function Job3UpsellScreen({ showIntelligencePanel = true }) {
               </span>
             </div>
             <p style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: "rgba(255,255,255,0.6)" }}>
-              GWG target: +$75 ARO on oil change visits. This service recommendation delivers +$240. At 50 oil changes/month, lifting 25% acceptance = <strong style={{ color: "rgba(255,255,255,0.85)" }}>+$3,000/month incremental.</strong>
+              EWG target: +$75 ARO on oil change visits. This service recommendation delivers +$240. At 50 oil changes/month, lifting 25% acceptance = <strong style={{ color: "rgba(255,255,255,0.85)" }}>+$3,000/month incremental.</strong>
             </p>
           </div>
 
-          {/* GWG tag */}
+          {/* EWG tag */}
           <div
             style={{
               display: "flex",
@@ -758,7 +758,7 @@ export default function Job3UpsellScreen({ showIntelligencePanel = true }) {
           >
             <ChevronRight size={12} color={COLORS.gold} />
             <span style={{ fontSize: 11, fontWeight: 600, color: COLORS.goldHover }}>
-              GWG Job 3: Oil change ARO +$75 &nbsp;&middot;&nbsp; 30% acceptance target
+              EWG Job 3: Oil change ARO +$75 &nbsp;&middot;&nbsp; 30% acceptance target
             </span>
           </div>
 

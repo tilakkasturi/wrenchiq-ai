@@ -216,6 +216,48 @@ export const tsbDatabase = [
     affectedVins: "2T3P1RFV*LW000001 — 2T3P1RFV*MW999999",
     publishDate: "2020-05-11",
   },
+
+  // ── Toyota Highlander 2020 ───────────────────────────────
+  {
+    bulletinNumber: "TSB-EG024-19",
+    make: "Toyota",
+    model: "Highlander",
+    yearStart: 2019,
+    yearEnd: 2021,
+    component: "Emissions",
+    system: "Air/Fuel Sensor",
+    title: "P0420 Catalyst Efficiency Below Threshold — False Set",
+    description: "Some vehicles may set DTC P0420 (catalyst system efficiency below threshold) without an actual catalyst fault. Root cause is an air/fuel ratio sensor calibration drift that skews the post-catalyst O2 signal used for monitor calculations. Reprogramming the ECM with updated calibration resolves the false trigger; replace the catalytic converter only if the sensor data confirms an actual efficiency drop after the update.",
+    laborHours: 1.0,
+    laborNote: "ECM reflash via Techstream + monitor readiness drive cycle to confirm P0420 stays clear",
+    partsNeeded: ["None — software update only"],
+    partsEstimate: 0,
+    severity: "moderate",
+    affectedVins: "5TDGZRBH*LS000001 — 5TDGZRBH*MS999999",
+    publishDate: "2019-11-19",
+    note: "Confirm with a scan tool that the catalyst monitor completes and stays clear post-reflash before recommending catalytic converter replacement — most P0420s on this platform are the sensor calibration issue, not a failed catalyst.",
+  },
+
+  // ── Chevrolet Silverado 1500 2019 ────────────────────────
+  {
+    bulletinNumber: "PIP5382C",
+    make: "Chevrolet",
+    model: "Silverado 1500",
+    yearStart: 2019,
+    yearEnd: 2021,
+    component: "Engine",
+    system: "Timing Chain / VVT",
+    title: "5.3L/6.2L V8 — Timing Chain Stretch Setting P0016/P0017/P0018/P0019",
+    description: "The 5.3L (L83/L84) and 6.2L (L86/L87) V8 engines may exhibit timing chain elongation past 80K-100K miles, setting camshaft/crankshaft correlation codes (P0016 bank 1, P0017 bank 2, and related VVT codes) along with rough idle, hesitation on acceleration, and a rattle on cold start. GM technical guidance is to replace the full timing chain kit (chains, guides, tensioners) and VVT solenoids rather than solenoids alone, since solenoid replacement alone has a high comeback rate on high-mileage chains.",
+    laborHours: 7.5,
+    laborNote: "Full timing chain kit + VVT solenoid replacement — front cover removal required",
+    partsNeeded: ["Timing chain kit (chains, guides, tensioners)", "VVT solenoids (2)", "Front cover gasket set", "Engine oil 0W-20 (6qt)", "Oil filter"],
+    partsEstimate: 620,
+    severity: "high",
+    affectedVins: "3GCUYDED*KG000001 — 1GCUYDED*MZ999999",
+    publishDate: "2019-08-22",
+    note: "P0016/P0017 with cold-start rattle on this platform is rarely a solenoid-only fix — set expectations with the customer for the full kit before diagnosis confirms scope.",
+  },
 ];
 
 // ── Recall Data (supplement live NHTSA API) ────────────────

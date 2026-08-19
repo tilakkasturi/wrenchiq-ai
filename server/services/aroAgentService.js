@@ -1,22 +1,30 @@
 /**
- * WrenchIQ — ARO Agent Service
+ * WrenchIQ — ARO Analysis
  *
- * Autonomous agent that monitors Average Repair Order (ARO) vs. shop goals.
- * Runs a tool-calling loop against the FULL wrenchiq_ro collection (100K+ docs)
- * using MongoDB aggregation pipelines — never loads all docs into memory.
+ * Monitors Average Repair Order (ARO) vs. shop goals, computed against the
+ * FULL wrenchiq_ro collection (100K+ docs) via MongoDB aggregation pipelines
+ * — never loads all docs into memory.
  *
- * Tools:
- *   get_shop_kpis              — ARO (7d/30d/90d), revenue, open count, trend
- *   get_declined_services      — Top declined services + revenue opportunity
- *   get_tech_performance       — ELR + efficiency per technician
- *   get_aro_trend              — Monthly ARO trend (last 12 months)
- *   get_customer_patterns      — Repeat customer share, top customers by LTV
- *   get_vehicle_segments       — ARO breakdown by vehicle origin
- *   get_service_opportunities  — High-value underperformed services
+ * Single-pass, not a tool-calling agent: all 7 analytics views below are
+ * pre-fetched and reshaped up front, then inlined directly into one prompt
+ * for one LLM completion. There was previously a tool-calling loop here, but
+ * every "tool" was zero-argument and only reshaped data that had already
+ * been fetched before the loop started — the loop bought smaller prompts,
+ * never fewer DB hits or different data, so it added latency without adding
+ * capability (see docs/wrenchiq-agent-architecture-consolidation-proposal.md).
+ *
+ * Analytics views inlined into the prompt:
+ *   shop_kpis              — ARO (7d/30d/90d), revenue, open count, trend
+ *   aro_trend              — Monthly ARO trend (last 12 months)
+ *   tech_performance       — ELR + efficiency per technician
+ *   customer_patterns      — Repeat customer share, top customers by LTV
+ *   vehicle_segments       — ARO breakdown by vehicle origin
+ *   declined_services      — Top declined services + revenue opportunity
+ *   service_opportunities  — High-value underperformed services
  *
  * Usage:
  *   const result = await runAROAgent(shopId, db);
- *   // result = { goals, analysis, snapshot: { generatedAt } }
+ *   // result = { goals, analysis, analytics: { ...summaries for charts } }
  */
 
 import {
@@ -80,82 +88,6 @@ async function getActiveStandingPriorities(db, shopId) {
   }
 }
 
-// ── Tool definitions (OpenAI format) ─────────────────────────────────────────
-const ARO_TOOLS = [
-  {
-    type: 'function',
-    function: {
-      name: 'get_shop_kpis',
-      description:
-        'Returns current shop KPIs computed from the full RO dataset: ARO for the last 7, ' +
-        '30, and 90 days, revenue totals, open RO count, and ARO trend direction. ' +
-        'Call this first to understand the performance baseline.',
-      parameters: { type: 'object', properties: {}, required: [] },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_aro_trend',
-      description:
-        'Returns monthly ARO and revenue for the past 12 months, sorted oldest to newest. ' +
-        'Use this to identify seasonal patterns and multi-month performance trajectory.',
-      parameters: { type: 'object', properties: {}, required: [] },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_tech_performance',
-      description:
-        'Returns per-technician ELR and efficiency metrics computed across all ROs. ' +
-        'Use this to identify techs underperforming against the shop\'s minimum ELR goal.',
-      parameters: { type: 'object', properties: {}, required: [] },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_customer_patterns',
-      description:
-        'Returns repeat customer metrics: what share of customers return, top customers ' +
-        'by lifetime value, and visit frequency distribution. Use this to assess retention ' +
-        'and identify high-value at-risk customers.',
-      parameters: { type: 'object', properties: {}, required: [] },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_vehicle_segments',
-      description:
-        'Returns ARO broken down by vehicle origin (JAPANESE, GERMAN, DOMESTIC_US, OTHER). ' +
-        'Use this to find which vehicle segments generate the highest ARO and where to focus.',
-      parameters: { type: 'object', properties: {}, required: [] },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_declined_services',
-      description:
-        'Returns the top declined/deferred services with revenue opportunity estimates. ' +
-        'Use this to quantify the upsell gap and identify highest-impact follow-up actions.',
-      parameters: { type: 'object', properties: {}, required: [] },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_service_opportunities',
-      description:
-        'Returns high-revenue services that are underperformed relative to vehicle mix. ' +
-        'Use this to recommend specific service campaigns that will move the ARO needle.',
-      parameters: { type: 'object', properties: {}, required: [] },
-    },
-  },
-];
-
 // ── Pre-fetch all analytics data in parallel ──────────────────────────────────
 async function fetchAllAnalytics(shopId, db) {
   const [
@@ -188,97 +120,71 @@ async function fetchAllAnalytics(shopId, db) {
   };
 }
 
-// ── Tool execution (synchronous, uses pre-fetched data) ───────────────────────
-function executeTool(toolName, data, goals) {
-  switch (toolName) {
-    case 'get_shop_kpis': {
-      const { currentARO } = data;
-      return {
-        aro_7d:           currentARO.aro7d,
-        aro_30d:          currentARO.aro30d,
-        aro_90d:          currentARO.aro90d,
-        revenue_7d:       currentARO.rev7d,
-        revenue_30d:      currentARO.rev30d,
-        ro_count_7d:      currentARO.count7d,
-        ro_count_30d:     currentARO.count30d,
-        trend:            currentARO.trend,
-        goal_aro:         goals.aro,
-        gap_7d:           currentARO.aro7d - goals.aro,
-        gap_pct_7d:       goals.aro > 0 ? Math.round(((currentARO.aro7d - goals.aro) / goals.aro) * 100) : 0,
-      };
-    }
+// ── Reshape pre-fetched analytics into the views the model reads ─────────────
+// Same reshaping this file always did — previously exposed one view per tool
+// call, now inlined as one JSON object in the single-pass prompt.
+function buildAnalyticsViews(data, goals) {
+  const { currentARO, aroTrend, topServices, customerPatterns, vehicleSegments, techELR, serviceOpportunities } = data;
 
-    case 'get_aro_trend': {
-      const { aroTrend } = data;
-      // Summarise trend: last month vs 3 months prior
-      const recent = aroTrend.slice(-3).map(m => ({ label: m.label, aro: m.avgARO, ros: m.roCount }));
-      const oldest = aroTrend[0]?.avgARO || 0;
-      const newest = aroTrend[aroTrend.length - 1]?.avgARO || 0;
-      return {
-        monthly_trend:          aroTrend,
-        recent_3_months:        recent,
-        change_oldest_to_newest: newest - oldest,
-        months_captured:        aroTrend.length,
-      };
-    }
+  const recent = aroTrend.slice(-3).map(m => ({ label: m.label, aro: m.avgARO, ros: m.roCount }));
+  const oldest = aroTrend[0]?.avgARO || 0;
+  const newest = aroTrend[aroTrend.length - 1]?.avgARO || 0;
+  const flaggedTechs = techELR.filter(t => t.elr > 0 && t.elr < goals.minELR);
+  const bestSegment = vehicleSegments[0] || null;
 
-    case 'get_tech_performance': {
-      const { techELR } = data;
-      const flagged = techELR.filter(t => t.elr > 0 && t.elr < goals.minELR);
-      return {
-        techs:            techELR,
-        tech_count:       techELR.length,
-        below_elr_goal:   flagged.map(t => ({ name: t.name || t.techId, elr: t.elr, efficiency: t.efficiency })),
-        min_elr_goal:     goals.minELR,
-      };
-    }
-
-    case 'get_customer_patterns': {
-      const { customerPatterns } = data;
-      return {
-        total_unique_customers: customerPatterns.totalUniqueCustomers,
-        repeat_customer_share:  customerPatterns.repeatCustomerShare,
-        top_customers_by_ltv:   customerPatterns.topCustomersByLTV.slice(0, 10),
-        visit_frequency:        customerPatterns.visitFrequency,
-      };
-    }
-
-    case 'get_vehicle_segments': {
-      const { vehicleSegments } = data;
-      const best = vehicleSegments[0] || null;
-      return {
-        segments:          vehicleSegments,
-        highest_aro_segment: best ? { origin: best.origin, avg_aro: best.avgARO } : null,
-      };
-    }
-
-    case 'get_declined_services': {
-      const { topServices } = data;
-      // We don't have a separate declined list in the aggregation;
-      // surface the top services by revenue as the upsell opportunity set.
-      return {
-        top_revenue_services: topServices.slice(0, 8).map(s => ({
-          service:     s.service,
-          performed:   s.count,
-          avg_revenue: s.avgCost,
-          total_rev:   s.totalRevenue,
-        })),
-        note: 'Based on full RO history — services with the highest average revenue per visit.',
-      };
-    }
-
-    case 'get_service_opportunities': {
-      const { serviceOpportunities } = data;
-      return {
-        opportunities:   serviceOpportunities.slice(0, 10),
-        total_found:     serviceOpportunities.length,
-        note: 'Services with high average revenue but low frequency — best candidates for service campaigns.',
-      };
-    }
-
-    default:
-      return { error: `Unknown tool: ${toolName}` };
-  }
+  return {
+    shop_kpis: {
+      aro_7d:       currentARO.aro7d,
+      aro_30d:      currentARO.aro30d,
+      aro_90d:      currentARO.aro90d,
+      revenue_7d:   currentARO.rev7d,
+      revenue_30d:  currentARO.rev30d,
+      ro_count_7d:  currentARO.count7d,
+      ro_count_30d: currentARO.count30d,
+      trend:        currentARO.trend,
+      goal_aro:     goals.aro,
+      gap_7d:       currentARO.aro7d - goals.aro,
+      gap_pct_7d:   goals.aro > 0 ? Math.round(((currentARO.aro7d - goals.aro) / goals.aro) * 100) : 0,
+    },
+    aro_trend: {
+      monthly_trend:           aroTrend,
+      recent_3_months:         recent,
+      change_oldest_to_newest: newest - oldest,
+      months_captured:         aroTrend.length,
+    },
+    tech_performance: {
+      techs:          techELR,
+      tech_count:     techELR.length,
+      below_elr_goal: flaggedTechs.map(t => ({ name: t.name || t.techId, elr: t.elr, efficiency: t.efficiency })),
+      min_elr_goal:   goals.minELR,
+    },
+    customer_patterns: {
+      total_unique_customers: customerPatterns.totalUniqueCustomers,
+      repeat_customer_share:  customerPatterns.repeatCustomerShare,
+      top_customers_by_ltv:   customerPatterns.topCustomersByLTV.slice(0, 10),
+      visit_frequency:        customerPatterns.visitFrequency,
+    },
+    vehicle_segments: {
+      segments:            vehicleSegments,
+      highest_aro_segment: bestSegment ? { origin: bestSegment.origin, avg_aro: bestSegment.avgARO } : null,
+    },
+    // We don't have a separate declined list in the aggregation; surface the
+    // top services by revenue as the upsell opportunity set.
+    declined_services: {
+      top_revenue_services: topServices.slice(0, 8).map(s => ({
+        service:     s.service,
+        performed:   s.count,
+        avg_revenue: s.avgCost,
+        total_rev:   s.totalRevenue,
+      })),
+      note: 'Based on full RO history — services with the highest average revenue per visit.',
+    },
+    service_opportunities: {
+      opportunities: serviceOpportunities.slice(0, 10),
+      total_found:   serviceOpportunities.length,
+      note: 'Services with high average revenue but low frequency — best candidates for service campaigns.',
+    },
+  };
 }
 
 // ── ARO Agent system prompt ───────────────────────────────────────────────────
@@ -290,9 +196,10 @@ alongside the numeric goals above when synthesizing recommendations):\n${
       }`
     : '';
 
-  return `You are the ARO Agent for WrenchIQ — an autonomous AI agent that monitors shop \
-performance KPIs outside the core SMS workflow. You have read-only access to analytics \
-derived from the shop's full repair order database (100,000+ ROs) via tools.
+  return `You are the ARO Agent for WrenchIQ — an AI that monitors shop performance KPIs \
+outside the core SMS workflow. All analytics below are already computed from the shop's \
+full repair order database (100,000+ ROs) — there are no tools to call, everything you \
+need is provided.
 
 Shop goals:
   - ARO (Average Repair Order): $${goals.aro}
@@ -301,11 +208,10 @@ Shop goals:
   - Max comeback rate: ${goals.comebackRate}%${customBlock}
 
 Your mission:
-1. Start with get_shop_kpis to understand current ARO vs. goal
-2. Call get_aro_trend to understand the multi-month trajectory
-3. Call the remaining tools as needed to investigate root causes
-4. Synthesize findings into structured alerts and actionable recommendations
-5. Return ONLY a JSON object — no prose, no markdown, no code fences, just raw JSON
+1. Review the KPI, trend, technician, customer, vehicle-segment, and service-opportunity
+   data provided below to understand current ARO vs. goal and the root causes of any gap
+2. Synthesize findings into structured alerts and actionable recommendations
+3. Return ONLY a JSON object — no prose, no markdown, no code fences, just raw JSON
 
 Output schema (strict):
 {
@@ -345,13 +251,14 @@ Rules:
 // ── Main agent runner ─────────────────────────────────────────────────────────
 
 /**
- * Run the ARO Agent for a shop.
- * Pre-fetches all analytics in parallel, then runs the LLM tool-calling loop
- * (model configured via LLM_BASE_URL / LLM_MODEL in server/config.js).
+ * Run ARO analysis for a shop.
+ * Pre-fetches all analytics in parallel, reshapes them into the views the
+ * model reads, and makes one single-pass LLM completion — no tool-calling
+ * loop (model configured via LLM_BASE_URL / LLM_MODEL in server/config.js).
  *
  * @param {string} shopId
  * @param {object} db  - MongoDB db handle
- * @returns {Promise<{ goals, analysis, data: analytics summary }>}
+ * @returns {Promise<{ goals, analysis, analytics: analytics summary }>}
  */
 export async function runAROAgent(shopId = 'shop-001', db) {
   if (!AZURE_OPENAI_API_KEY) {
@@ -367,57 +274,34 @@ export async function runAROAgent(shopId = 'shop-001', db) {
   const analyticsData = await fetchAllAnalytics(shopId, db);
   console.log(`[aroAgent] Analytics ready — ${analyticsData.aroTrend.length} months of trend data`);
 
-  const messages = [
-    {
-      role:    'user',
-      content: 'Run the full ARO monitoring check. Use the tools available to analyze the shop\'s ' +
-               'performance across all dimensions, then return your JSON analysis.',
-    },
-  ];
+  const analyticsViews = buildAnalyticsViews(analyticsData, goals);
+  const prompt = `${buildSystemPrompt(goals, standingPriorities, voice)}
 
-  let finalAnalysis = null;
+DATA ALREADY LOADED (no tool calls available):
 
-  for (let turn = 0; turn < 10; turn++) {
-    const data = await callAzureOpenAI({
-      system:     buildSystemPrompt(goals, standingPriorities, voice),
-      messages,
-      max_tokens: 4096,
-      tools:      ARO_TOOLS,
-      _route: '/api/aro-agent',
-    });
+${JSON.stringify(analyticsViews, null, 2)}
 
-    const choice       = data.choices?.[0];
-    const finishReason = choice?.finish_reason;
-    const message      = choice?.message;
+Now produce the JSON analysis object.`;
 
-    // Save the assistant message to history
-    messages.push({ role: 'assistant', content: message?.content ?? null, tool_calls: message?.tool_calls });
+  const data = await callAzureOpenAI({
+    messages:   [{ role: 'user', content: prompt }],
+    max_tokens: 4096,
+    jsonMode:   true,
+    _route:     '/api/aro-agent',
+  });
 
-    if (finishReason === 'stop') {
-      const text = message?.content || '';
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        finalAnalysis = JSON.parse(jsonMatch[0]);
-      }
-      break;
-    }
+  const raw       = getTextFromResponse(data) || '';
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
 
-    if (finishReason === 'tool_calls') {
-      for (const tc of (message?.tool_calls || [])) {
-        const toolName = tc.function?.name;
-        const result   = executeTool(toolName, analyticsData, goals);
-        console.log(`[aroAgent] Tool: ${toolName} → ${JSON.stringify(result).slice(0, 160)}`);
-        messages.push({
-          role:         'tool',
-          tool_call_id: tc.id,
-          content:      JSON.stringify(result),
-        });
-      }
-    }
+  let finalAnalysis;
+  try {
+    finalAnalysis = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+  } catch (err) {
+    throw new Error(`ARO Agent returned malformed JSON: ${err.message}`);
   }
 
   if (!finalAnalysis) {
-    throw new Error('ARO Agent did not complete analysis within turn limit');
+    throw new Error('ARO Agent did not return a parseable analysis');
   }
 
   // Attach key analytics summaries to the response so the UI can render charts

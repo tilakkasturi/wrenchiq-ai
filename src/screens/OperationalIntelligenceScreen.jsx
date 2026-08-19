@@ -66,7 +66,7 @@ const INSIGHT_CARDS = [
     dotColor: COLORS.danger,
     title: "3C Compliance is Your Biggest Gap",
     detail:
-      "Brake narratives averaging 54% completeness. Root cause: Marcus and DeShawn entering single-line causes without DVI references. Top GWG locations average 82%+. Warranty rejection risk is high.",
+      "Brake narratives averaging 54% completeness. Root cause: Marcus and DeShawn entering single-line causes without DVI references. Top EWG locations average 82%+. Warranty rejection risk is high.",
     metric: "54% avg score vs 80% target",
     metricColor: COLORS.danger,
     action: "Enable Auto-Scoring for Brake Category →",

@@ -13,6 +13,10 @@
  * "aiEvidence" alongside the advisor's own "status", which always wins.
  *
  * Returns: [{ id, status: "met"|"not_met"|"unclear", evidence }]
+ *
+ * A single-call scoring skill, not an agent — one JSON-mode completion per
+ * call, no tool-calling loop. See
+ * docs/wrenchiq-agent-architecture-consolidation-proposal.md.
  */
 
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';

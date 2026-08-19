@@ -273,7 +273,7 @@ export default function DemoConfigPanel({ onClose }) {
               {/* Corporate Name */}
               <div>
                 <label style={labelStyle}>Corporate / Chain Name</label>
-                <input value={local.corporateName} onChange={e => setLocal(p => ({ ...p, corporateName: e.target.value }))} placeholder="e.g. GWG Auto Group" style={inputStyle} />
+                <input value={local.corporateName} onChange={e => setLocal(p => ({ ...p, corporateName: e.target.value }))} placeholder="e.g. EWG Auto Group" style={inputStyle} />
               </div>
 
               {/* Shop Name */}

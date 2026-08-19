@@ -8,13 +8,10 @@
 // intelligence renders here — that's exclusively the Surface B sidecar's job.
 
 import { useState, useEffect } from "react";
-import { Search, Car, AlertTriangle, FileText, Plus, Wrench, Package } from "lucide-react";
+import { Search, Car, AlertTriangle, FileText, Plus, Wrench, Package, Trash2 } from "lucide-react";
 import { COLORS } from "../theme/colors";
 import { updateStoryRO } from "../services/repairOrderService";
-
-// Most US states don't tax labor on repair invoices but do tax parts —
-// this shop's rate (Bay Area, CA) is applied to the parts subtotal only.
-const PARTS_TAX_RATE = 0.0875;
+import { PARTS_TAX_RATE, computeRepairOrderTotal } from "../services/roTotals";
 
 const STATUS_LABEL = {
   in_progress:   "In Progress",
@@ -87,13 +84,17 @@ export default function RepairOrderViewerScreen({ ros = [] }) {
   const vehicle  = selected?._vehicle;
 
   // Reset the editable line list whenever the selected RO changes (new
-  // selection, or a fresh poll brought back updated data).
+  // selection) or a fresh poll brought back a different set of service
+  // lines for the RO already open (e.g. the Sidecar just transferred a new
+  // job onto it) — keyed on length + total so an in-place line edit (not a
+  // line being added/removed) doesn't reset the row the advisor is editing.
+  const selectedServicesKey = `${selected?.services?.length ?? 0}:${selected?.totalEstimate ?? 0}`;
   useEffect(() => {
     setServiceLines(selected?.services || []);
     setAddingType(null);
     setLineDesc(""); setLineHours(""); setLineRate(""); setLineQty("1"); setLineUnitPrice("");
     setSaveState(null);
-  }, [selected?.roNumber || selected?.id]);
+  }, [selected?.roNumber || selected?.id, selectedServicesKey]);
 
   // Each repair job keeps its labor and parts together, the way a real RO
   // reads — a job card shows its own labor line plus its own part lines,
@@ -108,17 +109,16 @@ export default function RepairOrderViewerScreen({ ros = [] }) {
     const partsTotal = parts.reduce((sum, p) => sum + Math.round(p.total), 0);
     return {
       name: s.name,
+      status: s.status,
       labor: hasLabor ? { hours: s.laborHrs || 0, rate: s.laborHrs ? (s.laborCost || 0) / s.laborHrs : null, total: s.laborCost || 0 } : null,
       parts,
       jobTotal: laborTotal + partsTotal,
     };
   });
 
-  const laborSubtotal = jobGroups.reduce((sum, j) => sum + (j.labor ? Math.round(j.labor.total) : 0), 0);
-  const partsSubtotal = jobGroups.reduce((sum, j) => sum + j.parts.reduce((s2, p) => s2 + Math.round(p.total), 0), 0);
-  const subtotal = laborSubtotal + partsSubtotal;
-  const tax      = Math.round(partsSubtotal * PARTS_TAX_RATE);
-  const grandTotal = subtotal + tax;
+  // Same formula the Sidecar uses (src/services/roTotals.js) so the two
+  // surfaces never disagree on what this RO adds up to.
+  const { laborSubtotal, partsSubtotal, subtotal, tax, grandTotal } = computeRepairOrderTotal(serviceLines);
 
   async function persist(nextLines) {
     if (!selected) return;
@@ -131,9 +131,7 @@ export default function RepairOrderViewerScreen({ ros = [] }) {
       status:            s.status || "pending",
       ...(s.clockIn ? { clockIn: s.clockIn } : {}),
     }));
-    const newLaborSubtotal = nextLines.reduce((sum, l) => sum + Math.round(l.laborCost || 0), 0);
-    const newPartsSubtotal = nextLines.reduce((sum, l) => sum + Math.round((l.parts || []).reduce((s2, p) => s2 + (p.cost || 0), 0)), 0);
-    const newTotal = newLaborSubtotal + newPartsSubtotal + Math.round(newPartsSubtotal * PARTS_TAX_RATE);
+    const { grandTotal: newTotal } = computeRepairOrderTotal(nextLines);
     setSaveState("saving");
     try {
       await updateStoryRO(selected.roNumber || selected.id, { repairJobs, invoice: newTotal });
@@ -142,6 +140,12 @@ export default function RepairOrderViewerScreen({ ros = [] }) {
       console.error("Failed to save RO line:", err);
       setSaveState("error");
     }
+  }
+
+  function removeLine(index) {
+    const nextLines = serviceLines.filter((_, i) => i !== index);
+    setServiceLines(nextLines);
+    persist(nextLines);
   }
 
   function commitAddLine() {
@@ -365,14 +369,46 @@ export default function RepairOrderViewerScreen({ ros = [] }) {
               <div>
                 <SectionLabel icon={<Wrench size={11} color={COLORS.textMuted} />} text={`Services — ${fmtMoney(subtotal)}`} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {jobGroups.map((job, i) => (
-                    <div key={i} style={{ background: "#fff", border: `1px solid ${COLORS.border}`, borderRadius: 8, overflow: "hidden" }}>
+                  {jobGroups.map((job, i) => {
+                    const justTransferred = job.status === "transferred";
+                    return (
+                    <div key={i} style={{
+                      background: justTransferred ? "#FFF7ED" : "#fff",
+                      border: `1px solid ${justTransferred ? "#FDBA74" : COLORS.border}`,
+                      borderRadius: 8, overflow: "hidden",
+                    }}>
                       <div style={{
                         display: "flex", justifyContent: "space-between", alignItems: "center",
-                        padding: "9px 14px", background: "#F9FAFB", borderBottom: `1px solid ${COLORS.border}`,
+                        padding: "9px 14px", background: justTransferred ? "#FFEDD5" : "#F9FAFB",
+                        borderBottom: `1px solid ${justTransferred ? "#FDBA74" : COLORS.border}`,
                       }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary }}>{job.name}</span>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: COLORS.textPrimary }}>{fmtMoney(job.jobTotal)}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.textPrimary }}>{job.name}</span>
+                          {justTransferred && (
+                            <span style={{
+                              fontSize: 9, fontWeight: 700, letterSpacing: 0.3, textTransform: "uppercase",
+                              background: "#EA580C", color: "#fff", borderRadius: 4, padding: "2px 6px",
+                            }}>
+                              New from WrenchIQ
+                            </span>
+                          )}
+                        </span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: COLORS.textPrimary }}>{fmtMoney(job.jobTotal)}</span>
+                          {justTransferred && (
+                            <button
+                              onClick={() => removeLine(i)}
+                              title="Remove this WrenchIQ-transferred line from the RO"
+                              style={{
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                background: "transparent", border: "none", cursor: "pointer",
+                                padding: 2, color: "#B45309",
+                              }}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </span>
                       </div>
 
                       {job.labor && (
@@ -398,7 +434,8 @@ export default function RepairOrderViewerScreen({ ros = [] }) {
                         </div>
                       ))}
                     </div>
-                  ))}
+                    );
+                  })}
 
                   {jobGroups.length === 0 && (
                     <div style={{ background: "#fff", border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: 14, fontSize: 12, color: COLORS.textMuted, textAlign: "center" }}>

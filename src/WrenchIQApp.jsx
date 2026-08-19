@@ -55,7 +55,7 @@ import OEMDealerGroupScreen from "./screens/OEMDealerGroupScreen";
 import OEMTechScreen from "./screens/OEMTechScreen";
 import OEMPartsScreen from "./screens/OEMPartsScreen";
 import OEMSettingsScreen from "./screens/OEMSettingsScreen";
-import GWGCorporateScreen            from "./screens/GWGCorporateScreen";
+import EWGCorporateScreen            from "./screens/EWGCorporateScreen";
 import OperationalIntelligenceScreen from "./screens/OperationalIntelligenceScreen";
 import ImpactDashboardScreen         from "./screens/ImpactDashboardScreen";
 
@@ -135,9 +135,9 @@ function resolvePersonaScreen(persona, screenId, extraProps) {
     if (screenId === "oemTechHome") return <OEMTechScreen />;
   }
 
-  // GWG Corporate
-  if (persona === "gwgCorporate") {
-    return <GWGCorporateScreen />;
+  // EWG Corporate
+  if (persona === "ewgCorporate") {
+    return <EWGCorporateScreen />;
   }
 
   return <DashboardScreen onNavigate={extraProps.onNavigate} persona={persona} />;
@@ -153,7 +153,7 @@ const PERSONA_DEFAULT_SCREEN = {
   fixedOps:     "fixedOpsHome",
   oemAdvisor:   "roWriter",
   oemTech:      "oemTechHome",
-  gwgCorporate: "gwgCorporate",
+  ewgCorporate: "ewgCorporate",
 };
 
 // ── Session helpers (localStorage) ──────────────────────────
@@ -194,7 +194,7 @@ const _embeddedScreens = _sp.get('screens')
 const AM_PERSONAS_LABELS = {
   advisor:      "Service Advisor",
   owner:        "Shop Owner",
-  gwgCorporate: "GWG Corporate",
+  ewgCorporate: "EWG Corporate",
   fixedOps:     "Fixed Ops Director",
   oemAdvisor:   "OEM Service Advisor",
   oemTech:      "Technician",
@@ -390,11 +390,11 @@ export default function WrenchIQApp() {
       roData: techDVIData,
     };
 
-    // GWG Corporate has its own full-screen layout — render directly without PersonaShell
-    if (activePersona === "gwgCorporate") {
+    // EWG Corporate has its own full-screen layout — render directly without PersonaShell
+    if (activePersona === "ewgCorporate") {
       return (
         <div style={{ height: "100vh", overflow: "hidden" }}>
-          <GWGCorporateScreen onExitPersona={() => {
+          <EWGCorporateScreen onExitPersona={() => {
             setActivePersona(null);
             setActiveScreen("dashboard");
           }} />

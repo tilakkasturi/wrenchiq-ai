@@ -110,16 +110,16 @@ export default function RepairOrderQueue({ onSelect }) {
 
       <div style={{ flex: 1, overflowY: "auto", padding: "4px 18px 16px" }}>
         {loading && customers.length === 0 && (
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", padding: "12px 0" }}>Loading queue…</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", padding: "12px 0" }}>Loading queue…</div>
         )}
         {!loading && sortedFiltered.length === 0 && (
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", padding: "12px 0" }}>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", padding: "12px 0" }}>
             {query ? `No ROs match "${query}"` : "No active repair orders in the queue."}
           </div>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {sortedFiltered.map((c) => {
-            const statusMeta = STATUS_LABEL[c.status] || { label: c.status || "Open", color: "rgba(255,255,255,0.4)" };
+            const statusMeta = STATUS_LABEL[c.status] || { label: c.status || "Open", color: "rgba(255,255,255,0.8)" };
             const vehicleLine = c.vehicle?.make
               ? `${c.vehicle.year || ""} ${c.vehicle.make} ${c.vehicle.model || ""}`.trim()
               : null;
@@ -146,7 +146,7 @@ export default function RepairOrderQueue({ onSelect }) {
                     {statusMeta.label}
                   </span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.8)" }}>
                   <span style={{ fontFamily: "monospace" }}>{c.roNumber || "—"}</span>
                   {vehicleLine && <><span>·</span><span>{vehicleLine}</span></>}
                   {valueScore && (

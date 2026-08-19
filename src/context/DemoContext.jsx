@@ -57,7 +57,7 @@ export const DEMO_SHOPS = {
     ownerName: "Dave Kowalski",
     ownerInitials: "DK",
     smsName: "Protractor",
-    corporateName: "GWG Auto Group",
+    corporateName: "EWG Auto Group",
     primaryCustomer: "Elena Vasquez",
     smsProvider: "protractor",
     advisorName: "James Kowalski",
@@ -105,13 +105,16 @@ function defaultModuleConfig() {
   return { edition: "am", modules }; // "am" | "oem" | "both"
 }
 
+// Hardcoded for the live demo — cross-window localStorage sync for the SMS
+// picker (Settings -> Integrations) isn't reliable in the Tauri build, so
+// every surface reading useDemo()'s smsName/smsProvider is pinned to
+// Protractor rather than risking a stale/inconsistent value mid-demo.
+const HARDCODED_SMS_NAME = "Protractor";
+const HARDCODED_SMS_PROVIDER = "protractor";
+
 const DEFAULTS = {
-  // Shop Management System selection defaults to Mitchell1 ShopManager SE
-  // regardless of which demo shop is active — set independently under
-  // Settings -> Learn -> Integrations and remembered via localStorage
-  // (below) across every surface that reads useDemo()'s smsName/smsProvider.
-  smsName:         "Mitchell1 ShopManager SE",
-  smsProvider:     "mitchell1",
+  smsName:         HARDCODED_SMS_NAME,
+  smsProvider:     HARDCODED_SMS_PROVIDER,
   // V5 feedback (C1): Read-only (default, included) vs Read+Write (premium
   // tier) SMS/DMS integration — gates write-back actions client-side; see
   // src/services/am3cSMSWritebackService.js call sites.
@@ -140,6 +143,8 @@ function load() {
     return {
       ...DEFAULTS,
       ...parsed,
+      smsName:     HARDCODED_SMS_NAME,
+      smsProvider: HARDCODED_SMS_PROVIDER,
       moduleConfig: {
         edition: parsed.moduleConfig?.edition ?? "am",
         modules: mergedModules,
@@ -166,12 +171,28 @@ function applyDemoQueryParam(cfg) {
       shopName:        shop.shopName,
       ownerName:       shop.ownerName,
       ownerInitials:   shop.ownerInitials,
-      smsName:         shop.smsName,
+      smsName:         HARDCODED_SMS_NAME,
       corporateName:   shop.corporateName,
       primaryCustomer: shop.primaryCustomer,
-      smsProvider:     shop.smsProvider,
+      smsProvider:     HARDCODED_SMS_PROVIDER,
       advisorName:     shop.advisorName,
     };
+    save(next);
+    return next;
+  } catch {
+    return cfg;
+  }
+}
+
+// ?sms=Protractor — passed explicitly when the Sidecar opens the Admin
+// Settings window (openSurfaceASettings in WrenchIQSidecarScreen.jsx), so
+// the Integrations dropdown there opens already matching the Sidecar's
+// current smsName instead of depending on the cross-window "storage" event.
+function applySmsQueryParam(cfg) {
+  try {
+    const name = new URLSearchParams(window.location.search).get("sms");
+    if (!name) return cfg;
+    const next = { ...cfg, smsName: name, smsProvider: smsNameToProvider(name) };
     save(next);
     return next;
   } catch {
@@ -188,7 +209,7 @@ export const SMS_PROVIDER_COLORS = {
 };
 
 export function DemoProvider({ children }) {
-  const [config, setConfig] = useState(() => applyDemoQueryParam(load()));
+  const [config, setConfig] = useState(() => applySmsQueryParam(applyDemoQueryParam(load())));
 
   // Cross-window sync: another window/tab (e.g. the sidecar) changing the
   // active demo shop writes to the shared localStorage key. The "storage"
@@ -205,7 +226,7 @@ export function DemoProvider({ children }) {
 
   const setDemo = useCallback((updates) => {
     setConfig(prev => {
-      const next = { ...prev, ...updates };
+      const next = { ...prev, ...updates, smsName: HARDCODED_SMS_NAME, smsProvider: HARDCODED_SMS_PROVIDER };
       // Auto-generate initials if ownerName changed and initials not explicitly set
       if (updates.ownerName && !updates.ownerInitials) {
         const parts = updates.ownerName.trim().split(/\s+/);

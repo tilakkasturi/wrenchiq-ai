@@ -625,7 +625,7 @@ export default function Job1IntakeScreen({ onNavigate, showIntelligencePanel = t
             </p>
           </div>
 
-          {/* GWG target tag */}
+          {/* EWG target tag */}
           <div
             style={{
               display: "flex",
@@ -636,7 +636,7 @@ export default function Job1IntakeScreen({ onNavigate, showIntelligencePanel = t
           >
             <Target size={12} color="#60A5FA" />
             <span style={{ fontSize: 11, color: "#60A5FA", fontWeight: 600 }}>
-              GWG Job 1 Target: &gt;90% first-visit accuracy
+              EWG Job 1 Target: &gt;90% first-visit accuracy
             </span>
           </div>
 

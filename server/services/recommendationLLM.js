@@ -4,6 +4,10 @@
  * Calls the configured LLM (see LLM_BASE_URL / LLM_MODEL in server/config.js)
  * to generate shop recommendations from a snapshot.
  * Model and token settings are read from server/config.js (set via .env.local).
+ *
+ * A single-call generation skill, not an agent — one completion per request
+ * (cached 15 min per shopId+edition by the route), no tool-calling. See
+ * docs/wrenchiq-agent-architecture-consolidation-proposal.md.
  */
 
 import {

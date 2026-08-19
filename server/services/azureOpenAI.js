@@ -32,7 +32,7 @@ import { getActiveLLMProfile, LLM_PROFILES } from './llmProviderConfig.js';
  *   different endpoint that doesn't have the requested model.
  * @returns {object} Raw Azure OpenAI response
  */
-export async function callAzureOpenAI({ system, messages, max_tokens, model, jsonMode = false, tools, _route, useConfiguredProvider = false, profileKey }) {
+export async function callAzureOpenAI({ system, messages, max_tokens, model, jsonMode = false, tools, _route, useConfiguredProvider = false, profileKey, temperature }) {
   let profile;
   if (profileKey) {
     profile = { profileKey, ...LLM_PROFILES[profileKey] };
@@ -67,6 +67,16 @@ export async function callAzureOpenAI({ system, messages, max_tokens, model, jso
 
   if (jsonMode) {
     body.response_format = { type: 'json_object' };
+  }
+
+  // Explicit opt-in only — most callers (chat, recommendations) want the
+  // backend's default sampling. temperature: 0 alone doesn't *guarantee*
+  // bit-identical output on every inference backend (continuous-batching
+  // servers like vLLM can still introduce tiny nondeterminism), so callers
+  // that need real agreement across repeated calls (e.g. threeCScoreService)
+  // cache by input hash on top of this rather than relying on it alone.
+  if (temperature !== undefined) {
+    body.temperature = temperature;
   }
 
   if (tools?.length) {
