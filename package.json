@@ -21,6 +21,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.86.1",
+    "@langchain/core": "^1.2.8",
+    "@langchain/openai": "~1.5.8",
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-notification": "^2.3.3",
     "@tauri-apps/plugin-opener": "^2.5.4",
