@@ -37,7 +37,7 @@ export const LLM_SKIP_TOOLS =
 // run clean: no new error classes per _route in llm_request_log, and the RO
 // Advisor tool loop completing without dropping to its single-pass fallback.
 export const LLM_ENGINE =
-  process.env.LLM_ENGINE === 'langchain' ? 'langchain' : 'legacy';
+  process.env.LLM_ENGINE === 'legacy' ? 'legacy' : 'langchain';
 
 // ── Azure OpenAI (legacy aliases — kept for any remaining imports) ─────────────
 export const AZURE_OPENAI_API_KEY = LLM_API_KEY;
