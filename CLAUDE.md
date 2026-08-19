@@ -43,6 +43,10 @@ bin/seed-batch                     # batch 1 (default)
 bin/seed-batch 2                   # batch 2
 bin/seed-batch --reset             # drop collection, re-seed
 
+# Tests (vitest — currently covers the LLM gateway only; see test/README.md)
+npm test
+npm run test:watch
+
 # Health check
 curl http://localhost:3001/api/health
 ```
@@ -113,6 +117,9 @@ Express 5, MongoDB. All Claude/Anthropic settings in `server/config.js` — read
 | `server/routes/recommendations.js` | POST `/api/recommendations` — 15-min TTL cache in MongoDB |
 | `server/routes/knowledgeGraph.js` | KG graph + `/api/knowledge-graph/ask` (Claude chat) |
 | `server/routes/repairOrders.js` | CRUD for RepairOrder collection |
+| `server/services/azureOpenAI.js` | **The single LLM gateway** — every server-side LLM call goes through `callAzureOpenAI()`. Returns the raw OpenAI-compatible JSON; callers read `choices[0].message`, `finish_reason` and `usage` directly, so keep it a passthrough. Dispatches on `LLM_ENGINE`. |
+| `server/services/azureOpenAILangChain.js` | Gateway implementation over `@langchain/openai` (default) |
+| `server/services/azureOpenAILegacy.js` | Original raw-`fetch` implementation, kept as the `LLM_ENGINE=legacy` rollback. Delete once LangChain has proven out — see the note in `config.js`. |
 | `server/services/snapshotBuilder.js` | Builds shop snapshot for recommendation engine; auto-rebases stale demo RO dates to today |
 | `server/services/recommendationLLM.js` | Calls Claude Haiku; strips meta-commentary and internal IDs from output |
 | `server/services/recommendationFallback.js` | Client-side rule engine when API returns 503 |
