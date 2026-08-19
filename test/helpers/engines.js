@@ -11,7 +11,7 @@
  */
 // Add 'langchain' here in the step that implements it (AE-1286 step 6) — that
 // one-line change turns every suite below into a legacy-vs-LangChain parity test.
-export const ENGINES = ['legacy'];
+export const ENGINES = ['legacy', undefined];
 
 /** Human label for describe() blocks. */
 export const engineLabel = (engine) => `LLM_ENGINE=${engine ?? '(default)'}`;

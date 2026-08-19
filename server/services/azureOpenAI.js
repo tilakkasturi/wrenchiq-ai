@@ -1,23 +1,31 @@
 /**
- * WrenchIQ — Azure OpenAI Helper
+ * WrenchIQ — LLM Gateway
  *
- * Thin fetch wrapper for Azure OpenAI chat completions.
- * Uses the OpenAI-compatible endpoint on Azure.
+ * The single entry point for every server-side LLM call. Returns the raw
+ * OpenAI-compatible chat-completions JSON: callers read choices[0].message
+ * (content and tool_calls), finish_reason, usage.*_tokens and model directly,
+ * so this stays a passthrough rather than normalising anything.
+ *
+ * LLM_ENGINE selects the client underneath — see server/config.js. Both engines
+ * build the same request and return the same shape; the flag exists as a
+ * rollback, not as a feature toggle.
  */
 
-import { logLLMRequest } from './llmLogger.js';
-import { getActiveLLMProfile, LLM_PROFILES } from './llmProviderConfig.js';
+import { LLM_ENGINE } from '../config.js';
+import { callAzureOpenAILegacy } from './azureOpenAILegacy.js';
 
 /**
- * Call Azure OpenAI chat completions.
+ * Call the LLM chat-completions endpoint.
  *
  * @param {object} opts
  * @param {string}   opts.system      - System prompt (optional)
  * @param {Array}    opts.messages    - Chat messages [{role, content}]
  * @param {number}   opts.max_tokens  - Max tokens in response
- * @param {string}   [opts.model]     - Model override (defaults to AZURE_OPENAI_MODEL)
+ * @param {string}   [opts.model]     - Model override (defaults to the profile's model)
  * @param {boolean}  [opts.jsonMode]  - Set response_format to json_object
  * @param {Array}    [opts.tools]     - OpenAI-format tool definitions
+ * @param {string}   [opts._route]    - Logging tag; the only observability key
+ *   into llm_request_log, so keep it stable per call site.
  * @param {boolean}  [opts.useConfiguredProvider] - Only the Chat feature
  *   (roChatService.js) opts into the Settings → Integrations "AI Engine"
  *   provider toggle. Every other caller (recommendations, ARO Agent, RO
@@ -30,110 +38,19 @@ import { getActiveLLMProfile, LLM_PROFILES } from './llmProviderConfig.js';
  *   profile the Settings toggle has active. Throws if that profile has no
  *   base URL configured, rather than silently falling through to a
  *   different endpoint that doesn't have the requested model.
- * @returns {object} Raw Azure OpenAI response
+ * @param {number}   [opts.temperature] - Omitted from the request entirely when
+ *   undefined, so the backend's own default applies.
+ * @returns {Promise<object>} Raw OpenAI-compatible response
  */
-export async function callAzureOpenAI({ system, messages, max_tokens, model, jsonMode = false, tools, _route, useConfiguredProvider = false, profileKey, temperature }) {
-  let profile;
-  if (profileKey) {
-    profile = { profileKey, ...LLM_PROFILES[profileKey] };
-    if (!profile.baseUrl) {
-      throw new Error(`LLM profile "${profileKey}" is not configured — set its base URL/key in .env.local`);
-    }
-  } else {
-    profile = useConfiguredProvider ? getActiveLLMProfile() : { profileKey: 'default', ...LLM_PROFILES.default };
-  }
-  const effectiveModel = model || profile.model;
-  // Strip trailing slash, then append the path.
-  // Endpoints ending in /v1 are OpenAI-compatible (Bearer auth, no api-version param).
-  // Azure deployment-style endpoints use api-key header + api-version query param.
-  const base = profile.baseUrl.replace(/\/$/, '');
-  const isV1Endpoint = base.endsWith('/v1') || base.endsWith('/openai/v1');
-  const url = isV1Endpoint
-    ? `${base}/chat/completions`
-    : `${base}/chat/completions?api-version=${profile.apiVersion}`;
-
-  const oaiMessages = [];
-  if (system) oaiMessages.push({ role: 'system', content: system });
-  oaiMessages.push(...messages);
-
-  const body = {
-    model:      effectiveModel,
-    messages:   oaiMessages,
-    // Newer OpenAI-family models (gpt-5.x, o1, o3, ...) reject `max_tokens`
-    // and require `max_completion_tokens` instead — the API's error is
-    // explicit about this, so match on model name rather than guessing.
-    ...(/^(gpt-5|o1|o3)/i.test(effectiveModel) ? { max_completion_tokens: max_tokens } : { max_tokens }),
-  };
-
-  if (jsonMode) {
-    body.response_format = { type: 'json_object' };
-  }
-
-  // Explicit opt-in only — most callers (chat, recommendations) want the
-  // backend's default sampling. temperature: 0 alone doesn't *guarantee*
-  // bit-identical output on every inference backend (continuous-batching
-  // servers like vLLM can still introduce tiny nondeterminism), so callers
-  // that need real agreement across repeated calls (e.g. threeCScoreService)
-  // cache by input hash on top of this rather than relying on it alone.
-  if (temperature !== undefined) {
-    body.temperature = temperature;
-  }
-
-  if (tools?.length) {
-    body.tools = tools;
-  }
-
-  // OpenAI-compatible (/v1) uses Bearer auth; Azure deployment-style uses api-key header.
-  // Local servers with no key: omit the auth header entirely to avoid rejected requests.
-  const authHeader = profile.apiKey
-    ? isV1Endpoint
-      ? { 'Authorization': `Bearer ${profile.apiKey}` }
-      : { 'api-key': profile.apiKey }
-    : {};
-
-  const t0 = Date.now();
-  let res;
-  try {
-    res = await fetch(url, {
-      method:  'POST',
-      headers: {
-        ...authHeader,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-  } catch (fetchErr) {
-    const dur = Date.now() - t0;
-    logLLMRequest({ provider: 'llm', route: _route, model: effectiveModel, durationMs: dur, status: 'error', error: fetchErr.message }).catch(() => {});
-    throw fetchErr;
-  }
-
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '(no body)');
-    const dur = Date.now() - t0;
-    logLLMRequest({ provider: 'llm', route: _route, model: effectiveModel, durationMs: dur, status: 'error', error: `${res.status}: ${errBody}` }).catch(() => {});
-    throw new Error(`LLM error ${res.status}: ${errBody}`);
-  }
-
-  const data = await res.json();
-  const dur = Date.now() - t0;
-  const usage = data.usage || {};
-  logLLMRequest({
-    provider: 'llm',
-    route: _route,
-    model: effectiveModel,
-    promptTokens: usage.prompt_tokens,
-    completionTokens: usage.completion_tokens,
-    totalTokens: usage.total_tokens,
-    durationMs: dur,
-    status: 'ok',
-  }).catch(() => {});
-
-  return data;
+export async function callAzureOpenAI(opts) {
+  // The LangChain path lands in the next commit; until then both values resolve
+  // to the same implementation, so the flag itself can be exercised safely.
+  if (LLM_ENGINE === 'legacy') return callAzureOpenAILegacy(opts);
+  return callAzureOpenAILegacy(opts);
 }
 
 /**
- * Extract text from an Azure OpenAI chat completions response.
+ * Extract text from a chat-completions response.
  */
 export function getTextFromResponse(data) {
   return data.choices?.[0]?.message?.content || '';
