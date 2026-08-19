@@ -13,6 +13,7 @@
 
 import { LLM_ENGINE } from '../config.js';
 import { callAzureOpenAILegacy } from './azureOpenAILegacy.js';
+import { callAzureOpenAILangChain } from './azureOpenAILangChain.js';
 
 /**
  * Call the LLM chat-completions endpoint.
@@ -43,10 +44,8 @@ import { callAzureOpenAILegacy } from './azureOpenAILegacy.js';
  * @returns {Promise<object>} Raw OpenAI-compatible response
  */
 export async function callAzureOpenAI(opts) {
-  // The LangChain path lands in the next commit; until then both values resolve
-  // to the same implementation, so the flag itself can be exercised safely.
   if (LLM_ENGINE === 'legacy') return callAzureOpenAILegacy(opts);
-  return callAzureOpenAILegacy(opts);
+  return callAzureOpenAILangChain(opts);
 }
 
 /**
