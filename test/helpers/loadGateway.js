@@ -17,7 +17,7 @@ import { vi } from 'vitest';
  * @param {object} options
  * @param {Record<string, object>} options.profiles  Synthetic LLM_PROFILES map.
  * @param {string} [options.activeProfile]  What getActiveLLMProfile() returns (default 'default').
- * @param {string} [options.engine]  'legacy' | 'langchain' — sets LLM_ENGINE before import.
+ * @param {string} [options.engine]  'loop' | 'langchain' — sets LLM_ENGINE before import.
  * @returns {Promise<{gateway: object, logCalls: Array}>} `logCalls` accumulates
  *   every logLLMRequest() argument object, in call order.
  */

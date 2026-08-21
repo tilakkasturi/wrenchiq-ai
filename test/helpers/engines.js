@@ -11,7 +11,7 @@
  */
 // `undefined` exercises the module default, so the suite also proves the default
 // is what we think it is rather than only testing explicit values.
-export const ENGINES = ['legacy', 'langchain', undefined];
+export const ENGINES = ['loop', 'langchain', undefined];
 
 /** Human label for describe() blocks. */
 export const engineLabel = (engine) => `LLM_ENGINE=${engine ?? '(default)'}`;
