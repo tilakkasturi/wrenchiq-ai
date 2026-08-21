@@ -6,7 +6,8 @@ npm run test:watch
 ```
 
 vitest, plain ESM, Node 20. Introduced in AE-1286 to make the LangChain gateway
-migration verifiable; the LLM gateway is currently the only covered area.
+migration verifiable. Two areas are covered: the LLM gateway, and the RO Advisor
+agent that sits on top of it.
 
 ## Layout
 
@@ -16,9 +17,11 @@ migration verifiable; the LLM gateway is currently the only covered area.
 | `helpers/loadGateway.js` | Loads the gateway with synthetic profiles and a captured logger. |
 | `helpers/stubProvider.js` | A real local HTTP server standing in for the LLM. |
 | `helpers/engines.js` | The `LLM_ENGINE` values every suite runs over. |
+| `helpers/loadROAdvisor.js` | Loads the RO Advisor with both flags set, plus its RO/vehicle/result fixtures. |
 | `fixtures/callSites.js` | The argument shape of all 15 production LLM call sites. |
 | `gateway.*.test.js` | Request, response, quirks, errors, lifecycle. |
 | `health.test.js` | `checkLLMHealth`. |
+| `roAdvisor.agent.test.js` | The agent's tool loop, over every `LLM_ENGINE`. |
 
 ## Two hazards `setup.js` works around
 
@@ -60,8 +63,28 @@ When a new server-side LLM call is added, add its arguments to
 picks it up automatically. `_route` is the only observability key into
 `llm_request_log`, so it should be stable and unique per call site.
 
+## Adding a runtime to the RO Advisor
+
+`roAdvisor.agent.test.js` runs every assertion over each value of
+`LLM_ENGINE`, so a new runtime is added to its `RUNTIMES` array and has to
+satisfy the existing suite rather than bring its own. What the suite pins is the
+contract the Sidecar depends on — summed `usage`, the five `dataSourced`
+counters, the captured `model` — plus the wire shapes a framework tends to
+"helpfully" alter: `content: null` on a replayed assistant turn, byte-intact
+tools, and no extra top-level or per-message fields.
+
+Two things to know before scripting turns:
+
+- **Give each canned completion its own `id`.** LangGraph's message state is a
+  reducer keyed on message id, so reusing one makes a later turn *overwrite* an
+  earlier one instead of appending — the run then looks plausible while testing a
+  conversation that cannot happen.
+- **`startStubProvider({ responses: [...] })`** serves bodies in order, repeating
+  the last, which is what makes a multi-turn run scriptable at all.
+
 ## What is not covered
 
 Route handlers, prompt construction, MongoDB access, and everything browser-side.
-The gateway was scoped first because it is the seam the migration moves; the rest
-has no tests yet.
+The gateway was scoped first because it is the seam the migration moves, and the
+RO Advisor second because it is the only tool-calling agent; the rest has no
+tests yet.
