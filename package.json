@@ -29,6 +29,7 @@
     "concurrently": "^10.0.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "langchain": "^1.5.10",
     "lucide-react": "^0.474.0",
     "mongodb": "^7.1.1",
     "react": "^19.0.0",
