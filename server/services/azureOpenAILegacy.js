@@ -2,7 +2,7 @@
  * WrenchIQ — Legacy raw-fetch LLM gateway
  *
  * The original implementation of callAzureOpenAI, moved here unchanged when the
- * LangChain path landed (AE-1286). Reachable by setting LLM_ENGINE=legacy, as a
+ * LangChain path landed (AE-1286). Reachable by setting LLM_ENGINE=loop, as a
  * no-rebuild rollback.
  *
  * Do not add features here. Fixes belong in azureOpenAI.js; this file exists to

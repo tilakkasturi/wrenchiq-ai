@@ -44,7 +44,7 @@ import { callAzureOpenAILangChain } from './azureOpenAILangChain.js';
  * @returns {Promise<object>} Raw OpenAI-compatible response
  */
 export async function callAzureOpenAI(opts) {
-  if (LLM_ENGINE === 'legacy') return callAzureOpenAILegacy(opts);
+  if (LLM_ENGINE === 'loop') return callAzureOpenAILegacy(opts);
   return callAzureOpenAILangChain(opts);
 }
 

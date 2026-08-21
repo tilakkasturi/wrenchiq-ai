@@ -40,7 +40,7 @@
  */
 
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
-import { LLM_SKIP_TOOLS } from '../config.js';
+import { LLM_SKIP_TOOLS, LLM_ENGINE } from '../config.js';
 import { getCannedJobs } from './cannedJobsService.js';
 import { getShopProfileSnapshot } from './shopProfileSnapshotService.js';
 import { getTSBsForVehicle } from './nhtsaTsbService.js';
@@ -342,7 +342,7 @@ function cleanCustomerMessage(result, ro) {
 
 // ── Tool definitions (OpenAI format) ─────────────────────────────────────────
 
-const RO_TOOLS = [
+export const RO_TOOLS = [
   {
     type: 'function',
     function: {
@@ -462,7 +462,7 @@ const RO_TOOLS = [
 
 // ── System prompt ─────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(ro, vehicle, shopName, shopProfile) {
+export function buildSystemPrompt(ro, vehicle, shopName, shopProfile) {
   const vehicleStr = vehicle
     ? `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''} — ${(vehicle.mileage || 0).toLocaleString()} miles`
     : 'vehicle details not available';
@@ -554,7 +554,7 @@ Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
 
 // ── Tool executor (synchronous — data pre-loaded) ─────────────────────────────
 
-function executeTool(name, args, preloaded) {
+export function executeTool(name, args, preloaded) {
   switch (name) {
     case 'get_customer_history':
       return {
@@ -728,7 +728,7 @@ Now produce the JSON recommendation object.`;
 // single agent run — the tool-calling loop makes one call per turn (5 tool
 // rounds + 1 synthesis round is typical), so usage must be summed, not just
 // read off the last response.
-function addUsage(running, usage) {
+export function addUsage(running, usage) {
   const u = usage || {};
   const base = running || { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
   return {
@@ -738,10 +738,79 @@ function addUsage(running, usage) {
   };
 }
 
+// ── Shared setup and teardown (both runtimes) ────────────────────────────────
+
+const SHOP_NAME = 'Cornerstone Auto Group';
+
+/**
+ * Everything both runtimes need before the first LLM call: a normalized vehicle,
+ * a resolved shop profile, and the pre-fetched bundle executeTool reads.
+ *
+ * @returns {Promise<{ vehicle: object, shopProfile: object, preloaded: object }>}
+ */
+async function preloadAdvisorContext({ ro, customer, vehicle, shopId = 'shop-001', db, shopProfile }) {
+  const customerId = customer?.id || customer?.customerId || ro?.customerId;
+
+  // Story ROs store the odometer reading as `vehicle.odometer`; only the
+  // Kanban-normalized `_vehicle` shape uses `mileage`. Normalize here so
+  // every downstream read (system prompt, get_mileage_services) sees a
+  // real number instead of silently defaulting to 0.
+  const normalizedVehicle = vehicle
+    ? { ...vehicle, mileage: vehicle.mileage ?? vehicle.odometer ?? 0 }
+    : vehicle;
+
+  const currentSeason = getCurrentSeasonName();
+
+  // Pre-fetch data in parallel — each is tolerant of failure
+  const [history, objectives, cannedJobs, resolvedShopProfile, seasonalTrends, tsbs] = await Promise.all([
+    fetchCustomerHistory(customerId, db),
+    fetchShopObjectives(shopId, db),
+    getCannedJobs(db, shopId),
+    shopProfile ? Promise.resolve(shopProfile) : fetchShopProfile(shopId, db),
+    fetchSeasonalTrends(shopId, db),
+    fetchTSBs(normalizedVehicle?.make, normalizedVehicle?.model, normalizedVehicle?.year, db),
+  ]);
+
+  return {
+    vehicle: normalizedVehicle,
+    shopProfile: resolvedShopProfile,
+    preloaded: { history, objectives, cannedJobs, seasonalTrends, tsbs, currentSeason, ro },
+  };
+}
+
+/**
+ * Shape a raw LLM result into the response envelope every caller depends on.
+ *
+ * WrenchIQSidecarScreen.jsx reads every field here — its Agent Trace tab prices
+ * off `usage.promptTokens`/`usage.completionTokens`/`model` and renders the five
+ * `dataSourced` counters — so this is the contract, not a convenience.
+ */
+function finishAdvisorResult(result, ro, preloaded, usage, model) {
+  const cleaned = cleanCustomerMessage(filterExistingServices(result, ro), ro);
+
+  return {
+    ...cleaned,
+    generatedAt: new Date().toISOString(),
+    dataSourced: {
+      historyVisits:           preloaded.history.length,
+      objectivesCount:         preloaded.objectives.length,
+      cannedJobsCount:         preloaded.cannedJobs.length,
+      seasonalTrendsAvailable: preloaded.seasonalTrends.length > 0,
+      tsbCount:                preloaded.tsbs.length,
+    },
+    usage,
+    model,
+  };
+}
+
 // ── Main agent runner ─────────────────────────────────────────────────────────
 
 /**
  * Run the RO Advisor Agent for a specific repair order.
+ *
+ * Dispatches on LLM_ENGINE: runLangChainROAdvisorAgent by default, or the
+ * hand-rolled tool loop below when the flag selects 'loop' as a rollback.
+ * Both produce the same envelope — see config.js.
  *
  * @param {object} ro        - Current repair order object
  * @param {object} customer  - Customer record
@@ -753,43 +822,18 @@ function addUsage(running, usage) {
  *   self-sufficient. roAdvisor.js passes its own already-fetched shopConfig to avoid a duplicate query.
  * @returns {Promise<{ advisorBrief, serviceRecommendations, ings, alerts, generatedAt }>}
  */
-export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-001', db, shopProfile }) {
-  const customerId = customer?.id || customer?.customerId || ro?.customerId;
-  const shopName   = 'Cornerstone Auto Group';
+export async function runROAdvisorAgent(opts) {
+  if (LLM_ENGINE === 'langchain') return runLangChainROAdvisorAgent(opts);
 
-  // Story ROs store the odometer reading as `vehicle.odometer`; only the
-  // Kanban-normalized `_vehicle` shape uses `mileage`. Normalize here so
-  // every downstream read (system prompt, get_mileage_services) sees a
-  // real number instead of silently defaulting to 0.
-  vehicle = vehicle ? { ...vehicle, mileage: vehicle.mileage ?? vehicle.odometer ?? 0 } : vehicle;
-
-  const currentSeason = getCurrentSeasonName();
-
-  // Pre-fetch data in parallel — each is tolerant of failure
-  const [history, objectives, cannedJobs, resolvedShopProfile, seasonalTrends, tsbs] = await Promise.all([
-    fetchCustomerHistory(customerId, db),
-    fetchShopObjectives(shopId, db),
-    getCannedJobs(db, shopId),
-    shopProfile ? Promise.resolve(shopProfile) : fetchShopProfile(shopId, db),
-    fetchSeasonalTrends(shopId, db),
-    fetchTSBs(vehicle?.make, vehicle?.model, vehicle?.year, db),
-  ]);
-  shopProfile = resolvedShopProfile;
-
-  const preloaded = { history, objectives, cannedJobs, seasonalTrends, tsbs, currentSeason, ro };
+  const { ro } = opts;
+  const shopName = SHOP_NAME;
+  const { vehicle, shopProfile, preloaded } = await preloadAdvisorContext(opts);
 
   // If the LLM server doesn't support tool_calls, go straight to single-pass
   if (LLM_SKIP_TOOLS) {
     console.log('[roAdvisor] LLM_SKIP_TOOLS=true — using single-pass prompt');
-    const single = await runSinglePassAgent(ro, vehicle, 'Cornerstone Auto Group', preloaded, shopProfile);
-    const result = cleanCustomerMessage(filterExistingServices(single.result, ro), ro);
-    return {
-      ...result,
-      generatedAt: new Date().toISOString(),
-      dataSourced: { historyVisits: history.length, objectivesCount: objectives.length, cannedJobsCount: cannedJobs.length, seasonalTrendsAvailable: seasonalTrends.length > 0, tsbCount: tsbs.length },
-      usage: single.usage,
-      model: single.model,
-    };
+    const single = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
+    return finishAdvisorResult(single.result, ro, preloaded, single.usage, single.model);
   }
 
   const messages = [
@@ -883,19 +927,50 @@ export async function runROAdvisorAgent({ ro, customer, vehicle, shopId = 'shop-
     model  = model || single.model;
   }
 
-  result = cleanCustomerMessage(filterExistingServices(result, ro), ro);
+  return finishAdvisorResult(result, ro, preloaded, usage, model);
+}
 
-  return {
-    ...result,
-    generatedAt:   new Date().toISOString(),
-    dataSourced: {
-      historyVisits:   history.length,
-      objectivesCount: objectives.length,
-      cannedJobsCount: cannedJobs.length,
-      seasonalTrendsAvailable: seasonalTrends.length > 0,
-      tsbCount: tsbs.length,
-    },
-    usage,
-    model,
-  };
+/**
+ * Run the RO Advisor Agent with the tool loop driven by LangChain's createAgent
+ * instead of the hand-rolled loop above — same tools, same prompt, same
+ * envelope. Selected by default (LLM_ENGINE=langchain); LLM_ENGINE=loop
+ * selects the hand-rolled loop above instead.
+ *
+ * Takes the same arguments and honours the same LLM_SKIP_TOOLS short-circuit and
+ * single-pass fallback, so it is a drop-in substitute rather than a variant.
+ * See roAdvisorLangChainAgent.js for the loop itself and its known divergences.
+ *
+ * @param {object} opts - Identical to runROAdvisorAgent.
+ */
+export async function runLangChainROAdvisorAgent(opts) {
+  const { ro } = opts;
+  const { vehicle, shopProfile, preloaded } = await preloadAdvisorContext(opts);
+
+  if (LLM_SKIP_TOOLS) {
+    console.log('[roAdvisor] LLM_SKIP_TOOLS=true — using single-pass prompt');
+    const single = await runSinglePassAgent(ro, vehicle, SHOP_NAME, preloaded, shopProfile);
+    return finishAdvisorResult(single.result, ro, preloaded, single.usage, single.model);
+  }
+
+  // Imported lazily so the default path never loads langchain/langgraph at all.
+  const { runCreateAgentLoop } = await import('./roAdvisorLangChainAgent.js');
+
+  const run = await runCreateAgentLoop({
+    system: buildSystemPrompt(ro, vehicle, SHOP_NAME, shopProfile),
+    preloaded,
+  });
+
+  if (run.result) {
+    return finishAdvisorResult(run.result, ro, preloaded, run.usage, run.model);
+  }
+
+  // No parseable JSON — same degradation as the hand-rolled loop, and the tokens
+  // the failed run already spent are carried into the total rather than dropped.
+  const single = await runSinglePassAgent(ro, vehicle, SHOP_NAME, preloaded, shopProfile);
+  const usage = addUsage(run.usage, {
+    prompt_tokens:     single.usage?.promptTokens,
+    completion_tokens: single.usage?.completionTokens,
+    total_tokens:      single.usage?.totalTokens,
+  });
+  return finishAdvisorResult(single.result, ro, preloaded, usage, run.model || single.model);
 }

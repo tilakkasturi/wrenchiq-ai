@@ -27,17 +27,21 @@ export const LLM_MODEL =
 export const LLM_SKIP_TOOLS =
   process.env.LLM_SKIP_TOOLS === 'true' || process.env.LLM_SKIP_TOOLS === '1';
 
-// Which client the LLM gateway uses underneath. 'langchain' routes through
-// @langchain/openai; 'legacy' restores the original raw-fetch implementation in
-// server/services/azureOpenAILegacy.js. Both build the same request and return
-// the same raw provider JSON — this exists purely as a no-rebuild rollback if
-// the LangChain path misbehaves against a self-hosted model (AE-1286).
+// Which runtime the LLM gateway AND the RO Advisor's tool loop use
+// underneath. 'langchain' routes the gateway through @langchain/openai and
+// the RO Advisor's tool-calling loop through LangChain's createAgent
+// (roAdvisorLangChainAgent.js); 'loop' is the combined no-rebuild rollback —
+// the gateway's original raw-fetch implementation (azureOpenAILegacy.js) and
+// the RO Advisor's own hand-rolled finish_reason loop (roAdvisorService.js).
+// Both values build the same requests and return the same shapes, so this is
+// a soak switch, not a feature toggle (AE-1286).
 //
-// Remove this flag, and delete azureOpenAILegacy.js, once the LangChain path has
-// run clean: no new error classes per _route in llm_request_log, and the RO
-// Advisor tool loop completing without dropping to its single-pass fallback.
+// Remove this flag, delete azureOpenAILegacy.js, and delete the hand-rolled
+// loop, once the langchain path has run clean: no new error classes per
+// _route in llm_request_log, and the RO Advisor tool loop completing without
+// dropping to its single-pass fallback.
 export const LLM_ENGINE =
-  process.env.LLM_ENGINE === 'legacy' ? 'legacy' : 'langchain';
+  process.env.LLM_ENGINE === 'loop' ? 'loop' : 'langchain';
 
 // ── Azure OpenAI (legacy aliases — kept for any remaining imports) ─────────────
 export const AZURE_OPENAI_API_KEY = LLM_API_KEY;
