@@ -22,6 +22,8 @@ agent that sits on top of it.
 | `gateway.*.test.js` | Request, response, quirks, errors, lifecycle. |
 | `health.test.js` | `checkLLMHealth`. |
 | `roAdvisor.agent.test.js` | The agent's tool loop, over every `LLM_ENGINE`. |
+| `langfuseTracing.test.js` | `langfuseTracing.js`'s own env-gating and OTEL bootstrap, in isolation (Langfuse/OTEL packages mocked). |
+| `roAdvisor.langfuse.test.js` | Proves the LangChain tool loop actually calls `buildLangfuseHandler()` and feeds the result into `agent.invoke`'s callbacks — `LLM_ENGINE=langchain` only. |
 
 ## Two hazards `setup.js` works around
 
@@ -32,10 +34,11 @@ agent that sits on top of it.
    worker with no useful message. The module is mocked out.
 
 2. **The LLM SDKs read the environment.** `@langchain/openai` and `openai@6` both
-   fall back to `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `AZURE_OPENAI_*` and the
-   LangSmith variables. A developer's real `.env.local` could otherwise make a
-   test pass, or send real traffic. Those are deleted, and `fetch` is restricted
-   to loopback so anything leaving the machine fails loudly.
+   fall back to `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `AZURE_OPENAI_*`, the
+   LangSmith variables, and (since AE-1319) `LANGFUSE_*`. A developer's real
+   `.env.local` could otherwise make a test pass, or send real traffic. Those
+   are deleted, and `fetch` is restricted to loopback so anything leaving the
+   machine fails loudly.
 
 If a future SDK version starts reading a *new* variable, the isolation tests in
 `gateway.lifecycle.test.js` are what should catch it.

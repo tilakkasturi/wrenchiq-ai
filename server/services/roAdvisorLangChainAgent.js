@@ -55,6 +55,7 @@ import OpenAI from 'openai';
 import { logLLMRequest } from './llmLogger.js';
 import { LLM_PROFILES } from './llmProviderConfig.js';
 import { RO_TOOLS, executeTool, addUsage } from './roAdvisorService.js';
+import { buildLangfuseHandler } from './langfuseTracing.js';
 
 /** Same observability tag the hand-rolled loop logs under. */
 const ROUTE = '/api/agent/ro-advisor';
@@ -357,6 +358,8 @@ function elapsed(startedAt, runId) {
 export async function runCreateAgentLoop({ system, preloaded }) {
   const { chat, model } = buildChatModel();
   const { handler, collected } = makeCollector(model);
+  const langfuseHandler = await buildLangfuseHandler({ tags: ['ro-advisor'] });
+  const callbacks = langfuseHandler ? [handler, langfuseHandler] : [handler];
 
   const agent = createAgent({
     model: chat,
@@ -373,7 +376,7 @@ export async function runCreateAgentLoop({ system, preloaded }) {
           content: 'Analyze this repair order and produce recommendations for the service advisor.',
         }],
       },
-      { recursionLimit: MAX_MODEL_CALLS * 2, callbacks: [handler] },
+      { recursionLimit: MAX_MODEL_CALLS * 2, callbacks },
     );
   } catch (err) {
     console.warn('[roAdvisor] createAgent run failed, falling back to single-pass:', err.message);
