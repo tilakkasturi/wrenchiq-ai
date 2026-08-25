@@ -18,9 +18,13 @@ import { vi } from 'vitest';
  * @param {string} [options.engine]  'loop' | 'langchain' — sets LLM_ENGINE, which drives both
  *   the gateway client and the RO Advisor's tool-calling runtime.
  * @param {boolean} [options.skipTools]  Sets LLM_SKIP_TOOLS.
+ * @param {Function} [options.buildLangfuseHandler]  Replaces
+ *   langfuseTracing.js's export wholesale (e.g. `vi.fn(async () => fakeHandler)`)
+ *   so a test can control/observe it without touching real Langfuse/OTEL
+ *   packages or LANGFUSE_* env vars.
  * @returns {Promise<{service: object, logCalls: Array}>}
  */
-export async function loadROAdvisor({ profiles, engine, skipTools } = {}) {
+export async function loadROAdvisor({ profiles, engine, skipTools, buildLangfuseHandler } = {}) {
   vi.resetModules();
 
   setEnv('LLM_ENGINE', engine);
@@ -30,6 +34,10 @@ export async function loadROAdvisor({ profiles, engine, skipTools } = {}) {
   vi.doMock('../../server/services/llmLogger.js', () => ({
     logLLMRequest: async (entry) => { logCalls.push(entry); },
   }));
+
+  if (buildLangfuseHandler) {
+    vi.doMock('../../server/services/langfuseTracing.js', () => ({ buildLangfuseHandler }));
+  }
 
   if (profiles) {
     vi.doMock('../../server/services/llmProviderConfig.js', () => ({

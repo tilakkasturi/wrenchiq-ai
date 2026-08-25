@@ -115,6 +115,24 @@ export const API_PORT =
 export const RO_NER_BASE_URL =
   process.env.RO_NER_BASE_URL || 'http://localhost:8090';
 
+// ── Langfuse (RO Advisor tracing — LangChain runtime only) ─────────────────────
+// Traces the RO Advisor's createAgent tool loop (roAdvisorLangChainAgent.js /
+// langfuseTracing.js), which only runs under LLM_ENGINE=langchain (the
+// default) — the hand-rolled LLM_ENGINE=loop runtime and the single-pass
+// fallback are unaffected. Opt-in and off by default: LANGFUSE_ENABLED must be
+// explicitly truthy AND both keys must be set, otherwise the run proceeds
+// untraced rather than failing (AE-1319).
+const langfuseFlagRaw = process.env.LANGFUSE_ENABLED;
+export const LANGFUSE_ENABLED =
+  langfuseFlagRaw === 'true' || langfuseFlagRaw === '1';
+
+export const LANGFUSE_PUBLIC_KEY = process.env.LANGFUSE_PUBLIC_KEY;
+export const LANGFUSE_SECRET_KEY = process.env.LANGFUSE_SECRET_KEY;
+
+// Self-hosted Langfuse instance URL — leave unset to use Langfuse Cloud
+// (LangfuseSpanProcessor's own default).
+export const LANGFUSE_BASE_URL = process.env.LANGFUSE_BASE_URL;
+
 // ── NHTSA TSB API ────────────────────────────────────────────────────────────
 // Free, public, no API key required. Configurable because this environment
 // has no outbound network access to verify the exact path segments against
