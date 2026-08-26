@@ -11,12 +11,12 @@ definitions:
   steps:
     - step: &BUILD
         name: build
-
+        image: node:24
         script:
           - chmod 755 build/*.sh
-          - ./build/package.sh next-gen
+          - ./build/package.sh wrenchiq
         artifacts:
-          - bin/next-gen.tar.gz
+          - bin/wrenchiq.tar.gz
 
     - step: &BINARY
         fail-fast: true
@@ -24,52 +24,44 @@ definitions:
         image: atlassian/default-image:2
         script:
           - chmod 755 build/*.sh
-          - ./build/binary.sh next-gen
+          - ./build/binary.sh wrenchiq
         artifacts:
-          - bin/next-gen/**
+          - bin/wrenchiq/**
 
-    - step: &DEPLOY_DEV
-        name: Deploy [DEV]
-        image:
-          name: prediibitbucket.azurecr.io/predii-azcopy:latest
-          username: $ACR_USERNAME
-          password: $ACR_PASSWORD
-        # trigger: manual
-        deployment: Test
-        script:
-          - chmod 755 build/*.sh
-          - ./build/deploy.sh DEV next-gen
-
-    - step: &DEPLOY_UAT
-        name: Deploy [UAT]
+    - step: &DEPLOY_DEV_WRENCHIQ
+        name: Deploy [DEV_WRENCHIQ]
         image:
           name: prediibitbucket.azurecr.io/predii-azcopy:latest
           username: $ACR_USERNAME
           password: $ACR_PASSWORD
         trigger: manual
-        deployment: Staging
+        deployment: DEV_WRENCHIQ
         script:
           - chmod 755 build/*.sh
-          - ./build/deploy.sh UAT next-gen
+          - ./build/deploy.sh DEV wrenchiq
+          - bash build/trigger_k8s.sh DEV
 
-    - step: &DEPLOY_PROD
-        name: Deploy [PROD]
-        image:
-          name: prediibitbucket.azurecr.io/predii-azcopy:latest
-          username: $ACR_USERNAME
-          password: $ACR_PASSWORD
+    - step: &DEPLOY_UAT_WRENCHIQ
+        name: Deploy [UAT_WRENCHIQ]
+        image: atlassian/default-image:4
         trigger: manual
-        deployment: Production
+        deployment: UAT_WRENCHIQ
         script:
-          - chmod 755 build/*.sh
-          - ./build/deploy.sh PROD next-gen
+          - chmod 755 build/trigger_k8s.sh
+ #         - bash build/trigger_k8s.sh UAT
+
+    - step: &DEPLOY_PROD_WRENCHIQ
+        name: Deploy [PROD_WRENCHIQ]
+        image: atlassian/default-image:4
+        trigger: manual
+        deployment: PROD_WRENCHIQ
+        script:
+          - chmod 755 build/trigger_k8s.sh
+ #         - bash build/trigger_k8s.sh PROD
 
 pipelines:
   branches:
-    master:
-      - step: *BUILD
-
-    "release/*":
+    main:
       - step: *BUILD
 
   pull-requests:
@@ -80,6 +72,8 @@ pipelines:
     "*":
       - step: *BUILD
       - step: *BINARY
-      - step: *DEPLOY_DEV
-      - step: *DEPLOY_UAT
-      - step: *DEPLOY_PROD
+      - parallel:
+          steps:
+            - step: *DEPLOY_DEV_WRENCHIQ
+            - step: *DEPLOY_UAT_WRENCHIQ
+            - step: *DEPLOY_PROD_WRENCHIQ
