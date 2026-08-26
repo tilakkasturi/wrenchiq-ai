@@ -37,7 +37,7 @@ export default function RepairOrderQueue({ onSelect }) {
   // alongside the Gold Standard hygiene score shown once an RO is open —
   // this is the queue-level view of it (see roValueScoreService.js).
   const [valueScores, setValueScores] = useState({});
-  const [sortByValue, setSortByValue] = useState(false);
+  const [sortByValue, setSortByValue] = useState(true);
 
   useEffect(() => {
     if (customers.length === 0) return;
@@ -122,6 +122,7 @@ export default function RepairOrderQueue({ onSelect }) {
             const statusMeta = STATUS_LABEL[c.status] || { label: c.status || "Open", color: "rgba(255,255,255,0.8)" };
             const vehicleLine = c.vehicle?.make
               ? `${c.vehicle.year || ""} ${c.vehicle.make} ${c.vehicle.model || ""}`.trim()
+                + (c.vehicle.mileage != null ? ` — ${c.vehicle.mileage.toLocaleString()} mi` : "")
               : null;
             const valueScore = valueScores[c.roNumber];
             return (

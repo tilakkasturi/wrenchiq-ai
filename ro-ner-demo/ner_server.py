@@ -6,6 +6,7 @@ import json
 import os
 import random
 import re
+import time
 from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -52,6 +53,67 @@ LLM_MODEL = cfg["endpoints"]["llm"].get("model", "llama3.2")
 # "/v1/v1/chat/completions" whenever the env override was in effect.
 LLM_BASE_ROOT = LLM_BASE[:-3] if LLM_BASE.endswith("/v1") else LLM_BASE
 LLM_BASE_V1 = LLM_BASE if LLM_BASE.endswith("/v1") else f"{LLM_BASE}/v1"
+
+# ── Follow the WrenchIQ Sidecar's primary/secondary LLM endpoint switch ────────
+# LLM_BASE(_ROOT/_V1)/LLM_MODEL above are the static startup fallback only.
+# The next-gen server can switch which physical LLM box "Predii LLM" points
+# at (vLLM primary vs. sglang secondary) at runtime, from the WrenchIQ Home /
+# Health Check screen — without this, a shop could switch the Sidecar to the
+# sglang box and Predii Learn's NER extraction would silently keep calling
+# the vLLM box. Resolve the *currently active* endpoint from the main
+# server's own GET /api/llm-provider-config on every call (short-TTL cached
+# so this doesn't add a network round-trip per NER request), falling back to
+# the static values above when that server is unreachable (e.g. running this
+# service standalone, without the Node app up).
+#
+# GET /api/llm-provider-config never returns apiKey values (by design — see
+# llmProviderConfig.js), so the key for whichever endpoint comes back is
+# looked up locally from this same process's own env (bin/ro-ner-demo already
+# sources the repo's .env.local before launching this script), matched by
+# base URL rather than trusted blindly from the Node response.
+WRENCHIQ_API_BASE = os.environ.get("VITE_API_BASE") or f"http://localhost:{os.environ.get('API_PORT', '3001')}"
+_ENDPOINT_KEYS = {
+    (os.environ.get("LLM_BASE_URL") or "").rstrip("/"): os.environ.get("LLM_API_KEY", ""),
+    (os.environ.get("LLM_BASE_URL2") or "").rstrip("/"): os.environ.get("LLM_API_KEY2", ""),
+}
+_ENDPOINT_CACHE_TTL = 5  # seconds
+_endpoint_cache = {"base_root": LLM_BASE_ROOT, "base_v1": LLM_BASE_V1, "model": LLM_MODEL, "api_key": "", "ts": 0.0}
+
+
+async def resolve_llm_endpoint(client: httpx.AsyncClient) -> dict:
+    """Current active LLM endpoint, mirroring the WrenchIQ Sidecar's
+    primary/secondary switch. Cached for _ENDPOINT_CACHE_TTL seconds so
+    switching on the Home screen takes effect within a few seconds rather
+    than requiring a restart, without hitting the Node server on every
+    single NER call."""
+    now = time.monotonic()
+    if now - _endpoint_cache["ts"] < _ENDPOINT_CACHE_TTL:
+        return _endpoint_cache
+    try:
+        resp = await client.get(f"{WRENCHIQ_API_BASE}/api/llm-provider-config", timeout=3)
+        resp.raise_for_status()
+        default = resp.json()["profiles"]["default"]
+        # Match against .env.local's raw LLM_BASE_URL/LLM_BASE_URL2 values
+        # (which include a trailing "/v1") to find the right key, before
+        # splitting into base_root/base_v1 the same way LLM_BASE_ROOT/
+        # LLM_BASE_V1 do above.
+        raw_base_url = default["baseUrl"].rstrip("/")
+        api_key = _ENDPOINT_KEYS.get(raw_base_url, "")
+        base_root = raw_base_url[:-3] if raw_base_url.endswith("/v1") else raw_base_url
+        base_v1 = raw_base_url if raw_base_url.endswith("/v1") else f"{raw_base_url}/v1"
+        _endpoint_cache.update({
+            "base_root": base_root,
+            "base_v1": base_v1,
+            "model": default["model"],
+            "api_key": api_key,
+            "ts": now,
+        })
+    except Exception:
+        # WrenchIQ server unreachable — keep the last-known-good value (or
+        # the static YAML/env default, on the very first failed lookup)
+        # rather than failing NER extraction outright.
+        _endpoint_cache["ts"] = now
+    return _endpoint_cache
 
 # ── SME store (singleton) ─────────────────────────────────────────────────────
 SME_STORE = _sme_module.get(cfg)
@@ -942,14 +1004,22 @@ def safe_list(val) -> list[str]:
 
 
 async def call_llm(client: httpx.AsyncClient, text: str) -> dict:
+    endpoint = await resolve_llm_endpoint(client)
     payload = {
-        "model": LLM_MODEL,
+        "model": endpoint["model"],
         "messages": build_messages(text),
         "max_tokens": cfg["endpoints"]["llm"].get("max_tokens", 512),
         "temperature": cfg["endpoints"]["llm"].get("temperature", 0),
     }
+    # Qwen3's "thinking" mode spends the completion budget on hidden
+    # reasoning before any visible content — see WrenchIQ's own fix in
+    # server/services/azureOpenAI.js for the full writeup. Mirrored here
+    # since this endpoint can now resolve to that same sglang/Qwen3 box.
+    if re.search(r"qwen3", endpoint["model"], re.IGNORECASE):
+        payload["chat_template_kwargs"] = {"enable_thinking": False}
+    headers = {"Authorization": f"Bearer {endpoint['api_key']}"} if endpoint["api_key"] else {}
     resp = await client.post(
-        f"{LLM_BASE_V1}/chat/completions", json=payload, timeout=30
+        f"{endpoint['base_v1']}/chat/completions", json=payload, headers=headers, timeout=30
     )
     resp.raise_for_status()
     raw = resp.json()["choices"][0]["message"]["content"].strip()
@@ -1012,11 +1082,13 @@ async def index():
 async def health():
     try:
         async with httpx.AsyncClient() as c:
-            r = await c.get(f"{LLM_BASE_ROOT}/health", timeout=5)
+            endpoint = await resolve_llm_endpoint(c)
+            r = await c.get(f"{endpoint['base_root']}/health", timeout=5)
             llm_ok = r.status_code == 200
     except Exception:
+        endpoint = _endpoint_cache
         llm_ok = False
-    return {"samples": len(SAMPLES), "llm_ok": llm_ok, "llm_url": LLM_BASE}
+    return {"samples": len(SAMPLES), "llm_ok": llm_ok, "llm_url": endpoint["base_root"]}
 
 
 @app.get("/api/samples/demo")
@@ -1408,15 +1480,23 @@ async def summarize(req: SummarizeRequest):
         top_repairs=_fmt_list(req.top_repairs),
         top_dtcs=_fmt_list(req.top_dtcs),
     )
-    payload = {
-        "model": LLM_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 400,
-        "temperature": cfg["endpoints"]["llm"].get("temperature", 0),
-    }
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.post(f"{LLM_BASE_V1}/chat/completions", json=payload, timeout=60)
+            endpoint = await resolve_llm_endpoint(client)
+            payload = {
+                "model": endpoint["model"],
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 400,
+                "temperature": cfg["endpoints"]["llm"].get("temperature", 0),
+            }
+            # Belt-and-suspenders with the <think> strip below (which predates
+            # this fix and was the only guard here) — enable_thinking:false
+            # avoids burning the token budget on hidden reasoning at all,
+            # same fix as call_llm() above.
+            if re.search(r"qwen3", endpoint["model"], re.IGNORECASE):
+                payload["chat_template_kwargs"] = {"enable_thinking": False}
+            headers = {"Authorization": f"Bearer {endpoint['api_key']}"} if endpoint["api_key"] else {}
+            resp = await client.post(f"{endpoint['base_v1']}/chat/completions", json=payload, headers=headers, timeout=60)
             resp.raise_for_status()
             text = resp.json()["choices"][0]["message"]["content"].strip()
             text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()

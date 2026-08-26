@@ -36,6 +36,11 @@ export async function loadGateway({ profiles, activeProfile = 'default', engine 
     vi.doMock('../../server/services/llmProviderConfig.js', () => ({
       LLM_PROFILES: profiles,
       getActiveLLMProfile: () => ({ profileKey: activeProfile, ...profiles[activeProfile] }),
+      // Always the 'default' entry regardless of activeProfile/activeEndpoint —
+      // matches production's getDefaultProfile(), which resolves the
+      // WrenchIQ Home primary/secondary switch independently of the
+      // Settings "AI Engine" (activeProfile) toggle these tests exercise.
+      getDefaultProfile: () => ({ profileKey: 'default', ...profiles.default }),
       isProfileConfigured: (key) => !!profiles[key]?.baseUrl,
       hydrateActiveProfile: async () => {},
       setActiveProfile: async () => {},

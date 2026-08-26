@@ -1217,7 +1217,7 @@ const HISTORICAL_ROS = [
     repairJobs: [
       { description: 'Multi-Point Inspection (56-pt) + Cabin Air Filter', laborHours: 0.6, actualLaborHours: 0.6, lineCost: 45, parts: [{ description: 'Cabin Air Filter', lineCost: 28 }], status: 'completed' },
     ],
-    invoice: 110.00,
+    invoice: 73.00,
     progress: 100,
     laborTimeTracking: { totalFlatHrs: 0.6, totalActualHrs: 0.6, elr: 122, postedRate: 175 },
     aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
@@ -1252,7 +1252,7 @@ const HISTORICAL_ROS = [
     declinedServices: [
       { description: 'Brake Fluid Flush (2yr interval due)', estimatedCost: 180 },
     ],
-    invoice: 620.00,
+    invoice: 390.00,
     progress: 100,
     laborTimeTracking: { totalFlatHrs: 1.5, totalActualHrs: 1.4, elr: 186, postedRate: 175 },
     aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
@@ -1280,7 +1280,7 @@ const HISTORICAL_ROS = [
       { description: 'Engine Oil & Filter Change (5W-30 Full Synthetic)', laborHours: 0.5, actualLaborHours: 0.5, lineCost: 55, parts: [{ description: 'Oil Filter + 6qt 5W-30', lineCost: 65 }], status: 'completed' },
       { description: 'Tire Pressure & Tread Check', laborHours: 0.2, actualLaborHours: 0.2, lineCost: 0, parts: [], status: 'completed' },
     ],
-    invoice: 210.00,
+    invoice: 120.00,
     progress: 100,
     laborTimeTracking: { totalFlatHrs: 0.7, totalActualHrs: 0.7, elr: 171, postedRate: 175 },
     aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
@@ -1418,7 +1418,7 @@ const HISTORICAL_ROS = [
     repairJobs: [
       { description: 'Serpentine Belt Replacement', laborHours: 0.8, actualLaborHours: 0.8, lineCost: 140, parts: [{ description: 'Serpentine Belt', lineCost: 45 }], status: 'completed' },
     ],
-    invoice: 220.00,
+    invoice: 185.00,
     progress: 100,
     laborTimeTracking: { totalFlatHrs: 0.8, totalActualHrs: 0.8, elr: 175, postedRate: 175 },
     aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
@@ -1445,7 +1445,7 @@ const HISTORICAL_ROS = [
     repairJobs: [
       { description: 'Annual Inspection + Oil Change', laborHours: 0.7, actualLaborHours: 0.7, lineCost: 60, parts: [{ description: 'Oil Filter + 5qt 0W-20', lineCost: 55 }], status: 'completed' },
     ],
-    invoice: 140.00,
+    invoice: 115.00,
     progress: 100,
     laborTimeTracking: { totalFlatHrs: 0.7, totalActualHrs: 0.7, elr: 143, postedRate: 175 },
     aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,
@@ -1475,7 +1475,7 @@ const HISTORICAL_ROS = [
     repairJobs: [
       { description: 'Transmission Fluid & Filter Service', laborHours: 1.8, actualLaborHours: 1.9, lineCost: 315, parts: [{ description: 'ATF + Filter Kit', lineCost: 145 }], status: 'completed' },
     ],
-    invoice: 890.00,
+    invoice: 460.00,
     progress: 100,
     laborTimeTracking: { totalFlatHrs: 1.8, totalActualHrs: 1.9, elr: 166, postedRate: 175 },
     aiInsights: [], agenticUpsells: [], agenticCustomerText: null, agenticTextStatus: null,

@@ -7,11 +7,24 @@
  * Usage:
  *   const { smsName, shopName, ownerName } = useDemo();
  *   const { setDemo } = useDemo();
+ *
+ * smsName/smsProvider specifically are NOT localStorage-backed like
+ * everything else here — they're fetched from/written to the server
+ * (GET/PATCH /api/demo-config, server/services/demoConfig.js). They used to
+ * be pinned to a hardcoded "Protractor" value in every load()/setDemo()
+ * call, because cross-window localStorage "storage"-event sync isn't
+ * reliable across separate Tauri windows — a shop's SMS/DMS picker
+ * selection could silently diverge between the Sidecar and Admin windows.
+ * Moving just this one fact to the server (same fix as the LLM primary/
+ * secondary endpoint switch in llmProviderConfig.js) fixes that at the
+ * root instead of working around it — every window reads the same
+ * value, and the Settings picker actually works.
  */
 
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 
 const STORAGE_KEY = "wrenchiq_demo_config";
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 const SMS_OPTIONS = [
   "Mitchell1 ShopManager SE",
@@ -105,16 +118,16 @@ function defaultModuleConfig() {
   return { edition: "am", modules }; // "am" | "oem" | "both"
 }
 
-// Hardcoded for the live demo — cross-window localStorage sync for the SMS
-// picker (Settings -> Integrations) isn't reliable in the Tauri build, so
-// every surface reading useDemo()'s smsName/smsProvider is pinned to
-// Protractor rather than risking a stale/inconsistent value mid-demo.
-const HARDCODED_SMS_NAME = "Protractor";
-const HARDCODED_SMS_PROVIDER = "protractor";
+// Pre-fetch fallback only — the real value comes from GET /api/demo-config
+// (see the file header comment) and overwrites this on mount. Matches what
+// the server itself defaults to when unset, so there's no flash-of-wrong-
+// vendor before that fetch resolves.
+const DEFAULT_SMS_NAME = "Mitchell1 ShopManager SE";
+const DEFAULT_SMS_PROVIDER = "mitchell1";
 
 const DEFAULTS = {
-  smsName:         HARDCODED_SMS_NAME,
-  smsProvider:     HARDCODED_SMS_PROVIDER,
+  smsName:         DEFAULT_SMS_NAME,
+  smsProvider:     DEFAULT_SMS_PROVIDER,
   // V5 feedback (C1): Read-only (default, included) vs Read+Write (premium
   // tier) SMS/DMS integration — gates write-back actions client-side; see
   // src/services/am3cSMSWritebackService.js call sites.
@@ -143,8 +156,9 @@ function load() {
     return {
       ...DEFAULTS,
       ...parsed,
-      smsName:     HARDCODED_SMS_NAME,
-      smsProvider: HARDCODED_SMS_PROVIDER,
+      // smsName/smsProvider are overwritten again right after load() returns
+      // (see the fetch-on-mount effect below) — whatever's in localStorage
+      // here is only the pre-fetch flash-of-content fallback.
       moduleConfig: {
         edition: parsed.moduleConfig?.edition ?? "am",
         modules: mergedModules,
@@ -165,16 +179,17 @@ function applyDemoQueryParam(cfg) {
   try {
     const shop = DEMO_SHOPS[new URLSearchParams(window.location.search).get("demo")];
     if (!shop) return cfg;
+    // smsName/smsProvider deliberately not touched here — they're now a
+    // single global, admin-configured, server-synced value (see file header
+    // comment), not something that resets per demo shop.
     const next = {
       ...cfg,
       activeShopId:    shop.id,
       shopName:        shop.shopName,
       ownerName:       shop.ownerName,
       ownerInitials:   shop.ownerInitials,
-      smsName:         HARDCODED_SMS_NAME,
       corporateName:   shop.corporateName,
       primaryCustomer: shop.primaryCustomer,
-      smsProvider:     HARDCODED_SMS_PROVIDER,
       advisorName:     shop.advisorName,
     };
     save(next);
@@ -211,28 +226,65 @@ export const SMS_PROVIDER_COLORS = {
 export function DemoProvider({ children }) {
   const [config, setConfig] = useState(() => applySmsQueryParam(applyDemoQueryParam(load())));
 
+  // The real smsName/smsProvider source of truth (see file header comment)
+  // — fetched once on mount and applied on top of whatever load()/the ?sms=
+  // query param guessed, so every window converges on the same value
+  // shortly after opening rather than depending on localStorage's
+  // "storage" event (which doesn't fire reliably across separate Tauri
+  // windows — the exact bug this replaces).
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/demo-config`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.smsName) return;
+        setConfig((prev) => ({ ...prev, smsName: data.smsName, smsProvider: data.smsProvider }));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
   // Cross-window sync: another window/tab (e.g. the sidecar) changing the
   // active demo shop writes to the shared localStorage key. The "storage"
   // event only fires in *other* windows, not the one that made the change,
-  // so this can't loop with setDemo/reset below.
+  // so this can't loop with setDemo/reset below. smsName/smsProvider are
+  // excluded from this — they don't go through localStorage at all anymore.
   useEffect(() => {
     function handleStorage(e) {
       if (e.key !== STORAGE_KEY) return;
-      setConfig(load());
+      setConfig((prev) => ({ ...load(), smsName: prev.smsName, smsProvider: prev.smsProvider }));
     }
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   const setDemo = useCallback((updates) => {
+    // smsName is now server-synced (GET/PATCH /api/demo-config), not
+    // localStorage — PATCH it here rather than folding it into the same
+    // save() as everything else, and don't let it round-trip through
+    // save()'s localStorage snapshot below.
+    if (updates.smsName) {
+      const smsProvider = updates.smsProvider || smsNameToProvider(updates.smsName);
+      fetch(`${API_BASE}/api/demo-config`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ smsName: updates.smsName, smsProvider }),
+      }).catch(() => {});
+    }
+
     setConfig(prev => {
-      const next = { ...prev, ...updates, smsName: HARDCODED_SMS_NAME, smsProvider: HARDCODED_SMS_PROVIDER };
+      const next = { ...prev, ...updates };
       // Auto-generate initials if ownerName changed and initials not explicitly set
       if (updates.ownerName && !updates.ownerInitials) {
         const parts = updates.ownerName.trim().split(/\s+/);
         next.ownerInitials = parts.map(p => p[0]?.toUpperCase() || "").join("").slice(0, 2);
       }
-      save(next);
+      // smsName/smsProvider excluded from the localStorage snapshot — the
+      // server is their source of truth, and load() would otherwise hand
+      // back a stale value here on the next page refresh before the fetch
+      // above resolves.
+      const { smsName: _smsName, smsProvider: _smsProvider, ...toSave } = next;
+      save(toSave);
       return next;
     });
   }, []);

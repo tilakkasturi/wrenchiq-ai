@@ -14,6 +14,7 @@
 import { LLM_ENGINE } from '../config.js';
 import { callAzureOpenAILegacy } from './azureOpenAILegacy.js';
 import { callAzureOpenAILangChain } from './azureOpenAILangChain.js';
+import { getDefaultProfile } from './llmProviderConfig.js';
 
 /**
  * Call the LLM chat-completions endpoint.
@@ -29,10 +30,14 @@ import { callAzureOpenAILangChain } from './azureOpenAILangChain.js';
  *   into llm_request_log, so keep it stable per call site.
  * @param {boolean}  [opts.useConfiguredProvider] - Only the Chat feature
  *   (roChatService.js) opts into the Settings → Integrations "AI Engine"
- *   provider toggle. Every other caller (recommendations, ARO Agent, RO
- *   Score Agent, Knowledge Graph, RO Advisor) always uses the "default"
- *   Predii LLM profile, regardless of what the toggle is set to — explicit
- *   product requirement, not an oversight.
+ *   provider toggle (default Predii LLM vs. Azure). Every other caller
+ *   (recommendations, ARO Agent, RO Score Agent, Knowledge Graph, RO
+ *   Advisor) always uses the "default" Predii LLM profile, regardless of
+ *   what that toggle is set to — explicit product requirement, not an
+ *   oversight. "Default" itself still resolves to whichever physical
+ *   endpoint (primary/secondary) is active — see getDefaultProfile() —
+ *   since that's a separate, WrenchIQ-Home-driven switch, not the Azure
+ *   toggle.
  * @param {string}   [opts.profileKey] - Force a specific LLM_PROFILES entry
  *   (e.g. 'frontier') regardless of useConfiguredProvider — its own
  *   base URL/key/model, not just a model-name override on top of whichever
@@ -62,14 +67,15 @@ export function getTextFromResponse(data) {
  */
 export async function checkLLMHealth() {
   const t0 = Date.now();
+  const { model, baseUrl } = getDefaultProfile();
   try {
     await Promise.race([
       callAzureOpenAI({ messages: [{ role: 'user', content: 'ping' }], max_tokens: 5, _route: 'health-check' }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('LLM health check timed out')), 5000)),
     ]);
     const latencyMs = Date.now() - t0;
-    return { status: latencyMs > 3000 ? 'degraded' : 'connected', latencyMs };
+    return { status: latencyMs > 3000 ? 'degraded' : 'connected', latencyMs, model, baseUrl };
   } catch (err) {
-    return { status: 'error', latencyMs: Date.now() - t0, error: err.message };
+    return { status: 'error', latencyMs: Date.now() - t0, error: err.message, model, baseUrl };
   }
 }

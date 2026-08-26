@@ -15,3 +15,17 @@ export async function getCannedJobs(db, shopId) {
   const doc = await db.collection('RepairOrder').findOne({ shopId, isCannedJobCatalog: true });
   return doc?.repairJobs || [];
 }
+
+// Appends one job to the shop's catalog doc, creating it (upsert) if this
+// shop has never had one seeded — $push + upsert:true still sets the filter
+// fields (shopId, isCannedJobCatalog) on the newly-inserted doc, so a shop
+// with no catalog yet gets a proper one-job catalog rather than an error.
+export async function addCannedJob(db, shopId, job) {
+  if (!db || !shopId) throw new Error('shopId is required');
+  await db.collection('RepairOrder').updateOne(
+    { shopId, isCannedJobCatalog: true },
+    { $push: { repairJobs: job } },
+    { upsert: true }
+  );
+  return getCannedJobs(db, shopId);
+}

@@ -138,15 +138,20 @@ function ShopSwitcher({ shopName, activeShopId, setDemo }) {
   }, []);
 
   function selectShop(shop) {
+    // smsName/smsProvider deliberately excluded — it's a single global,
+    // admin-configured, server-synced value (DemoContext.jsx file header
+    // comment), not something that should change as a side effect of
+    // switching which shop's data is being viewed. Passing it through here
+    // used to be a no-op (setDemo unconditionally overrode it); now that
+    // setDemo actually applies whatever smsName it's given, doing so here
+    // would silently overwrite the Admin Settings SMS/DMS picker.
     setDemo({
       activeShopId:    shop.id,
       shopName:        shop.shopName,
       ownerName:       shop.ownerName,
       ownerInitials:   shop.ownerInitials,
-      smsName:         shop.smsName,
       corporateName:   shop.corporateName,
       primaryCustomer: shop.primaryCustomer,
-      smsProvider:     shop.smsProvider,
       advisorName:     shop.advisorName,
     });
     setOpen(false);

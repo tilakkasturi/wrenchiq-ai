@@ -43,6 +43,11 @@ export async function loadROAdvisor({ profiles, engine, skipTools, buildLangfuse
     vi.doMock('../../server/services/llmProviderConfig.js', () => ({
       LLM_PROFILES: profiles,
       getActiveLLMProfile: () => ({ profileKey: 'default', ...profiles.default }),
+      // Matches production's getDefaultProfile() — the RO Advisor is pinned
+      // to 'default' regardless of the Settings "AI Engine" toggle, and
+      // 'default' itself resolves the WrenchIQ Home primary/secondary
+      // switch, which these tests don't exercise (single synthetic profile).
+      getDefaultProfile: () => ({ profileKey: 'default', ...profiles.default }),
       isProfileConfigured: (key) => !!profiles[key]?.baseUrl,
       hydrateActiveProfile: async () => {},
       setActiveProfile: async () => {},

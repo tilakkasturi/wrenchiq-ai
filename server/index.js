@@ -36,6 +36,9 @@ import tribalNotesRouter      from './routes/tribalNotes.js';
 import shopVoiceSettingsRouter from './routes/shopVoiceSettings.js';
 import llmProviderConfigRouter from './routes/llmProviderConfig.js';
 import { hydrateActiveProfile } from './services/llmProviderConfig.js';
+import demoConfigRouter from './routes/demoConfig.js';
+import customerNotesRouter from './routes/customerNotes.js';
+import { hydrateDemoConfig } from './services/demoConfig.js';
 import customersRouter        from './routes/customers.js';
 import authLogRouter          from './routes/authLog.js';
 import llmLogRouter           from './routes/llmLog.js';
@@ -132,6 +135,8 @@ app.use('/api/ro-value-score',      roValueScoreRouter);
 app.use('/api/tribal-notes',    tribalNotesRouter);
 app.use('/api/shop-voice-settings', shopVoiceSettingsRouter);
 app.use('/api/llm-provider-config', llmProviderConfigRouter);
+app.use('/api/demo-config', demoConfigRouter);
+app.use('/api/customer-notes', customerNotesRouter);
 app.use('/api/hierarchy',       hierarchyRouter);
 app.use('/api/customers',       customersRouter);
 app.use('/api/auth',            authLogRouter);
@@ -199,6 +204,7 @@ async function startServer() {
     await ensureTSBCacheIndexes(db);
     app.locals.db = db;
     await hydrateActiveProfile(db);
+    await hydrateDemoConfig(db);
 
     app.listen(PORT, () => {
       const masked = MONGODB_URI.replace(/:\/\/.*@/, '://<credentials>@');

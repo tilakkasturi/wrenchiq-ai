@@ -10,7 +10,11 @@
  */
 
 import { logLLMRequest } from './llmLogger.js';
-import { getActiveLLMProfile, LLM_PROFILES } from './llmProviderConfig.js';
+import { getActiveLLMProfile, getDefaultProfile, LLM_PROFILES } from './llmProviderConfig.js';
+// Pure function, unrelated to LangChain internals — shared here rather than
+// duplicated so the loop and langchain engines can't drift on this again
+// (this file previously had no protection against it at all).
+import { thinkingModeFields } from './azureOpenAILangChain.js';
 
 /**
  * Call the LLM chat-completions endpoint over raw fetch.
@@ -27,7 +31,12 @@ export async function callAzureOpenAILegacy({ system, messages, max_tokens, mode
       throw new Error(`LLM profile "${profileKey}" is not configured — set its base URL/key in .env.local`);
     }
   } else {
-    profile = useConfiguredProvider ? getActiveLLMProfile() : { profileKey: 'default', ...LLM_PROFILES.default };
+    // getDefaultProfile(), not the static LLM_PROFILES.default — 'default'
+    // resolves to whichever physical endpoint (primary/secondary) is
+    // currently active on the WrenchIQ Home screen, not just the .env.local
+    // startup value. Regressed to the static form when this file was split
+    // out of azureOpenAI.js (AE-1286); restored here.
+    profile = useConfiguredProvider ? getActiveLLMProfile() : getDefaultProfile();
   }
   const effectiveModel = model || profile.model;
   // Strip trailing slash, then append the path.
@@ -50,6 +59,7 @@ export async function callAzureOpenAILegacy({ system, messages, max_tokens, mode
     // and require `max_completion_tokens` instead — the API's error is
     // explicit about this, so match on model name rather than guessing.
     ...(/^(gpt-5|o1|o3)/i.test(effectiveModel) ? { max_completion_tokens: max_tokens } : { max_tokens }),
+    ...thinkingModeFields(effectiveModel),
   };
 
   if (jsonMode) {

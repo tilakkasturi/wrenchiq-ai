@@ -397,15 +397,18 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
             return (
               <button
                 key={shop.id}
+                // smsName/smsProvider deliberately excluded — see the matching
+                // comment in SMSRepresentativeApp.jsx's selectShop(). It's a
+                // single global, admin-configured, server-synced value, not
+                // something that should change as a side effect of switching
+                // which demo shop is active.
                 onClick={() => setDemo({
                   activeShopId: shop.id,
                   shopName: shop.shopName,
                   ownerName: shop.ownerName,
                   ownerInitials: shop.ownerInitials,
-                  smsName: shop.smsName,
                   corporateName: shop.corporateName,
                   primaryCustomer: shop.primaryCustomer,
-                  smsProvider: shop.smsProvider,
                   advisorName: shop.advisorName,
                 })}
                 style={{
@@ -417,7 +420,10 @@ export default function PersonaGatewayScreen({ onSelectPersona, onOpenSpecs, onO
                   fontSize: 10, fontWeight: 700, transition: "all 0.15s",
                 }}
               >
-                {shop.shopName} ({shop.smsName})
+                {/* No longer suffixed with the shop's own smsName — SMS/DMS
+                    is a single global setting now (see onClick comment
+                    above), so a per-shop label here would just be wrong. */}
+                {shop.shopName}
               </button>
             );
           })}

@@ -22,6 +22,13 @@ export const LLM_API_KEY =
 export const LLM_MODEL =
   process.env.LLM_MODEL || process.env.AZURE_OPENAI_MODEL || 'gpt-4o-mini';
 
+// Second self-hosted endpoint ("secondary") — switchable against the primary
+// LLM_BASE_URL above from the WrenchIQ Home / Sidecar Health Check screen.
+// See server/services/llmProviderConfig.js for the primary/secondary toggle.
+export const LLM_BASE_URL_2 = process.env.LLM_BASE_URL2 || '';
+export const LLM_API_KEY_2 = process.env.LLM_API_KEY2 || '';
+export const LLM_MODEL_2 = process.env.LLM_MODEL2 || '';
+
 // Set LLM_SKIP_TOOLS=true when the LLM server doesn't support tool_calls
 // (e.g. vLLM without --enable-auto-tool-choice --tool-call-parser hermes)
 export const LLM_SKIP_TOOLS =

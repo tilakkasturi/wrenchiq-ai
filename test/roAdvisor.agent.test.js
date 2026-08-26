@@ -120,7 +120,11 @@ describe.each(RUNTIMES.map((r) => [runtimeLabel(r), r]))('RO Advisor [%s]', (_la
         role: 'user',
         content: 'Analyze this repair order and produce recommendations for the service advisor.',
       });
-      expect(body.max_tokens).toBe(1200);
+      // 3000, not the original 1200 — raised so a reasoning model's hidden
+      // <think> tokens don't truncate the visible synthesis turn before it
+      // writes any JSON (see azureOpenAILangChain.js's thinkingModeFields
+      // and the "sglang vs vLLM Endpoint Handling" Confluence page).
+      expect(body.max_tokens).toBe(3000);
       expect('response_format' in body).toBe(false);
       expect('stream' in body).toBe(false);
     });

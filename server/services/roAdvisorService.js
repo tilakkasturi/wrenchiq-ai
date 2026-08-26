@@ -65,36 +65,60 @@ const DEMO_NOTES_FALLBACK = [
 
 // ── Data fetchers (each tolerates MongoDB failure gracefully) ─────────────────
 
-export async function fetchCustomerHistory(customerId, db) {
+// customerId is NOT globally unique across every demo dataset in this repo —
+// the hand-authored Cornerstone story customers (cust-001..008) collide with
+// small-integer customer ids reused by the separately-seeded multi-location
+// network dataset in wrenchiq_ro (different shops, different chains, often a
+// different actual person). Without a shopId filter, a Cornerstone
+// customer's "history" could silently include an unrelated customer's
+// visits from a totally different shop — wrong service categories, wrong
+// totals, sometimes even a different name. Both collection queries below
+// are scoped to shopId (flat on RepairOrder, nested under shop.id on
+// wrenchiq_ro) whenever the caller has one, which every real call site does.
+export async function fetchCustomerHistory(customerId, db, shopId) {
   if (!db || !customerId) return [];
   try {
-    const query   = { 'customer.id': customerId };
+    const roQuery = { 'customer.id': customerId, ...(shopId ? { shopId } : {}) };
+    const wqQuery = { 'customer.id': customerId, ...(shopId ? { 'shop.id': shopId } : {}) };
     const [ros, wqros] = await Promise.all([
       db.collection('RepairOrder')
-        .find(query)
+        .find(roQuery)
         .sort({ dateIn: -1 })
         .limit(8)
         .project({ roNumber: 1, dateIn: 1, serviceCategory: 1, repairJobs: 1, invoice: 1, dtcs: 1 })
         .toArray(),
       db.collection('wrenchiq_ro')
-        .find(query)
+        .find(wqQuery)
         .sort({ date_in: -1 })
         .limit(8)
         .project({ ro_number: 1, date_in: 1, service_category: 1, repair_jobs: 1, invoice: 1 })
         .toArray(),
     ]);
 
-    const normalize = (ro, isWQ) => ({
-      roNumber:         isWQ ? ro.ro_number    : ro.roNumber,
-      date:             isWQ ? ro.date_in      : ro.dateIn,
-      serviceType:      isWQ ? ro.service_category : ro.serviceCategory,
-      services:         isWQ
-        ? (ro.repair_jobs || []).map(j => j.repair_job || j.description || '').filter(Boolean)
-        : (ro.repairJobs  || []).map(j => j.description || j.name || j.service || '').filter(Boolean),
-      declinedServices: [],
-      totalEstimate:    typeof ro.invoice === 'number' ? ro.invoice : (ro.invoice?.total || 0),
-      dtcs:             ro.dtcs || [],
-    });
+    // Falls back to summing labor + parts line costs when a record has no
+    // aggregate invoice total on file (some bulk-imported records price
+    // every part individually but never rolled a total up) — so a visit
+    // that genuinely was priced doesn't display as $0 just because one
+    // summary field is missing.
+    const sumJobsCost = (jobs, isWQ) => (jobs || []).reduce((sum, j) => {
+      const labor = (isWQ ? j.line_cost : j.lineCost) || 0;
+      const parts = (j.parts || []).reduce((s, p) => s + ((isWQ ? p.line_cost : p.lineCost) || 0), 0);
+      return sum + labor + parts;
+    }, 0);
+
+    const normalize = (ro, isWQ) => {
+      const jobs = isWQ ? ro.repair_jobs : ro.repairJobs;
+      const invoiceTotal = typeof ro.invoice === 'number' ? ro.invoice : ro.invoice?.total;
+      return {
+        roNumber:         isWQ ? ro.ro_number    : ro.roNumber,
+        date:             isWQ ? ro.date_in      : ro.dateIn,
+        serviceType:      isWQ ? ro.service_category : ro.serviceCategory,
+        services:         (jobs || []).map(j => (isWQ ? (j.repair_job || j.description) : (j.description || j.name || j.service)) || '').filter(Boolean),
+        declinedServices: [],
+        totalEstimate:    typeof invoiceTotal === 'number' ? invoiceTotal : sumJobsCost(jobs, isWQ),
+        dtcs:             ro.dtcs || [],
+      };
+    };
 
     const all = [
       ...ros.map(r => normalize(r, false)),
@@ -194,8 +218,18 @@ function normalizeCuratedTSB(t) {
     nhtsaNumber: t.bulletinNumber,
     manufacturerNumber: t.bulletinNumber,
     component: t.component,
+    title: t.title,
     summary: `${t.title}. ${t.description} Typical fix: ~${t.laborHours} labor hr${partsNote}.`,
     dateCommunicationSent: t.publishDate,
+    // Kept as structured numbers (not just folded into summary's prose)
+    // so reconcileTSBRecommendations can price a TSB recommendation
+    // deterministically instead of trusting the LLM's each-run-different
+    // parse of "~2.5 labor hr, parts ~$380" — see that function for why.
+    // undefined for live NHTSA bulletins (normalizeTSB in
+    // nhtsaTsbService.js has no such fields; real manufacturer
+    // communications don't come with a clean labor/parts breakdown).
+    laborHours: t.laborHours,
+    partsEstimate: t.partsEstimate,
   };
 }
 
@@ -233,7 +267,7 @@ function getMileageServices(make = '', model = '', mileage = 0) {
   if (m >= 15000)                       services.push({ service: 'Cabin Air Filter',          interval: 'every 15-20k mi', estimatedCost: 65,  category: 'year_round' });
   if (m >= 30000)                       services.push({ service: 'Brake Fluid Flush',         interval: 'every 30k mi',    estimatedCost: 89,  category: 'year_round' });
   if (m >= 45000)                       services.push({ service: 'Transmission Fluid Service',interval: 'every 45-60k mi', estimatedCost: 175, category: 'year_round' });
-  if (m >= 50000)                       services.push({ service: 'Battery Test',              interval: '50k+ or 4 years', estimatedCost: 25,  category: 'year_round' });
+  if (m >= 50000)                       services.push({ service: 'Battery Test',              interval: '50k+ or 4 years', estimatedCost: 0,   category: 'year_round' });
   if (m >= 60000 && (mk.includes('honda') || mk.includes('acura') || mk.includes('toyota') || mk.includes('subaru')))
                                         services.push({ service: 'Timing Belt Inspection',    interval: '60-90k mi (non-chain engines)', estimatedCost: 150, category: 'year_round' });
   if (m >= 75000)                       services.push({ service: 'Spark Plugs (iridium)',     interval: '75-100k mi',      estimatedCost: 195, category: 'year_round' });
@@ -297,6 +331,147 @@ function filterExistingServices(result, ro) {
       ? result.ings.filter(ing => !ingAlreadyCovered(ing.note, existingNames))
       : result.ings,
   };
+}
+
+// Generic action/diagnostic words stripped before comparing a recommended
+// service name against a TSB's own title — same "strip the verb, compare
+// the noun phrase" approach as ingAlreadyCovered above, extended with
+// diagnostic-only verbs ("inspection", "diagnostic", "diagnosis", "test")
+// since those are exactly the words a scope-downgrade substitutes for
+// "replacement"/"repair" — the mismatch this function exists to catch.
+const TSB_SCOPE_STOPWORDS = /\b(replacement|replace|repair|service|serviced|flush|check|inspection|inspect|diagnostic|diagnosis|test|performance|system|assembly)\b/g;
+
+// Significant words only (>=4 chars) — short tokens like "ac" or "oil" are
+// common enough that a substring/short-word check would call almost any two
+// automotive phrases "overlapping," defeating the point of this check.
+function coreWords(text) {
+  return (text || '')
+    .toLowerCase()
+    // Strip non-alphanumerics first so formatting differences alone
+    // ("A/C" vs "AC") never produce a spurious non-match.
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(TSB_SCOPE_STOPWORDS, '')
+    .split(/\s+/)
+    .filter(w => w.length >= 4);
+}
+
+// The specific downgrade observed in practice: the part/system stays right
+// ("condenser") but the verb quietly shrinks from "replace" to "inspect" —
+// which coreWords' noun-overlap check alone does NOT catch, since the
+// shared noun ("condenser") makes the two phrases look like they overlap.
+// Catches it directly: a TSB whose own title/summary specifies a concrete
+// repair action, recommended under a purely diagnostic verb with no repair
+// verb alongside it.
+const REPAIR_SCOPE_RE = /\b(replace|replacement|repair)\b/i;
+const DIAGNOSTIC_ONLY_RE = /\b(inspect|inspection|check|diagnostic|diagnosis|test|performance)\b/i;
+
+/**
+ * Corrects two failure modes observed in "tsb"-category recommendations,
+ * both stemming from the same root cause: the system prompt tells the LLM
+ * to "estimate labor hours/cost from the TSB's component and summary text"
+ * rather than handing it a firm number, so the same TSB produces a
+ * different cost on every run, and the model is free to substitute a
+ * lesser diagnostic step (e.g. "AC Performance Inspection") for the fix the
+ * bulletin actually specifies (e.g. TSB-20-009's condenser *replacement*) —
+ * technically still "citing" the TSB, but misrepresenting what it says.
+ *
+ * Both are fixed the same way the codebase already fixes margin/ARO
+ * numbers: deterministically, from the same source data the tool result
+ * exposed to the model, rather than trusting LLM arithmetic or LLM fidelity
+ * for something the code can just compute or check directly. Only applies
+ * when the matched TSB carries structured laborHours/partsEstimate — i.e.
+ * this repo's curated fallback set (src/data/tsbData.js). Live NHTSA
+ * bulletins have no such numbers, so those recommendations are left as the
+ * LLM priced/scoped them (nothing to reconcile against).
+ */
+function reconcileTSBRecommendations(result, tsbs, shopProfile) {
+  if (!result || !Array.isArray(result.serviceRecommendations)) return result;
+  const laborCost = shopProfile?.laborCost ?? DEFAULT_SHOP_PROFILE.laborCost;
+  const matchedTsbs = []; // curated TSBs actually matched to a rec, for the dedup pass below
+
+  const priced = result.serviceRecommendations.map(rec => {
+    if (rec.category !== 'tsb' || !rec.tsbNumber) return rec;
+    const tsb = tsbs.find(t => t.nhtsaNumber === rec.tsbNumber || t.manufacturerNumber === rec.tsbNumber);
+    if (!tsb || typeof tsb.laborHours !== 'number' || typeof tsb.partsEstimate !== 'number') return rec;
+    matchedTsbs.push(tsb);
+
+    const estimatedCost = Math.round(tsb.laborHours * laborCost + tsb.partsEstimate);
+
+    // Two independent ways a recommendation can misrepresent its own cited
+    // TSB: (a) topic drift — no significant word in common with the TSB's
+    // title at all — or (b) same part, downgraded verb — "Condenser
+    // Inspection" for a TSB whose fix is a condenser *replacement*, which
+    // (a) alone misses because "condenser" is still shared between the two.
+    const titleWords = coreWords(tsb.title);
+    const serviceWords = new Set(coreWords(rec.service));
+    const noSharedTopic = titleWords.length > 0 && !titleWords.some(w => serviceWords.has(w));
+
+    const tsbSpecifiesRepair = REPAIR_SCOPE_RE.test(tsb.title || '') || REPAIR_SCOPE_RE.test(tsb.summary || '');
+    const downgradedToDiagnosticOnly = DIAGNOSTIC_ONLY_RE.test(rec.service) && !REPAIR_SCOPE_RE.test(rec.service);
+
+    const scopeMismatch = noSharedTopic || (tsbSpecifiesRepair && downgradedToDiagnosticOnly);
+
+    return {
+      ...rec,
+      estimatedCost,
+      ...(scopeMismatch ? { service: tsb.title } : {}),
+    };
+  });
+
+  // Deterministic backstop for the system prompt's "don't double-recommend
+  // your own overlapping work" rule — the model complies inconsistently
+  // (observed: present in roughly half of otherwise-identical runs against
+  // Frank Delgado/TSB-20-009), because judging semantic overlap between two
+  // free-text recommendations is exactly the kind of thing sampling
+  // variance affects. Narrow and literal on purpose: only fires when a
+  // curated TSB's own fix text and another recommendation's service name
+  // both say "recharge" — the specific, demonstrated failure signature
+  // (a condenser-replacement TSB's built-in "evacuate/recharge" step vs. a
+  // separately-recommended "A/C recharge" seasonal item) — rather than a
+  // broad same-system heuristic that would risk dropping genuinely
+  // distinct AC-adjacent work.
+  const tsbTextMentionsRecharge = matchedTsbs.some(t => /recharge/i.test(t.summary || ''));
+  const serviceRecommendations = tsbTextMentionsRecharge
+    ? priced.filter(rec => rec.category === 'tsb' || !/recharge/i.test(rec.service || ''))
+    : priced;
+
+  return { ...result, serviceRecommendations };
+}
+
+// Catches the shop-objective equivalent of the TSB pricing bug: a "tribal
+// knowledge" note that embeds a dollar threshold in its own text (e.g.
+// "Follow up within 24 hours on any estimate over $1,500") is a plain
+// numeric comparison against ro.totalEstimate — a number the code already
+// has — not something that needs an LLM to read and compare. Observed
+// wrong in practice: a $2,314 RO evaluated against this exact $1,500 rule
+// came back applies:false with reason "Current estimate is likely below
+// this threshold," which is simply false, not a judgment call the model
+// got right or wrong on a coin flip — the number was sitting right there.
+// Deliberately narrow (only fires when the note actually names a dollar
+// figure next to one of these comparison words) so it never overrides a
+// genuinely qualitative objective the LLM is better positioned to judge.
+const DOLLAR_THRESHOLD_RE = /\b(?:over|above|exceed(?:s|ing)?|more than)\s*\$([\d,]+(?:\.\d{1,2})?)/i;
+
+function reconcileDollarThresholdIngs(result, ro) {
+  if (!result || !Array.isArray(result.ings)) return result;
+  const totalEstimate = ro?.totalEstimate || 0;
+
+  const ings = result.ings.map(ing => {
+    const match = DOLLAR_THRESHOLD_RE.exec(ing.note || '');
+    const threshold = match ? parseFloat(match[1].replace(/,/g, '')) : NaN;
+    if (!Number.isFinite(threshold)) return ing;
+
+    const applies = totalEstimate > threshold;
+    return {
+      ...ing,
+      applies,
+      reason: applies
+        ? `This RO's current estimate ($${totalEstimate.toLocaleString()}) is over the $${threshold.toLocaleString()} threshold.`
+        : `This RO's current estimate ($${totalEstimate.toLocaleString()}) is at or below the $${threshold.toLocaleString()} threshold.`,
+    };
+  });
+
+  return { ...result, ings };
 }
 
 // Matches a stray list-numbering artifact the LLM sometimes leaves behind —
@@ -508,6 +683,7 @@ Rules:
 - A "seasonal" recommendation should cite get_seasonal_trends data when it returns real jobs for the current season (reference the shop's own historical count in the reason) — only fall back to generic seasonal domain knowledge (e.g. AC before summer) when that tool comes back empty.
 - Every TSB get_tsbs returns for this exact vehicle is real manufacturer guidance, not domain-knowledge guesswork — include ALL of them as "tsb"-category recommendations, uncapped and regardless of whether they relate to this RO's stated concern or DTCs. Do not filter a TSB out just because it's unrelated to why the car is in today — a known issue for this exact vehicle is worth surfacing on its own. If the TSB's own summary mentions a mileage/age threshold, only include it once this vehicle is at or near that point (use the "In for" mileage above); if it mentions no threshold, include it regardless of mileage. When a TSB *does* plausibly explain this RO's DTCs or concern, say so explicitly in reason and set confidence "high" instead of "medium" — otherwise phrase reason as a proactive heads-up (e.g. "known issue for this model at this mileage — not related to today's visit") and use confidence "medium". Set tsbNumber to the TSB's nhtsaNumber (fall back to manufacturerNumber if nhtsaNumber is absent) and cite the TSB number in reason (e.g. "per TSB 10214582 — reflash addresses reported MIL/P0300"). category = "tsb". Price it from get_canned_jobs if the described fix matches a menu item; otherwise estimate labor hours/cost from the TSB's own component and summary text (e.g. a software reflash is typically 0.3-1 hr labor with no parts; a component replacement follows the parts/labor scope the summary describes) — never invent a number unrelated to what the bulletin actually describes.
 - NEVER recommend a service that is already a line item on the current RO (see "Line items already on this RO" above, or any due service/canned job/seasonal job/TSB flagged alreadyOnRO) — the recommendation engine must exclude anything already on this RO's job list, even if you'd word it differently.
+- The same "don't double-recommend" rule applies to your OWN recommendations, not just this RO's existing line items: if a "tsb" fix already covers work you'd otherwise recommend separately for the same system (e.g. a condenser replacement's own "evacuate/recharge" step already covers what a general "A/C recharge/inspection" seasonal item would do), recommend only the "tsb" item — a general item that a TSB fix already subsumes is a duplicate charge to the customer, not two separate jobs. Only keep both if they're genuinely distinct work (e.g. a cabin air filter replacement alongside an unrelated AC condenser TSB is fine — different scope, not subsumed).
 - category = "year_round" for anything that recurs on a mileage/time interval regardless of season — this always includes oil changes, lube/oil filter service, and engine oil filter jobs. Never classify these as "seasonal" and never invent a MOTOR-sourced "Oil Service" seasonal line item. category = "seasonal" only for genuinely calendar-season-driven work (e.g. AC performance check before summer, coolant/antifreeze check before winter, or anything surfaced by get_seasonal_trends).
 
 Gold Standard tone for suggestedCustomerMessage — this is a text/SMS the advisor sends directly to the customer, so it must read as warm and human, never salesy:
@@ -633,6 +809,7 @@ export function executeTool(name, args, preloaded) {
           nhtsaNumber:        t.nhtsaNumber,
           manufacturerNumber: t.manufacturerNumber,
           component:          t.component,
+          title:              t.title,
           summary:            t.summary,
           dateCommunicationSent: t.dateCommunicationSent,
           // Flag if a fix already matching this TSB's component is already on
@@ -712,7 +889,9 @@ Now produce the JSON recommendation object.`;
 
   const data = await callAzureOpenAI({
     messages:   [{ role: 'user', content: prompt }],
-    max_tokens: 1200,
+    // See the matching comment on the tool-loop call above — reasoning
+    // models need headroom beyond the visible JSON for hidden chain-of-thought.
+    max_tokens: 3000,
     jsonMode:   true,
     _route: '/api/agent/ro-advisor',
   });
@@ -763,7 +942,7 @@ async function preloadAdvisorContext({ ro, customer, vehicle, shopId = 'shop-001
 
   // Pre-fetch data in parallel — each is tolerant of failure
   const [history, objectives, cannedJobs, resolvedShopProfile, seasonalTrends, tsbs] = await Promise.all([
-    fetchCustomerHistory(customerId, db),
+    fetchCustomerHistory(customerId, db, shopId),
     fetchShopObjectives(shopId, db),
     getCannedJobs(db, shopId),
     shopProfile ? Promise.resolve(shopProfile) : fetchShopProfile(shopId, db),
@@ -785,8 +964,9 @@ async function preloadAdvisorContext({ ro, customer, vehicle, shopId = 'shop-001
  * off `usage.promptTokens`/`usage.completionTokens`/`model` and renders the five
  * `dataSourced` counters — so this is the contract, not a convenience.
  */
-function finishAdvisorResult(result, ro, preloaded, usage, model) {
-  const cleaned = cleanCustomerMessage(filterExistingServices(result, ro), ro);
+function finishAdvisorResult(result, ro, preloaded, usage, model, shopProfile) {
+  const reconciled = reconcileDollarThresholdIngs(reconcileTSBRecommendations(result, preloaded.tsbs, shopProfile), ro);
+  const cleaned = cleanCustomerMessage(filterExistingServices(reconciled, ro), ro);
 
   return {
     ...cleaned,
@@ -798,6 +978,23 @@ function finishAdvisorResult(result, ro, preloaded, usage, model) {
       seasonalTrendsAvailable: preloaded.seasonalTrends.length > 0,
       tsbCount:                preloaded.tsbs.length,
     },
+    // Full bulletin data for every TSB get_tsbs fetched for this vehicle —
+    // not just the ones that became a "tsb"-category recommendation. The
+    // LLM only ever sees `summary` (a prose string); this is the same
+    // underlying data with the fields the client needs to render a
+    // "View bulletin" popup kept as separate fields rather than re-parsed
+    // out of that prose. pdfUrl is only ever populated for live
+    // NHTSA-sourced bulletins (nhtsaTsbService.js's documents[].pdfUrl) —
+    // curated bulletins (src/data/tsbData.js) have no real external
+    // document, so this repo never fabricates one for them.
+    tsbReferences: (preloaded.tsbs || []).map(t => ({
+      tsbNumber:             t.nhtsaNumber || t.manufacturerNumber,
+      title:                 t.title || null,
+      summary:               t.summary,
+      component:             t.component,
+      dateCommunicationSent: t.dateCommunicationSent,
+      pdfUrl:                t.documents?.[0]?.pdfUrl || null,
+    })),
     usage,
     model,
   };
@@ -833,7 +1030,7 @@ export async function runROAdvisorAgent(opts) {
   if (LLM_SKIP_TOOLS) {
     console.log('[roAdvisor] LLM_SKIP_TOOLS=true — using single-pass prompt');
     const single = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
-    return finishAdvisorResult(single.result, ro, preloaded, single.usage, single.model);
+    return finishAdvisorResult(single.result, ro, preloaded, single.usage, single.model, shopProfile);
   }
 
   const messages = [
@@ -854,7 +1051,14 @@ export async function runROAdvisorAgent(opts) {
       data = await callAzureOpenAI({
         system:     buildSystemPrompt(ro, vehicle, shopName, shopProfile),
         messages,
-        max_tokens: 1200,
+        // Reasoning models (e.g. Qwen3 thinking mode on sglang) spend part of
+        // this budget on hidden chain-of-thought before writing any visible
+        // content — 1200 was tuned against non-reasoning models (gemma/vLLM)
+        // and left the post-tool-calls synthesis turn truncated (finish_reason
+        // "length", empty content) on a reasoning model, silently dropping
+        // advisorBrief/serviceRecommendations. See ROBUST_RESULT check below
+        // for the defense-in-depth half of this fix.
+        max_tokens: 3000,
         tools:      RO_TOOLS,
         _route:     '/api/agent/ro-advisor',
       });
@@ -884,10 +1088,22 @@ export async function runROAdvisorAgent(opts) {
     if (finishReason === 'stop' || finishReason === 'length') {
       const text = msg?.content || '{}';
       const json = text.match(/\{[\s\S]*\}/)?.[0] || text;
+      let parsed = null;
       try {
-        result = JSON.parse(json);
+        parsed = JSON.parse(json);
       } catch {
-        // LLM didn't produce valid JSON — run single-pass with data injected
+        // fall through to the single-pass fallback below via parsed === null
+      }
+      // A reasoning model that gets truncated mid-thought (finish_reason
+      // "length" with empty visible content — see max_tokens comment above)
+      // parses successfully as "{}", which is valid JSON but not a usable
+      // result: treat "no advisorBrief and no serviceRecommendations" the
+      // same as a parse failure rather than silently returning an empty
+      // brief to the advisor.
+      const usable = parsed && (parsed.advisorBrief || (parsed.serviceRecommendations || []).length > 0);
+      if (usable) {
+        result = parsed;
+      } else {
         const single = await runSinglePassAgent(ro, vehicle, shopName, preloaded, shopProfile);
         result = single.result;
         usage  = addUsage(usage, { prompt_tokens: single.usage?.promptTokens, completion_tokens: single.usage?.completionTokens, total_tokens: single.usage?.totalTokens });
@@ -927,7 +1143,7 @@ export async function runROAdvisorAgent(opts) {
     model  = model || single.model;
   }
 
-  return finishAdvisorResult(result, ro, preloaded, usage, model);
+  return finishAdvisorResult(result, ro, preloaded, usage, model, shopProfile);
 }
 
 /**
@@ -949,7 +1165,7 @@ export async function runLangChainROAdvisorAgent(opts) {
   if (LLM_SKIP_TOOLS) {
     console.log('[roAdvisor] LLM_SKIP_TOOLS=true — using single-pass prompt');
     const single = await runSinglePassAgent(ro, vehicle, SHOP_NAME, preloaded, shopProfile);
-    return finishAdvisorResult(single.result, ro, preloaded, single.usage, single.model);
+    return finishAdvisorResult(single.result, ro, preloaded, single.usage, single.model, shopProfile);
   }
 
   // Imported lazily so the default path never loads langchain/langgraph at all.
@@ -961,7 +1177,7 @@ export async function runLangChainROAdvisorAgent(opts) {
   });
 
   if (run.result) {
-    return finishAdvisorResult(run.result, ro, preloaded, run.usage, run.model);
+    return finishAdvisorResult(run.result, ro, preloaded, run.usage, run.model, shopProfile);
   }
 
   // No parseable JSON — same degradation as the hand-rolled loop, and the tokens
@@ -972,5 +1188,5 @@ export async function runLangChainROAdvisorAgent(opts) {
     completion_tokens: single.usage?.completionTokens,
     total_tokens:      single.usage?.totalTokens,
   });
-  return finishAdvisorResult(single.result, ro, preloaded, usage, run.model || single.model);
+  return finishAdvisorResult(single.result, ro, preloaded, usage, run.model || single.model, shopProfile);
 }

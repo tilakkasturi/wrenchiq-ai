@@ -24,6 +24,7 @@ import { openExternalUrl, openSmsRepresentativeSplit, openAdminSettingsWindow } 
 import { computeRepairJobsTotal } from "../services/roTotals";
 import { notifyROUpdated } from "../services/roUpdatesChannel";
 import TransferSimulationModal from "../components/sidecar/TransferSimulationModal";
+import TSBReferenceModal from "../components/sidecar/TSBReferenceModal";
 import HealthCheckScreen from "./sidecar/HealthCheckScreen";
 import RepairOrderQueue from "./sidecar/RepairOrderQueue";
 
@@ -33,6 +34,42 @@ const WEB_APP_BASE_URL = import.meta.env.VITE_WEB_APP_BASE_URL || "http://localh
 function fmtMoney(n) {
   if (n == null) return "$0";
   return `$${Math.round(n).toLocaleString()}`;
+}
+
+// Visit-history serviceType comes straight from the RO's raw serviceCategory
+// field (see fetchCustomerHistory), which is internal shop taxonomy, not
+// customer/advisor-facing copy — "factory_oem" means "manufacturer-scheduled
+// maintenance package," not literally "OEM" or "factory." Mapped to plain
+// language here rather than displayed verbatim.
+const SERVICE_CATEGORY_LABELS = {
+  factory_oem: "Maintenance",
+  other_mechanical: "General Repair",
+  ac: "A/C",
+  climate_control: "A/C",
+  engine_emissions: "Engine/Emissions",
+};
+function humanizeServiceCategory(cat) {
+  if (!cat) return "Service";
+  if (SERVICE_CATEGORY_LABELS[cat]) return SERVICE_CATEGORY_LABELS[cat];
+  return cat.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Header icon buttons (zoom, Home, notifications, chat, SMS/settings launch)
+// were rendered at 0.15-0.4 white opacity — nearly invisible against the
+// dark navy header. Every one of them now reads at a solid, legible
+// contrast: `active` (a toggled-on state, e.g. viewing Home or Notifications
+// showing) gets a gold fill+outline, a plain clickable icon sits at 0.9
+// opacity, and a genuinely inert one (zoom already maxed) still holds at
+// 0.35 rather than fading out.
+function headerIconStyle({ enabled = true, active = false }) {
+  return {
+    background: active ? "rgba(255,214,10,0.18)" : "transparent",
+    border: active ? "1px solid rgba(255,214,10,0.4)" : "1px solid transparent",
+    cursor: enabled ? "pointer" : "default",
+    padding: 5, borderRadius: 6,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    color: active ? COLORS.gold : enabled ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.35)",
+  };
 }
 
 // Splits a flowing AI-generated message into ~2 even paragraphs by sentence,
@@ -98,6 +135,29 @@ function simulateCatalogMatch(serviceName, estimatedCost) {
     candidateCount, laborHrs, partNumber, partCost, laborCost,
     parts: [{ description: `${serviceName} — ${partNumber}`, lineCost: partCost }],
   };
+}
+
+// Strategic Priorities mix two different kinds of objective: sellable
+// upsells ("offer alignment check", "add shop supply fee ($29.95)") and pure
+// process/compliance rules ("follow up within 24 hours on estimates over
+// $1,500"). Only the former has a real price to add to the RO — for the
+// latter, any dollar figure in the note is a threshold condition, not a fee,
+// so grabbing it (or fabricating a hash-based simulated catalog line item)
+// would add a nonsensical charge to the customer's invoice. This resolves a
+// price only when there's a real canned-job match or an explicit fee named
+// in the note itself; otherwise it returns null and the UI skips pricing.
+const THRESHOLD_PHRASE_RE = /\b(?:over|above|exceed(?:s|ing)?|more than|under|below|less than|at least|up to)\s*\$[\d,]+(?:\.\d{1,2})?/gi;
+function extractIngFee(note) {
+  const stripped = (note || "").replace(THRESHOLD_PHRASE_RE, "");
+  const m = stripped.match(/\$([\d,]+(?:\.\d{1,2})?)/);
+  return m ? parseFloat(m[1].replace(/,/g, "")) : null;
+}
+function resolveIngPricing(note, cannedJobs) {
+  const cannedMatch = matchCannedJob(note, cannedJobs);
+  if (cannedMatch) return cannedMatch;
+  const fee = extractIngFee(note);
+  if (fee == null) return null;
+  return { real: true, sourceDescription: note, laborHrs: 0, laborCost: fee, parts: [], partCost: 0, totalPrice: fee };
 }
 
 function timeAgo(ts) {
@@ -339,94 +399,59 @@ export default function WrenchIQSidecarScreen() {
               {llmProfile === "azure" ? "Microsoft/OpenAI" : "PrediiLLM"}
             </span>
           )}
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 2 }}>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 3 }}>
             <button
               onClick={zoomOut}
               disabled={!canZoomOut}
               title="Zoom out — shrink section text back down"
-              style={{
-                background: "transparent", border: "none",
-                cursor: canZoomOut ? "pointer" : "default", padding: 4, borderRadius: 6,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: canZoomOut ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.25)",
-              }}
+              style={headerIconStyle({ enabled: canZoomOut })}
             >
-              <ZoomOut size={14} />
+              <ZoomOut size={15} />
             </button>
             <button
               onClick={zoomIn}
               disabled={!canZoomIn}
               title="Zoom in — enlarge the text inside each section for readability"
-              style={{
-                background: "transparent", border: "none",
-                cursor: canZoomIn ? "pointer" : "default", padding: 4, borderRadius: 6,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: canZoomIn ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.25)",
-              }}
+              style={headerIconStyle({ enabled: canZoomIn })}
             >
-              <ZoomIn size={14} />
+              <ZoomIn size={15} />
             </button>
             <button
               onClick={() => setPhase("health")}
               disabled={phase === "health"}
               title="Home — back to the launch/connections screen"
-              style={{
-                background: "transparent", border: "none",
-                cursor: phase === "health" ? "default" : "pointer", padding: 4, borderRadius: 6,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: phase === "health" ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.4)",
-              }}
+              style={headerIconStyle({ enabled: phase !== "health", active: phase === "health" })}
             >
-              <Home size={14} />
+              <Home size={15} />
             </button>
             <button
               onClick={() => setNotificationsVisible((v) => !v)}
               title={notificationsVisible ? "Hide notifications" : "Show notifications"}
-              style={{
-                background: "transparent", border: "none",
-                cursor: "pointer", padding: 4, borderRadius: 6,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: notificationsVisible ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)",
-              }}
+              style={headerIconStyle({ enabled: true, active: notificationsVisible })}
             >
-              {notificationsVisible ? <Bell size={14} /> : <BellOff size={14} />}
+              {notificationsVisible ? <Bell size={15} /> : <BellOff size={15} />}
             </button>
             <button
               onClick={() => setPhase("shopChat")}
               disabled={phase === "shopChat"}
               title="Ask WrenchIQ — shop-wide chat grounded in canned jobs, Shop Profile, and any named customer's history"
-              style={{
-                background: "transparent", border: "none",
-                cursor: phase === "shopChat" ? "default" : "pointer", padding: 4, borderRadius: 6,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: phase === "shopChat" ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.4)",
-              }}
+              style={headerIconStyle({ enabled: phase !== "shopChat", active: phase === "shopChat" })}
             >
-              <MessagesSquare size={14} />
+              <MessagesSquare size={15} />
             </button>
             <button
               onClick={() => openSurfaceC(smsName)}
               title={`Open ${smsName || "SMS/DMS"} Representative (Surface C)`}
-              style={{
-                background: "transparent", border: "none",
-                cursor: "pointer", padding: 4, borderRadius: 6,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "rgba(255,255,255,0.8)",
-              }}
+              style={headerIconStyle({ enabled: true })}
             >
-              <ExternalLink size={14} />
+              <ExternalLink size={15} />
             </button>
             <button
               onClick={() => openSurfaceASettings(smsName)}
               title="Open WrenchIQ settings"
-              style={{
-                background: "transparent", border: "none",
-                cursor: "pointer", padding: 4, borderRadius: 6,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "rgba(255,255,255,0.8)",
-              }}
+              style={headerIconStyle({ enabled: true })}
             >
-              <Settings size={14} />
+              <Settings size={15} />
             </button>
           </div>
         </div>
@@ -573,11 +598,15 @@ function RepairOrderCard({ ro, activeCustomer, loading, onOpenQueue, smsName, ad
     ? `${cust.firstName} ${cust.lastName}`
     : activeCustomer?.customerName || (loading ? "Loading…" : "Select a customer");
   const roNumber = ro?.roNumber || activeCustomer?.roNumber;
+  const vehMileage = veh?.mileage ?? veh?.odometer ?? activeCustomer?.vehicle?.mileage ?? null;
   const vehicleLine = veh?.make
     ? `${veh.year} ${veh.make} ${veh.model}`
     : activeCustomer?.vehicle
       ? `${activeCustomer.vehicle.year || ""} ${activeCustomer.vehicle.make || ""} ${activeCustomer.vehicle.model || ""}`.trim()
       : null;
+  const vehicleLineWithMileage = vehicleLine && vehMileage != null
+    ? `${vehicleLine} — ${vehMileage.toLocaleString()} mi`
+    : vehicleLine;
 
   return (
     // A plain div (not <button>) because the Transfer action below renders
@@ -647,8 +676,8 @@ function RepairOrderCard({ ro, activeCustomer, loading, onOpenQueue, smsName, ad
         )}
       </div>
 
-      {vehicleLine && (
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)" }}>{vehicleLine}</div>
+      {vehicleLineWithMileage && (
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)" }}>{vehicleLineWithMileage}</div>
       )}
 
       {/* Base RO value → accepted upsell → new total, so the advisor can see */}
@@ -1321,9 +1350,7 @@ function ThreeCPanel({ ro }) {
 
           {rewriteResult && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: bz(9), color: "rgba(255,255,255,0.75)", lineHeight: 1.4 }}>
-                Rewrite is grounded strictly in this RO's own data — no invented DTCs, parts, or customer statements.
-              </div>
+              <GroundingNotice grounding={rewriteResult.grounding} bz={bz} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 <div style={{ borderLeft: "3px solid rgba(255,255,255,0.2)", borderRadius: 6, padding: "6px 10px", background: "rgba(255,255,255,0.03)" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
@@ -1349,7 +1376,7 @@ function ThreeCPanel({ ro }) {
                   )}
                 </div>
               </div>
-              {rewriteResult.rewritten && !applied && (
+              {rewriteResult.rewritten && !applied && rewriteResult.grounding?.grounded !== false && (
                 <button
                   onClick={handleApply}
                   style={{
@@ -1368,6 +1395,110 @@ function ThreeCPanel({ ro }) {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+// Renders the outcome of verifyThreeCGrounding() — an independent LLM
+// fact-check of the rewrite against the same context it was supposed to be
+// grounded in. Blocks the natural next step to read "flagged, don't apply"
+// as strongly as the copy does: ThreeCPanel/runThreeCTask both hide their
+// "Apply"/accept affordance whenever grounded === false, rather than just
+// showing a warning next to a button that still works.
+// "Translate" on a non-English assistant reply — the advisor picked (or the
+// model auto-detected) a language other than English to talk to the
+// customer in, but still needs to know what was actually said. Fetches
+// lazily on first click and caches the result locally so re-toggling never
+// re-calls the model; shown as a hovering popover anchored to the button
+// rather than replacing the reply inline, so the original (the thing that
+// actually gets sent/copied to the customer) stays the visible text.
+function TranslateButton({ text }) {
+  const [open, setOpen] = useState(false);
+  const [translation, setTranslation] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleClick() {
+    if (open) { setOpen(false); return; }
+    if (translation) { setOpen(true); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/ro-chat/translate`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      setTranslation(data.translation || "Translation unavailable.");
+      setOpen(true);
+    } catch {
+      setTranslation("Sorry, WrenchIQ couldn't translate this just now — try again.");
+      setOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ position: "relative", display: "inline-flex" }}>
+      <button
+        onClick={handleClick}
+        title="Translate to English"
+        style={{
+          display: "flex", alignItems: "center", gap: 4,
+          background: "transparent", border: "none", cursor: "pointer", padding: "0 2px",
+          color: open ? "#7DD3FC" : "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 600,
+        }}
+      >
+        <Layers size={11} />
+        {loading ? "Translating…" : "Translate"}
+      </button>
+      {open && translation && (
+        <div style={{
+          position: "absolute", bottom: "calc(100% + 6px)", left: 0, zIndex: 20,
+          minWidth: 200, maxWidth: 320,
+          background: COLORS.navyMid, border: "1px solid rgba(125,211,252,0.35)",
+          borderRadius: 8, padding: "8px 10px", boxShadow: "0 12px 32px rgba(0,0,0,0.45)",
+          fontSize: 11.5, lineHeight: 1.5, color: "#fff", whiteSpace: "pre-wrap",
+        }}>
+          {translation}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GroundingNotice({ grounding, bz }) {
+  if (!grounding || grounding.grounded == null) {
+    return (
+      <div style={{ fontSize: bz(9), color: "rgba(255,255,255,0.75)", lineHeight: 1.4 }}>
+        Rewrite is instructed to stay grounded strictly in this RO's own data — no invented DTCs, parts, or
+        customer statements — but the independent fact-check couldn't be reached, so this hasn't been verified.
+      </div>
+    );
+  }
+  if (grounding.grounded === false) {
+    return (
+      <div style={{
+        display: "flex", gap: 6, alignItems: "flex-start", fontSize: bz(10), lineHeight: 1.45,
+        color: "#FCA5A5", background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)",
+        borderRadius: 6, padding: "7px 9px",
+      }}>
+        <AlertTriangle size={12} style={{ flexShrink: 0, marginTop: 1 }} />
+        <div>
+          <div style={{ fontWeight: 700 }}>Hallucination check failed — do not apply as-is.</div>
+          {grounding.fabrications?.length > 0 && (
+            <ul style={{ margin: "4px 0 0", paddingLeft: 16 }}>
+              {grounding.fabrications.map((f, i) => <li key={i}>{f}</li>)}
+            </ul>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: "flex", gap: 5, alignItems: "center", fontSize: bz(9), color: "#86EFAC", lineHeight: 1.4 }}>
+      <Check size={11} style={{ flexShrink: 0 }} />
+      Independently fact-checked — grounded strictly in this RO's own data, no invented DTCs, parts, or customer statements.
     </div>
   );
 }
@@ -1476,10 +1607,14 @@ function TalkTrackText({ ro, service, talkTrack }) {
 // job to the RO's repairJobs. Distinct from the bulk "Transfer to SE" button
 // above, which only simulates pushing everything to the SMS and never writes
 // to the story RO itself.
-function ServiceRecommendationCard({ ro, rec, accepted, onConfirm, cannedJobs }) {
+function ServiceRecommendationCard({ ro, rec, accepted, onConfirm, cannedJobs, tsbReferences }) {
   const [phase, setPhase] = useState("idle"); // idle | searching | resolved
   const [match, setMatch] = useState(null);
+  const [tsbModalOpen, setTsbModalOpen] = useState(false);
   const { bz } = useZoom();
+  const tsbRef = rec.category === "tsb"
+    ? (tsbReferences || []).find((t) => t.tsbNumber === rec.tsbNumber)
+    : null;
 
   // Accept resolves the catalog match and adds it to the RO in one step —
   // no separate "Confirm & Add to RO" click required.
@@ -1505,15 +1640,21 @@ function ServiceRecommendationCard({ ro, rec, accepted, onConfirm, cannedJobs })
         <span style={{ fontSize: 12, fontWeight: 700, color: "#F1F5F9", flex: 1, marginRight: 8 }}>
           {rec.service}
           {rec.category === "tsb" && (
-            <span
-              title={rec.tsbNumber ? `NHTSA TSB ${rec.tsbNumber}` : "Manufacturer Technical Service Bulletin"}
+            <button
+              onClick={() => setTsbModalOpen(true)}
+              title={tsbRef ? "View full bulletin" : (rec.tsbNumber ? `NHTSA TSB ${rec.tsbNumber}` : "Manufacturer Technical Service Bulletin")}
               style={{
                 marginLeft: 6, fontSize: 9, fontWeight: 700, borderRadius: 3, padding: "1px 5px",
                 background: "rgba(240,171,252,0.15)", color: "#F0ABFC", letterSpacing: 0.2,
+                border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3,
               }}
             >
               TSB{rec.tsbNumber ? ` ${rec.tsbNumber}` : ""}
-            </span>
+              <FileText size={9} />
+            </button>
+          )}
+          {tsbModalOpen && (
+            <TSBReferenceModal rec={rec} tsbRef={tsbRef} onClose={() => setTsbModalOpen(false)} />
           )}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
@@ -1567,6 +1708,18 @@ function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, 
   // below) — it must count toward addedJobs/Transfer just like any other
   // accepted item, not just flip a local "Accepted" label.
   const [acceptedIngs, setAcceptedIngs] = useState(new Set());
+  // A Strategic Priority isn't always a sellable item to Accept — some are
+  // pure talking points (e.g. "lead with loyalty history") with nothing to
+  // price or add to the RO. This just tracks "I said this to the customer,"
+  // independent of Accept — the two aren't mutually exclusive or dependent.
+  const [presentedIngs, setPresentedIngs] = useState(new Set());
+  function togglePresented(note) {
+    setPresentedIngs((prev) => {
+      const next = new Set(prev);
+      if (next.has(note)) next.delete(note); else next.add(note);
+      return next;
+    });
+  }
   // This shop's real priced canned-job menu — lets the Accept flow below use
   // real labor hours + parts pricing when a recommendation is on the menu,
   // instead of always falling back to the simulated catalog match.
@@ -1583,16 +1736,16 @@ function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, 
 
   // Accepting a Strategic Priority resolves it the same way a Service
   // Recommendation does — real canned-job pricing when the note matches the
-  // shop's menu, an explicit dollar figure already named in the note itself
-  // (e.g. "shop supply fee ($29.95)"), or the same simulated catalog match
-  // used as a last resort elsewhere — then hands off to the same
+  // shop's menu, otherwise an explicit fee already named in the note itself
+  // (e.g. "shop supply fee ($29.95)") — then hands off to the same
   // onConfirmRecommendation the parent uses to add a job to the RO and count
-  // it toward the Transfer button.
+  // it toward the Transfer button. Only ever called when resolveIngPricing()
+  // found a real price (see the render below) — pure process/compliance
+  // objectives have no Accept control at all, so there's nothing to add.
   function handleAcceptIng(ing) {
     if (acceptedIngs.has(ing.note)) return;
-    const explicitCost = (ing.note || "").match(/\$([\d,]+(?:\.\d{1,2})?)/);
-    const estimatedCost = explicitCost ? parseFloat(explicitCost[1].replace(/,/g, "")) : undefined;
-    const match = matchCannedJob(ing.note, cannedJobs) || simulateCatalogMatch(ing.note, estimatedCost);
+    const match = resolveIngPricing(ing.note, cannedJobs);
+    if (!match) return;
     setAcceptedIngs((prev) => new Set(prev).add(ing.note));
     onConfirmRecommendation({ service: ing.note }, match);
   }
@@ -1744,6 +1897,7 @@ function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, 
                   accepted={acceptedServices.has(u.service)}
                   onConfirm={onConfirmRecommendation}
                   cannedJobs={cannedJobs}
+                  tsbReferences={agentData?.tsbReferences}
                 />
               ))}
             </div>
@@ -1769,6 +1923,7 @@ function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, 
                     accepted={acceptedServices.has(u.service)}
                     onConfirm={onConfirmRecommendation}
                     cannedJobs={cannedJobs}
+                    tsbReferences={agentData?.tsbReferences}
                   />
                 ))}
               </div>
@@ -1779,7 +1934,14 @@ function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, 
       })()}
 
       {/* ── Strategic Priorities — distinct purple panel ────────────────── */}
-      {(agentData?.ings || []).length > 0 && (
+      {/* Only priorities that actually apply to this RO — an N/A one isn't
+          actionable here and isn't worth a row (the Agent Trace tab is where
+          the full applies/N/A picture, including why something didn't
+          apply, is meant to live). */}
+      {(() => {
+        const applicableIngs = (agentData?.ings || []).filter((ing) => ing.applies);
+        if (applicableIngs.length === 0) return null;
+        return (
         <div style={{
           background: "rgba(168,85,247,0.08)",
           border: "1px solid rgba(168,85,247,0.22)",
@@ -1789,37 +1951,47 @@ function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, 
             Strategic Priorities
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {[...agentData.ings].sort((a, b) => (b.applies ? 1 : 0) - (a.applies ? 1 : 0)).map((ing, i) => {
+            {applicableIngs.map((ing, i) => {
               const isAccepted = acceptedIngs.has(ing.note);
+              const pricing = resolveIngPricing(ing.note, cannedJobs);
               return (
               <div key={i} style={{
                 display: "flex", gap: 7, alignItems: "flex-start",
                 padding: "5px 0",
-                borderBottom: i < agentData.ings.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                borderBottom: i < applicableIngs.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
               }}>
-                {ing.applies && (
-                  isAccepted ? (
-                    <span style={{
-                      display: "flex", alignItems: "center", gap: 3, flexShrink: 0, marginTop: 1,
-                      fontSize: 10, fontWeight: 700, color: "#D8B4FE",
+                {isAccepted ? (
+                  <span style={{
+                    display: "flex", alignItems: "center", gap: 3, flexShrink: 0, marginTop: 1,
+                    fontSize: 10, fontWeight: 700, color: "#D8B4FE",
+                    background: "rgba(216,180,254,0.12)", border: "1px solid rgba(216,180,254,0.3)",
+                    borderRadius: 6, padding: "3px 8px",
+                  }}>
+                    <Check size={11} /> Added {fmtMoney(pricing?.totalPrice)}
+                  </span>
+                ) : pricing ? (
+                  <button
+                    onClick={() => handleAcceptIng(ing)}
+                    title={`Adds ${fmtMoney(pricing.totalPrice)} to this RO's estimate`}
+                    style={{
+                      flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", gap: 3,
                       background: "rgba(216,180,254,0.12)", border: "1px solid rgba(216,180,254,0.3)",
-                      borderRadius: 6, padding: "3px 8px",
-                    }}>
-                      <Check size={11} /> Accepted
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleAcceptIng(ing)}
-                      style={{
-                        flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", gap: 3,
-                        background: "rgba(216,180,254,0.12)", border: "1px solid rgba(216,180,254,0.3)",
-                        borderRadius: 6, padding: "3px 8px", cursor: "pointer",
-                        fontSize: 10, fontWeight: 700, color: "#D8B4FE",
-                      }}
-                    >
-                      <Check size={11} /> Accept
-                    </button>
-                  )
+                      borderRadius: 6, padding: "3px 8px", cursor: "pointer",
+                      fontSize: 10, fontWeight: 700, color: "#D8B4FE",
+                    }}
+                  >
+                    <Check size={11} /> Accept {fmtMoney(pricing.totalPrice)}
+                  </button>
+                ) : (
+                  <span
+                    title="Process/compliance reminder, not a sellable service — no price to add to this RO"
+                    style={{
+                      flexShrink: 0, marginTop: 1, fontSize: 9, fontWeight: 700, borderRadius: 3, padding: "3px 8px",
+                      background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.45)", letterSpacing: 0.2,
+                    }}
+                  >
+                    Not billable
+                  </span>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: bz(11), color: "rgba(255,255,255,0.82)", lineHeight: 1.45 }}>{ing.note}</div>
@@ -1827,12 +1999,28 @@ function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, 
                     <div style={{ fontSize: bz(10), color: "rgba(255,255,255,0.75)", marginTop: 2, lineHeight: 1.4 }}>{ing.reason}</div>
                   )}
                 </div>
+                <label
+                  title="Check off once you've actually said this to the customer"
+                  style={{
+                    display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginTop: 1,
+                    cursor: "pointer", fontSize: 9.5, color: presentedIngs.has(ing.note) ? "#D8B4FE" : "rgba(255,255,255,0.5)",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={presentedIngs.has(ing.note)}
+                    onChange={() => togglePresented(ing.note)}
+                    style={{ accentColor: "#A855F7", cursor: "pointer" }}
+                  />
+                  Presented
+                </label>
               </div>
               );
             })}
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
@@ -1961,8 +2149,61 @@ function fmtUsd(n) {
   return `$${n.toFixed(4)}`;
 }
 
-// 5 tool-call stages + 1 "final synthesis" reveal + 1 "usage/cost" reveal.
-const TRACE_STAGE_COUNT = REACT_TOOLS.length + 2;
+// One stage per tool call + 1 "final synthesis" reveal + 1 "deterministic
+// corrections" reveal + 1 "usage/cost" reveal.
+const TRACE_STAGE_COUNT = REACT_TOOLS.length + 3;
+
+// The non-LLM pass every result goes through after synthesis, before
+// reaching the client — finishAdvisorResult() in roAdvisorService.js.
+// Listed here so the trace doesn't stop at "the model produced JSON" and
+// silently skip the corrections that run on every single request.
+const DETERMINISTIC_CORRECTIONS = [
+  {
+    label: "Filter already-on-RO items",
+    detail: "Any recommendation or shop-objective note that duplicates an existing line item on this RO is dropped — worded differently or not.",
+  },
+  {
+    label: "Reconcile TSB pricing & scope",
+    detail: "Every \"tsb\"-category recommendation matched to this repo's curated bulletin data (src/data/tsbData.js) gets its cost recomputed from that bulletin's own labor hours × shop rate + parts — not the LLM's own estimate, which varied run-to-run. If the recommended service name drops the bulletin's specified fix (e.g. \"Inspection\" standing in for a bulletin that specifies replacement), it's realigned to the bulletin's own title. Live NHTSA-sourced TSBs have no such structured pricing and are left as the model scoped/priced them.",
+  },
+  {
+    label: "Regenerate customer message on artifact",
+    detail: "If the model's customer-facing message leaked a stray list-numbering fragment (a drafting artifact, not a price or real number), it's rebuilt directly from the structured recommendations rather than patched in place.",
+  },
+];
+
+// Previews, per recommendation, the exact pricing source ServiceRecommendationCard's
+// real Accept flow will resolve to (matchCannedJob → simulateCatalogMatch) — same
+// two functions, same fallback order, so this is never out of sync with what
+// actually happens on Accept, and an advisor can see which items are priced from
+// the shop's real menu vs. a simulated placeholder before ever clicking Accept.
+function CatalogMatchPreview({ service, estimatedCost, cannedJobs }) {
+  const match = matchCannedJob(service, cannedJobs) || simulateCatalogMatch(service, estimatedCost);
+
+  if (match.real) {
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", gap: 5, marginTop: 5,
+        fontSize: 10, color: "#86EFAC",
+      }}>
+        <Check size={10} style={{ flexShrink: 0 }} />
+        Canned-job match: "{match.sourceDescription}" — {match.laborHrs} hr + {match.parts.length} part{match.parts.length === 1 ? "" : "s"} → {fmtMoney(match.totalPrice)}
+      </div>
+    );
+  }
+  return (
+    <div
+      title="No match on this shop's canned-job menu — this is a placeholder parts/labor split, not a real parts search. See WrenchIQ Product Spec v3.0 §4/§7."
+      style={{
+        display: "flex", alignItems: "center", gap: 5, marginTop: 5,
+        fontSize: 10, color: "rgba(255,255,255,0.6)",
+      }}
+    >
+      <AlertTriangle size={10} style={{ flexShrink: 0 }} />
+      Simulated catalog match (no canned-job on file): {match.laborHrs} hr @ part #{match.partNumber} — {fmtMoney(match.laborCost)} labor + {fmtMoney(match.partCost)} parts
+    </div>
+  );
+}
 
 function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
   const { bz } = useZoom();
@@ -1970,6 +2211,20 @@ function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
   const [revealCount, setRevealCount] = useState(TRACE_STAGE_COUNT); // fully shown by default
   const [isPlaying, setIsPlaying] = useState(false);
   const playTimerRef = useRef(null);
+  const { activeShopId } = useDemo();
+  // Independent fetch rather than a prop from IntelligencePanel — this tab
+  // is meant to be self-sufficient (reads straight off this RO's own data),
+  // and it needs the same canned-job menu ServiceRecommendationCard's real
+  // Accept flow checks, to show *before* the advisor clicks Accept which
+  // pricing source each recommendation will actually resolve to.
+  const [cannedJobs, setCannedJobs] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchCannedJobs(activeShopId)
+      .then((data) => { if (!cancelled) setCannedJobs(data.jobs || []); })
+      .catch(() => { if (!cancelled) setCannedJobs([]); });
+    return () => { cancelled = true; };
+  }, [activeShopId]);
 
   useEffect(() => () => clearTimeout(playTimerRef.current), []);
 
@@ -2002,7 +2257,8 @@ function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
 
   const toolsRevealed = Math.min(revealCount, REACT_TOOLS.length);
   const synthesisRevealed = revealCount > REACT_TOOLS.length;
-  const usageRevealed = revealCount > REACT_TOOLS.length + 1;
+  const correctionsRevealed = revealCount > REACT_TOOLS.length + 1;
+  const usageRevealed = revealCount > REACT_TOOLS.length + 2;
 
   if (agentLoading && !agentData) return <LoadingSkeleton />;
 
@@ -2013,10 +2269,16 @@ function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-        <div style={{ fontSize: bz(11), color: "rgba(255,255,255,0.8)", lineHeight: 1.5, flex: 1 }}>
-          The actual ReAct tool-calling loop WrenchIQ Intelligence ran for{" "}
-          <strong style={{ color: "rgba(255,255,255,0.85)" }}>{ro?.roNumber}</strong> — 5 tool calls, then one JSON
-          synthesis that becomes the Service Recommendations and Strategic Priorities panels on the Intelligence tab.
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: bz(11), color: "rgba(255,255,255,0.85)", lineHeight: 1.5 }}>
+            Tool-calling run for <strong style={{ color: "#fff" }}>{ro?.roNumber}</strong> — up to{" "}
+            {REACT_TOOLS.length} tool calls → synthesis → deterministic corrections → Intelligence tab.
+          </div>
+          <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.4, marginTop: 3 }}>
+            Runs on one of two interchangeable engines (hand-rolled loop or LangChain's{" "}
+            <code style={{ fontFamily: "monospace" }}>createAgent</code>, via server setting{" "}
+            <code style={{ fontFamily: "monospace" }}>LLM_ENGINE</code>) — same tools/prompt/contract either way.
+          </div>
         </div>
         <button
           onClick={handlePlay}
@@ -2106,8 +2368,25 @@ function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
                 <span style={{ fontWeight: 400, color: "rgba(255,255,255,0.75)", fontSize: 10 }}>
                   · {r.category} · {r.confidence} confidence · {fmtMoney(r.estimatedCost)}
                 </span>
+                {/* Curated bulletins (src/data/tsbData.js) are numbered like "TSB-20-009"/
+                    "SIB-11-06-20" — letter-prefixed. Live NHTSA-sourced numbers are plain
+                    numeric IDs and carry no structured labor/parts data to reconcile against,
+                    so the badge (and the claim it makes) only applies to the former. */}
+                {r.category === "tsb" && /^[A-Za-z]/.test(r.tsbNumber || "") && (
+                  <span
+                    title="Cost recomputed deterministically from the bulletin's own labor/parts data — see Deterministic corrections below."
+                    style={{
+                      marginLeft: 6, fontSize: 8.5, fontWeight: 700, borderRadius: 3, padding: "1px 5px",
+                      letterSpacing: "0.04em", textTransform: "uppercase",
+                      background: "rgba(74,222,128,0.14)", color: "#86EFAC",
+                    }}
+                  >
+                    price verified
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>{r.reason}</div>
+              <CatalogMatchPreview service={r.service} estimatedCost={r.estimatedCost} cannedJobs={cannedJobs} />
             </div>
           ))}
         </div>
@@ -2149,6 +2428,29 @@ function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
             ))}
           </div>
         )}
+      </div>
+
+      {/* ── Deterministic corrections — runs on every result, LLM-independent ── */}
+      <div style={{
+        opacity: correctionsRevealed ? 1 : 0, transform: correctionsRevealed ? "translateY(0)" : "translateY(-6px)",
+        transition: "opacity 0.45s ease, transform 0.45s ease",
+        pointerEvents: correctionsRevealed ? "auto" : "none",
+      }}>
+        <div style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: 8, padding: "12px 14px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#86EFAC", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 4 }}>
+            Deterministic corrections (no LLM call)
+          </div>
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", lineHeight: 1.5, marginBottom: 8 }}>
+            The synthesis JSON above is the model's output before this pass — everything below runs in plain code
+            against that JSON, the same way marginCheck/aroGap never let the model do that arithmetic itself.
+          </div>
+          {DETERMINISTIC_CORRECTIONS.map((c, i) => (
+            <div key={c.label} style={{ padding: "6px 0", borderBottom: i < DETERMINISTIC_CORRECTIONS.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>{c.label}</div>
+              <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", marginTop: 2, lineHeight: 1.45 }}>{c.detail}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── Token usage & cost projection ────────────────────────────────── */}
@@ -2255,31 +2557,12 @@ function buildPresetTasks(ro) {
   const primaryService = serviceNames[0];
   const tasks = [];
 
-  if (concern) {
-    tasks.push({
-      id: "rewriteConcern",
-      label: "Rewrite concern",
-      icon: Pencil,
-      prompt: `Rewrite this customer concern for the RO record in clear, professional automotive language:\n"${concern}"`,
-    });
-    tasks.push({
-      id: "rewriteCCC",
-      label: "Rewrite CCC",
-      icon: FileText,
-      prompt: `Using this RO, write it up as a proper Complaint / Cause / Correction.\nComplaint (customer's own words): "${concern}"\nServices performed or recommended on this RO: ${serviceNames.join(", ") || "none listed"}\nWrite three short labeled sections: Complaint, Cause, Correction.`,
-    });
-    // A genuinely multi-step task (root-cause reasoning + real pricing lookup
-    // + tone-constrained customer copy, all in one structured answer) — sent
-    // to both tiers at once so the reasoning-quality gap is directly visible
-    // rather than asserted.
-    tasks.push({
-      id: "deepDiagnosisCompare",
-      label: "Deep diagnosis (compare models)",
-      icon: Layers,
-      compare: true,
-      prompt: `Do a full diagnosis writeup for this RO in three clearly labeled sections:\n1. Diagnosis Reasoning — the most likely root cause(s) for the customer's concern, reasoned from the vehicle and concern given.\n2. Recommended Job(s) & Price — which job(s) on our canned job menu address it, with the exact price.\n3. Customer Message — a warm, Gold Standard customer-facing message explaining the finding, price, and urgency.\nConcern: "${concern}"`,
-    });
-  }
+  // "Rewrite concern", "Rewrite CCC", and "Deep diagnosis (compare models)"
+  // used to live here — all three duplicated what the "3C" task below
+  // already does strictly better (scores before/after, grounds the rewrite
+  // in this RO's own data, independently fact-checks it for hallucination,
+  // and can apply the result straight to the RO). Removed rather than kept
+  // as a second, worse way to do the same thing.
 
   // Live 3C scoring/rewrite — a dedicated flow (server/services/
   // threeCScoreService.js), not a plain chat prompt: scores this RO's
@@ -2312,14 +2595,26 @@ function buildPresetTasks(ro) {
       : `A customer says their car makes a grinding noise when braking. What's the likely related repair, and do we have a canned job for it?`,
   });
 
-  // Free-chat capability: summarize this customer's real visit history
-  // (server-side lookup — see roChat.js's loadCustomerHistory), not a guess.
+  // Structured (not LLM-summarized) visit-by-date timeline — real MongoDB
+  // history (see roChat.js's GET /customer-history, same lookup the chat's
+  // own grounding already uses), rendered as a scannable list rather than
+  // asking the model to restate dates from prose.
   const customerName = ro._customer?.firstName || "this customer";
   tasks.push({
-    id: "summarizeVisits",
-    label: "Summarize past visits",
+    id: "visitHistory",
+    label: "Visit history",
     icon: History,
-    prompt: `Summarize ${customerName}'s past visits — what's been done before, any patterns, and anything worth following up on.`,
+    history: true,
+  });
+
+  // Advisor guidance for the conversation happening today — grounded in
+  // the customer's real history (recurring issues, declined work worth
+  // re-offering, tenure), distinct from the raw timeline above.
+  tasks.push({
+    id: "talkingPoints",
+    label: "Talking points for today",
+    icon: Sparkles,
+    prompt: `Based on ${customerName}'s full visit history, give me specific talking points for my conversation with them today: any recurring issue worth mentioning, previously declined work worth re-offering, their tenure/loyalty if it's notable, and anything to watch for. Write it as short bullet points I can glance at while talking to them — not a script to read verbatim.`,
   });
 
   return tasks;
@@ -2327,6 +2622,78 @@ function buildPresetTasks(ro) {
 
 // One half of a model-comparison reply — a colored-left-border card with a
 // labeled header, its own copy button, and an optional fallback notice.
+// Renders **bold** spans inline — the one inline markup the chat prompts
+// actually ask the model to use (e.g. "bold the price"). Everything else
+// (headers, emphasis) stays plain text rather than growing a real markdown
+// parser for a small assistant reply surface.
+function formatInlineBold(text) {
+  const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) =>
+    p.startsWith("**") && p.endsWith("**") && p.length > 4
+      ? <strong key={i} style={{ color: "inherit", fontWeight: 800 }}>{p.slice(2, -2)}</strong>
+      : p
+  );
+}
+
+// Chat replies were rendered as one whiteSpace:pre-wrap blob — a model's
+// numbered sections and bullet lists ran together into a wall of text since
+// nothing gave them real line breaks or list markup. This gives replies the
+// structure they're already asking for: blank-line paragraphs, "- "/"* "
+// bullets, "1. " numbered steps, and inline **bold** — without pulling in a
+// markdown dependency for what's still a small, mostly-plain-text surface.
+function ChatMessageText({ text }) {
+  const lines = String(text || "").split("\n");
+  const blocks = [];
+  let currentList = null;
+  let currentPara = [];
+
+  const flushPara = () => {
+    if (currentPara.length) { blocks.push({ type: "p", text: currentPara.join(" ") }); currentPara = []; }
+  };
+  const flushList = () => {
+    if (currentList) { blocks.push(currentList); currentList = null; }
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) { flushPara(); flushList(); continue; }
+
+    const bulletMatch = line.match(/^[-*•]\s+(.*)/);
+    const numberedMatch = line.match(/^\d+[.)]\s+(.*)/);
+
+    if (bulletMatch) {
+      flushPara();
+      if (!currentList || currentList.type !== "ul") { flushList(); currentList = { type: "ul", items: [] }; }
+      currentList.items.push(bulletMatch[1]);
+    } else if (numberedMatch) {
+      flushPara();
+      if (!currentList || currentList.type !== "ol") { flushList(); currentList = { type: "ol", items: [] }; }
+      currentList.items.push(numberedMatch[1]);
+    } else {
+      flushList();
+      currentPara.push(line);
+    }
+  }
+  flushPara();
+  flushList();
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {blocks.map((b, i) => {
+        if (b.type === "ul" || b.type === "ol") {
+          const Tag = b.type === "ul" ? "ul" : "ol";
+          return (
+            <Tag key={i} style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 3 }}>
+              {b.items.map((item, j) => <li key={j}>{formatInlineBold(item)}</li>)}
+            </Tag>
+          );
+        }
+        return <div key={i}>{formatInlineBold(b.text)}</div>;
+      })}
+    </div>
+  );
+}
+
 function ComparisonReplyBlock({ label, color, textColor, text, notice, copyKey, copiedKey, onCopy }) {
   const copied = copiedKey === copyKey;
   return (
@@ -2351,8 +2718,8 @@ function ComparisonReplyBlock({ label, color, textColor, text, notice, copyKey, 
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <div style={{ fontSize: 12, lineHeight: 1.5, color: "rgba(255,255,255,0.8)", whiteSpace: "pre-wrap" }}>
-        {text}
+      <div style={{ fontSize: 12, lineHeight: 1.5, color: "rgba(255,255,255,0.8)" }}>
+        <ChatMessageText text={text} />
       </div>
       {notice && (
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", marginTop: 6, fontStyle: "italic" }}>
@@ -2386,6 +2753,16 @@ function buildShopPresetTasks(selectedCustomerName) {
       icon: Stethoscope,
       prompt: "What seasonal patterns should we be planning around right now?",
     },
+    // Deterministic (not LLM-guessed) candidate discovery — see
+    // cannedJobCandidatesService.js. Finds RO jobs that recur often but
+    // aren't priced on the menu yet, so the shop can turn tribal pricing
+    // knowledge into a real canned job with one click.
+    {
+      id: "cannedJobCandidates",
+      label: "Suggest new canned jobs",
+      icon: ClipboardCheck,
+      cannedJobCandidates: true,
+    },
   ];
   if (selectedCustomerName) {
     tasks.push({
@@ -2396,6 +2773,76 @@ function buildShopPresetTasks(selectedCustomerName) {
     });
   }
   return tasks;
+}
+
+// Common Tasks dropdown — replaces a horizontally-scrolling row of pill
+// buttons with a single "Select a task…" control, since the Sidecar window
+// is narrow enough that a wide task list either wrapped awkwardly or forced
+// horizontal scrolling past the visible edge. Shared between ChatTab (RO
+// Chat) and ShopChatScreen (Ask WrenchIQ) — same interaction, different
+// task lists and open direction (ChatTab's control sits at the bottom of
+// the panel, so its menu opens upward over the transcript instead of
+// downward off the bottom edge).
+function TaskMenu({ tasks, onRun, sending, direction = "down" }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "relative", flexShrink: 0 }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        disabled={sending}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)",
+          borderRadius: 8, padding: "8px 11px", cursor: sending ? "default" : "pointer",
+          color: "#F1F5F9", fontSize: 12, fontWeight: 700, boxSizing: "border-box",
+        }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Layers size={13} color="rgba(255,255,255,0.55)" />
+          Select a task…
+        </span>
+        <ChevronDown
+          size={14} color="rgba(255,255,255,0.5)"
+          style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
+        />
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", left: 0, right: 0, zIndex: 20,
+          ...(direction === "up" ? { bottom: "calc(100% + 6px)" } : { top: "calc(100% + 6px)" }),
+          background: COLORS.navyMid, border: "1px solid rgba(255,255,255,0.14)", borderRadius: 8,
+          boxShadow: "0 12px 32px rgba(0,0,0,0.45)", maxHeight: 260, overflowY: "auto",
+        }}>
+          {tasks.map((t, i) => {
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                onClick={() => { setOpen(false); onRun(t); }}
+                title={
+                  t.threeC ? "Score this RO's 3C narrative and draft a grounded rewrite"
+                    : t.history ? "This customer's real visit history, by date"
+                    : t.cannedJobCandidates ? "RO jobs that recur often but aren't on the canned-job menu yet"
+                    : t.compare ? `${t.label} — sends to both Predii LLM and Frontier at once`
+                    : t.label
+                }
+                style={{
+                  display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left",
+                  background: "transparent", border: "none",
+                  borderBottom: i < tasks.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                  padding: "9px 11px", cursor: "pointer", boxSizing: "border-box",
+                  fontSize: 12, fontWeight: 600, color: t.compare ? "#C4B5FD" : "#F1F5F9",
+                }}
+              >
+                <Icon size={13} color={t.compare ? "#C4B5FD" : "#86EFAC"} style={{ flexShrink: 0 }} />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ShopChatScreen — shop-wide chat, no RO needs to be open. Ask anything
@@ -2465,6 +2912,52 @@ function ShopChatScreen({ customers = [] }) {
     }
   }
 
+  // Finds RO jobs that recur often but aren't on the canned-job menu yet
+  // (see cannedJobCandidatesService.js — every number here comes from this
+  // shop's own historical line items, never LLM-estimated) and renders them
+  // as its own message type with a per-candidate Yes/No, not a plain reply.
+  async function runCannedJobCandidatesTask() {
+    if (sending) return;
+    setMessages((prev) => [...prev, { role: "user", text: "Suggest new canned jobs" }]);
+    setSending(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/canned-jobs/${encodeURIComponent(activeShopId)}/candidates`);
+      const data = await res.json();
+      setMessages((prev) => [...prev, { role: "cannedJobSuggestion", candidates: data.candidates || [] }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: "assistant", text: "Sorry, WrenchIQ couldn't check for canned-job candidates just now — try again." }]);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  // Persists a candidate as a real canned job (POST /api/canned-jobs/:shopId)
+  // and flips that one card to "Added" — msgIndex + candidate description
+  // together key which card, since candidates within one suggestion message
+  // don't otherwise have a stable id.
+  async function handleAddCannedJob(msgIndex, candidate) {
+    setMessages((prev) => prev.map((m, i) => i !== msgIndex ? m : { ...m, addingKey: candidate.description }));
+    try {
+      await fetch(`${API_BASE}/api/canned-jobs/${encodeURIComponent(activeShopId)}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(candidate.proposedJob),
+      });
+      setMessages((prev) => prev.map((m, i) => i !== msgIndex ? m : {
+        ...m, addingKey: null,
+        addedKeys: [...(m.addedKeys || []), candidate.description],
+      }));
+    } catch {
+      setMessages((prev) => prev.map((m, i) => i !== msgIndex ? m : { ...m, addingKey: null }));
+    }
+  }
+
+  function handleDismissCandidate(msgIndex, candidate) {
+    setMessages((prev) => prev.map((m, i) => i !== msgIndex ? m : {
+      ...m, dismissedKeys: [...(m.dismissedKeys || []), candidate.description],
+    }));
+  }
+
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "14px 18px", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
@@ -2472,15 +2965,15 @@ function ShopChatScreen({ customers = [] }) {
           Ask WrenchIQ · {shopName || "this shop"}
         </div>
         <div style={{ display: "flex", background: "rgba(255,255,255,0.06)", borderRadius: 6, padding: 2 }}>
-          {[{ id: "tasks", label: "Tasks" }, { id: "custom", label: "Custom" }].map((m) => (
+          {[{ id: "tasks", label: "Common Tasks" }, { id: "custom", label: "Ask anything" }].map((m) => (
             <button
               key={m.id}
               onClick={() => setChatMode(m.id)}
               style={{
-                padding: "3px 10px", borderRadius: 5, border: "none", cursor: "pointer",
-                fontSize: 10, fontWeight: 700,
+                padding: "4px 11px", borderRadius: 5, border: "none", cursor: "pointer",
+                fontSize: 11, fontWeight: 700,
                 background: chatMode === m.id ? COLORS.accent : "transparent",
-                color: chatMode === m.id ? "#fff" : "rgba(255,255,255,0.6)",
+                color: chatMode === m.id ? "#fff" : "rgba(255,255,255,0.75)",
               }}
             >
               {m.label}
@@ -2505,35 +2998,14 @@ function ShopChatScreen({ customers = [] }) {
       </select>
 
       {chatMode === "tasks" && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, flexShrink: 0 }}>
-          {presetTasks.map((t) => {
-            const Icon = t.icon;
-            return (
-              <button
-                key={t.id}
-                onClick={() => sendMessage(t.prompt)}
-                disabled={sending}
-                title={t.label}
-                style={{
-                  display: "flex", alignItems: "center", gap: 5,
-                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 7, padding: "6px 10px", cursor: sending ? "default" : "pointer",
-                  fontSize: 11, fontWeight: 700, color: "#86EFAC",
-                }}
-              >
-                <Icon size={12} />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
+        <TaskMenu tasks={presetTasks} sending={sending} direction="down" onRun={(t) => sendMessage(t.prompt)} />
       )}
 
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
         {messages.length === 0 && (
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
             {chatMode === "tasks"
-              ? "Tap a task above, or switch to Custom to ask anything in your own words."
+              ? "Tap a task above, or switch to Ask anything to type your own question."
               : "Ask anything grounded in this shop's canned-job pricing, Shop Profile, or (if selected above) a customer's real visit history. Works in English and Spanish. Always runs on Predii's default model."}
           </div>
         )}
@@ -2544,9 +3016,8 @@ function ShopChatScreen({ customers = [] }) {
               maxWidth: "85%", borderRadius: 10, padding: "8px 11px", fontSize: 12, lineHeight: 1.5,
               background: m.role === "user" ? COLORS.accent : "rgba(255,255,255,0.06)",
               color: m.role === "user" ? "#fff" : "rgba(255,255,255,0.8)",
-              whiteSpace: "pre-wrap",
             }}>
-              {m.text}
+              <ChatMessageText text={m.text} />
             </div>
             {m.role === "assistant" && (
               <button
@@ -2614,6 +3085,61 @@ function ShopChatScreen({ customers = [] }) {
 // words, tech shorthand) into correct "automotive speak" in either
 // direction, grounded in this RO's shop/vehicle/service context (see
 // server/services/roChatService.js for the system prompt).
+// The chat auto-detects English/Spanish by default (matches whatever
+// language the advisor types in), but an advisor drafting a message *for* a
+// customer who doesn't speak English needs to force the reply language
+// regardless of what they themselves type — e.g. type shop jargon in
+// English, get back a Vietnamese customer-facing message. This roster
+// matches what the server (roChatService.js LANGUAGE_NAMES) actually
+// supports — the languages most commonly spoken by customers at US
+// independent auto shops, plus German and French.
+const LANGUAGES = [
+  { code: "auto", label: "Auto (EN/ES)" },
+  { code: "en", label: "English" },
+  { code: "es", label: "Español (Spanish)" },
+  { code: "zh", label: "中文 (Chinese)" },
+  { code: "vi", label: "Tiếng Việt (Vietnamese)" },
+  { code: "de", label: "Deutsch (German)" },
+  { code: "fr", label: "Français (French)" },
+];
+
+// Shown as tap-to-fill chips once a specific (non-auto) language is picked
+// in "Ask anything" mode — an advisor who doesn't speak that language still
+// needs to know *what a reasonable question looks like* in it, not just
+// that the model can reply in it.
+const SAMPLE_QUERIES = {
+  en: [
+    "What's our price for a brake pad replacement?",
+    "Summarize this customer's past visits.",
+    "Is the noise from the front brakes something urgent?",
+  ],
+  es: [
+    "¿Cuál es el precio de un cambio de pastillas de freno?",
+    "Resume las visitas anteriores de este cliente.",
+    "¿El ruido de los frenos delanteros es urgente?",
+  ],
+  zh: [
+    "更换刹车片多少钱？",
+    "总结一下这位客户之前的到店记录。",
+    "前刹车的异响严重吗？",
+  ],
+  vi: [
+    "Thay má phanh trước giá bao nhiêu?",
+    "Tóm tắt các lần đến sửa xe trước đây của khách này.",
+    "Tiếng kêu ở phanh trước có nghiêm trọng không?",
+  ],
+  de: [
+    "Was kostet ein Bremsbelagwechsel bei uns?",
+    "Fasse die bisherigen Besuche dieses Kunden zusammen.",
+    "Ist das Geräusch von den vorderen Bremsen dringend?",
+  ],
+  fr: [
+    "Quel est notre prix pour un remplacement de plaquettes de frein ?",
+    "Résume les visites précédentes de ce client.",
+    "Le bruit des freins avant est-il urgent ?",
+  ],
+};
+
 function ChatTab({ ro }) {
   const { bz } = useZoom();
   const [messages, setMessages] = useState([]);
@@ -2647,12 +3173,25 @@ function ChatTab({ ro }) {
   // presets vs. a fully custom question, kept consistent across both chat
   // surfaces instead of always showing both at once.
   const [chatMode, setChatMode] = useState("tasks"); // "tasks" | "custom"
+  // "auto" matches the original bilingual EN/ES auto-detect behavior; any
+  // other value forces every reply into that language regardless of what
+  // the advisor typed (see LANGUAGES above and LANGUAGE_NAMES server-side).
+  const [chatLanguage, setChatLanguage] = useState("auto");
+  // Personal notes an advisor saved about this customer (customerNotesService.js)
+  // — kept visible regardless of Tasks/Custom mode, since "remember this
+  // about the customer" isn't a one-shot task, it's persistent context the
+  // advisor should see every time they open this chat.
+  const [customerNotes, setCustomerNotes] = useState([]);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const scrollRef = useRef(null);
 
   const shop = ro.shop || { name: "the shop" };
   const customer = ro._customer;
   const vehicle = ro._vehicle;
   const presetTasks = buildPresetTasks(ro);
+  const customerId = customer?.id || ro.customerId || null;
 
   useEffect(() => {
     fetch(`${API_BASE}/api/ro-chat/frontier-info`)
@@ -2664,6 +3203,46 @@ function ChatTab({ ro }) {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, sending]);
+
+  useEffect(() => {
+    if (!customerId) { setCustomerNotes([]); return; }
+    let cancelled = false;
+    fetch(`${API_BASE}/api/customer-notes?shopId=${encodeURIComponent(ro.shopId || "")}&customerId=${encodeURIComponent(customerId)}`)
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) setCustomerNotes(data.notes || []); })
+      .catch(() => { if (!cancelled) setCustomerNotes([]); });
+    return () => { cancelled = true; };
+  }, [customerId, ro.shopId]);
+
+  async function handleAddNote() {
+    const trimmed = noteDraft.trim();
+    if (!trimmed || !customerId || savingNote) return;
+    setSavingNote(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/customer-notes`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          shopId: ro.shopId,
+          customerId,
+          customerName: [customer?.firstName, customer?.lastName].filter(Boolean).join(" "),
+          note: trimmed,
+        }),
+      });
+      const data = await res.json();
+      if (data.note) setCustomerNotes((prev) => [data.note, ...prev]);
+      setNoteDraft("");
+    } catch {
+      // best-effort — advisor can retry; nothing else depends on this write.
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  function handleDeleteNote(id) {
+    setCustomerNotes((prev) => prev.filter((n) => n._id !== id));
+    fetch(`${API_BASE}/api/customer-notes/${id}`, { method: "DELETE" }).catch(() => {});
+  }
 
   function togglePrompt() {
     if (systemPrompt) { setShowPrompt((v) => !v); return; }
@@ -2692,7 +3271,7 @@ function ChatTab({ ro }) {
       const res = await fetch(`${API_BASE}/api/ro-chat`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message: trimmed, history, ro, customer, vehicle, shop, modelTier, maxTokens }),
+        body: JSON.stringify({ message: trimmed, history, ro, customer, vehicle, shop, modelTier, language: chatLanguage === "auto" ? undefined : chatLanguage, maxTokens }),
       });
       const data = await res.json();
       const notice = data.forcedReason === "pii"
@@ -2700,7 +3279,7 @@ function ChatTab({ ro }) {
         : data.forcedReason === "not_configured"
           ? "\n\n(Frontier model isn't configured on this server yet — this reply came from Predii's model instead.)"
           : "";
-      setMessages((prev) => [...prev, { role: "assistant", text: (data.reply || "…") + notice }]);
+      setMessages((prev) => [...prev, { role: "assistant", text: (data.reply || "…") + notice, lang: chatLanguage }]);
     } catch {
       setMessages((prev) => [...prev, { role: "assistant", text: "Sorry, WrenchIQ couldn't reach the assistant just now — try again." }]);
     } finally {
@@ -2738,7 +3317,7 @@ function ChatTab({ ro }) {
       const call = (tier) => fetch(`${API_BASE}/api/ro-chat`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message: trimmed, history, ro, customer, vehicle, shop, modelTier: tier, maxTokens }),
+        body: JSON.stringify({ message: trimmed, history, ro, customer, vehicle, shop, modelTier: tier, language: chatLanguage === "auto" ? undefined : chatLanguage, maxTokens }),
       }).then((r) => r.json());
 
       const [predii, frontier] = await Promise.all([call("predii"), call("frontier")]);
@@ -2793,13 +3372,45 @@ function ChatTab({ ro }) {
     }
   }
 
+  // Structured visit-by-date timeline — real data (GET /customer-history),
+  // rendered as its own message type rather than asking the model to
+  // restate dates and totals it might get wrong.
+  async function runHistoryTask() {
+    if (sending) return;
+    setMessages((prev) => [...prev, { role: "user", text: "Show visit history" }]);
+    setSending(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/ro-chat/customer-history?customerId=${encodeURIComponent(customerId || "")}&shopId=${encodeURIComponent(ro.shopId || "")}`);
+      const data = await res.json();
+      setMessages((prev) => [...prev, { role: "history", visits: data.history || [] }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: "assistant", text: "Sorry, WrenchIQ couldn't load visit history just now — try again." }]);
+    } finally {
+      setSending(false);
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.75)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-          WrenchIQ Assistant · EN / ES
+          WrenchIQ Assistant
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <select
+            value={chatLanguage}
+            onChange={(e) => setChatLanguage(e.target.value)}
+            title="Force every reply into this language, regardless of what language you type in — useful when drafting a message for a customer who doesn't speak English"
+            style={{
+              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 5, padding: "2px 4px", cursor: "pointer",
+              color: "rgba(255,255,255,0.75)", fontSize: 10, fontWeight: 700,
+            }}
+          >
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code} style={{ color: "#000" }}>{l.label}</option>
+            ))}
+          </select>
           <button
             onClick={() => {
               if (modelTier === "predii") {
@@ -2850,24 +3461,100 @@ function ChatTab({ ro }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, gap: 8 }}>
         <div style={{ display: "flex", background: "rgba(255,255,255,0.06)", borderRadius: 6, padding: 2 }}>
-          {[{ id: "tasks", label: "Tasks" }, { id: "custom", label: "Custom" }].map((m) => (
+          {[{ id: "tasks", label: "Common Tasks" }, { id: "custom", label: "Ask anything" }].map((m) => (
             <button
               key={m.id}
               onClick={() => setChatMode(m.id)}
               style={{
-                padding: "3px 10px", borderRadius: 5, border: "none", cursor: "pointer",
-                fontSize: 10, fontWeight: 700,
+                padding: "4px 11px", borderRadius: 5, border: "none", cursor: "pointer",
+                fontSize: 11, fontWeight: 700,
                 background: chatMode === m.id ? COLORS.accent : "transparent",
-                color: chatMode === m.id ? "#fff" : "rgba(255,255,255,0.6)",
+                color: chatMode === m.id ? "#fff" : "rgba(255,255,255,0.75)",
               }}
             >
               {m.label}
             </button>
           ))}
         </div>
+        {customerId && (
+          <button
+            onClick={() => setNotesOpen((v) => !v)}
+            title="Personal notes about this customer — remembered across visits"
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              background: notesOpen ? "rgba(250,204,21,0.15)" : "rgba(255,255,255,0.06)",
+              border: `1px solid ${notesOpen ? "rgba(250,204,21,0.4)" : "rgba(255,255,255,0.1)"}`,
+              borderRadius: 6, padding: "4px 9px", cursor: "pointer",
+              fontSize: 11, fontWeight: 700, color: notesOpen ? COLORS.gold : "rgba(255,255,255,0.75)",
+            }}
+          >
+            <Pencil size={11} />
+            Notes{customerNotes.length > 0 ? ` · ${customerNotes.length}` : ""}
+          </button>
+        )}
       </div>
+
+      {notesOpen && customerId && (
+        <div style={{
+          flexShrink: 0, background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.25)",
+          borderRadius: 8, padding: "9px 11px", display: "flex", flexDirection: "column", gap: 7,
+        }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: COLORS.gold, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            Personal notes — {[customer?.firstName, customer?.lastName].filter(Boolean).join(" ") || "this customer"}
+          </div>
+          {customerNotes.length === 0 ? (
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
+              Nothing saved yet — jot down anything worth remembering for next time (preferences, sensitivities, small talk to pick back up).
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 140, overflowY: "auto" }}>
+              {customerNotes.map((n) => (
+                <div key={n._id} style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                  <div style={{ flex: 1, fontSize: 11.5, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
+                    {n.note}
+                    <span style={{ fontSize: 9.5, color: "rgba(255,255,255,0.45)", marginLeft: 6 }}>
+                      {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : ""}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteNote(n._id)}
+                    title="Delete this note"
+                    style={{ background: "transparent", border: "none", cursor: "pointer", padding: 2, color: "rgba(255,255,255,0.4)", flexShrink: 0 }}
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 6 }}>
+            <input
+              value={noteDraft}
+              onChange={(e) => setNoteDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleAddNote(); }}
+              placeholder="Add a note about this customer…"
+              style={{
+                flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 6, padding: "5px 8px", color: "#fff", fontSize: 11, outline: "none",
+              }}
+            />
+            <button
+              onClick={handleAddNote}
+              disabled={!noteDraft.trim() || savingNote}
+              style={{
+                background: "rgba(250,204,21,0.18)", border: "1px solid rgba(250,204,21,0.4)",
+                borderRadius: 6, padding: "5px 10px", cursor: !noteDraft.trim() || savingNote ? "default" : "pointer",
+                fontSize: 11, fontWeight: 700, color: COLORS.gold,
+                opacity: !noteDraft.trim() || savingNote ? 0.5 : 1,
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      )}
 
       {showFrontierDisclaimer && (
         <div style={{
@@ -2910,7 +3597,7 @@ function ChatTab({ ro }) {
         {messages.length === 0 && (
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
             {chatMode === "tasks"
-              ? "Tap a task below, or switch to Custom to ask anything in your own words."
+              ? "Tap a task below, or switch to Ask anything to type your own question."
               : ro.customerConcern
                 ? "This RO's concern is already loaded below — send it as-is, or ask anything grounded in this shop's data (pricing, past visits, seasonal patterns)."
                 : "Ask anything grounded in this shop's data — pricing, symptoms, past visits, seasonal patterns. Works in English and Spanish."}
@@ -2929,6 +3616,49 @@ function ChatTab({ ro }) {
                   label={`Frontier${frontierModel ? ` (${frontierModel})` : ""}`} color="#8B5CF6" textColor="#C4B5FD"
                   text={m.frontier} notice={m.frontierNotice} copyKey={`${i}-frontier`} copiedKey={copiedKey} onCopy={handleCopy}
                 />
+              </div>
+            );
+          }
+          if (m.role === "history") {
+            return (
+              <div key={i} style={{
+                borderLeft: "3px solid rgba(134,239,172,0.4)", borderRadius: 8, padding: "8px 11px",
+                background: "rgba(255,255,255,0.04)",
+              }}>
+                {m.visits.length === 0 ? (
+                  <div style={{ fontSize: bz(11), color: "rgba(255,255,255,0.7)" }}>
+                    No past visits on file for this customer.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                    {m.visits.map((v, vi) => (
+                      <div key={vi} style={{
+                        display: "flex", gap: 8, padding: "6px 0",
+                        borderBottom: vi < m.visits.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                      }}>
+                        <div style={{ fontSize: bz(10), color: "rgba(255,255,255,0.55)", flexShrink: 0, width: 76 }}>
+                          {v.date ? new Date(v.date).toLocaleDateString() : "unknown date"}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: bz(11), color: "#F1F5F9", fontWeight: 700 }}>
+                            {humanizeServiceCategory(v.serviceType)}
+                            {v.roNumber ? <span style={{ fontWeight: 400, color: "rgba(255,255,255,0.5)", marginLeft: 6 }}>{v.roNumber}</span> : null}
+                          </div>
+                          {v.services?.length > 0 && (
+                            <div style={{ fontSize: bz(10.5), color: "rgba(255,255,255,0.7)", marginTop: 1 }}>
+                              {v.services.join(", ")}
+                            </div>
+                          )}
+                        </div>
+                        {typeof v.totalEstimate === "number" && v.totalEstimate > 0 && (
+                          <div style={{ fontSize: bz(11), fontWeight: 700, color: "#86EFAC", flexShrink: 0 }}>
+                            {fmtMoney(v.totalEstimate)}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           }
@@ -2955,9 +3685,7 @@ function ChatTab({ ro }) {
                     )}
                   </div>
                 </div>
-                <div style={{ fontSize: bz(9), color: "rgba(255,255,255,0.75)" }}>
-                  Rewrite is grounded strictly in this RO's own data — no invented DTCs, parts, or customer statements.
-                </div>
+                <GroundingNotice grounding={m.grounding} bz={bz} />
               </div>
             );
           }
@@ -2967,23 +3695,25 @@ function ChatTab({ ro }) {
                 maxWidth: "85%", borderRadius: 10, padding: "8px 11px", fontSize: bz(12), lineHeight: 1.5,
                 background: m.role === "user" ? COLORS.accent : "rgba(255,255,255,0.06)",
                 color: m.role === "user" ? "#fff" : "rgba(255,255,255,0.8)",
-                whiteSpace: "pre-wrap",
               }}>
-                {m.text}
+                <ChatMessageText text={m.text} />
               </div>
               {m.role === "assistant" && (
-                <button
-                  onClick={() => handleCopy(m.text, `${i}`)}
-                  title="Copy this reply"
-                  style={{
-                    display: "flex", alignItems: "center", gap: 4,
-                    background: "transparent", border: "none", cursor: "pointer", padding: "0 2px",
-                    color: copiedKey === `${i}` ? "#4ADE80" : "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 600,
-                  }}
-                >
-                  {copiedKey === `${i}` ? <Check size={11} /> : <Clipboard size={11} />}
-                  {copiedKey === `${i}` ? "Copied" : "Copy"}
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <button
+                    onClick={() => handleCopy(m.text, `${i}`)}
+                    title="Copy this reply"
+                    style={{
+                      display: "flex", alignItems: "center", gap: 4,
+                      background: "transparent", border: "none", cursor: "pointer", padding: "0 2px",
+                      color: copiedKey === `${i}` ? "#4ADE80" : "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 600,
+                    }}
+                  >
+                    {copiedKey === `${i}` ? <Check size={11} /> : <Clipboard size={11} />}
+                    {copiedKey === `${i}` ? "Copied" : "Copy"}
+                  </button>
+                  {m.lang && m.lang !== "en" && <TranslateButton text={m.text} />}
+                </div>
               )}
             </div>
           );
@@ -2998,65 +3728,72 @@ function ChatTab({ ro }) {
         )}
       </div>
 
-      {/* Tasks mode: a persistent task strip, always one tap away right
-          above the compose box — not tucked inside the scrolling transcript. */}
+      {/* Tasks mode: a dropdown, always one tap away right above the
+          compose box — opens upward over the transcript since this control
+          sits at the bottom of the panel. */}
       {chatMode === "tasks" && (
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", flexShrink: 0, paddingBottom: 2 }}>
-          {presetTasks.map((t) => {
-            const Icon = t.icon;
-            return (
-              <button
-                key={t.id}
-                onClick={() => (t.threeC ? runThreeCTask() : t.compare ? sendComparisonMessage(t.prompt) : sendMessage(t.prompt))}
-                disabled={sending}
-                title={t.threeC ? "Score this RO's 3C narrative and draft a grounded rewrite" : t.compare ? `${t.label} — sends to both Predii LLM and Frontier at once` : t.label}
-                style={{
-                  display: "flex", alignItems: "center", gap: 5, flexShrink: 0,
-                  background: t.compare ? "rgba(139,92,246,0.12)" : "rgba(255,255,255,0.06)",
-                  border: `1px solid ${t.compare ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.1)"}`,
-                  borderRadius: 7, padding: "6px 10px", cursor: sending ? "default" : "pointer",
-                  fontSize: 11, fontWeight: 700, color: t.compare ? "#C4B5FD" : "#86EFAC", whiteSpace: "nowrap",
-                }}
-              >
-                <Icon size={12} />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
+        <TaskMenu
+          tasks={presetTasks}
+          sending={sending}
+          direction="up"
+          onRun={(t) => (t.threeC ? runThreeCTask() : t.history ? runHistoryTask() : t.compare ? sendComparisonMessage(t.prompt) : sendMessage(t.prompt))}
+        />
       )}
 
-      {/* Custom mode: the free-form compose box. */}
+      {/* Custom mode: the free-form compose box. Sample queries in the
+          selected language appear above it once a specific (non-auto)
+          language is picked — an advisor who doesn't speak that language
+          still needs an example of a reasonable question in it. */}
       {chatMode === "custom" && (
-        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Paste text to rewrite… (English or Español)"
-            rows={2}
-            style={{
-              flex: 1, resize: "none", boxSizing: "border-box",
-              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 8, padding: "8px 10px", color: "#fff", fontSize: 12,
-              fontFamily: "inherit", outline: "none",
-            }}
-          />
-          <button
-            onClick={() => sendMessage()}
-            disabled={sending || !input.trim()}
-            title="Send"
-            style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              background: COLORS.accent, border: "none", borderRadius: 8,
-              width: 36, flexShrink: 0,
-              cursor: sending || !input.trim() ? "default" : "pointer",
-              opacity: sending || !input.trim() ? 0.5 : 1,
-            }}
-          >
-            <Send size={14} color="#fff" />
-          </button>
-        </div>
+        <>
+          {chatLanguage !== "auto" && SAMPLE_QUERIES[chatLanguage] && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5, flexShrink: 0 }}>
+              {SAMPLE_QUERIES[chatLanguage].map((q, i) => (
+                <button
+                  key={i}
+                  onClick={() => setInput(q)}
+                  title="Use this sample query"
+                  style={{
+                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 6, padding: "4px 8px", cursor: "pointer",
+                    fontSize: 10.5, color: "rgba(255,255,255,0.75)", textAlign: "left",
+                  }}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Paste text to rewrite… (English or Español)"
+              rows={2}
+              style={{
+                flex: 1, resize: "none", boxSizing: "border-box",
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 8, padding: "8px 10px", color: "#fff", fontSize: 12,
+                fontFamily: "inherit", outline: "none",
+              }}
+            />
+            <button
+              onClick={() => sendMessage()}
+              disabled={sending || !input.trim()}
+              title="Send"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: COLORS.accent, border: "none", borderRadius: 8,
+                width: 36, flexShrink: 0,
+                cursor: sending || !input.trim() ? "default" : "pointer",
+                opacity: sending || !input.trim() ? 0.5 : 1,
+              }}
+            >
+              <Send size={14} color="#fff" />
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

@@ -31,10 +31,11 @@ function normalizeFeedRecord(doc, source) {
   const customerName = doc.customer?.name || doc.customerName || null;
   const customerId   = doc.customer?.id   || doc.customerId   || null;
   const vehicle = doc.vehicle ? {
-    year:  doc.vehicle.year  ?? null,
-    make:  doc.vehicle.make  ?? null,
-    model: doc.vehicle.model ?? null,
-    vin:   doc.vehicle.vin   ?? null,
+    year:    doc.vehicle.year  ?? null,
+    make:    doc.vehicle.make  ?? null,
+    model:   doc.vehicle.model ?? null,
+    vin:     doc.vehicle.vin   ?? null,
+    mileage: doc.vehicle.odometer ?? doc.vehicle.mileage ?? null,
   } : null;
   const isStoryRO = source === CAMEL_COLL && doc.isStoryRO;
   const rawDateIn    = doc.dateIn    || doc.date_in    || null;

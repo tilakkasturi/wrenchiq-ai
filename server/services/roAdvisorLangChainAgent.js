@@ -15,21 +15,26 @@
  *
  * `createAgent` needs a LangChain chat model instance, which the gateway
  * (azureOpenAILangChain.js) deliberately does not expose — it exposes a
- * request/response function. Rather than widen that proven surface, the model is
- * constructed here, and every quirk the gateway documents is carried over
- * verbatim below with its reason. That duplication is the deliberate cost of
- * leaving the default gateway path untouched: **any fix to the profile,
- * endpoint, max-token or fetch-shim logic in azureOpenAILangChain.js must be
- * mirrored here.**
+ * request/response function. Rather than widen that proven surface, the model
+ * is constructed here. Profile resolution, endpoint computation, the
+ * max-token key rule, and the Qwen3 thinking-mode fix are imported from
+ * azureOpenAILangChain.js rather than duplicated — this file used to keep
+ * its own copies "mirrored" from the gateway's, and that mirror silently
+ * drifted twice (a static-profile regression that broke the WrenchIQ Home
+ * primary/secondary switch, and a missing thinking-mode fix that reintroduced
+ * the exact empty-recommendations bug the fix was for). What's left here is
+ * only what genuinely cannot be shared: the chat model *instance*, its own
+ * client cache (a different custom fetch shim than the gateway's — see
+ * `makeNormalizingFetch` below), and the auth-header-nulling step.
  *
- * One thing genuinely differs. The gateway suppresses the auth headers the
- * legacy path would not have sent by nulling them per request through
- * `options.headers`, which is not reachable when LangChain owns the invocation.
- * They are nulled on the OpenAI client's `defaultHeaders` instead: openai@6
- * deletes a header whose value is null (internal/headers.js), and orders
- * `defaultHeaders` after its own auth headers (client.js buildHeaders), so the
- * placeholder Bearer loses. Same bytes on the wire, asserted in
- * test/roAdvisor.agent.test.js.
+ * That header step genuinely differs. The gateway suppresses the auth headers
+ * the legacy path would not have sent by nulling them per request through
+ * `options.headers`, which is not reachable when LangChain owns the invocation
+ * (createAgent has no equivalent per-call hook). They are nulled on the OpenAI
+ * client's `defaultHeaders` instead: openai@6 deletes a header whose value is
+ * null (internal/headers.js), and orders `defaultHeaders` after its own auth
+ * headers (client.js buildHeaders), so the placeholder Bearer loses. Same
+ * bytes on the wire, asserted in test/roAdvisor.agent.test.js.
  *
  * ── Known divergences from the hand-rolled loop ──────────────────────────────
  *
@@ -53,15 +58,26 @@ import { ChatOpenAICompletions } from '@langchain/openai';
 import OpenAI from 'openai';
 
 import { logLLMRequest } from './llmLogger.js';
-import { LLM_PROFILES } from './llmProviderConfig.js';
+import {
+  resolveProfile as resolveGatewayProfile,
+  resolveEndpoint as resolveGatewayEndpoint,
+  maxTokenFields,
+  thinkingModeFields,
+} from './azureOpenAILangChain.js';
 import { RO_TOOLS, executeTool, addUsage } from './roAdvisorService.js';
 import { buildLangfuseHandler } from './langfuseTracing.js';
 
 /** Same observability tag the hand-rolled loop logs under. */
 const ROUTE = '/api/agent/ro-advisor';
 
-/** Same budget the hand-rolled loop passes on every turn. */
-const MAX_TOKENS = 1200;
+// Reasoning models (e.g. Qwen3 thinking mode on sglang) spend part of this
+// budget on hidden <think> reasoning before writing any visible content —
+// 1200 matches the hand-rolled loop's original, non-reasoning-model budget
+// and left the post-tool-calls synthesis turn truncated (finish_reason
+// "length", empty content) against a reasoning model. See thinkingModeFields
+// (azureOpenAILangChain.js) for the actual fix, and the "sglang vs vLLM
+// Endpoint Handling" Confluence page for the full writeup.
+const MAX_TOKENS = 3000;
 
 /**
  * Four model calls, matching the `turn < 4` cap. LangGraph counts graph steps,
@@ -88,10 +104,13 @@ const _clientCache = new Map();
 /**
  * The RO Advisor is pinned to the 'default' Predii LLM profile regardless of the
  * Settings → Integrations toggle — see the useConfiguredProvider note in
- * azureOpenAI.js. So there is nothing to resolve, only to validate.
+ * azureOpenAI.js. Delegates to the gateway's resolveProfile({}) (no
+ * profileKey, no useConfiguredProvider) — identical to calling
+ * getDefaultProfile() directly, but sharing the gateway's copy means a
+ * future change to how "default" is validated only has to happen once.
  */
 function resolveProfile() {
-  const profile = { profileKey: 'default', ...LLM_PROFILES.default };
+  const profile = resolveGatewayProfile({});
   if (!profile.baseUrl) {
     throw new Error('LLM profile "default" is not configured — set its base URL/key in .env.local');
   }
@@ -104,24 +123,21 @@ function resolveProfile() {
  * A profile with no key gets no auth header at all — self-hosted servers reject
  * requests carrying a bogus one, and the SDK would otherwise attach the
  * placeholder, so the header is explicitly nulled rather than merely omitted.
+ *
+ * Builds on the gateway's resolveEndpoint (baseURL/isV1Endpoint/defaultQuery
+ * computation, shared) and adds the header-nulling this file's own model
+ * construction needs — see the file header comment for why that step can't
+ * itself be shared with the gateway's per-call approach.
  */
 function resolveEndpoint(profile) {
-  const baseURL = profile.baseUrl.replace(/\/$/, '');
-  const isV1Endpoint = baseURL.endsWith('/v1') || baseURL.endsWith('/openai/v1');
+  const gatewayEndpoint = resolveGatewayEndpoint(profile);
+  const isV1Endpoint = gatewayEndpoint.baseURL.endsWith('/v1') || gatewayEndpoint.baseURL.endsWith('/openai/v1');
 
-  const defaultHeaders = {};
-  if (profile.apiKey) {
-    if (isV1Endpoint) defaultHeaders.Authorization = `Bearer ${profile.apiKey}`;
-    else defaultHeaders['api-key'] = profile.apiKey;
-  }
+  const defaultHeaders = { ...gatewayEndpoint.defaultHeaders };
   if (!(profile.apiKey && isV1Endpoint)) defaultHeaders.Authorization = null;
   if (!profile.apiKey) defaultHeaders['api-key'] = null;
 
-  return {
-    baseURL,
-    defaultHeaders,
-    defaultQuery: isV1Endpoint ? undefined : { 'api-version': profile.apiVersion },
-  };
+  return { ...gatewayEndpoint, defaultHeaders };
 }
 
 /**
@@ -210,30 +226,16 @@ function getClient(endpoint) {
   return client;
 }
 
-/** Newer OpenAI-family models reject max_tokens — the legacy gateway's rule. */
-const legacyWantsCompletionTokens = (model) => /^(gpt-5|o1|o3)/i.test(model);
-
-/** @langchain/openai's own isReasoningModel, mirrored so the two can be compared. */
-const langchainWantsCompletionTokens = (model) =>
-  /^o\d/.test(model) || (model.startsWith('gpt-5') && !model.startsWith('gpt-5-chat'));
-
-/**
- * Put the token budget on the key the legacy gateway would have used. The chat
- * model writes its own choice of key from `this.maxTokens` after spreading
- * modelKwargs, so modelKwargs alone cannot win.
- */
-function maxTokenFields(model, maxTokens) {
-  const legacyKey = legacyWantsCompletionTokens(model) ? 'max_completion_tokens' : 'max_tokens';
-  const langchainKey = langchainWantsCompletionTokens(model) ? 'max_completion_tokens' : 'max_tokens';
-
-  return legacyKey === langchainKey
-    ? { maxTokens }
-    : { modelKwargs: { [legacyKey]: maxTokens } };
-}
+// maxTokenFields and thinkingModeFields are imported from
+// azureOpenAILangChain.js — see the file header comment for why these
+// stay shared rather than mirrored.
 
 function buildChatModel() {
   const profile = resolveProfile();
   const endpoint = resolveEndpoint(profile);
+
+  const tokenFields = maxTokenFields(profile.model, MAX_TOKENS);
+  const modelKwargs = { ...tokenFields.modelKwargs, ...thinkingModeFields(profile.model) };
 
   const chat = new ChatOpenAICompletions({
     model: profile.model,
@@ -242,7 +244,8 @@ function buildChatModel() {
                          // would turn this agent's fast fallback into a stall.
     streaming: false,
     __includeRawResponse: true,
-    ...maxTokenFields(profile.model, MAX_TOKENS),
+    ...(tokenFields.maxTokens !== undefined ? { maxTokens: tokenFields.maxTokens } : {}),
+    ...(Object.keys(modelKwargs).length ? { modelKwargs } : {}),
     configuration: {
       baseURL: endpoint.baseURL,
       defaultHeaders: endpoint.defaultHeaders,
@@ -390,7 +393,18 @@ export async function runCreateAgentLoop({ system, preloaded }) {
 
   try {
     const json = text.match(/\{[\s\S]*\}/)?.[0] || text;
-    return { result: JSON.parse(json), usage: collected.usage, model: collected.model };
+    const parsed = JSON.parse(json);
+    // A reasoning model truncated mid-thought (empty visible content, see
+    // the MAX_TOKENS comment above) parses successfully as "{}" — valid
+    // JSON but not a usable result. Treat "no advisorBrief and no
+    // serviceRecommendations" the same as a parse failure rather than
+    // silently returning an empty brief to the advisor.
+    const usable = parsed && (parsed.advisorBrief || (parsed.serviceRecommendations || []).length > 0);
+    if (!usable) {
+      console.warn('[roAdvisor] createAgent produced an empty result, falling back to single-pass');
+      return { result: null, usage: collected.usage, model: collected.model };
+    }
+    return { result: parsed, usage: collected.usage, model: collected.model };
   } catch {
     console.warn('[roAdvisor] createAgent produced no parseable JSON, falling back to single-pass');
     return { result: null, usage: collected.usage, model: collected.model };

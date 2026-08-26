@@ -1,12 +1,13 @@
 /**
  * WrenchIQ — LLM Provider Config Routes
  *
- * GET   /api/llm-provider-config — active profile + configured profiles (no key values)
- * PATCH /api/llm-provider-config — switch active profile ({ activeProfile })
+ * GET   /api/llm-provider-config — active profile/endpoint + configured options (no key values)
+ * PATCH /api/llm-provider-config — switch active profile ({ activeProfile }) and/or
+ *                                   active physical endpoint ({ activeEndpoint }: 'primary'|'secondary')
  */
 
 import { Router } from 'express';
-import { setActiveProfile, getPublicStatus } from '../services/llmProviderConfig.js';
+import { setActiveProfile, setActiveEndpoint, getPublicStatus } from '../services/llmProviderConfig.js';
 
 const router = Router();
 
@@ -16,11 +17,13 @@ router.get('/', async (req, res) => {
 
 router.patch('/', async (req, res) => {
   try {
-    const { activeProfile } = req.body || {};
-    if (!activeProfile) {
-      return res.status(400).json({ error: 'activeProfile is required' });
+    const { activeProfile, activeEndpoint } = req.body || {};
+    if (!activeProfile && !activeEndpoint) {
+      return res.status(400).json({ error: 'activeProfile or activeEndpoint is required' });
     }
-    const status = await setActiveProfile(req.db, activeProfile);
+    let status;
+    if (activeProfile) status = await setActiveProfile(req.db, activeProfile);
+    if (activeEndpoint) status = await setActiveEndpoint(req.db, activeEndpoint);
     res.json(status);
   } catch (err) {
     res.status(400).json({ error: err.message });

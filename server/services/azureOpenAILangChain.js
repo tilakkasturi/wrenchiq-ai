@@ -36,7 +36,7 @@ import { ChatOpenAICompletions } from '@langchain/openai';
 import OpenAI from 'openai';
 
 import { logLLMRequest } from './llmLogger.js';
-import { getActiveLLMProfile, LLM_PROFILES } from './llmProviderConfig.js';
+import { getActiveLLMProfile, getDefaultProfile, LLM_PROFILES } from './llmProviderConfig.js';
 
 /**
  * The chat model's apiKey field falls back to process.env.OPENAI_API_KEY when
@@ -60,8 +60,16 @@ export function getLLMClientCacheSize() {
   return _clientCache.size;
 }
 
-/** Resolve which profile this call uses — identical rules to the legacy path. */
-function resolveProfile({ profileKey, useConfiguredProvider }) {
+/**
+ * Resolve which profile this call uses — identical rules to the legacy path.
+ * Exported so roAdvisorLangChainAgent.js (the createAgent-based tool loop,
+ * which builds its own chat model rather than calling
+ * callAzureOpenAILangChain) shares this instead of keeping its own copy —
+ * a duplicate copy is what let this regress to a static LLM_PROFILES.default
+ * read (losing the WrenchIQ Home primary/secondary switch) when the
+ * LangChain migration split this file out of the original azureOpenAI.js.
+ */
+export function resolveProfile({ profileKey, useConfiguredProvider } = {}) {
   if (profileKey) {
     const profile = { profileKey, ...LLM_PROFILES[profileKey] };
     if (!profile.baseUrl) {
@@ -69,9 +77,14 @@ function resolveProfile({ profileKey, useConfiguredProvider }) {
     }
     return profile;
   }
+  // getDefaultProfile(), not the static LLM_PROFILES.default — 'default'
+  // resolves to whichever physical endpoint (primary/secondary) is
+  // currently active on the WrenchIQ Home screen, not just the .env.local
+  // startup value. Regressed to the static form when this file was split
+  // out of azureOpenAI.js (AE-1286); restored here.
   return useConfiguredProvider
     ? getActiveLLMProfile()
-    : { profileKey: 'default', ...LLM_PROFILES.default };
+    : getDefaultProfile();
 }
 
 /**
@@ -79,8 +92,14 @@ function resolveProfile({ profileKey, useConfiguredProvider }) {
  * Anything else is Azure deployment style: api-key header, api-version query.
  * A profile with no key gets no auth header at all — self-hosted servers reject
  * requests carrying a bogus one.
+ *
+ * Exported for roAdvisorLangChainAgent.js — see resolveProfile's export note.
+ * That caller additionally nulls out defaultHeaders itself (createAgent has
+ * no per-call options.headers the way chat.invoke() below does), so this
+ * function stays a pure baseURL/header/query computation rather than baking
+ * in a header-suppression strategy that wouldn't fit both callers.
  */
-function resolveEndpoint(profile) {
+export function resolveEndpoint(profile) {
   const baseURL = profile.baseUrl.replace(/\/$/, '');
   const isV1Endpoint = baseURL.endsWith('/v1') || baseURL.endsWith('/openai/v1');
 
@@ -181,13 +200,29 @@ const langchainWantsCompletionTokens = (model) =>
  * it then writes its key as undefined, which JSON.stringify drops — and supply
  * the legacy key through modelKwargs.
  */
-function maxTokenFields(model, maxTokens) {
+export function maxTokenFields(model, maxTokens) {
   const legacyKey = legacyWantsCompletionTokens(model) ? 'max_completion_tokens' : 'max_tokens';
   const langchainKey = langchainWantsCompletionTokens(model) ? 'max_completion_tokens' : 'max_tokens';
 
   return legacyKey === langchainKey
     ? { maxTokens }
     : { modelKwargs: { [legacyKey]: maxTokens } };
+}
+
+/**
+ * Qwen3's "thinking" mode is on by default on vLLM/sglang and spends the
+ * completion budget on hidden <think> reasoning before any visible content
+ * — confirmed against the sglang-served Qwen3.8-27B-FP8 secondary endpoint:
+ * a multi-tool-result synthesis call hit finish_reason "length" with empty
+ * content well before reasoning finished, silently producing an
+ * empty-but-valid JSON result (see "sglang vs vLLM Endpoint Handling" on
+ * Confluence for the full writeup). Both vLLM and sglang accept this
+ * OpenAI-compatible extension to turn it off; harmless no-op for
+ * servers/models that ignore unknown body fields. Exported so
+ * roAdvisorLangChainAgent.js shares this rather than keeping its own copy.
+ */
+export function thinkingModeFields(model) {
+  return /qwen3/i.test(model) ? { chat_template_kwargs: { enable_thinking: false } } : {};
 }
 
 /**
@@ -276,6 +311,9 @@ export async function callAzureOpenAILangChain({
   const effectiveModel = model || profile.model;
   const endpoint = resolveEndpoint(profile);
 
+  const tokenFields = maxTokenFields(effectiveModel, max_tokens);
+  const modelKwargs = { ...tokenFields.modelKwargs, ...thinkingModeFields(effectiveModel) };
+
   const chat = new ChatOpenAICompletions({
     model: effectiveModel,
     apiKey: API_KEY_PLACEHOLDER,
@@ -284,7 +322,8 @@ export async function callAzureOpenAILangChain({
                          // Advisor's fast fallback into a multi-second stall.
     streaming: false,
     __includeRawResponse: true,
-    ...maxTokenFields(effectiveModel, max_tokens),
+    ...(tokenFields.maxTokens !== undefined ? { maxTokens: tokenFields.maxTokens } : {}),
+    ...(Object.keys(modelKwargs).length ? { modelKwargs } : {}),
     ...(temperature !== undefined ? { temperature } : {}),
     configuration: {
       baseURL: endpoint.baseURL,

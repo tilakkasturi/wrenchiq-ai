@@ -70,6 +70,24 @@ export function resolveModelTier(modelTier, message) {
   return { profileKey: 'frontier', forcedPredii: false, forcedReason: null };
 }
 
+// serviceType is the RO's raw internal serviceCategory field (see
+// fetchCustomerHistory) — shop taxonomy, not customer/advisor-facing
+// language. "factory_oem" means "manufacturer-scheduled maintenance
+// package," not literally "OEM" or "factory" — mapped so the model doesn't
+// parrot the raw code back to an advisor in a summary or talking point.
+const SERVICE_CATEGORY_LABELS = {
+  factory_oem: 'maintenance',
+  other_mechanical: 'general repair',
+  ac: 'A/C',
+  climate_control: 'A/C',
+  engine_emissions: 'engine/emissions',
+};
+function humanizeServiceCategory(cat) {
+  if (!cat) return 'service';
+  if (SERVICE_CATEGORY_LABELS[cat]) return SERVICE_CATEGORY_LABELS[cat];
+  return cat.replace(/_/g, ' ');
+}
+
 // This customer's own past visits (see roAdvisorService.js's
 // fetchCustomerHistory, reused here) — real MongoDB data, not the
 // shop-wide Shop Profile above.
@@ -79,11 +97,36 @@ function formatCustomerHistory(history) {
     const date = v.date ? new Date(v.date).toLocaleDateString() : 'unknown date';
     const services = (v.services || []).join(', ') || 'no line items listed';
     const total = v.totalEstimate ? ` — $${v.totalEstimate}` : '';
-    return `- ${date} (${v.roNumber || 'RO?'}): ${v.serviceType || 'service'} — ${services}${total}`;
+    return `- ${date} (${v.roNumber || 'RO?'}): ${humanizeServiceCategory(v.serviceType)} — ${services}${total}`;
   }).join('\n');
 }
 
-export function buildChatSystemPrompt({ ro, customer, vehicle, shop, cannedJobs, shopProfile, customerHistory, voice } = {}) {
+// Personal notes an advisor saved about this customer (customerNotesService.js)
+// — e.g. "prefers texts over calls," "picky about noise complaints." These
+// are the one piece of context here that's *only* ever advisor-authored, so
+// they're presented as-is rather than summarized/interpreted.
+function formatCustomerNotes(notes) {
+  if (!notes || notes.length === 0) return 'none on file for this customer';
+  return notes.map((n) => {
+    const date = n.createdAt ? new Date(n.createdAt).toLocaleDateString() : 'unknown date';
+    return `- (${date}) ${n.note}`;
+  }).join('\n');
+}
+
+// Beyond the default English/Spanish auto-detect, an advisor can force a
+// reply language explicitly (e.g. a Vietnamese- or Mandarin-speaking
+// customer's text needs translating the other direction) — see LANGUAGES in
+// WrenchIQSidecarScreen.jsx for the matching client-side picker.
+const LANGUAGE_NAMES = {
+  en: 'English',
+  es: 'Spanish',
+  zh: 'Mandarin Chinese',
+  vi: 'Vietnamese',
+  de: 'German',
+  fr: 'French',
+};
+
+export function buildChatSystemPrompt({ ro, customer, vehicle, shop, cannedJobs, shopProfile, customerHistory, customerNotes, voice, language } = {}) {
   const shopName  = shop?.name || 'the shop';
   const laborRate = shop?.laborRate ? `$${shop.laborRate}/hr` : 'not on file';
   const mileage   = vehicle?.mileage ?? vehicle?.odometer;
@@ -94,9 +137,10 @@ export function buildChatSystemPrompt({ ro, customer, vehicle, shop, cannedJobs,
   const cannedJobsList = formatCannedJobsList(cannedJobs);
   const shopProfileSummary = formatShopProfileSummary(shopProfile);
   const customerHistorySummary = formatCustomerHistory(customerHistory);
+  const customerNotesSummary = formatCustomerNotes(customerNotes);
   const customerLabel = [customer?.firstName, customer?.lastName].filter(Boolean).join(' ') || 'this customer';
 
-  return `You are the WrenchIQ Assistant, a bilingual (English and Spanish) assistant embedded in ${shopName}'s repair order tool. It's a free-form chat, not a fixed menu — an advisor can ask anything grounded in this shop's own real data below.
+  return `You are the WrenchIQ Assistant, a multilingual (English, Spanish, Mandarin Chinese, Vietnamese, German, French) assistant embedded in ${shopName}'s repair order tool. It's a free-form chat, not a fixed menu — an advisor can ask anything grounded in this shop's own real data below.
 
 Your job has four parts:
   1. Rewrite rough text into clear, correct "automotive speak." Two directions come up about equally — infer which one fits the message, defaulting to whichever direction the input suggests if it isn't stated:
@@ -123,8 +167,13 @@ ${shopProfileSummary}
 ${customerLabel}'s visit history (most recent first):
 ${customerHistorySummary}
 
+Personal notes an advisor saved about ${customerLabel} (advisor-authored, not derived from RO data — use these to inform tone/approach, e.g. a communication preference, but never state one back to the customer as if it were a documented vehicle fact):
+${customerNotesSummary}
+
 Rules:
-- Detect the language of the user's message and reply in that same language (English or Spanish) — don't switch languages unless asked to translate.
+${language && LANGUAGE_NAMES[language]
+    ? `- Reply in ${LANGUAGE_NAMES[language]}, regardless of what language the advisor's own message is written in — they've explicitly selected ${LANGUAGE_NAMES[language]} for this chat (e.g. to draft a message for a ${LANGUAGE_NAMES[language]}-speaking customer). Don't switch languages unless asked to translate into a different one.`
+    : `- Detect the language of the user's message and reply in that same language (English, Spanish, Mandarin Chinese, Vietnamese, German, or French) — don't switch languages unless asked to translate.`}
 - Keep replies short and directly usable — lead with the answer itself, plainly; add at most one short follow-up line only if something needs clarifying. A visit-history summary can run to a few sentences if genuinely summarizing several visits.
 - When asked for a price, match the request against the canned job menu above (by name or by the closest matching symptom/repair) and quote its labor + parts + total. If nothing on the menu is a reasonable match, say plainly that it's not on file — never invent a price.
 - When asked to look up a symptom, name the likely related repair and, if it maps to one of the canned jobs above, name that job and its price too.
@@ -145,14 +194,16 @@ Rules:
  * @param {Array}  [opts.cannedJobs] - shop's priced canned-job menu (see cannedJobsService.js)
  * @param {object} [opts.shopProfile] - persisted Predii Learn shop profile (see shopProfileSnapshotService.js)
  * @param {Array}  [opts.customerHistory] - this customer's past visits (see roAdvisorService.js fetchCustomerHistory)
+ * @param {Array}  [opts.customerNotes] - advisor-saved personal notes about this customer (see customerNotesService.js)
  * @param {string} [opts.modelTier] - 'predii' | 'frontier'
+ * @param {string} [opts.language] - force a reply language ('en'|'es'|'zh'|'vi') instead of auto-detecting from the message
  * @param {number} [opts.maxTokens] - override the completion-token budget
  *   (see server/config.js RO_CHAT_MAX_TOKENS for the default) — the Tauri
  *   chat UI exposes this for complex tasks; clamped to [100, 4000] regardless.
  * @returns {Promise<{reply: string, forcedPredii: boolean, forcedReason: 'pii'|'not_configured'|null, modelUsed: 'predii'|'frontier'}>}
  */
-export async function runROChatAgent({ message, history = [], ro, customer, vehicle, shop, cannedJobs, shopProfile, customerHistory, voice, modelTier, maxTokens }) {
-  const system = buildChatSystemPrompt({ ro, customer, vehicle, shop, cannedJobs, shopProfile, customerHistory, voice });
+export async function runROChatAgent({ message, history = [], ro, customer, vehicle, shop, cannedJobs, shopProfile, customerHistory, customerNotes, voice, modelTier, language, maxTokens }) {
+  const system = buildChatSystemPrompt({ ro, customer, vehicle, shop, cannedJobs, shopProfile, customerHistory, customerNotes, voice, language });
 
   const { profileKey, forcedPredii, forcedReason } = resolveModelTier(modelTier, message);
 

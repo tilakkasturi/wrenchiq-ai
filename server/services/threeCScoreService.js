@@ -184,16 +184,79 @@ Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
 }
 
 /**
+ * Independent fact-check of a rewrite against the same context it was
+ * supposed to be grounded in — a second LLM call whose only job is to
+ * catch fabrication the rewrite prompt's own grounding instruction failed
+ * to prevent. This is deliberately an LLM judge rather than a deterministic
+ * check: unlike TSB pricing/scope (where a structured ground-truth number
+ * exists to compute against), a free-form narrative rewrite has no
+ * structured field to diff against — spotting "this claim isn't supported
+ * by the source text" is a judgment call, which is exactly what an LLM
+ * judge is for and a regex/deterministic check is not.
+ *
+ * @returns {Promise<{grounded: boolean|null, fabrications: string[]}>}
+ *   grounded is null (not false) when the judge call itself failed — an
+ *   unreachable model isn't evidence of fabrication.
+ */
+export async function verifyThreeCGrounding({ rewritten, concern, diagnosis, correction, vehicle, dtcs, services }) {
+  const context = formatContext({ concern, diagnosis, correction, vehicle, dtcs, services });
+
+  const prompt = `You are a strict fact-checker reviewing a rewritten repair-order narrative for fabrication.
+
+ORIGINAL CONTEXT (the only source of truth):
+${context}
+
+REWRITE TO CHECK:
+Complaint: ${rewritten.concern || ''}
+Cause: ${rewritten.diagnosis || ''}
+Correction: ${rewritten.correction || ''}
+
+Flag any statement in the rewrite that asserts a fact — a DTC, TSB number, part name/number, measurement, test result, specific customer statement, or other concrete claim — that is NOT present in the original context above, even if it sounds like a plausible detail for this kind of repair. Rephrasing, reorganizing, or elaborating on the *style* of something already in the context is fine and is not a fabrication. A generic phrase like "diagnosis is pending" or "not yet documented" is also fine.
+
+Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
+{
+  "grounded": boolean,
+  "fabrications": string[]
+}`;
+
+  let data;
+  try {
+    data = await callAzureOpenAI({
+      messages:    [{ role: 'user', content: prompt }],
+      max_tokens:  400,
+      jsonMode:    true,
+      temperature: 0,
+      _route:      '/api/three-c-score/verify-grounding',
+    });
+  } catch (err) {
+    console.warn('[threeCScoreService] grounding verification call failed:', err.message);
+    return { grounded: null, fabrications: [] };
+  }
+
+  const parsed = extractJson(getTextFromResponse(data));
+  if (!parsed) return { grounded: null, fabrications: [] };
+
+  return {
+    grounded: typeof parsed.grounded === 'boolean' ? parsed.grounded : null,
+    fabrications: Array.isArray(parsed.fabrications) ? parsed.fabrications.filter(Boolean) : [],
+  };
+}
+
+/**
  * Score the narrative as-is, rewrite it (grounded-only), then score the
  * rewrite — so the "before" and "after" numbers both come from the same
- * live judge rather than one live score next to a hardcoded "after".
+ * live judge rather than one live score next to a hardcoded "after" — and
+ * independently verify the rewrite's grounding (see verifyThreeCGrounding).
  */
 export async function scoreAndRewriteThreeC(input) {
   const before = await scoreThreeC(input);
   const rewritten = await rewriteThreeC(input);
   if (!rewritten) {
-    return { before, rewritten: null, after: null };
+    return { before, rewritten: null, after: null, grounding: null };
   }
-  const after = await scoreThreeC({ ...input, ...rewritten });
-  return { before, rewritten, after };
+  const [after, grounding] = await Promise.all([
+    scoreThreeC({ ...input, ...rewritten }),
+    verifyThreeCGrounding({ rewritten, ...input }),
+  ]);
+  return { before, rewritten, after, grounding };
 }
