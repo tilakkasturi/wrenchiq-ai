@@ -31,11 +31,6 @@ export async function callAzureOpenAILegacy({ system, messages, max_tokens, mode
       throw new Error(`LLM profile "${profileKey}" is not configured — set its base URL/key in .env.local`);
     }
   } else {
-    // getDefaultProfile(), not the static LLM_PROFILES.default — 'default'
-    // resolves to whichever physical endpoint (primary/secondary) is
-    // currently active on the WrenchIQ Home screen, not just the .env.local
-    // startup value. Regressed to the static form when this file was split
-    // out of azureOpenAI.js (AE-1286); restored here.
     profile = useConfiguredProvider ? getActiveLLMProfile() : getDefaultProfile();
   }
   const effectiveModel = model || profile.model;
@@ -101,14 +96,14 @@ export async function callAzureOpenAILegacy({ system, messages, max_tokens, mode
     });
   } catch (fetchErr) {
     const dur = Date.now() - t0;
-    logLLMRequest({ provider: 'llm', route: _route, model: effectiveModel, durationMs: dur, status: 'error', error: fetchErr.message }).catch(() => {});
+    logLLMRequest({ provider: 'llm', route: _route, model: effectiveModel, baseUrl: base, durationMs: dur, status: 'error', error: fetchErr.message }).catch(() => {});
     throw fetchErr;
   }
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => '(no body)');
     const dur = Date.now() - t0;
-    logLLMRequest({ provider: 'llm', route: _route, model: effectiveModel, durationMs: dur, status: 'error', error: `${res.status}: ${errBody}` }).catch(() => {});
+    logLLMRequest({ provider: 'llm', route: _route, model: effectiveModel, baseUrl: base, durationMs: dur, status: 'error', error: `${res.status}: ${errBody}` }).catch(() => {});
     throw new Error(`LLM error ${res.status}: ${errBody}`);
   }
 
@@ -119,6 +114,7 @@ export async function callAzureOpenAILegacy({ system, messages, max_tokens, mode
     provider: 'llm',
     route: _route,
     model: effectiveModel,
+    baseUrl: base,
     promptTokens: usage.prompt_tokens,
     completionTokens: usage.completion_tokens,
     totalTokens: usage.total_tokens,

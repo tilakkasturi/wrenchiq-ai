@@ -1,0 +1,153 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE FRONT BRAKE PADS - All",
+        "Skill": "B",
+        "Labor (Hours)": 1.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "FRONT DISC BRAKE PAD"
+      },
+      {
+        "Note": "COMBINATION - CLEAN & LUBRICATE CALIPER SLIDE PINS",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "FRONT DISC BRAKE PAD"
+      },
+      {
+        "Note": "COMBINATION - INSPECT BRAKE LINES & HOSE CONDITION",
+        "Skill": "B",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "FRONT DISC BRAKE PAD"
+      },
+      {
+        "Note": "COMBINATION - BRAKE SYSTEM BLEED - HYDRAULIC",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "FRONT DISC BRAKE PAD"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "45022",
+        "pt": "BRAKE PAD",
+        "part_number": "45022-TLA-A01",
+        "part_description": "PAD SET, FRONT DISC BRAKE",
+        "system_group": null,
+        "display_term": "FRONT BRAKE PAD KIT",
+        "part_location": "45-01 - FRONT BRAKE CALIPER ASSEMBLY",
+        "category": "MAIN",
+        "system": "BRAKING SYSTEM",
+        "image_id": "HND-8821",
+        "suggested_price": 84.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE FRONT BRAKE PADS - All",
+            "Skill": "B",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "FRONT DISC BRAKE PAD"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2HKRW2H83JH607249",
+          "CRV-2018-ALL-FWD"
+        ],
+        "supersession": "45022-TLA-A02",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "47720",
+        "pt": "CALIPER SLIDE PIN",
+        "part_number": "47720-T0A-000",
+        "part_description": "PIN, CALIPER GUIDE",
+        "system_group": null,
+        "display_term": "CALIPER GUIDE PIN, FRONT",
+        "part_location": "47-02 - FRONT CALIPER GUIDE",
+        "category": "RELATED",
+        "system": "BRAKING SYSTEM",
+        "image_id": "HND-1102",
+        "suggested_price": 12.99,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "CRV-2018-ALL"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "43512",
+        "pt": "BRAKE ROTOR",
+        "part_number": "43512-T0A-555",
+        "part_description": "DISC, FRONT VENTED",
+        "system_group": null,
+        "display_term": "FRONT BRAKE ROTOR",
+        "part_location": "43-01 - FRONT AXLE HUB",
+        "category": "RELATED",
+        "system": "BRAKING SYSTEM",
+        "image_id": "HND-4490",
+        "suggested_price": 115,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE FRONT DISC ROTOR - Each",
+            "Skill": "B",
+            "Labor (Hours)": 0.7,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "FRONT BRAKE ROTOR"
+          }
+        ],
+        "stats": {
+          "total_count": 450,
+          "cooccurrence_count": 310,
+          "cooccurrence_percent": 68.88
+        },
+        "qty": "02",
+        "usage": [
+          "2HKRW2H83JH607249"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "FRONT DISC BRAKE PAD",
+  "labor_hours": 2.4,
+  "input": {
+    "vin": "2HKRW2H83JH607249",
+    "text": "Front Brake Pads",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "HONDA",
+    "catalog_code": "HND-CRV-2018"
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "SERVICE BRAKE FLUID - DOT 3 - Complete System Flush",
+        "Skill": "A",
+        "Labor (Hours)": 1.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "BRAKE FLUID"
+      },
+      {
+        "Note": "COMBINATION - INSPECT BRAKE LINES AND HOSES FOR LEAKS OR DEGRADATION",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "BRAKE FLUID"
+      },
+      {
+        "Note": "COMBINATION - BLEED BRAKE SYSTEM - Manual Pressure Bleed",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "BRAKE FLUID"
+      },
+      {
+        "Note": "COMBINATION - TEST ABS MODULATOR FUNCTION POST-FLUSH",
+        "Skill": "A",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "BRAKE FLUID"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "FL-092",
+        "pt": "BRAKE FLUID",
+        "part_number": "802116030",
+        "part_description": "FLUID, BRAKE, DOT 3, 1L",
+        "system_group": null,
+        "display_term": "DOT 3 BRAKE FLUID (1L)",
+        "part_location": "01-01 - BRAKE HYDRAULIC SYSTEM",
+        "category": "MAIN",
+        "system": "BRAKE SYSTEM",
+        "image_id": "55210",
+        "suggested_price": 14.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "SERVICE BRAKE FLUID - DOT 3 - Complete System Flush",
+            "Skill": "A",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "BRAKE FLUID"
+          }
+        ],
+        "stats": null,
+        "qty": "3",
+        "usage": [
+          "SUBARU OUTBACK 2015-2020",
+          "FORESTER 2014-2018"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "FL-093",
+        "pt": "BRAKE FLUID",
+        "part_number": "802116032",
+        "part_description": "FLUID, BRAKE, DOT 4, 1L",
+        "system_group": null,
+        "display_term": "DOT 4 BRAKE FLUID (1L)",
+        "part_location": "01-01 - BRAKE HYDRAULIC SYSTEM",
+        "category": "MAIN",
+        "system": "BRAKE SYSTEM",
+        "image_id": "55211",
+        "suggested_price": 18.75,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "1",
+        "usage": [
+          "SUBARU OUTBACK 2018-2022"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "BRAKE FLUID",
+  "labor_hours": 2.6,
+  "input": {
+    "vin": "4S4BSACC5J3308906",
+    "text": "Brake Fluid Flush — DOT 3",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "SUBARU",
+    "catalog_code": "SUB-B-FLUSH-01"
+  }
+}

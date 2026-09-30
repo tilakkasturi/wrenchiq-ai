@@ -1,0 +1,143 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "CHANGE ENGINE OIL AND FILTER - Conventional/Synthetic - V8 Engine",
+        "Skill": "A",
+        "Labor (Hours)": 0.7,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "ENGINE OIL SERVICE"
+      },
+      {
+        "Note": "INSPECT ENGINE OIL SYSTEM - Check for leaks at drain plug and filter housing",
+        "Skill": "C",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "INSPECTION",
+        "LaborComponent": "ENGINE OIL SERVICE"
+      },
+      {
+        "Note": "COMBINATION - RESET ENGINE OIL LIFE MONITOR - Electronic Reset",
+        "Skill": "B",
+        "Labor (Hours)": 0.1,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "ENGINE OIL SERVICE"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "99201",
+        "pt": "ENGINE OIL",
+        "part_number": "MOB-0W20-1Q",
+        "part_description": "MOBIL 1 FULL SYNTHETIC 0W-20 QUART",
+        "system_group": null,
+        "display_term": "MOBIL 1 0W-20 SYNTHETIC OIL",
+        "part_location": "ENGINE - LUBRICATION SYSTEM",
+        "category": "MAIN",
+        "system": "ENGINE",
+        "image_id": "55210",
+        "suggested_price": 9.49,
+        "fluid": [
+          "0W-20"
+        ],
+        "labor": [
+          {
+            "Note": "CHANGE ENGINE OIL AND FILTER - Conventional/Synthetic - V8 Engine",
+            "Skill": "A",
+            "Labor (Hours)": 0.7,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "ENGINE OIL SERVICE"
+          }
+        ],
+        "stats": null,
+        "qty": "08",
+        "usage": [
+          "L53 5.3L V8",
+          "L84 6.2L V8"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "11402",
+        "pt": "OIL FILTER",
+        "part_number": "ACD-12588",
+        "part_description": "OIL FILTER, SPIN-ON",
+        "system_group": null,
+        "display_term": "ENGINE OIL FILTER",
+        "part_location": "ENGINE - LUBRICATION SYSTEM",
+        "category": "MAIN",
+        "system": "ENGINE",
+        "image_id": "55215",
+        "suggested_price": 8.95,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "CHANGE ENGINE OIL AND FILTER - Conventional/Synthetic - V8 Engine",
+            "Skill": "A",
+            "Labor (Hours)": 0.7,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "ENGINE OIL SERVICE"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "SILVERADO 1500 2019-2023"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "88201",
+        "pt": "DRAIN PLUG WASHER",
+        "part_number": "GM-90697444",
+        "part_description": "WASHER, DRAIN PLUG - CRUSH WASHER",
+        "system_group": null,
+        "display_term": "OIL DRAIN PLUG SEAL",
+        "part_location": "ENGINE - LUBRICATION SYSTEM",
+        "category": "RELATED",
+        "system": "ENGINE",
+        "image_id": "55220",
+        "suggested_price": 1.25,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "ALL CHEVROLET V8"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "ENGINE OIL & FILTER",
+  "labor_hours": 1,
+  "input": {
+    "vin": "3GCUKREC6KG184723",
+    "text": "Engine Oil & Filter Change",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "CHEVROLET",
+    "catalog_code": "GM-LUBE-2019"
+  }
+}

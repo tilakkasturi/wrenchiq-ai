@@ -183,6 +183,76 @@ Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
   };
 }
 
+// Lines the Sidecar's inspection-findings dropdown appends onto
+// customerConcern (see WrenchIQSidecarScreen.jsx's handleInspectionItemSelect)
+// — technician-authored, not the customer's own words. The rewrite below
+// must never paraphrase or merge these into the customer's sentence (an LLM
+// asked to "clean up the customer's concern" will happily fold them in and
+// drop the specific component/measurement, even under a grounding rule that
+// only forbids *inventing* facts, not reorganizing existing ones) — so they
+// are held out of the LLM call entirely and re-appended verbatim after.
+const INSPECTION_NOTE_PREFIX = 'Inspection finding:';
+
+function splitConcernNotes(concern) {
+  const lines = (concern || '').split('\n');
+  const customerLines = lines.filter((l) => !l.startsWith(INSPECTION_NOTE_PREFIX));
+  const inspectionLines = lines.filter((l) => l.startsWith(INSPECTION_NOTE_PREFIX));
+  return { customerText: customerLines.join('\n').trim(), inspectionLines };
+}
+
+/**
+ * Rewrite just the customer's intake concern (ro.customerConcern) — grounded
+ * the same way as rewriteThreeC() (clarity/grammar only, no invented
+ * symptoms, DTCs, or parts), but scoped to the concern text alone since it
+ * has no diagnosis/correction/DTC context at intake time. Any
+ * technician-appended "Inspection finding:" lines are preserved verbatim,
+ * not sent through the rewrite (see splitConcernNotes above).
+ *
+ * @returns {Promise<{concern: string}|null>}
+ */
+export async function rewriteConcern({ concern, vehicle }) {
+  const { customerText, inspectionLines } = splitConcernNotes(concern);
+  const reattach = (rewrittenCustomerText) =>
+    [rewrittenCustomerText, ...inspectionLines].filter(Boolean).join('\n');
+
+  if (!customerText) {
+    // Nothing but inspection notes (or empty) — no customer wording to rewrite.
+    return { concern: reattach('') };
+  }
+
+  const vehicleStr = vehicle
+    ? `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''}`.trim() || 'unknown vehicle'
+    : 'unknown vehicle';
+
+  const prompt = `You are an expert automotive service writer cleaning up a customer's stated concern for a repair order intake.
+
+STRICT GROUNDING RULE — this is the most important instruction: use ONLY what the customer actually said below. Do not invent a symptom, DTC, part, measurement, or detail that isn't already there. You may fix grammar, spelling, and organize the wording into clear, professional language, but do not add new claims.
+
+Vehicle: ${vehicleStr}
+Customer's concern (as written): ${customerText}
+
+Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
+{ "concern": string }`;
+
+  let data;
+  try {
+    data = await callAzureOpenAI({
+      messages:   [{ role: 'user', content: prompt }],
+      max_tokens: 300,
+      jsonMode:   true,
+      _route:     '/api/three-c-score/rewrite-concern',
+    });
+  } catch (err) {
+    console.warn('[threeCScoreService] rewriteConcern call failed:', err.message);
+    return null;
+  }
+
+  const parsed = extractJson(getTextFromResponse(data));
+  if (!parsed) return null;
+
+  return { concern: reattach(parsed.concern || customerText) };
+}
+
 /**
  * Independent fact-check of a rewrite against the same context it was
  * supposed to be grounded in — a second LLM call whose only job is to

@@ -1,0 +1,166 @@
+{
+  "roId": "RO-2026-0403",
+  "vehicleId": "vin-1ftew1eg7mfa12847",
+  "techId": "tech-882",
+  "inspectedAt": "2026-05-12T14:22:00",
+  "categories": [
+    {
+      "name": "Engine & Drivetrain",
+      "items": [
+        {
+          "id": "dvi-f150-002",
+          "name": "Drive Belt / Serpentine Belt",
+          "status": "monitor",
+          "measurement": "Minor glazing",
+          "newSpec": "100%",
+          "minSpec": "70%",
+          "wearPct": 25,
+          "hasPhoto": true,
+          "photoLabel": "belt_surface_check",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 91,
+            "finding": "Serpentine belt shows slight glazing on the ribbed side, but no visible cracking or fraying.",
+            "recommendation": "MONITOR — Inspect again at next oil change. No immediate replacement needed.",
+            "reasoning": "Visual inspection of the belt surface shows a smooth, shiny texture indicative of heat/slippage, but material integrity remains intact. Ford F-150 service interval is typically 100k miles; current belt appears mid-life."
+          }
+        },
+        {
+          "id": "dvi-f150-003",
+          "name": "CV Axle / Boot",
+          "status": "good",
+          "measurement": "No tears/leaks",
+          "hasPhoto": true,
+          "photoLabel": "cv_axle_front_left",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 95,
+            "finding": "Front left CV axle boot is intact. No grease leakage or tearing detected.",
+            "recommendation": "GOOD — No action required.",
+            "reasoning": "Visual inspection of the rubber bellows shows no signs of stress cracking or grease accumulation around the joint."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brakes",
+      "items": [
+        {
+          "id": "dvi-f150-004",
+          "name": "Front Brake Pads",
+          "status": "good",
+          "measurement": "10mm",
+          "newSpec": "13mm",
+          "minSpec": "3mm",
+          "wearPct": 23,
+          "hasPhoto": true,
+          "photoLabel": "front_pad_thickness",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 94,
+            "finding": "Front brake pads at 10mm. Significant life remaining.",
+            "recommendation": "GOOD — Replace when thickness reaches 3mm.",
+            "reasoning": "Digital caliper measurement. Wear is even across both front calipers."
+          }
+        },
+        {
+          "id": "dvi-f150-005",
+          "name": "Rear Brake Pads",
+          "status": "monitor",
+          "measurement": "5mm",
+          "newSpec": "12mm",
+          "minSpec": "2mm",
+          "wearPct": 58,
+          "hasPhoto": true,
+          "photoLabel": "rear_pad_thickness",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 92,
+            "finding": "Rear brake pads at 5mm. Approaching mid-life replacement threshold.",
+            "recommendation": "MONITOR — Plan for replacement within the next 12,000 miles.",
+            "reasoning": "Standard wear for F-150 rear braking components. 58% wear indicates steady usage."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suspension & Steering",
+      "items": [
+        {
+          "id": "dvi-f150-006",
+          "name": "Front Shocks",
+          "status": "good",
+          "measurement": "No leaks",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 97,
+            "finding": "Front shock absorbers show no signs of hydraulic fluid leakage or structural damage.",
+            "recommendation": "GOOD — No action needed.",
+            "reasoning": "Visual inspection of the shock body and seals shows no weeping or residue."
+          }
+        },
+        {
+          "id": "dvi-f150-007",
+          "name": "Tie Rod Ends",
+          "status": "good",
+          "measurement": "No play",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 90,
+            "finding": "Tie rod ends are tight with no detectable play in the steering linkage.",
+            "recommendation": "GOOD — No action needed.",
+            "reasoning": "Manual shake test performed on steering linkage. Components are secure."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filters",
+      "items": [
+        {
+          "id": "dvi-f150-008",
+          "name": "Engine Air Filter",
+          "status": "urgent",
+          "measurement": "85% clogged",
+          "newSpec": "100%",
+          "minSpec": "50%",
+          "wearPct": 85,
+          "hasPhoto": true,
+          "photoLabel": "engine_air_filter",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 96,
+            "finding": "Engine air filter is heavily impacted with dust and organic debris.",
+            "recommendation": "REPLACE — High restriction will negatively impact fuel economy and engine breathing.",
+            "reasoning": "Visual inspection shows significant discoloration and blockage of filter media. Highly recommended to replace to prevent unnecessary vacuum load on the engine."
+          }
+        },
+        {
+          "id": "dvi-f150-009",
+          "name": "Cabin Air Filter",
+          "status": "good",
+          "measurement": "Clean",
+          "newSpec": "100%",
+          "minSpec": "20%",
+          "wearPct": 10,
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 93,
+            "finding": "Cabin filter is in excellent condition with minimal particulate.",
+            "recommendation": "GOOD — No action needed.",
+            "reasoning": "Filter media is bright white with no visible debris or odors."
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "urgent": 2,
+    "monitor": 2,
+    "good": 6,
+    "totalItems": 10
+  }
+}

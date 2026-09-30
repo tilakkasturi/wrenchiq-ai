@@ -1,0 +1,157 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "DIAGNOSTIC - SUSPENSION SYSTEM - Comprehensive inspection of struts, shocks, and mounting hardware.",
+        "Skill": "A",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "SUSPENSION"
+      },
+      {
+        "Note": "INSPECTION - CHASSIS & STEERING - Inspect ball joints, tie rod ends, and steering linkage.",
+        "Skill": "B",
+        "Labor (Hours)": 0.8,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "STEERING"
+      },
+      {
+        "Note": "INSPECTION - CONTROL ARM BUSHINGS - Visual and physical check for tearing or excessive play.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "CHASSIS"
+      },
+      {
+        "Note": "COMBINATION - WHEEL ALIGNMENT CHECK - Verify caster/camber/toe within spec via scan tool/alignment rack.",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "STEERING"
+      },
+      {
+        "Note": "DIAGNOSTIC - SHOCK ABSORBER LEAK TEST - Inspect hydraulic fluid integrity and dampening response.",
+        "Skill": "B",
+        "Labor (Hours)": 0.6,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "SUSPENSION"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "82120A",
+        "pt": "STRUT ASSEMBLY",
+        "part_number": "82120-F2000",
+        "part_description": "STRUT ASSY, FRONT LEFT",
+        "system_group": null,
+        "display_term": "FRONT LEFT STRUT ASSEMBLY",
+        "part_location": "44-01 - FRONT SUSPENSION ASSEMBLY",
+        "category": "MAIN",
+        "system": "SUSPENSION",
+        "image_id": "55210",
+        "suggested_price": 245.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REPLACE STRUT ASSEMBLY - Front, One Side",
+            "Skill": "B",
+            "Labor (Hours)": 1.5,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "STRUT ASSEMBLY"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "TUCSON-2023-ALL",
+          "HYUN-SUS-88"
+        ],
+        "supersession": null,
+        "local_reman_parts": "82120-REM"
+      },
+      {
+        "part_key": "82401B",
+        "pt": "CONTROL ARM",
+        "part_number": "82401-F2050",
+        "part_description": "CONTROL ARM, LOWER",
+        "system_group": null,
+        "display_term": "LOWER CONTROL ARM",
+        "part_location": "44-05 - LOWER CONTROL ARM ASSEMBLY",
+        "category": "MAIN",
+        "system": "SUSPENSION",
+        "image_id": "55215",
+        "suggested_price": 118.75,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REPLACE CONTROL ARM - Lower, Each",
+            "Skill": "B",
+            "Labor (Hours)": 1.2,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "CONTROL ARM"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "TUCSON-2023-F20"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "82661C",
+        "pt": "TIE ROD END",
+        "part_number": "82661-F2010",
+        "part_description": "TIE ROD END, OUTER",
+        "system_group": null,
+        "display_term": "OUTER TIE ROD END",
+        "part_location": "45-02 - STEERING LINKAGE",
+        "category": "RELATED",
+        "system": "STEERING",
+        "image_id": "55300",
+        "suggested_price": 42.3,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "TUCSON-2023-GEN2"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "SUSPENSION DIAGNOSTIC",
+  "labor_hours": null,
+  "input": {
+    "vin": "5NMJFCAE3PH264144",
+    "text": "Suspension Diagnostic & Chassis Inspection",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "HYUNDAI",
+    "catalog_code": "HY-SUS-2023"
+  }
+}

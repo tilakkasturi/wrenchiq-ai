@@ -7,37 +7,80 @@
 // Surface A (the web admin app) in the OS default browser, since the packaged webview
 // only ever loads sidecar.html. Local data-feed cache / auth relay are still not
 // implemented — see src-tauri/README.md for that follow-on.
+//
+// Window mode ("sidecar" vs "full", see WrenchIQSidecarApp.jsx's header toggle and
+// bin/tauri-app's `full` argument): the initial mode comes from the
+// WRENCHIQ_WINDOW_MODE env var (set by bin/tauri-app), tracked afterward in the
+// WindowModeState below so a later `window_mode` query (e.g. after the header toggle)
+// reflects the latest value, not just what the process started with.
 
-use tauri::{Manager, PhysicalPosition, PhysicalSize, Position, Size};
+use std::env;
+use std::sync::Mutex;
+use tauri::{Manager, PhysicalPosition, PhysicalSize, Position, Size, WebviewWindow};
+
+struct WindowModeState(Mutex<String>);
+
+// Applies the geometry for `mode` to `window`. "sidecar" (default) docks to the
+// right edge of the primary display, spanning its full height — a sidecar should
+// sit alongside the shop's SMS/DMS window, not float centered on top of it. "full"
+// takes the whole primary display instead, for the full-screen queue+intelligence
+// layout (WrenchIQSidecarFullScreen.jsx).
+fn apply_window_mode(window: &WebviewWindow, mode: &str) {
+    if let Ok(Some(monitor)) = window.primary_monitor() {
+        let monitor_size = *monitor.size();
+        let monitor_pos = *monitor.position();
+
+        let (width, height, x, y) = if mode == "full" {
+            (monitor_size.width, monitor_size.height, monitor_pos.x, monitor_pos.y)
+        } else {
+            let width = window.outer_size().map(|s| s.width).unwrap_or(420);
+            let height = monitor_size.height;
+            let x = monitor_pos.x + (monitor_size.width as i32 - width as i32);
+            let y = monitor_pos.y;
+            (width, height, x, y)
+        };
+
+        let _ = window.set_size(Size::Physical(PhysicalSize::new(width, height)));
+        let _ = window.set_position(Position::Physical(PhysicalPosition::new(x, y)));
+    }
+}
+
+// Returns the current window mode — read once by the frontend on launch to decide
+// which layout (WrenchIQSidecarScreen vs WrenchIQSidecarFullScreen) to render.
+#[tauri::command]
+fn window_mode(state: tauri::State<WindowModeState>) -> String {
+    state.0.lock().unwrap().clone()
+}
+
+// Called by the header mode-toggle to switch window mode live, without relaunching.
+#[tauri::command]
+fn set_window_mode(app: tauri::AppHandle, mode: String) -> Result<(), String> {
+    if mode != "sidecar" && mode != "full" {
+        return Err(format!("unknown window mode: {mode}"));
+    }
+    let window = app
+        .get_webview_window("main")
+        .ok_or_else(|| "main window not found".to_string())?;
+    apply_window_mode(&window, &mode);
+    *app.state::<WindowModeState>().0.lock().unwrap() = mode;
+    Ok(())
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let initial_mode = env::var("WRENCHIQ_WINDOW_MODE").unwrap_or_else(|_| "sidecar".to_string());
+
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
-        .setup(|app| {
-            // Default placement: docked to the right edge of the primary display,
-            // spanning its full height — a sidecar should sit alongside the shop's
-            // SMS/DMS window, not float centered on top of it. tauri.conf.json's
-            // width/height are just the pre-monitor-detection fallback for the
-            // first paint; this is what actually determines placement on launch.
+        .manage(WindowModeState(Mutex::new(initial_mode.clone())))
+        .invoke_handler(tauri::generate_handler![window_mode, set_window_mode])
+        .setup(move |app| {
             // Starts hidden (tauri.conf.json `visible: false`) so this
             // resize+reposition never flashes the default centered placement
-            // before snapping to the right edge.
+            // before snapping into place.
             if let Some(window) = app.get_webview_window("main") {
-                if let Ok(Some(monitor)) = window.primary_monitor() {
-                    let monitor_size = *monitor.size();
-                    let monitor_pos = *monitor.position();
-                    let width = window
-                        .outer_size()
-                        .map(|s| s.width)
-                        .unwrap_or(420);
-                    let height = monitor_size.height;
-                    let x = monitor_pos.x + (monitor_size.width as i32 - width as i32);
-                    let y = monitor_pos.y;
-                    let _ = window.set_size(Size::Physical(PhysicalSize::new(width, height)));
-                    let _ = window.set_position(Position::Physical(PhysicalPosition::new(x, y)));
-                }
+                apply_window_mode(&window, &initial_mode);
                 let _ = window.show();
                 let _ = window.set_focus();
             }

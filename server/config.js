@@ -9,7 +9,7 @@
 // ── LLM endpoint (generic — works with any OpenAI-compatible server) ──────────
 // LLM_BASE_URL takes priority over the Azure-specific vars below.
 // Examples:
-//   Local:  LLM_BASE_URL=http://192.222.55.177:8081/v1
+//   Local:  LLM_BASE_URL=http://192.222.52.110:8081/v1
 //   Azure:  LLM_BASE_URL=https://prediillm2.openai.azure.com/openai/v1
 export const LLM_BASE_URL =
   process.env.LLM_BASE_URL || process.env.AZURE_OPENAI_API_BASE || 'https://prediillm2.openai.azure.com/openai/v1/';
@@ -21,13 +21,6 @@ export const LLM_API_KEY =
 // Model name — sent in every completion request
 export const LLM_MODEL =
   process.env.LLM_MODEL || process.env.AZURE_OPENAI_MODEL || 'gpt-4o-mini';
-
-// Second self-hosted endpoint ("secondary") — switchable against the primary
-// LLM_BASE_URL above from the WrenchIQ Home / Sidecar Health Check screen.
-// See server/services/llmProviderConfig.js for the primary/secondary toggle.
-export const LLM_BASE_URL_2 = process.env.LLM_BASE_URL2 || '';
-export const LLM_API_KEY_2 = process.env.LLM_API_KEY2 || '';
-export const LLM_MODEL_2 = process.env.LLM_MODEL2 || '';
 
 // Set LLM_SKIP_TOOLS=true when the LLM server doesn't support tool_calls
 // (e.g. vLLM without --enable-auto-tool-choice --tool-call-parser hermes)

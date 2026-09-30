@@ -1,0 +1,56 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "PERFORM MULTI-POINT INSPECTION - 56-POINT SERVICE - Includes: Visual inspection of all fluid levels, belt condition, hose integrity, brake thickness, tire tread depth, and lighting functionality. Includes digital photographic documentation of all identified concerns.",
+        "Skill": "A",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "MULTI-POINT INSPECTION"
+      },
+      {
+        "Note": "COMBINATION - DIGITAL DOCUMENTATION - Capture high-resolution images of wear items and undercarriage components for customer review.",
+        "Skill": "A",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "MULTI-POINT INSPECTION"
+      }
+    ],
+    "part_list": []
+  },
+  "maintenance": {
+    "labor_list": [
+      {
+        "Note": "PERFORM MULTI-POINT INSPECTION - 56-POINT SERVICE - Includes: Visual inspection of all fluid levels, belt condition, hose integrity, brake thickness, tire tread depth, and lighting functionality. Includes digital photographic documentation of all identified concerns.",
+        "Skill": "A",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "MULTI-POINT INSPECTION"
+      }
+    ],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "MULTI-POINT INSPECTION",
+  "labor_hours": 1.5,
+  "input": {
+    "vin": "5TDGZRBH5LS503482",
+    "text": "Multi-Point Inspection (56-pt) — with Photos",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "MPI-56P"
+  }
+}

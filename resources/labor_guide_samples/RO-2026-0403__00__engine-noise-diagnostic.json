@@ -1,0 +1,108 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "DIAGNOSTIC - ENGINE NOISE / UNUSUAL SOUND - Verify customer concern, perform visual inspection, and utilize stethoscope for component isolation.",
+        "Skill": "A",
+        "Labor (Hours)": 1.5,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "ENGINE"
+      },
+      {
+        "Note": "DIAGNOSTIC - ENGINE PERFORMANCE - Verify excessive vibration or noise during idle/load.",
+        "Skill": "B",
+        "Labor (Hours)": 0.8,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "ENGINE"
+      },
+      {
+        "Note": "COMBINATION - SCAN TOOL DATA STREAM ANALYSIS - Monitor cylinder misfire counts and valve timing correlation.",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "ENGINE"
+      },
+      {
+        "Note": "DIAGNOSTIC - ACCESSORY DRIVE SYSTEM - Inspect serpentine belt, tensioner, and idler pulley for bearing noise.",
+        "Skill": "B",
+        "Labor (Hours)": 0.7,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "ENGINE"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "99281",
+        "pt": "DIAGNOSTIC TOOL ACCESSORY",
+        "part_number": "FL-99281-X",
+        "part_description": "ELECTRONIC STETHOSCOPE - DIGITAL",
+        "system_group": null,
+        "display_term": "DIGITAL ENGINE STETHOSCOPE",
+        "part_location": "SHOP TOOL",
+        "category": "MISC",
+        "system": "DIAGNOSTIC EQUIPMENT",
+        "image_id": "44120",
+        "suggested_price": 0,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "FORD SERVICE STANDARD"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "10294",
+        "pt": "ENGINE SEALANT",
+        "part_number": "F1ET-19880-A",
+        "part_description": "RTV SILICONE SEALANT, BLACK",
+        "system_group": null,
+        "display_term": "ENGINE SEALANT KIT",
+        "part_location": "ENGINE ASSEMBLY",
+        "category": "CONSUMABLE",
+        "system": "ENGINE",
+        "image_id": "11204",
+        "suggested_price": 14.5,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "F-150 3.5L ECOBOOST"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "ENGINE NOISE DIAGNOSTIC",
+  "labor_hours": 3.5,
+  "input": {
+    "vin": "1FTEW1EG7MFA12847",
+    "text": "Engine Noise Diagnostic",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "FORD",
+    "catalog_code": "F150-ENG-09"
+  }
+}

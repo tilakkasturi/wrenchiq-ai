@@ -1,0 +1,110 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE REAR DISC ROTOR - Both Sides",
+        "Skill": "B",
+        "Labor (Hours)": 1.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "REAR DISC ROTOR"
+      },
+      {
+        "Note": "COMBINATION - CLEAN AND INSPECT BRAKE HUB SURFACE - Remove oxidation from mating surface to ensure rotor sits flush.",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "REAR DISC ROTOR"
+      },
+      {
+        "Note": "COMBINATION - TORQUE WHEEL LUGS TO SPECIFICATION - Final check after rotor installation.",
+        "Skill": "A",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "REAR DISC ROTOR"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "88210",
+        "pt": "REAR DISC ROTOR",
+        "part_number": "88210-AF410",
+        "part_description": "DISC, REAR BRAKE, VENTED",
+        "system_group": null,
+        "display_term": "REAR BRAKE ROTOR ASSEMBLY",
+        "part_location": "42-10 - REAR AXLE HUB & ROTOR",
+        "category": "MAIN",
+        "system": "BRAKE SYSTEM",
+        "image_id": "77210",
+        "suggested_price": 114.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE REAR DISC ROTOR - Both Sides",
+            "Skill": "B",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "REAR DISC ROTOR"
+          }
+        ],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "SUBARU OUTBACK 2015-2019",
+          "VIN ENDS 3308906"
+        ],
+        "supersession": "88210-AF411",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "88215",
+        "pt": "BRAKE ROTOR BOLT",
+        "part_number": "88215-00120",
+        "part_description": "BOLT, ROTOR SECURING",
+        "system_group": null,
+        "display_term": "ROTOR SET SCREW",
+        "part_location": "42-10 - REAR AXLE HUB & ROTOR",
+        "category": "RELATED",
+        "system": "BRAKE SYSTEM",
+        "image_id": "77215",
+        "suggested_price": 5.25,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "ALL REAR DISC MODELS"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "REAR DISC ROTOR",
+  "labor_hours": 1.9,
+  "input": {
+    "vin": "4S4BSACC5J3308906",
+    "text": "Rear Brake Rotor Replacement x2",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "SUBARU",
+    "catalog_code": "SB-4492"
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "PERFORM A/C SYSTEM EVACUATION AND RECHARGE - R-134a - Includes: Vacuum testing and system recharge to OEM specifications.",
+        "Skill": "C",
+        "Labor (Hours)": 1.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "A/C SERVICE"
+      },
+      {
+        "Note": "A/C SYSTEM PERFORMANCE TEST - Verify vent temperature and compressor cycling.",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "A/C SERVICE"
+      },
+      {
+        "Note": "INSPECT A/C SYSTEM FOR LEAKS - UV Dye and visual inspection of hoses and fittings.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "A/C SERVICE"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "90011",
+        "pt": "REFRIGERANT",
+        "part_number": "65-441-092-X",
+        "part_description": "R-134a REFRIGERANT, 1.35 LB CAN",
+        "system_group": null,
+        "display_term": "A/C REFRIGERANT R-134a",
+        "part_location": "09-01 - A/C SYSTEM REFRIGERANT STORAGE",
+        "category": "MAIN",
+        "system": "CLIMATE CONTROL",
+        "image_id": "44210",
+        "suggested_price": 58.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "PERFORM A/C SYSTEM EVACUATION AND RECHARGE - R-134a - Includes: Vacuum testing and system recharge to OEM specifications.",
+            "Skill": "C",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "A/C SERVICE"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "BMW X3 G01",
+          "B46/B48 ENGINE"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "90012",
+        "pt": "A/C SERVICE KIT",
+        "part_number": "88-129-004-K",
+        "part_description": "A/C SEAL & O-RING SERVICE KIT",
+        "system_group": null,
+        "display_term": "A/C SEAL KIT",
+        "part_location": "09-04 - A/C SERVICE ACCESS",
+        "category": "RELATED",
+        "system": "CLIMATE CONTROL",
+        "image_id": "44215",
+        "suggested_price": 14.25,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "BMW X3 G01"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "A/C SERVICE",
+  "labor_hours": 2.3,
+  "input": {
+    "vin": "5UX43DP04LL839271",
+    "text": "A/C System Evacuation, Recharge & Performance Test",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "BMW",
+    "catalog_code": "BMW-AC-X3-2020"
+  }
+}

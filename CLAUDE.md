@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Dev (both servers in parallel — Vite :5173 + Express :3001)
+# Dev (all three in parallel — Vite :5173 + Express :3001 + ro-ner-demo :8090)
 npm run dev:full
 
 # Frontend only
@@ -23,7 +23,10 @@ npm run dev
 # API server only
 bin/server
 
-# Tauri Sidecar app (starts Vite + API server + the Sidecar window in one command)
+# ro-ner-demo only (Predii Learn's backend — see prediiLearnService.js / server/routes/prediiLearn.js)
+npm run ner
+
+# Tauri Sidecar app (starts Vite + API server + ro-ner-demo + the Sidecar window in one command)
 bin/tauri-app
 
 # Stop the Sidecar app + its dev servers

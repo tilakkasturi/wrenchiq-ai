@@ -1,0 +1,140 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE FRONT STRUT ASSEMBLY - LH & RH - Includes: Inspecting upper mounting surface for corrosion.",
+        "Skill": "C",
+        "Labor (Hours)": 2.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "STRUT MOUNT ASSEMBLY"
+      },
+      {
+        "Note": "COMBINATION - REPLACE FRONT STRUT MOUNT & BEARING - Includes: Removal of strut assembly and installation of revised bearing kit.",
+        "Skill": "C",
+        "Labor (Hours)": 3.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "STRUT MOUNT ASSEMBLY"
+      },
+      {
+        "Note": "COMBINATION - WHEEL ALIGNMENT - Front End - Required following strut component replacement.",
+        "Skill": "B",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "STRUT MOUNT ASSEMBLY"
+      },
+      {
+        "Note": "COMBINATION - INSPECT FRONT SUSPENSION COMPONENTS - Check control arms, bushings, and ball joints for wear.",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "STRUT MOUNT ASSEMBLY"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "54030",
+        "pt": "STRUT MOUNT ASSEMBLY",
+        "part_number": "54330-F2000",
+        "part_description": "MOUNT ASSY, STRUT, FRONT (REVISED KIT)",
+        "system_group": null,
+        "display_term": "STRUT MOUNT KIT, FRONT LH/RH",
+        "part_location": "33-01 - FRONT SUSPENSION MOUNTING",
+        "category": "MAIN",
+        "system": "SUSPENSION SYSTEM",
+        "image_id": "88210",
+        "suggested_price": 142.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE FRONT STRUT ASSEMBLY - LH & RH",
+            "Skill": "C",
+            "Labor (Hours)": 2.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "STRUT MOUNT ASSEMBLY"
+          }
+        ],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "TUCSON 2021-2023",
+          "TSB 54-ST-013H"
+        ],
+        "supersession": "54330-F1000",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "54420",
+        "pt": "STRUT BEARING",
+        "part_number": "54420-F2001",
+        "part_description": "BEARING, STRUT MOUNT TOP",
+        "system_group": null,
+        "display_term": "STRUT BEARING, FRONT",
+        "part_location": "33-01 - FRONT SUSPENSION MOUNTING",
+        "category": "RELATED",
+        "system": "SUSPENSION SYSTEM",
+        "image_id": "88211",
+        "suggested_price": 38.75,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "TUCSON 2021-2023"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "92910",
+        "pt": "HARDWARE",
+        "part_number": "92910-F200A",
+        "part_description": "NUT, STRUT TOP MOUNT",
+        "system_group": null,
+        "display_term": "MOUNTING NUT, STRUT",
+        "part_location": "33-01 - FRONT SUSPENSION MOUNTING",
+        "category": "RELATED",
+        "system": "SUSPENSION SYSTEM",
+        "image_id": "88215",
+        "suggested_price": 5.2,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "TUCSON 2021-2023"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "STRUT MOUNT ASSEMBLY",
+  "labor_hours": null,
+  "input": {
+    "vin": "5NMJFCAE3PH264144",
+    "text": "Front Strut Mount Replacement LH & RH — OEM Revised Kit",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "HYUNDAI",
+    "catalog_code": "SUSP-7721"
+  }
+}

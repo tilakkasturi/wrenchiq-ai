@@ -1,0 +1,176 @@
+{
+  "roId": "RO-2026-0408",
+  "vehicleId": "3GCUKREC6KG184723",
+  "techId": "tech-088",
+  "inspectedAt": "2026-04-08T14:20:00",
+  "categories": [
+    {
+      "name": "Engine & Drive Components",
+      "items": [
+        {
+          "id": "dvi-101",
+          "name": "Timing Chain Assembly",
+          "status": "urgent",
+          "measurement": "Excessive slack/stretch",
+          "newSpec": "N/A",
+          "minSpec": "0.05mm play",
+          "wearPct": 95,
+          "hasPhoto": true,
+          "photoLabel": "timing_chain_tensioner",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Timing chain shows significant elongation and tensioner is at maximum extension.",
+            "recommendation": "REPLACE — Required per TSB PIP5765G to prevent catastrophic engine failure.",
+            "reasoning": "Visual inspection and DTC analysis confirm chain stretch exceeding manufacturer tolerances. This is the primary cause of the current timing/VVT error codes."
+          }
+        },
+        {
+          "id": "dvi-102",
+          "name": "VVT Solenoids (Intake/Exhaust)",
+          "status": "urgent",
+          "measurement": "Internal blockage/fault",
+          "newSpec": "N/A",
+          "minSpec": "N/A",
+          "wearPct": 90,
+          "hasPhoto": true,
+          "photoLabel": "vvt_solenoid_bank1",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 95,
+            "finding": "VVT solenoids showing electrical resistance out of spec and mechanical sticking.",
+            "recommendation": "REPLACE — Replace both Intake and Exhaust Bank 1 solenoids during timing chain service.",
+            "reasoning": "DTC analysis indicates solenoid failure. Replacing these alongside the timing kit is necessary to ensure proper variable valve timing functionality."
+          }
+        },
+        {
+          "id": "dvi-103",
+          "name": "Spark Plugs",
+          "status": "urgent",
+          "measurement": "Heavy carbon fouling",
+          "newSpec": "0.044\" gap",
+          "minSpec": "0.040\" gap",
+          "wearPct": 85,
+          "hasPhoto": true,
+          "photoLabel": "spark_plug_fouling",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 92,
+            "finding": "Spark plugs show significant electrode wear and carbon buildup.",
+            "recommendation": "REPLACE — Recommend replacement during current engine teardown for timing service.",
+            "reasoning": "Current plug condition contributes to misfire risk. Since the intake manifold must be moved for the timing chain job, labor overlap makes this high-value service."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brakes & Hydraulics",
+      "items": [
+        {
+          "id": "dvi-202",
+          "name": "Front Brake Pads",
+          "status": "good",
+          "measurement": "8mm",
+          "newSpec": "12mm",
+          "minSpec": "3mm",
+          "wearPct": 33,
+          "hasPhoto": true,
+          "photoLabel": "front_pad_left",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 94,
+            "finding": "Front pads have ample material remaining.",
+            "recommendation": "GOOD — No immediate action required.",
+            "reasoning": "Measurement shows 8mm thickness, well above the 3mm discard limit."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Electrical & Battery",
+      "items": [
+        {
+          "id": "dvi-301",
+          "name": "Battery Terminal Condition",
+          "status": "monitor",
+          "measurement": "Light oxidation",
+          "newSpec": "Clean/Shiny",
+          "minSpec": "N/A",
+          "wearPct": 20,
+          "hasPhoto": true,
+          "photoLabel": "battery_terminal",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 89,
+            "finding": "Minor surface corrosion detected on positive terminal.",
+            "recommendation": "MONITOR — Clean terminals during next oil change.",
+            "reasoning": "Oxidation is minimal but could lead to increased resistance over time. Cleaning is recommended to maintain optimal cranking voltage."
+          }
+        },
+        {
+          "id": "dvi-302",
+          "name": "Alternator Output",
+          "status": "good",
+          "measurement": "14.2V",
+          "newSpec": "13.5V - 14.7V",
+          "minSpec": "12.6V",
+          "wearPct": 10,
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Alternator charging within normal operating parameters.",
+            "recommendation": "GOOD — No action needed.",
+            "reasoning": "Voltage output is stable at 14.2V while engine is running, indicating a healthy charging system."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filters",
+      "items": [
+        {
+          "id": "dvi-401",
+          "name": "Engine Oil Filter",
+          "status": "urgent",
+          "measurement": "Due for replacement",
+          "newSpec": "N/A",
+          "minSpec": "N/A",
+          "wearPct": 100,
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 100,
+            "finding": "Oil filter is at end of service life.",
+            "recommendation": "REPLACE — Part of scheduled oil and filter service.",
+            "reasoning": "The vehicle is currently in for an oil change following the timing chain repair; replacement is mandatory."
+          }
+        },
+        {
+          "id": "dvi-402",
+          "name": "Engine Air Filter",
+          "status": "monitor",
+          "measurement": "Light dust accumulation",
+          "newSpec": "Clean",
+          "minSpec": "N/A",
+          "wearPct": 45,
+          "hasPhoto": true,
+          "photoLabel": "air_filter_dirty",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 91,
+            "finding": "Air filter is showing signs of light particulate buildup.",
+            "recommendation": "MONITOR — Replace within next 5,000 miles.",
+            "reasoning": "Filter is not currently restricted, but efficiency is beginning to drop. Suggest replacement at next interval."
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "urgent": 5,
+    "monitor": 2,
+    "good": 3,
+    "totalItems": 10
+  }
+}

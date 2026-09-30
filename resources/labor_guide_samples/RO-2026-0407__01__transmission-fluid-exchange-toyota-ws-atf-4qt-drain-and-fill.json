@@ -1,0 +1,140 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE TRANSMISSION FLUID - Drain and Fill - 4 Quarts",
+        "Skill": "B",
+        "Labor (Hours)": 1.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "TRANSMISSION FLUID"
+      },
+      {
+        "Note": "COMBINATION - INSPECT TRANSMISSION LEAKS - Check pan, seals, and lines for seepage.",
+        "Skill": "A",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "TRANSMISSION FLUID"
+      },
+      {
+        "Note": "COMBINATION - LEVEL TRANSMISSION FLUID - Check temperature and level via scan tool.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "TRANSMISSION FLUID"
+      },
+      {
+        "Note": "COMBINATION - REPLACE TRANSMISSION OIL PAN GASKET - Includes: Clean mating surfaces.",
+        "Skill": "B",
+        "Labor (Hours)": 0.6,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "TRANSMISSION FLUID"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "99005",
+        "pt": "TRANSMISSION FLUID",
+        "part_number": "08886-02305",
+        "part_description": "ATF WS (WORLD STANDARD) - 1 QT CAN",
+        "system_group": null,
+        "display_term": "TOYOTA WS FLUID",
+        "part_location": "01-05 - TRANSMISSION FLUID RESERVOIR",
+        "category": "MAIN",
+        "system": "TRANSMISSION SYSTEM",
+        "image_id": "44210",
+        "suggested_price": 14.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE TRANSMISSION FLUID - Drain and Fill - 4 Quarts",
+            "Skill": "B",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "TRANSMISSION FLUID"
+          }
+        ],
+        "stats": null,
+        "qty": "04",
+        "usage": [
+          "2T3P1RFV4LW284937",
+          "RAV4 A25A-FKS"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "55210",
+        "pt": "GASKET",
+        "part_number": "55210-48060",
+        "part_description": "GASKET, TRANSMISSION OIL PAN",
+        "system_group": null,
+        "display_term": "TRANS OIL PAN GASKET",
+        "part_location": "01-02 - TRANSMISSION CASE",
+        "category": "RELATED",
+        "system": "TRANSMISSION SYSTEM",
+        "image_id": "44215",
+        "suggested_price": 22.15,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1RFV4LW284937"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "88306",
+        "pt": "WASHER",
+        "part_number": "90430-12031",
+        "part_description": "WASHER, DRAIN PLUG",
+        "system_group": null,
+        "display_term": "DRAIN PLUG SEAL",
+        "part_location": "01-01 - TRANSMISSION CASE",
+        "category": "RELATED",
+        "system": "TRANSMISSION SYSTEM",
+        "image_id": "44220",
+        "suggested_price": 1.25,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1RFV4LW284937"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "TRANSMISSION FLUID",
+  "labor_hours": null,
+  "input": {
+    "vin": "2T3P1RFV4LW284937",
+    "text": "Transmission Fluid Exchange",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "TRNS-WS-4Q"
+  }
+}

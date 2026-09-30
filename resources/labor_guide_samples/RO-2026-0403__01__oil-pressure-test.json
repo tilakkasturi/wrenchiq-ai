@@ -1,0 +1,118 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "DIAGNOSTIC - OIL PRESSURE TEST - Engine Performance",
+        "Skill": "A",
+        "Labor (Hours)": 1.5,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "OIL PRESSURE TEST"
+      },
+      {
+        "Note": "COMBINATION - OIL PRESSURE TEST - Includes: Mechanical Gauge Installation and Pressure Verification",
+        "Skill": "B",
+        "Labor (Hours)": 0.8,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "OIL PRESSURE TEST"
+      },
+      {
+        "Note": "COMBINATION - ENGINE COMPRESSION & OIL PRESSURE TEST - Simultaneous",
+        "Skill": "A",
+        "Labor (Hours)": 2.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "OIL PRESSURE TEST"
+      },
+      {
+        "Note": "COMBINATION - SCAN TOOL DATA MONITORING - Oil Pressure Sensor Live Stream",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "OIL PRESSURE TEST"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "99201",
+        "pt": "OIL PRESSURE TEST KIT",
+        "part_number": "FL3Z-9601-A",
+        "part_description": "ADAPTER & GAUGE SET, OIL PRESSURE",
+        "system_group": null,
+        "display_term": "OIL PRESSURE TEST ADAPTER",
+        "part_location": "TOOLING - SPECIALTY SERVICE EQUIPMENT",
+        "category": "SPECIALTY",
+        "system": "ENGINE DIAGNOSTICS",
+        "image_id": "88210",
+        "suggested_price": 145,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "F-150 3.5L V6 ECOBOOST",
+          "F-150 5.0L V8"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "99202",
+        "pt": "OIL PRESSURE SENSOR",
+        "part_number": "FL3Z-9602-B",
+        "part_description": "SENSOR, OIL PRESSURE, ELECTRICAL",
+        "system_group": null,
+        "display_term": "OIL PRESSURE SWITCH",
+        "part_location": "ENGINE BLOCK - OIL GALLERY PORT",
+        "category": "MAIN",
+        "system": "ENGINE LUBRICATION",
+        "image_id": "88215",
+        "suggested_price": 42.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE OIL PRESSURE SENSOR",
+            "Skill": "B",
+            "Labor (Hours)": 0.6,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "OIL PRESSURE SENSOR"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "F-150 2015-2023"
+        ],
+        "supersession": "FL3Z-9602-A",
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "OIL PRESSURE TEST",
+  "labor_hours": null,
+  "input": {
+    "vin": "1FTEW1EG7MFA12847",
+    "text": "Oil Pressure Test",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "FORD",
+    "catalog_code": "F150-ENG-09"
+  }
+}

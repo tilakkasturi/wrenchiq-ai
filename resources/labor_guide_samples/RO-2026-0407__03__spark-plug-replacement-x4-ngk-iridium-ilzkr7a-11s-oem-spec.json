@@ -1,0 +1,127 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE IGNITION COIL - Each",
+        "Skill": "A",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "IGNITION COIL"
+      },
+      {
+        "Note": "REMOVE & REPLACE SPARK PLUG - Cylinder, Each",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "SPARK PLUG"
+      },
+      {
+        "Note": "COMBINATION - INSPECT IGNITION SYSTEM - Includes: Visual inspection of coils and wiring harness.",
+        "Skill": "B",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "SPARK PLUG"
+      },
+      {
+        "Note": "COMBINATION - CLEAN IGNITION COIL BOOT - Use compressed air to remove debris from coil well.",
+        "Skill": "B",
+        "Labor (Hours)": 0.1,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "SPARK PLUG"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "90919-01253",
+        "pt": "SPARK PLUG",
+        "part_number": "90919-01253",
+        "part_description": "SPARK PLUG, IRIDIUM",
+        "system_group": null,
+        "display_term": "SPARK PLUG, NGK ILZKR7A-11S",
+        "part_location": "12-01 - ENGINE CYLINDER HEAD",
+        "category": "MAIN",
+        "system": "IGNITION SYSTEM",
+        "image_id": "77210",
+        "suggested_price": 18.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE SPARK PLUG - Cylinder, Each",
+            "Skill": "B",
+            "Labor (Hours)": 0.5,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "SPARK PLUG"
+          }
+        ],
+        "stats": null,
+        "qty": "04",
+        "usage": [
+          "2T3P1R,2T3P1F",
+          "NGK-ILZKR7A-11S"
+        ],
+        "supersession": "90919-01253-B",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "90919-01254",
+        "pt": "SPARK PLUG",
+        "part_number": "90919-01254",
+        "part_description": "SPARK PLUG, IRIDIUM (SUPERCEDED)",
+        "system_group": null,
+        "display_term": "SPARK PLUG, IRIDIUM",
+        "part_location": "12-01 - ENGINE CYLINDER HEAD",
+        "category": "MAIN",
+        "system": "IGNITION SYSTEM",
+        "image_id": "77211",
+        "suggested_price": 21.75,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE SPARK PLUG - Cylinder, Each",
+            "Skill": "B",
+            "Labor (Hours)": 0.5,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "SPARK PLUG"
+          }
+        ],
+        "stats": null,
+        "qty": "04",
+        "usage": [
+          "2T3P1R"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "SPARK PLUG",
+  "labor_hours": 2,
+  "input": {
+    "vin": "2T3P1RFV4LW284937",
+    "text": "Spark Plug Replacement x4",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "IGN-2020-RAV4"
+  }
+}

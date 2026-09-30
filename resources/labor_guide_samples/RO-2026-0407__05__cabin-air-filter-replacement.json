@@ -1,0 +1,112 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE CABIN AIR FILTER - Inspect ventilation system for debris",
+        "Skill": "A",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "CABIN AIR FILTER"
+      },
+      {
+        "Note": "COMBINATION - CLEAN AIR INTAKE DUCTING AND VENTILATION CASE",
+        "Skill": "B",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "CABIN AIR FILTER"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "87139",
+        "pt": "CABIN AIR FILTER",
+        "part_number": "87139-58010",
+        "part_description": "FILTER, AIR, CABIN",
+        "system_group": null,
+        "display_term": "CABIN AIR FILTER",
+        "part_location": "72-01 - HVAC UNIT & DUCTING",
+        "category": "MAIN",
+        "system": "HVAC SYSTEM",
+        "image_id": "55210",
+        "suggested_price": 34.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE CABIN AIR FILTER - Inspect ventilation system for debris",
+            "Skill": "A",
+            "Labor (Hours)": 0.3,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "CABIN AIR FILTER"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1,2T3P2,2T3P5",
+          "RAV4-XLE,RAV4-LIMITED"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "87139A",
+        "pt": "CABIN AIR FILTER",
+        "part_number": "87139-58011",
+        "part_description": "FILTER, AIR, CABIN (CHARCOAL)",
+        "system_group": null,
+        "display_term": "CABIN AIR FILTER, ACTIVATED CARBON",
+        "part_location": "72-01 - HVAC UNIT & DUCTING",
+        "category": "MAIN",
+        "system": "HVAC SYSTEM",
+        "image_id": "55211",
+        "suggested_price": 48.75,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE CABIN AIR FILTER - Inspect ventilation system for debris",
+            "Skill": "A",
+            "Labor (Hours)": 0.3,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "CABIN AIR FILTER"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1,2T3P2,2T3P5",
+          "RAV4-XLE,RAV4-LIMITED"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "CABIN AIR FILTER",
+  "labor_hours": null,
+  "input": {
+    "vin": "2T3P1RFV4LW284937",
+    "text": "Cabin Air Filter Replacement",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "HVAC-7201"
+  }
+}

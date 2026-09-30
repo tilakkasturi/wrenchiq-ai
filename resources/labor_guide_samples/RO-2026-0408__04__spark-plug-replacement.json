@@ -1,0 +1,140 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REPLACE IGNITION COIL/SPARK PLUG - V6/V8 - All Cylinders",
+        "Skill": "A",
+        "Labor (Hours)": 2.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "SPARK PLUG"
+      },
+      {
+        "Note": "COMBINATION - INSPECT IGNITION SYSTEM - Check for coil boot damage or electrical connector integrity.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "SPARK PLUG"
+      },
+      {
+        "Note": "COMBINATION - CLEAN ENGINE VALVE COVER AREA - Remove carbon buildup around plug wells prior to removal.",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "SPARK PLUG"
+      },
+      {
+        "Note": "COMBINATION - TEST IGNITION COIL - Diagnostic check for misfire-inducing faults.",
+        "Skill": "B",
+        "Labor (Hours)": 0.6,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "SPARK PLUG"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "90120",
+        "pt": "SPARK PLUG",
+        "part_number": "94067832-X",
+        "part_description": "SPARK PLUG, Iridium, High Output",
+        "system_group": null,
+        "display_term": "SPARK PLUG, IRIDIUM",
+        "part_location": "ENG-01 - CYLINDER HEAD ASSEMBLY",
+        "category": "MAIN",
+        "system": "IGNITION SYSTEM",
+        "image_id": "77210",
+        "suggested_price": 14.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REPLACE IGNITION COIL/SPARK PLUG - V6/V8 - All Cylinders",
+            "Skill": "A",
+            "Labor (Hours)": 2.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "SPARK PLUG"
+          }
+        ],
+        "stats": null,
+        "qty": "08",
+        "usage": [
+          "L5C,L84,L85",
+          "CHEVY-V8-GEN5"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "90121",
+        "pt": "IGNITION COIL",
+        "part_number": "12412456-B",
+        "part_description": "COIL, IGNITION, TOP MOUNT",
+        "system_group": null,
+        "display_term": "IGNITION COIL, TOP MOUNT",
+        "part_location": "ENG-02 - IGNITION SYSTEM",
+        "category": "RELATED",
+        "system": "IGNITION SYSTEM",
+        "image_id": "77215",
+        "suggested_price": 68.25,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "08",
+        "usage": [
+          "L5C,L84"
+        ],
+        "supersession": "94067832-X",
+        "local_reman_parts": "12412456-R"
+      },
+      {
+        "part_key": "90122",
+        "pt": "GASKET",
+        "part_number": "55721094-S",
+        "part_description": "GASKET, VALVE COVER",
+        "system_group": null,
+        "display_term": "VALVE COVER GASKET SET",
+        "part_location": "ENG-03 - VALVE COVER",
+        "category": "RELATED",
+        "system": "ENGINE",
+        "image_id": "77220",
+        "suggested_price": 32.1,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "L84,L85"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "SPARK PLUG",
+  "labor_hours": null,
+  "input": {
+    "vin": "3GCUKREC6KG184723",
+    "text": "spark plug replacement",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "CHEVROLET",
+    "catalog_code": "GM-IGN-2019"
+  }
+}

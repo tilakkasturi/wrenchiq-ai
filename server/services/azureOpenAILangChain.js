@@ -64,10 +64,7 @@ export function getLLMClientCacheSize() {
  * Resolve which profile this call uses — identical rules to the legacy path.
  * Exported so roAdvisorLangChainAgent.js (the createAgent-based tool loop,
  * which builds its own chat model rather than calling
- * callAzureOpenAILangChain) shares this instead of keeping its own copy —
- * a duplicate copy is what let this regress to a static LLM_PROFILES.default
- * read (losing the WrenchIQ Home primary/secondary switch) when the
- * LangChain migration split this file out of the original azureOpenAI.js.
+ * callAzureOpenAILangChain) shares this instead of keeping its own copy.
  */
 export function resolveProfile({ profileKey, useConfiguredProvider } = {}) {
   if (profileKey) {
@@ -77,11 +74,6 @@ export function resolveProfile({ profileKey, useConfiguredProvider } = {}) {
     }
     return profile;
   }
-  // getDefaultProfile(), not the static LLM_PROFILES.default — 'default'
-  // resolves to whichever physical endpoint (primary/secondary) is
-  // currently active on the WrenchIQ Home screen, not just the .env.local
-  // startup value. Regressed to the static form when this file was split
-  // out of azureOpenAI.js (AE-1286); restored here.
   return useConfiguredProvider
     ? getActiveLLMProfile()
     : getDefaultProfile();
@@ -359,7 +351,7 @@ export async function callAzureOpenAILangChain({
   } catch (err) {
     const { error, logMessage } = normalizeError(err);
     logLLMRequest({
-      provider: 'llm', route: _route, model: effectiveModel,
+      provider: 'llm', route: _route, model: effectiveModel, baseUrl: endpoint.baseURL,
       durationMs: Date.now() - t0, status: 'error', error: logMessage,
     }).catch(() => {});
     throw error;
@@ -371,6 +363,7 @@ export async function callAzureOpenAILangChain({
     provider: 'llm',
     route: _route,
     model: effectiveModel,
+    baseUrl: endpoint.baseURL,
     promptTokens: usage.prompt_tokens,
     completionTokens: usage.completion_tokens,
     totalTokens: usage.total_tokens,

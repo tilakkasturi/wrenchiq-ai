@@ -12,17 +12,14 @@
  */
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { Sparkles, AlertTriangle, Search, Settings, ExternalLink, Bell, BellOff, Clipboard, Send, Check, ClipboardCheck, Circle, CircleSlash, ChevronDown, Pencil, X, MessageCircle, Info, ArrowRightLeft, Home, FileText, DollarSign, Stethoscope, Layers, History, MessagesSquare, RefreshCw, Play, RotateCcw, Coins, ZoomIn, ZoomOut } from "lucide-react";
+import { Sparkles, AlertTriangle, Search, Settings, ExternalLink, Bell, BellOff, Clipboard, Send, Check, ClipboardCheck, Circle, CircleSlash, ChevronDown, Pencil, X, MessageCircle, Info, ArrowRightLeft, Home, FileText, DollarSign, Stethoscope, Layers, History, MessagesSquare, RefreshCw, Play, RotateCcw, Coins, ZoomIn, ZoomOut, Maximize2, Minimize2 } from "lucide-react";
 import { useZoom } from "../context/ZoomContext";
 import { COLORS } from "../theme/colors";
-import { useSelectedCustomer } from "../context/SelectedCustomerContext";
 import { useDemo } from "../context/DemoContext";
-import { fetchStoryRO, updateStoryRO } from "../services/repairOrderService";
+import { updateStoryRO } from "../services/repairOrderService";
 import { fetchCannedJobs } from "../services/prediiLearnService";
-import { useInsightNotifier } from "../services/insightNotifier";
 import { openExternalUrl, openSmsRepresentativeSplit, openAdminSettingsWindow } from "../services/externalLink";
-import { computeRepairJobsTotal } from "../services/roTotals";
-import { notifyROUpdated } from "../services/roUpdatesChannel";
+import { useSidecarRO } from "../hooks/useSidecarRO";
 import TransferSimulationModal from "../components/sidecar/TransferSimulationModal";
 import TSBReferenceModal from "../components/sidecar/TSBReferenceModal";
 import HealthCheckScreen from "./sidecar/HealthCheckScreen";
@@ -61,7 +58,7 @@ function humanizeServiceCategory(cat) {
 // showing) gets a gold fill+outline, a plain clickable icon sits at 0.9
 // opacity, and a genuinely inert one (zoom already maxed) still holds at
 // 0.35 rather than fading out.
-function headerIconStyle({ enabled = true, active = false }) {
+export function headerIconStyle({ enabled = true, active = false }) {
   return {
     background: active ? "rgba(255,214,10,0.18)" : "transparent",
     border: active ? "1px solid rgba(255,214,10,0.4)" : "1px solid transparent",
@@ -167,201 +164,29 @@ function timeAgo(ts) {
   return `${Math.round(s / 60)}m ago`;
 }
 
-const openSurfaceASettings = (smsName) => openAdminSettingsWindow(`${WEB_APP_BASE_URL}/admin.html?section=settings&edition=am&sms=${encodeURIComponent(smsName)}`);
-const openSurfaceC = (smsName) => openSmsRepresentativeSplit(`${WEB_APP_BASE_URL}/sms-representative.html?sms=${encodeURIComponent(smsName)}`);
+export const openSurfaceASettings = (smsName) => openAdminSettingsWindow(`${WEB_APP_BASE_URL}/admin.html?section=settings&edition=am&sms=${encodeURIComponent(smsName)}`);
+export const openSurfaceC = (smsName) => openSmsRepresentativeSplit(`${WEB_APP_BASE_URL}/sms-representative.html?sms=${encodeURIComponent(smsName)}`);
 
-export default function WrenchIQSidecarScreen() {
+export default function WrenchIQSidecarScreen({ windowMode = "sidecar", onToggleWindowMode }) {
   // Launch sequence (WrenchIQ Product Spec v4.0): health → queue → ro.
   // "ro" is also where the collapsed RepairOrderCard lives; clicking it
   // navigates back to "queue" rather than opening its own dropdown.
   const [phase, setPhase] = useState("health");
-  const { activeCustomer, customers, selectCustomer } = useSelectedCustomer();
   const { smsName } = useDemo(); // shop's selected SMS/DMS (Settings → Learn → Integrations), defaults to Mitchell1 ShopManager SE
   const { zoomIn, zoomOut, canZoomIn, canZoomOut } = useZoom();
-  const [storyRO, setStoryRO] = useState(null);
-  const [agentData, setAgentData] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [notificationsVisible, setNotificationsVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState("intelligence");
-  const [roScorePct, setRoScorePct] = useState(null);
-  const [advisorFetchedAt, setAdvisorFetchedAt] = useState(null);
-  // Accepted-recommendation state lives here (not in IntelligencePanel) so the
-  // Transfer button/amount can render next to the customer name in
-  // RepairOrderCard, above the Intelligence tab's content.
-  const [addedJobs, setAddedJobs] = useState([]);
-  const [acceptedServices, setAcceptedServices] = useState(new Set());
-  const [transferOpen, setTransferOpen] = useState(false);
-  // Tracks which roNumber the auto-fetch effect below has already run for,
-  // so re-selecting the customer that's already active (or toggling phase
-  // away and back) doesn't re-trigger it — only an actual RO change or the
-  // manual refresh button does. Reset whenever the RO itself changes.
-  const fetchedRoIdRef = useRef(null);
-  const advisorRequestRef = useRef(0);
-  // Which LLM profile is actually powering "Predii LLM" right now (see
-  // Settings → Integrations → AI Engine / server/services/llmProviderConfig.js).
-  const [llmProfile, setLlmProfile] = useState(null);
 
-  useEffect(() => {
-    const fetchProfile = () => {
-      fetch(`${API_BASE}/api/llm-provider-config`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => { if (data) setLlmProfile(data.activeProfile); })
-        .catch(() => {});
-    };
-    fetchProfile();
-    // Poll so a profile switch made in Settings while the Sidecar is already
-    // open (no restart, no reload) shows up here without the user having to
-    // relaunch the app.
-    const interval = setInterval(fetchProfile, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const { notifications } = useInsightNotifier(customers);
-
-  // Fetches RO detail + a fresh WrenchIQ Intelligence brief for `roId`. Used
-  // both by the auto-fetch effect below and the manual refresh button — the
-  // request-id guard lets a later call (new RO, or a manual refresh) always
-  // win over a stale in-flight one, without needing an AbortController.
-  const runAdvisorFetch = useCallback((roId) => {
-    if (!roId) return;
-    const requestId = ++advisorRequestRef.current;
-    setLoading(true);
-
-    fetchStoryRO(roId)
-      .then((ro) => {
-        if (advisorRequestRef.current !== requestId || !ro) return;
-        setStoryRO(ro);
-
-        return fetch(`${API_BASE}/api/ro-advisor`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            ro: {
-              ...ro,
-              customerId: ro._customer?.id,
-              customerName: [ro._customer?.firstName, ro._customer?.lastName].filter(Boolean).join(" "),
-            },
-            customer: ro.customer || null,
-            vehicle: ro.vehicle || null,
-            shopId: ro.shopId,
-          }),
-        })
-          .then((r) => r.json())
-          .then((data) => {
-            if (advisorRequestRef.current !== requestId) return;
-            setAgentData(data);
-            setAdvisorFetchedAt(Date.now());
-          });
-      })
-      .finally(() => {
-        if (advisorRequestRef.current === requestId) setLoading(false);
-      });
-  }, []);
-
-  // Resets on every RO change (including the very first one) — deliberately
-  // does NOT fetch here. Fetching is gated in the effect below on phase ===
-  // "ro" so nothing calls the LLM silently in the background while the user
-  // is still on the health-check/queue screens.
-  useEffect(() => {
-    setStoryRO(null);
-    setAgentData(null);
-    setRoScorePct(null);
-    setAdvisorFetchedAt(null);
-    // Always land back on Intelligence for a newly-selected RO — otherwise
-    // whichever tab was open on the *previous* RO (e.g. Chat) carries over,
-    // since activeTab is independent state that this effect never touched.
-    setActiveTab("intelligence");
-    fetchedRoIdRef.current = null;
-    setAddedJobs([]);
-    setAcceptedServices(new Set());
-    setTransferOpen(false);
-  }, [activeCustomer?.roNumber]);
-
-  // Jobs accepted this session, kept locally so back-to-back accepts append
-  // onto each other correctly without needing a refetch of `storyRO` between
-  // clicks. Lives here (not IntelligencePanel) so RepairOrderCard can render
-  // the Transfer button/amount next to the customer name.
-  async function handleConfirmRecommendation(rec, match) {
-    const newJob = {
-      description: rec.service,
-      laborHours: match.laborHrs,
-      actualLaborHours: 0,
-      // Labor only — parts are tracked separately in `parts` below.
-      // normalizeStoryRO (server/routes/repairOrders.js) maps this straight
-      // to service.laborCost, so folding partCost in here would double-count
-      // it against the RO total (see src/services/roTotals.js).
-      lineCost: match.laborCost,
-      parts: match.parts,
-      status: "pending",
-    };
-    const nextAddedJobs = [...addedJobs, newJob];
-    setAddedJobs(nextAddedJobs);
-    setAcceptedServices((prev) => new Set(prev).add(rec.service));
-    const repairJobs = [...(storyRO.repairJobs || []), ...nextAddedJobs];
-    const { grandTotal } = computeRepairJobsTotal(repairJobs);
-    try {
-      await updateStoryRO(storyRO.roNumber, { repairJobs, invoice: grandTotal });
-    } catch {
-      // best-effort — the card still reflects "added" locally; a stale PATCH
-      // here doesn't undo the advisor's decision, matching this screen's
-      // existing best-effort convention for RO mutations (see StagedCustomerText).
-    }
-  }
-
-  // Opens the Transfer confirmation modal — nothing is sent to the SMS/DMS
-  // until the advisor clicks OK inside it (see confirmTransfer below).
-  function handleTransfer() {
-    setTransferOpen(true);
-  }
-
-  function cancelTransfer() {
-    setTransferOpen(false);
-  }
-
-  // Marks the accepted jobs as transferred (distinct from a locally-added
-  // "pending" line in the SMS/DMS's own RO editor), persists that onto the
-  // story RO — including a recomputed invoice total so every other reader
-  // of this RO (SMS/DMS RO Viewer, RO Kanban) agrees on the number — and
-  // nudges the SMS window to refetch immediately instead of waiting for its
-  // next scheduled poll.
-  async function confirmTransfer() {
-    const transferredJobs = addedJobs.map((j) => ({
-      ...j,
-      status: "transferred",
-      transferredAt: new Date().toISOString(),
-    }));
-    const repairJobs = [...(storyRO.repairJobs || []), ...transferredJobs];
-    const { grandTotal } = computeRepairJobsTotal(repairJobs);
-    try {
-      await updateStoryRO(storyRO.roNumber, { repairJobs, invoice: grandTotal });
-      notifyROUpdated(storyRO.roNumber);
-    } catch {
-      // best-effort, matching this screen's existing RO-mutation convention
-    }
-    setAddedJobs(transferredJobs);
-    setTransferOpen(false);
-  }
-
-  // Live totals, computed the same way the SMS/DMS RO Viewer does (see
-  // src/services/roTotals.js) from the same data about to be persisted —
-  // not from `storyRO.totalEstimate`, which only reflects whatever was on
-  // the RO the last time *something* recomputed it, and would otherwise
-  // read stale as soon as a recommendation is accepted here.
-  const liveRepairJobs = [...(storyRO?.repairJobs || []), ...addedJobs];
-  const roGrandTotal = computeRepairJobsTotal(liveRepairJobs).grandTotal;
-  const baseRoTotal = computeRepairJobsTotal(storyRO?.repairJobs || []).grandTotal;
-  const addedTotal = roGrandTotal - baseRoTotal;
-
-  // Auto-fetches once per RO, but only once the user has actually navigated
-  // to the RO screen — and only once (re-entering "ro" for the same RO, e.g.
-  // by re-selecting it from the queue, does not re-fetch; use the manual
-  // refresh button in the Intelligence tab for that).
-  useEffect(() => {
-    const roId = activeCustomer?.roNumber;
-    if (!roId || phase !== "ro" || fetchedRoIdRef.current === roId) return;
-    fetchedRoIdRef.current = roId;
-    runAdvisorFetch(roId);
-  }, [activeCustomer?.roNumber, phase, runAdvisorFetch]);
+  const {
+    activeCustomer, customers, selectCustomer,
+    storyRO, agentData, loading,
+    activeTab, setActiveTab,
+    roScorePct, setRoScorePct,
+    advisorFetchedAt, llmProfile, notifications,
+    addedJobs, acceptedServices,
+    transferOpen, handleTransfer, cancelTransfer, confirmTransfer,
+    runAdvisorFetch, handleConfirmRecommendation, handleConcernUpdate, handleInspectionItemSelect,
+    roGrandTotal, baseRoTotal, addedTotal,
+  } = useSidecarRO({ autoFetch: phase === "ro" });
 
   return (
     <div style={{
@@ -453,6 +278,15 @@ export default function WrenchIQSidecarScreen() {
             >
               <Settings size={15} />
             </button>
+            {onToggleWindowMode && (
+              <button
+                onClick={onToggleWindowMode}
+                title={windowMode === "full" ? "Switch to Sidecar (docked) mode" : "Switch to Full-screen mode"}
+                style={headerIconStyle({ enabled: true })}
+              >
+                {windowMode === "full" ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+              </button>
+            )}
           </div>
         </div>
 
@@ -526,6 +360,8 @@ export default function WrenchIQSidecarScreen() {
                 addedJobs={addedJobs}
                 acceptedServices={acceptedServices}
                 onConfirmRecommendation={handleConfirmRecommendation}
+                onConcernUpdate={handleConcernUpdate}
+                onInspectionItemSelect={handleInspectionItemSelect}
               />
             )}
 
@@ -591,7 +427,7 @@ export default function WrenchIQSidecarScreen() {
 // summary bar. Clicking it navigates back to the shared RepairOrderQueue
 // screen (phase="queue" in WrenchIQSidecarScreen) rather than owning a
 // second, separate list UI.
-function RepairOrderCard({ ro, activeCustomer, loading, onOpenQueue, smsName, addedCount = 0, addedTotal = 0, baseTotal, displayTotal, onTransfer }) {
+export function RepairOrderCard({ ro, activeCustomer, loading, onOpenQueue, smsName, addedCount = 0, addedTotal = 0, baseTotal, displayTotal, onTransfer }) {
   const cust = ro?._customer;
   const veh = ro?._vehicle;
   const displayName = cust?.firstName
@@ -704,7 +540,7 @@ function RepairOrderCard({ ro, activeCustomer, loading, onOpenQueue, smsName, ad
   );
 }
 
-function TabButton({ label, icon: Icon, active, onClick }) {
+export function TabButton({ label, icon: Icon, active, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -723,7 +559,7 @@ function TabButton({ label, icon: Icon, active, onClick }) {
   );
 }
 
-function EmptyState({ icon, text }) {
+export function EmptyState({ icon, text }) {
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -735,7 +571,7 @@ function EmptyState({ icon, text }) {
   );
 }
 
-function LoadingSkeleton() {
+export function LoadingSkeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
       {[80, 60, 90, 45].map((w, i) => (
@@ -1012,7 +848,7 @@ const AI_STATUS_STYLE = {
 // WrenchIQ also auto-scores the RO on open (using the RO record + conversation
 // fields + Intelligence findings) and surfaces its read as an "AI:" suggestion
 // per item — the advisor's own tap always remains the source of truth.
-function ROScoreTab({ ro, agentData, onScoreChange }) {
+export function ROScoreTab({ ro, agentData, onScoreChange }) {
   const [items, setItems] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aiScoring, setAiScoring] = useState(false);
@@ -1700,7 +1536,7 @@ function ServiceRecommendationCard({ ro, rec, accepted, onConfirm, cannedJobs, t
   );
 }
 
-function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, addedJobs, acceptedServices, onConfirmRecommendation }) {
+export function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, addedJobs, acceptedServices, onConfirmRecommendation, onConcernUpdate, onInspectionItemSelect }) {
   const cust = ro._customer;
   const { activeShopId } = useDemo();
   // Accepting a Strategic Priority resolves a catalog match and adds it to
@@ -1725,6 +1561,50 @@ function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, 
   // instead of always falling back to the simulated catalog match.
   const [cannedJobs, setCannedJobs] = useState([]);
   const { bz } = useZoom();
+
+  // Editable concern draft — parent remounts this component (key={roNumber})
+  // on RO change, so seeding from the prop here only needs to happen once
+  // per mount; a successful rewrite/inspection-select updates it directly
+  // via the returned final text rather than re-deriving from `ro`.
+  const [concernDraft, setConcernDraft] = useState(ro.customerConcern || "");
+  const [rewriting, setRewriting] = useState(false);
+  // The last persisted concern (post-rewrite or post-inspection-flag),
+  // shown read-only above recommendations so it's clear what the AI Agent
+  // actually used — distinct from concernDraft, which tracks live typing.
+  // Starts blank on load (not seeded from ro.customerConcern) so this
+  // section only appears once an actual rewrite/flag has happened.
+  const [savedConcern, setSavedConcern] = useState("");
+
+  async function handleConcernKeyDown(e) {
+    if (e.key !== "Enter" || e.shiftKey) return;
+    e.preventDefault();
+    setRewriting(true);
+    try {
+      // The textbox keeps the advisor's original typed text — only the
+      // "Updated Concern" section below shows the rewritten version.
+      const cleaned = await onConcernUpdate(concernDraft);
+      if (cleaned != null) setSavedConcern(cleaned);
+    } finally {
+      setRewriting(false);
+    }
+  }
+
+  async function handleInspectionSelectChange(e) {
+    const itemId = e.target.value;
+    e.target.value = "";
+    if (!itemId) return;
+    const item = urgentInspectionItems.find((i) => i.id === itemId);
+    if (!item) return;
+    const next = await onInspectionItemSelect(item);
+    if (next != null) {
+      setConcernDraft(next);
+      setSavedConcern(next);
+    }
+  }
+
+  const urgentInspectionItems = (ro.dviInspection?.categories || [])
+    .flatMap((c) => c.items || [])
+    .filter((i) => i.status === "urgent");
 
   useEffect(() => {
     let cancelled = false;
@@ -1759,14 +1639,59 @@ function IntelligencePanel({ ro, agentData, agentLoading, fetchedAt, onRefresh, 
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
       {/* ── Concern ──────────────────────────────────────────────────── */}
-      {ro.customerConcern && (
+      <div style={{
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 8, padding: "11px 13px",
+        display: "flex", flexDirection: "column", gap: 6,
+      }}>
+        <textarea
+          value={concernDraft}
+          onChange={(e) => setConcernDraft(e.target.value)}
+          onKeyDown={handleConcernKeyDown}
+          disabled={rewriting}
+          placeholder="Customer concern — type and press Enter to rewrite"
+          rows={5}
+          style={{
+            margin: 0, width: "100%", minHeight: 110, resize: "vertical", background: "transparent",
+            border: "none", outline: "none", fontFamily: "inherit",
+            fontSize: bz(13), color: "rgba(255,255,255,0.82)", lineHeight: 1.6, fontStyle: "italic",
+            opacity: rewriting ? 0.6 : 1,
+          }}
+        />
+        {rewriting && (
+          <span style={{ fontSize: bz(10), color: "rgba(134,239,172,0.85)" }}>Rewriting…</span>
+        )}
+        {urgentInspectionItems.length > 0 && (
+          <select
+            defaultValue=""
+            onChange={handleInspectionSelectChange}
+            disabled={rewriting}
+            style={{
+              fontSize: bz(10.5), color: "#FCA5A5", background: "rgba(248,113,113,0.08)",
+              border: "1px solid rgba(248,113,113,0.3)", borderRadius: 5, padding: "4px 6px",
+            }}
+          >
+            <option value="">Flag inspection finding…</option>
+            {urgentInspectionItems.map((item) => (
+              <option key={item.id} value={item.id}>{item.name}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* ── Updated Concern (last persisted — what the AI Agent used) ──── */}
+      {savedConcern && (
         <div style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(139,92,246,0.06)",
+          border: "1px solid rgba(139,92,246,0.2)",
           borderRadius: 8, padding: "11px 13px",
         }}>
-          <p style={{ margin: 0, fontSize: bz(12), color: "rgba(255,255,255,0.82)", lineHeight: 1.5, fontStyle: "italic" }}>
-            "{ro.customerConcern}"
+          <div style={{ fontSize: 9, fontWeight: 700, color: "#C4B5FD", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
+            Updated Concern
+          </div>
+          <p style={{ margin: 0, fontSize: bz(12), color: "rgba(255,255,255,0.82)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>
+            {savedConcern}
           </p>
         </div>
       )}
@@ -2205,7 +2130,7 @@ function CatalogMatchPreview({ service, estimatedCost, cannedJobs }) {
   );
 }
 
-function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
+export function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
   const { bz } = useZoom();
   const [showPrompt, setShowPrompt] = useState(false);
   const [revealCount, setRevealCount] = useState(TRACE_STAGE_COUNT); // fully shown by default
@@ -3140,7 +3065,7 @@ const SAMPLE_QUERIES = {
   ],
 };
 
-function ChatTab({ ro }) {
+export function ChatTab({ ro }) {
   const { bz } = useZoom();
   const [messages, setMessages] = useState([]);
   // D1: pre-fill the customer concern already on the RO instead of making

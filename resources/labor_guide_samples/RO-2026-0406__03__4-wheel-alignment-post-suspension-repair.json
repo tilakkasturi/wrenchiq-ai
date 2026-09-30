@@ -1,0 +1,117 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "FOUR WHEEL ALIGNMENT - Includes: Inspect steering linkage, check tire pressure, perform caster, camber, and toe adjustments.",
+        "Skill": "A",
+        "Labor (Hours)": 1.5,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "ALIGNMENT"
+      },
+      {
+        "Note": "COMBINATION - INSPECT FRONT SUSPENSION COMPONENTS - Check ball joints, tie rod ends, and control arm bushings.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "ALIGNMENT"
+      },
+      {
+        "Note": "COMBINATION - ADJUST STEERING ANGLE SENSOR - Post-Alignment - Calibration of SAS using scan tool.",
+        "Skill": "A",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "ALIGNMENT"
+      },
+      {
+        "Note": "COMBINATION - RE-TORQUE SUSPENSION FASTENERS - Post-Repair Verification.",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "ALIGNMENT"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "88210",
+        "pt": "ALIGNMENT KIT",
+        "part_number": "88210-HYU-23",
+        "part_description": "ALIGNMENT SHIM/WASHER KIT",
+        "system_group": null,
+        "display_term": "ALIGNMENT HARDWARE KIT",
+        "part_location": "STEERING & SUSPENSION",
+        "category": "RELATED",
+        "system": "STEERING SYSTEM",
+        "image_id": "77210",
+        "suggested_price": 14.5,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "TUCSON 2023-2024"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "54630",
+        "pt": "CONTROL ARM",
+        "part_number": "54630-F2000",
+        "part_description": "CONTROL ARM ASSY, FRONT LH",
+        "system_group": null,
+        "display_term": "LOWER CONTROL ARM, FRONT LEFT",
+        "part_location": "54-01 - FRONT SUSPENSION",
+        "category": "MAIN",
+        "system": "SUSPENSION SYSTEM",
+        "image_id": "55102",
+        "suggested_price": 142.18,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE CONTROL ARM - Front, One Side",
+            "Skill": "B",
+            "Labor (Hours)": 1.2,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "CONTROL ARM"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "TUCSON 2023"
+        ],
+        "supersession": "54630-F2001",
+        "local_reman_parts": "54630-REM-LH"
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "ALIGNMENT",
+  "labor_hours": 2.5,
+  "input": {
+    "vin": "5NMJFCAE3PH264144",
+    "text": "4-Wheel Alignment",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "HYUNDAI",
+    "catalog_code": "HYU-ALGN-01"
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE REAR BRAKE PADS - All",
+        "Skill": "B",
+        "Labor (Hours)": 1.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "REAR BRAKE PAD"
+      },
+      {
+        "Note": "COMBINATION - REAR BRAKE SERVICE - Clean and lubricate caliper slide pins and contact points.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "REAR BRAKE PAD"
+      },
+      {
+        "Note": "COMBINATION - REAR BRAKE SYSTEM - Inspect electronic parking brake actuator operation.",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "REAR BRAKE PAD"
+      },
+      {
+        "Note": "COMBINATION - BRAKE SYSTEM - Bleed brake system (Hydraulic)",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "REAR BRAKE PAD"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "88210",
+        "pt": "BRAKE PAD",
+        "part_number": "88210-AF210",
+        "part_description": "PAD SET, REAR DISC BRAKE, AKEBONO OE-SPEC",
+        "system_group": null,
+        "display_term": "REAR BRAKE PAD KIT",
+        "part_location": "47-08 - REAR DISC BRAKE ASSEMBLY",
+        "category": "MAIN",
+        "system": "BRAKE SYSTEM",
+        "image_id": "55210",
+        "suggested_price": 84.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE REAR BRAKE PADS - All",
+            "Skill": "B",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "REAR BRAKE PAD"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "SUBARU OUTBACK 2015-2019",
+          "TSB 05-187-20R"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "88215",
+        "pt": "BRAKE CALIPER SLIDE PIN",
+        "part_number": "88215-AF211",
+        "part_description": "SLIDE PIN, REAR CALIPER",
+        "system_group": null,
+        "display_term": "REAR CALIPER SLIDE PIN",
+        "part_location": "47-08 - REAR DISC BRAKE ASSEMBLY",
+        "category": "RELATED",
+        "system": "BRAKE SYSTEM",
+        "image_id": "55211",
+        "suggested_price": 18.25,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "SUBARU OUTBACK 2015-2019"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "00520",
+        "pt": "BRAKE CLEANER",
+        "part_number": "00520-BC100",
+        "part_description": "CLEANER, BRAKE AND PARTS",
+        "system_group": null,
+        "display_term": "BRAKE CLEANER SPRAY",
+        "part_location": "SHOP SUPPLIES",
+        "category": "CONSUMABLE",
+        "system": "BRAKE SYSTEM",
+        "image_id": "10022",
+        "suggested_price": 9.99,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "GENERAL SERVICE"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "REAR BRAKE PAD",
+  "labor_hours": 2.6,
+  "input": {
+    "vin": "4S4BSACC5J3308906",
+    "text": "Rear Brake Pad Replacement — Akebono OE-spec",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "SUBARU",
+    "catalog_code": "SUB-REAR-2018"
+  }
+}

@@ -17,8 +17,10 @@ import { COLORS } from "../../theme/colors";
 import { useSelectedCustomer } from "../../context/SelectedCustomerContext";
 import { useDemo } from "../../context/DemoContext";
 import { fetchValueScores } from "../../services/roValueScoreService";
+import { hoursSince, formatWaitTime } from "../../utils/waitTime";
 
 const VALUE_BAND_COLOR = { high: "#4ADE80", medium: "#FBBF24", low: "rgba(255,255,255,0.35)" };
+const WAIT_BAND_COLOR = (hours) => (hours >= 3 ? "#F87171" : hours >= 1 ? "#FBBF24" : "#4ADE80");
 
 const STATUS_LABEL = {
   checked_in:    { label: "Checked In",    color: "#60A5FA" },
@@ -29,7 +31,7 @@ const STATUS_LABEL = {
   ready:         { label: "Ready",         color: "#4ADE80" },
 };
 
-export default function RepairOrderQueue({ onSelect }) {
+export default function RepairOrderQueue({ onSelect, showWaitTime = false }) {
   const { customers, loading } = useSelectedCustomer();
   const { activeShopId } = useDemo();
   const [query, setQuery] = useState("");
@@ -125,6 +127,7 @@ export default function RepairOrderQueue({ onSelect }) {
                 + (c.vehicle.mileage != null ? ` — ${c.vehicle.mileage.toLocaleString()} mi` : "")
               : null;
             const valueScore = valueScores[c.roNumber];
+            const waitHours = showWaitTime ? hoursSince(c.dateIn) : null;
             return (
               <button
                 key={c.customerId || c.roNumber}
@@ -150,6 +153,20 @@ export default function RepairOrderQueue({ onSelect }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.8)" }}>
                   <span style={{ fontFamily: "monospace" }}>{c.roNumber || "—"}</span>
                   {vehicleLine && <><span>·</span><span>{vehicleLine}</span></>}
+                  {waitHours != null && (
+                    <span
+                      title={`Waiting ${formatWaitTime(waitHours)}`}
+                      style={{
+                        flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 3,
+                        padding: "1px 6px", borderRadius: 4,
+                        background: `${WAIT_BAND_COLOR(waitHours)}18`,
+                        border: `1px solid ${WAIT_BAND_COLOR(waitHours)}40`,
+                        color: WAIT_BAND_COLOR(waitHours), fontWeight: 700, fontSize: 9.5,
+                      }}
+                    >
+                      {formatWaitTime(waitHours)}
+                    </span>
+                  )}
                   {valueScore && (
                     <span
                       title={`Value/opportunity score: ${valueScore.score}/100 (trust ${valueScore.trustScore ?? "—"})`}

@@ -14,6 +14,38 @@ export async function openExternalUrl(url) {
 const SMS_WINDOW_LABEL = "sms-representative";
 const ADMIN_SETTINGS_WINDOW_LABEL = "admin-settings";
 
+// Window mode ("sidecar" — narrow docked panel — vs "full" — full-screen
+// queue+intelligence+chat layout, see WrenchIQSidecarFullScreen.jsx). The
+// native window geometry lives in src-tauri/src/lib.rs; these two functions
+// are the frontend's only touchpoint with it. Outside Tauri (plain-browser
+// dev), there's no native window to resize, so getWindowMode() falls back to
+// a `?mode=full` URL param for a quick layout preview and setWindowMode() is
+// a no-op.
+export async function getWindowMode() {
+  const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+  if (!isTauri) {
+    return new URLSearchParams(window.location.search).get("mode") === "full" ? "full" : "sidecar";
+  }
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    return (await invoke("window_mode")) || "sidecar";
+  } catch {
+    return "sidecar";
+  }
+}
+
+export async function setWindowMode(mode) {
+  const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+  if (!isTauri) return;
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    await invoke("set_window_mode", { mode });
+  } catch {
+    // best-effort — the React layout still switches even if the native
+    // window resize fails for some reason
+  }
+}
+
 // Opens Admin Settings as a Tauri WebviewWindow in this same app instance,
 // instead of the OS default browser (openExternalUrl) — admin.html needs to
 // share the Sidecar's localStorage (DemoContext's "wrenchiq_demo_config" key)

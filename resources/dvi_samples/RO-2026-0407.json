@@ -1,0 +1,159 @@
+{
+  "roId": "RO-2026-0407",
+  "vehicleId": "veh-rav4-2020",
+  "techId": "tech-882",
+  "inspectedAt": "2026-05-12T14:22:00",
+  "categories": [
+    {
+      "name": "Brakes",
+      "items": [
+        {
+          "id": "dvi-brake-01",
+          "name": "Front Brake Pads — Left",
+          "status": "good",
+          "measurement": "8mm",
+          "newSpec": "12mm",
+          "minSpec": "2mm",
+          "wearPct": 33,
+          "hasPhoto": true,
+          "photoLabel": "front_left_pad",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 95,
+            "finding": "Front left pad thickness is 8mm. 33% wear.",
+            "recommendation": "GOOD — plenty of life remaining. No immediate action required.",
+            "reasoning": "Visual inspection via caliper shows healthy friction material depth. Consistent with mileage for a 2020 model."
+          }
+        },
+        {
+          "id": "dvi-brake-02",
+          "name": "Front Brake Pads — Right",
+          "status": "good",
+          "measurement": "7.5mm",
+          "newSpec": "12mm",
+          "minSpec": "2mm",
+          "wearPct": 37,
+          "hasPhoto": true,
+          "photoLabel": "front_right_pad",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 94,
+            "finding": "Front right pad thickness is 7.5mm. 37% wear.",
+            "recommendation": "GOOD — within normal operating parameters.",
+            "reasoning": "Measurement shows minor asymmetry compared to left side, but well within acceptable limits for RAV4 braking systems."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drivetrain",
+      "items": [
+        {
+          "id": "dvi-drive-02",
+          "name": "CV Axle Boots — Rear",
+          "status": "good",
+          "measurement": "No tears",
+          "hasPhoto": true,
+          "photoLabel": "rear_cv_boot",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 97,
+            "finding": "Rear CV boots are intact with no visible grease leakage or rubber cracking.",
+            "recommendation": "GOOD — no action needed.",
+            "reasoning": "Visual inspection of the rubber bellows shows no signs of stress or environmental degradation."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Engine & Filters",
+      "items": [
+        {
+          "id": "dvi-filt-01",
+          "name": "Engine Air Filter",
+          "status": "urgent",
+          "measurement": "Heavily Clogged",
+          "hasPhoto": true,
+          "photoLabel": "engine_air_filter",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 96,
+            "finding": "Engine air filter is saturated with fine dust and organic debris.",
+            "recommendation": "URGENT — Replace engine air filter to restore airflow and fuel economy.",
+            "reasoning": "High restriction detected. Replacement is part of the current service visit."
+          }
+        },
+        {
+          "id": "dvi-filt-02",
+          "name": "Cabin Air Filter",
+          "status": "urgent",
+          "measurement": "High particulate",
+          "hasPhoto": true,
+          "photoLabel": "cabin_filter",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 93,
+            "finding": "Cabin filter shows significant accumulation of pollen and road grime.",
+            "recommendation": "URGENT — Replace cabin air filter to improve HVAC airflow and interior air quality.",
+            "reasoning": "Filter pleats are visually obscured by debris. Replacement is included in current RO."
+          }
+        },
+        {
+          "id": "dvi-filt-03",
+          "name": "Spark Plugs",
+          "status": "urgent",
+          "measurement": "Electrode wear detected",
+          "hasPhoto": true,
+          "photoLabel": "spark_plug_pull",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 89,
+            "finding": "Spark plug electrodes show significant rounding and gap widening.",
+            "recommendation": "URGENT — Replace all 4 spark plugs with NGK Iridium (OEM Spec).",
+            "reasoning": "Gap measurement exceeds service limits. This is contributing to the scheduled Spark Plug Replacement job."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suspension & Steering",
+      "items": [
+        {
+          "id": "dvi-susp-01",
+          "name": "Front Control Arm Bushings",
+          "status": "monitor",
+          "measurement": "Minor cracking",
+          "hasPhoto": true,
+          "photoLabel": "front_control_arm",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 85,
+            "finding": "Minor surface cracking observed on the front left control arm bushing.",
+            "recommendation": "MONITOR — Inspect again at next oil change. No immediate replacement required.",
+            "reasoning": "Cracking is superficial and does not yet affect bushing deflection or steering geometry."
+          }
+        },
+        {
+          "id": "dvi-susp-02",
+          "name": "Tie Rod Ends",
+          "status": "good",
+          "measurement": "No play",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Tie rod ends show zero play and no boot damage.",
+            "recommendation": "GOOD — no action needed.",
+            "reasoning": "Physical shake test and visual inspection confirm tight connections."
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "urgent": 5,
+    "monitor": 1,
+    "good": 4,
+    "totalItems": 12
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "roId": "RO-2026-0404",
+  "vehicleId": "veh-bmw-x3-2020",
+  "techId": "tech-882",
+  "inspectedAt": "2026-04-04T14:20:00",
+  "categories": [
+    {
+      "name": "Brakes",
+      "items": [
+        {
+          "id": "dvi-b-001",
+          "name": "Front Brake Pads — Left",
+          "status": "good",
+          "measurement": "8mm",
+          "newSpec": "12mm",
+          "minSpec": "3mm",
+          "wearPct": 33,
+          "hasPhoto": true,
+          "photoLabel": "front_left_pad",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 95,
+            "finding": "Front left pad thickness at 8mm. 33% wear.",
+            "recommendation": "GOOD — no immediate action required.",
+            "reasoning": "Pad thickness is well above the 3mm minimum threshold for BMW braking systems. Wear is uniform across the friction material."
+          }
+        },
+        {
+          "id": "dvi-b-002",
+          "name": "Front Brake Pads — Right",
+          "status": "good",
+          "measurement": "7.5mm",
+          "newSpec": "12mm",
+          "minSpec": "3mm",
+          "wearPct": 38,
+          "hasPhoto": true,
+          "photoLabel": "front_right_pad",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 94,
+            "finding": "Front right pad thickness at 7.5mm. 38% wear.",
+            "recommendation": "GOOD — no immediate action required.",
+            "reasoning": "Measurement is consistent with left side within normal tolerances for an X3 under standard driving conditions."
+          }
+        },
+        {
+          "id": "dvi-b-003",
+          "name": "Brake Rotors — Front",
+          "status": "monitor",
+          "measurement": "27.8mm",
+          "newSpec": "28.5mm",
+          "minSpec": "26.0mm",
+          "wearPct": 25,
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 91,
+            "finding": "Front rotors measuring 27.8mm. Approaching wear limits.",
+            "recommendation": "MONITOR — plan for rotor replacement during next pad service.",
+            "reasoning": "Rotor thickness is 0.7mm from new spec and 2.2mm from discard limit. Surface shows minor heat spotting."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suspension & Steering",
+      "items": [
+        {
+          "id": "dvi-s-001",
+          "name": "Front Control Arm Bushings",
+          "status": "monitor",
+          "measurement": "Minor cracking",
+          "hasPhoto": true,
+          "photoLabel": "control_arm_bushing",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 88,
+            "finding": "Small surface cracks visible on the rubber bushings of the front lower control arms.",
+            "recommendation": "MONITOR — inspect again at next oil change. No immediate replacement needed.",
+            "reasoning": "Cracking is superficial and does not currently impact steering geometry or cause audible noise, but indicates aging rubber."
+          }
+        },
+        {
+          "id": "dvi-s-002",
+          "name": "Front Struts",
+          "status": "good",
+          "measurement": "No leaks",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 97,
+            "finding": "Front strut assemblies show no signs of hydraulic fluid leakage or structural damage.",
+            "recommendation": "GOOD — no action needed.",
+            "reasoning": "Visual inspection of the strut body and seal area shows no weeping or oil residue."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Engine & Belts",
+      "items": [
+        {
+          "id": "dvi-e-001",
+          "name": "Serpentine Belt",
+          "status": "good",
+          "measurement": "No visible damage",
+          "hasPhoto": true,
+          "photoLabel": "serpentine_belt_view",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 93,
+            "finding": "Serpentine belt appears in good condition with no rib cracking or glazing.",
+            "recommendation": "GOOD — no action needed.",
+            "reasoning": "Visual check of the belt ribs and tensioner shows adequate tension and material integrity."
+          }
+        },
+        {
+          "id": "dvi-e-002",
+          "name": "Engine Air Filter",
+          "status": "urgent",
+          "measurement": "85% clogged",
+          "hasPhoto": true,
+          "photoLabel": "engine_air_filter_dirty",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 96,
+            "finding": "Engine air filter is heavily saturated with fine dust and organic debris.",
+            "recommendation": "REPLACE — essential for engine performance and fuel economy.",
+            "reasoning": "Filter pleats are visibly matted with particulate matter, significantly restricting airflow. This can lead to increased fuel consumption and potential sensor errors."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Electrical & Battery",
+      "items": [
+        {
+          "id": "dvi-el-001",
+          "name": "Battery Health",
+          "status": "good",
+          "measurement": "12.7V / 720 CCA",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Battery resting voltage is 12.7V. Load test shows 720 CCA (Rated 700+).",
+            "recommendation": "GOOD — battery is healthy.",
+            "reasoning": "Voltage and cranking capacity are within BMW factory specifications for a healthy AGM battery."
+          }
+        },
+        {
+          "id": "dvi-el-002",
+          "name": "Alternator Output",
+          "status": "good",
+          "measurement": "14.2V @ Idle",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 95,
+            "finding": "Alternator is providing correct charging voltage during idle and load.",
+            "recommendation": "GOOD — no action needed.",
+            "reasoning": "Voltage output remains stable between 13.8V and 14.4V during testing, indicating the charging system is functioning correctly."
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "urgent": 1,
+    "monitor": 2,
+    "good": 6,
+    "totalItems": 11
+  }
+}

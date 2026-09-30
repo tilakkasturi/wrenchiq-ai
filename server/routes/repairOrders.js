@@ -133,7 +133,7 @@ router.patch('/story-ro/:roId', async (req, res) => {
       'agenticTextStatus', 'agenticCustomerText', 'talkTrackOverrides',
       'threeCConcern', 'threeCDiagnosis',
       'threeCCorrection', 'threeCScore', 'kanbanStatus',
-      'repairJobs', 'invoice',
+      'repairJobs', 'invoice', 'customerConcern',
     ];
     const update = {};
     for (const f of ALLOWED_FIELDS) {
@@ -482,6 +482,10 @@ function normalizeStoryRO(doc) {
     threeCDiagnosis:          doc.threeCDiagnosis || '',
     threeCCorrection:         doc.threeCCorrection || '',
     threeCRewriteSuggestion:  doc.threeCRewriteSuggestion || null,
+
+    // DVI (Digital Vehicle Inspection) — seeded separately, see
+    // scripts/seedDviSamples.js; null until a shop has inspection data.
+    dviInspection: doc.dviInspection || null,
   };
 }
 

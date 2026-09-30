@@ -1,0 +1,128 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "BRAKE SYSTEM SERVICE - FLUID EXCHANGE - DOT 3 - ALL WHEELS",
+        "Skill": "B",
+        "Labor (Hours)": 1.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "BRAKE FLUID"
+      },
+      {
+        "Note": "COMBINATION - BRAKE SYSTEM INSPECTION - FLUID CONTAMINATION CHECK",
+        "Skill": "A",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "BRAKE FLUID"
+      },
+      {
+        "Note": "COMBINATION - BLEED BRAKE SYSTEM - HYDRAULIC METHOD",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "BRAKE FLUID"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "00102",
+        "pt": "BRAKE FLUID",
+        "part_number": "00102-DOT3-X",
+        "part_description": "BRAKE FLUID, DOT 3, 32OZ BOTTLE",
+        "system_group": null,
+        "display_term": "DOT 3 BRAKE FLUID",
+        "part_location": "01-00 - HYDRAULIC SYSTEM - FLUIDS",
+        "category": "MAIN",
+        "system": "BRAKE SYSTEM",
+        "image_id": "55210",
+        "suggested_price": 14.95,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "BRAKE SYSTEM SERVICE - FLUID EXCHANGE - DOT 3 - ALL WHEELS",
+            "Skill": "B",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "BRAKE FLUID"
+          }
+        ],
+        "stats": null,
+        "qty": "03",
+        "usage": [
+          "2T3P1RFV4LW284937",
+          "RAV4-GEN5"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "00103",
+        "pt": "BRAKE FLUID",
+        "part_number": "00103-DOT3-L",
+        "part_description": "BRAKE FLUID, DOT 3, 1 GALLON",
+        "system_group": null,
+        "display_term": "DOT 3 BRAKE FLUID (BULK)",
+        "part_location": "01-00 - HYDRAULIC SYSTEM - FLUIDS",
+        "category": "MAIN",
+        "system": "BRAKE SYSTEM",
+        "image_id": "55211",
+        "suggested_price": 42.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "BRAKE SYSTEM SERVICE - FLUID EXCHANGE - DOT 3 - ALL WHEELS",
+            "Skill": "B",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "BRAKE FLUID"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1RFV4LW284937"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [
+      {
+        "Note": "BRAKE FLUID FLUSH - SCHEDULED MAINTENANCE",
+        "Skill": "B",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "MAINTENANCE",
+        "LaborComponent": "BRAKE FLUID"
+      }
+    ],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "BRAKE FLUID",
+  "labor_hours": null,
+  "input": {
+    "vin": "2T3P1RFV4LW284937",
+    "text": "Brake Fluid Flush (Toyota DOT 3)",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "FL-DOT3-2020"
+  }
+}

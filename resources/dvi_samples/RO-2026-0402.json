@@ -1,0 +1,181 @@
+{
+  "roId": "RO-2026-0402",
+  "vehicleId": "2HKRW2H83JH607249",
+  "techId": "tech-088",
+  "inspectedAt": "2026-05-12T14:30:00",
+  "categories": [
+    {
+      "name": "Brakes",
+      "items": [
+        {
+          "id": "dvi-101",
+          "name": "Front Brake Pads — Left",
+          "status": "urgent",
+          "measurement": "1.5mm",
+          "newSpec": "11mm",
+          "minSpec": "3mm",
+          "wearPct": 86,
+          "hasPhoto": true,
+          "photoLabel": "front_left_pad",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Front left brake pad thickness is at 1.5mm, which is below the minimum safety threshold of 3mm.",
+            "recommendation": "URGENT — Replace front brake pads immediately. Metal-on-metal contact is imminent.",
+            "reasoning": "Visual inspection and caliper measurement confirm pad material is nearly depleted. This aligns with the open 'Front Brake Pads' repair job. Replacement of both front pads is required to ensure even braking performance."
+          }
+        },
+        {
+          "id": "dvi-102",
+          "name": "Front Brake Pads — Right",
+          "status": "urgent",
+          "measurement": "2.0mm",
+          "newSpec": "11mm",
+          "minSpec": "3mm",
+          "wearPct": 82,
+          "hasPhoto": true,
+          "photoLabel": "front_right_pad",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 97,
+            "finding": "Front right brake pad thickness is at 2.0mm.",
+            "recommendation": "URGENT — Replace front brake pads as a set.",
+            "reasoning": "Pad is below the 3mm safety limit. Wear is relatively even with the left side, suggesting a standard wear pattern rather than a caliper seizure."
+          }
+        },
+        {
+          "id": "dvi-103",
+          "name": "Rear Brake Pads",
+          "status": "monitor",
+          "measurement": "5mm",
+          "newSpec": "10mm",
+          "minSpec": "2mm",
+          "wearPct": 50,
+          "hasPhoto": true,
+          "photoLabel": "rear_pads",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 94,
+            "finding": "Rear brake pads are at 5mm thickness.",
+            "recommendation": "MONITOR — No immediate replacement needed. Plan for replacement in approximately 15,000 miles.",
+            "reasoning": "Rear pads show moderate wear. They are well above the 2mm discard limit."
+          }
+        },
+        {
+          "id": "dvi-104",
+          "name": "Brake Rotors — Front",
+          "status": "monitor",
+          "measurement": "25.5mm",
+          "newSpec": "26mm",
+          "minSpec": "22mm",
+          "wearPct": 15,
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 91,
+            "finding": "Front rotors show slight surface scoring but thickness is within spec.",
+            "recommendation": "MONITOR — Rotors can likely be resurfaced or reused with new pads if thickness remains above 22mm.",
+            "reasoning": "Micrometer reading shows 25.5mm. Honda CR-V OEM minimum discard thickness is 22mm. Current wear is minimal."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drivetrain",
+      "items": [
+        {
+          "id": "dvi-202",
+          "name": "CV Axle Boots",
+          "status": "good",
+          "measurement": "No tears",
+          "hasPhoto": true,
+          "photoLabel": "cv_boot_front",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 96,
+            "finding": "CV axle boots are intact with no signs of grease leakage or cracking.",
+            "recommendation": "GOOD — No action required.",
+            "reasoning": "Visual inspection of the front drive axles shows the rubber boots are supple and free of punctures."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Engine & Electrical",
+      "items": [
+        {
+          "id": "dvi-301",
+          "name": "Engine Air Filter",
+          "status": "good",
+          "measurement": "Clean",
+          "hasPhoto": true,
+          "photoLabel": "engine_air_filter",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Engine air filter is clean with minimal particulate buildup.",
+            "recommendation": "GOOD — No replacement necessary at this time.",
+            "reasoning": "Filter pleats show high airflow capacity and no significant debris accumulation."
+          }
+        },
+        {
+          "id": "dvi-302",
+          "name": "Battery",
+          "status": "monitor",
+          "measurement": "12.2V / 580 CCA",
+          "newSpec": "12.6V / 620 CCA",
+          "minSpec": "12.4V / 500 CCA",
+          "wearPct": 40,
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 93,
+            "finding": "Battery voltage is slightly low (12.2V) and CCA is trending downward.",
+            "recommendation": "MONITOR — Test battery health again during next oil change or if starting becomes sluggish.",
+            "reasoning": "Voltage is acceptable but on the lower end for a resting battery. Likely nearing end of its 3-4 year service life."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suspension & Steering",
+      "items": [
+        {
+          "id": "dvi-401",
+          "name": "Front Lower Control Arm Bushings",
+          "status": "good",
+          "measurement": "No cracking",
+          "hasPhoto": true,
+          "photoLabel": "control_arm_bushing",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 90,
+            "finding": "Control arm bushings show no signs of dry rot or tearing.",
+            "recommendation": "GOOD — No action needed.",
+            "reasoning": "Rubber components appear pliable and centered in the mounting bracket."
+          }
+        },
+        {
+          "id": "dvi-402",
+          "name": "Steering Rack & Tie Rods",
+          "status": "good",
+          "measurement": "No play",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 95,
+            "finding": "Tie rod ends and steering rack show no excessive play or boot damage.",
+            "recommendation": "GOOD — No action needed.",
+            "reasoning": "Physical shake test and visual inspection confirm steering linkage is tight."
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "urgent": 3,
+    "monitor": 3,
+    "good": 5,
+    "totalItems": 13
+  }
+}

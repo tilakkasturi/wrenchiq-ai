@@ -1,0 +1,118 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "ROTATE TIRES - 4 WHEELS - CROSS PATTERN",
+        "Skill": "A",
+        "Labor (Hours)": 0.6,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "TIRE SERVICE"
+      },
+      {
+        "Note": "BALANCE WHEEL & TIRE ASSEMBLY - EACH",
+        "Skill": "A",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "WHEEL BALANCE"
+      },
+      {
+        "Note": "INSPECT TIRE CONDITION & PRESSURE - ALL WHEELS",
+        "Skill": "C",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "INSPECTION",
+        "LaborComponent": "TIRE SERVICE"
+      },
+      {
+        "Note": "COMBINATION - RESET TPMS (TIRE PRESSURE MONITORING SYSTEM)",
+        "Skill": "B",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "TIRE SERVICE"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "77201",
+        "pt": "VALVE STEM",
+        "part_number": "77201-48A20",
+        "part_description": "STEM, TIRE VALVE, RUBBER",
+        "system_group": null,
+        "display_term": "TIRE VALVE STEM",
+        "part_location": "32-01 - WHEEL & TIRE ASSEMBLY",
+        "category": "MAIN",
+        "system": "WHEEL & TIRE",
+        "image_id": "55012",
+        "suggested_price": 8.45,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REPLACE VALVE STEM - EACH",
+            "Skill": "B",
+            "Labor (Hours)": 0.3,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "VALVE STEM"
+          }
+        ],
+        "stats": null,
+        "qty": "04",
+        "usage": [
+          "2T3P1RFV4LW284937",
+          "RAV4-2020-ALL"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "99432",
+        "pt": "BALANCE WEIGHT",
+        "part_number": "99432-W010",
+        "part_description": "WEIGHT, WHEEL BALANCE, CLIP-ON",
+        "system_group": null,
+        "display_term": "WHEEL BALANCE WEIGHT KIT",
+        "part_location": "32-05 - WHEEL BALANCE ACCESSORIES",
+        "category": "RELATED",
+        "system": "WHEEL & TIRE",
+        "image_id": "55088",
+        "suggested_price": 12.5,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "UNIVERSAL"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "TIRE ROTATION & BALANCE",
+  "labor_hours": 1.4,
+  "input": {
+    "vin": "2T3P1RFV4LW284937",
+    "text": "Tire Rotation & Balance (4-wheel)",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "TR-4W"
+  }
+}

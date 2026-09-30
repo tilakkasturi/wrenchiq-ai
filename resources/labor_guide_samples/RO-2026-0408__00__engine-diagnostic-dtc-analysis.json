@@ -1,0 +1,125 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "DIAGNOSTIC - SCAN TOOL DTC RETRIEVAL & ANALYSIS - Engine Control Module",
+        "Skill": "A",
+        "Labor (Hours)": 1,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "ENGINE DIAGNOSTIC"
+      },
+      {
+        "Note": "DIAGNOSTIC - LIVE DATA STREAM MONITORING - Fuel Trim & Ignition Timing",
+        "Skill": "A",
+        "Labor (Hours)": 1.5,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "ENGINE DIAGNOSTIC"
+      },
+      {
+        "Note": "COMBINATION - ELECTRICAL CIRCUIT TESTING - Voltage Drop & Continuity Check",
+        "Skill": "B",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "ENGINE DIAGNOSTIC"
+      },
+      {
+        "Note": "COMBINATION - COMPRESSION & LEAK DOWN TEST - Cylinder Bank 1 & 2",
+        "Skill": "B",
+        "Labor (Hours)": 1.8,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "ENGINE DIAGNOSTIC"
+      },
+      {
+        "Note": "COMBINATION - FUEL PRESSURE TEST - High Pressure Rail & Pump",
+        "Skill": "B",
+        "Labor (Hours)": 0.8,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "ENGINE DIAGNOSTIC"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "88210X",
+        "pt": "DIAGNOSTIC SERVICE",
+        "part_number": "88210-GM-DIAG",
+        "part_description": "COMPUTERIZED DIAGNOSTIC FEE - ENGINE CONTROL",
+        "system_group": null,
+        "display_term": "ENGINE SYSTEM DIAGNOSTIC FEE",
+        "part_location": "SERVICE - DIAGNOSTIC",
+        "category": "SERVICE",
+        "system": "ENGINE MANAGEMENT",
+        "image_id": "00000",
+        "suggested_price": 145,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "DIAGNOSTIC - SCAN TOOL DTC RETRIEVAL & ANALYSIS - Engine Control Module",
+            "Skill": "A",
+            "Labor (Hours)": 1,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "ENGINE DIAGNOSTIC"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "SILVERADO 1500 2019-2022"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "99102S",
+        "pt": "DIAGNOSTIC CONSUMABLE",
+        "part_number": "99102-GM-CLN",
+        "part_description": "ELECTRONIC CONTACT CLEANER - AEROSOL",
+        "system_group": null,
+        "display_term": "ELECTRICAL CONTACT CLEANER",
+        "part_location": "SHOP SUPPLIES",
+        "category": "SUPPLY",
+        "system": "ELECTRICAL",
+        "image_id": "11223",
+        "suggested_price": 12.99,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "ALL GM TRUCKS"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "ENGINE DIAGNOSTIC",
+  "labor_hours": null,
+  "input": {
+    "vin": "3GCUKREC6KG184723",
+    "text": "Engine Diagnostic & DTC Analysis",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "CHEVROLET",
+    "catalog_code": "GM-DIAG-2019"
+  }
+}

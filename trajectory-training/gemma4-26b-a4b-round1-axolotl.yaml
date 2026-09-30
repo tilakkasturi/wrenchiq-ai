@@ -1,0 +1,108 @@
+# Round 1 training config — Gemma 4 26B A4B (MoE)
+# Rejection-sampled trajectory SFT for your agentic loop
+# Framework: agentic-trajectory-training-framework.md (this is Phase 4, round 1)
+
+base_model: google/gemma-4-26B-A4B-it
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+
+# --- Precision: 16-bit LoRA, NOT QLoRA ---
+# QLoRA + MoE interact poorly on this model (quantized experts destabilize routing).
+# bf16 weights = ~52 GB -> plan on 2x 80GB GPUs (H100/A100) with grad checkpointing.
+# Unsloth's Gemma 4 kernels are the lower-memory alternative if you're short on VRAM.
+load_in_8bit: false
+load_in_4bit: false
+bf16: true
+fp16: false
+tf32: false
+strict: false
+
+# --- Data: your filtered trajectories (Phase 3 output) ---
+# One JSONL line per trajectory: {"messages": [{role, content, [tool_calls]}, ...], ...}
+# Messages must use Gemma 4's native tool-call format. DO NOT hand-roll the template:
+# always render with tokenizer.apply_chat_template so <|tool_call|>, <|tool_response|>
+# and <|think|> control tokens are byte-identical between training and inference.
+datasets:
+  - path: /path/to/trajectories_filtered.jsonl
+    type: chat_template
+    field: messages
+    message_field_role: role
+    message_field_content: content
+    # Mix in ~10-20% general instruction data to prevent chat regression:
+  - path: /path/to/general_instruction_mix.jsonl
+    type: chat_template
+    field: messages
+    message_field_role: role
+    message_field_content: content
+    ds_type: json
+
+val_set_size: 0.05
+evals_per_epoch: 2
+
+# --- LoRA targets: shared modules only ---
+# CONSTRAINT (verified by community fine-tunes of this exact checkpoint):
+# the 128 routed experts use 3D nn.Parameter FFN tensors that PEFT cannot target.
+# Apply LoRA to shared attention + shared MLP. Before launching, verify with:
+#   python -c "from transformers import AutoModelForCausalLM;
+#   m = AutoModelForCausalLM.from_pretrained('google/gemma-4-26B-A4B-it', torch_dtype='auto');
+#   print([n for n,_ in m.named_modules() if 'experts' in n][:5])"
+# and confirm none of your target_modules resolve under *.experts.*.
+adapter: lora
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+lora_target_linear: false
+
+# --- Sequence / batching ---
+# Trajectories are long. 16k covers most agentic episodes; filter training
+# trajectories to <= 16384 tokens (drop or split longer ones in Phase 3).
+sequence_len: 16384
+sample_packing: true
+pad_to_sequence_len: true
+group_by_length: true
+
+# --- Optimization ---
+# Learning rate HALVED vs dense-model defaults: MoE routing is sensitive,
+# aggressive updates destabilize expert assignment (community-verified).
+micro_batch_size: 1
+gradient_accumulation_steps: 8
+num_epochs: 3
+optimizer: adamw_torch
+lr_scheduler: cosine
+learning_rate: 0.00005
+warmup_steps: 50
+weight_decay: 0.01
+
+# --- Loss masking: assistant tokens ONLY ---
+# Includes the assistant's <|tool_call|> and <|think|> tokens.
+# NEVER train on tool outputs — the model would learn to hallucinate them.
+train_on_inputs: false
+
+# --- Memory ---
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+
+# --- Logging / checkpoints ---
+wandb_project: trajectory-sft
+wandb_name: gemma4-26b-a4b-round1
+logging_steps: 10
+evals_per_epoch: 2
+save_steps: 200
+saves_per_epoch: 2
+output_dir: ./models/gemma4-26b-a4b-round1
+
+# --- Serving (data generation + eval harness) ---
+# Serve the base and fine-tuned checkpoints identically with vLLM:
+#   vllm serve google/gemma-4-26B-A4B-it \
+#     --reasoning-parser gemma4 --tool-call-parser gemma4 \
+#     --enable-auto-tool-choice --tool-call-parser-thinking
+# (per the official vLLM Gemma 4 recipe)

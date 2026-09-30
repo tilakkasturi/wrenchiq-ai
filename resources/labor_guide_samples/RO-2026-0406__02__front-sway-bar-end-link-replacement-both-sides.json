@@ -1,0 +1,110 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REPLACE FRONT SWAY BAR END LINK - Both Sides",
+        "Skill": "B",
+        "Labor (Hours)": 1.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "SWAY BAR LINK"
+      },
+      {
+        "Note": "INSPECT FRONT SUSPENSION - Check for play in end links, bushings, and ball joints.",
+        "Skill": "A",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "INSPECTION",
+        "LaborComponent": "SUSPENSION"
+      },
+      {
+        "Note": "COMBINATION - REMOVE & REPLACE SUSPENSION COMPONENTS - Includes: Lubrication of mounting hardware.",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "SWAY BAR LINK"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "54830",
+        "pt": "SWAY BAR LINK",
+        "part_number": "54830-F2000",
+        "part_description": "LINK ASSY, STABILIZER, FRONT",
+        "system_group": null,
+        "display_term": "FRONT STABILIZER LINK",
+        "part_location": "54-02 - FRONT SUSPENSION / STABILIZER BAR",
+        "category": "MAIN",
+        "system": "STEERING & SUSPENSION",
+        "image_id": "HYU-9921",
+        "suggested_price": 42.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REPLACE FRONT SWAY BAR END LINK - Both Sides",
+            "Skill": "B",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "SWAY BAR LINK"
+          }
+        ],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "TUCSON 2022-2024",
+          "GAS/AWD MODELS"
+        ],
+        "supersession": "54830-F2001",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "82120",
+        "pt": "HARDWARE",
+        "part_number": "82120-F2000",
+        "part_description": "NUT, SELF-LOCKING",
+        "system_group": null,
+        "display_term": "MOUNTING NUT",
+        "part_location": "54-02 - FRONT SUSPENSION",
+        "category": "RELATED",
+        "system": "STEERING & SUSPENSION",
+        "image_id": "HYU-1102",
+        "suggested_price": 3.25,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "54830-F2000"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "SWAY BAR END LINK",
+  "labor_hours": 1.4,
+  "input": {
+    "vin": "5NMJFCAE3PH264144",
+    "text": "Front Sway Bar End Link Replacement",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "HYUNDAI",
+    "catalog_code": "HYU-SUS-2023"
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "DIAGNOSTIC - BRAKE SYSTEM PERFORMANCE - Verify customer concern via road test and visual inspection of hydraulic lines and components.",
+        "Skill": "C",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "BRAKE SYSTEM"
+      },
+      {
+        "Note": "DIAGNOSTIC - SCAN TOOL ANALYSIS - Brake Control Module - Perform electronic control module scan to check for stored fault codes in ABS/VDC system.",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "BRAKE SYSTEM"
+      },
+      {
+        "Note": "ROAD TEST - BRAKE SYSTEM VERIFICATION - Evaluate pedal feel, noise, and stopping distance under various load conditions.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "BRAKE SYSTEM"
+      },
+      {
+        "Note": "COMBINATION - BRAKE FLUID MOISTURE TEST - Test brake fluid hygroscopic properties to determine replacement necessity.",
+        "Skill": "A",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "BRAKE SYSTEM"
+      },
+      {
+        "Note": "COMBINATION - INSPECT BRAKE LINES & HOSE - Check for swelling, cracks, or leaks in flexible lines and hard lines.",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "BRAKE SYSTEM"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "99001",
+        "pt": "BRAKE FLUID",
+        "part_number": "99001-DOT4-SB",
+        "part_description": "DOT 4 BRAKE FLUID, SUBARU SPEC",
+        "system_group": null,
+        "display_term": "DOT 4 BRAKE FLUID",
+        "part_location": "GENERAL SERVICE",
+        "category": "FLUID",
+        "system": "BRAKE SYSTEM",
+        "image_id": "44012",
+        "suggested_price": 14.5,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "SUBARU OUTBACK 2015-2023"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "99002",
+        "pt": "BRAKE CLEANER",
+        "part_number": "99002-BC-A1",
+        "part_description": "BRAKE CLEANER SPRAY, 12OZ",
+        "system_group": null,
+        "display_term": "BRAKE CLEANER",
+        "part_location": "GENERAL SERVICE",
+        "category": "CHEMICAL",
+        "system": "BRAKE SYSTEM",
+        "image_id": "44015",
+        "suggested_price": 8.95,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "UNIVERSAL"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "BRAKE SYSTEM",
+  "labor_hours": 2.6,
+  "input": {
+    "vin": "4S4BSACC5J3308906",
+    "text": "Brake System Diagnostic & Road Test",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "SUBARU",
+    "catalog_code": "SB-DIAG-09"
+  }
+}

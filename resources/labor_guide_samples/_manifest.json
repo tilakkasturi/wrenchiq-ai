@@ -1,0 +1,2484 @@
+[
+  {
+    "roNumber": "RO-2026-0401",
+    "job": "Engine Oil & Filter Change (0W-20 Full Synthetic)",
+    "file": "resources/labor_guide_samples/RO-2026-0401__00__engine-oil-filter-change-0w-20-full-synthetic.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [
+              "string"
+            ],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0401",
+    "job": "Multi-Point Inspection (56-pt) — with Photos",
+    "file": "resources/labor_guide_samples/RO-2026-0401__01__multi-point-inspection-56-pt-with-photos.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": []
+      },
+      "maintenance": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0402",
+    "job": "Brake System Diagnostic",
+    "file": "resources/labor_guide_samples/RO-2026-0402__00__brake-system-diagnostic.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0402",
+    "job": "Front Brake Pads (OEM-spec)",
+    "file": "resources/labor_guide_samples/RO-2026-0402__01__front-brake-pads-oem-spec.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "string",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0402",
+    "job": "Transmission Fluid Service",
+    "file": "resources/labor_guide_samples/RO-2026-0402__02__transmission-fluid-service.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [
+              "string"
+            ],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0403",
+    "job": "Engine Noise Diagnostic",
+    "file": "resources/labor_guide_samples/RO-2026-0403__00__engine-noise-diagnostic.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0403",
+    "job": "Oil Pressure Test",
+    "file": "resources/labor_guide_samples/RO-2026-0403__01__oil-pressure-test.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0404",
+    "job": "A/C System Diagnosis & Pressure Test",
+    "file": "resources/labor_guide_samples/RO-2026-0404__00__a-c-system-diagnosis-pressure-test.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0404",
+    "job": "Evaporator Outlet Fitting O-Ring Replacement (per TSB 64 13 24)",
+    "file": "resources/labor_guide_samples/RO-2026-0404__01__evaporator-outlet-fitting-o-ring-replacement-per-tsb-64-13-2.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "string",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "string",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0404",
+    "job": "A/C System Evacuation, Recharge & Performance Test (R-134a, 1.35 lbs)",
+    "file": "resources/labor_guide_samples/RO-2026-0404__02__a-c-system-evacuation-recharge-performance-test-r-134a-1-35-.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0405",
+    "job": "Brake System Diagnostic & Road Test",
+    "file": "resources/labor_guide_samples/RO-2026-0405__00__brake-system-diagnostic-road-test.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0405",
+    "job": "Rear Brake Pad Replacement — Akebono OE-spec (per TSB 05-187-20R)",
+    "file": "resources/labor_guide_samples/RO-2026-0405__01__rear-brake-pad-replacement-akebono-oe-spec-per-tsb-05-187-20.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0405",
+    "job": "Rear Brake Rotor Replacement x2 (heat-cracked, non-resurfaceable)",
+    "file": "resources/labor_guide_samples/RO-2026-0405__02__rear-brake-rotor-replacement-x2-heat-cracked-non-resurfaceab.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "string",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0405",
+    "job": "Brake Fluid Flush — DOT 3 (4.1% moisture content)",
+    "file": "resources/labor_guide_samples/RO-2026-0405__03__brake-fluid-flush-dot-3-4-1-moisture-content.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0406",
+    "job": "Suspension Diagnostic & Chassis Inspection",
+    "file": "resources/labor_guide_samples/RO-2026-0406__00__suspension-diagnostic-chassis-inspection.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "string"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0406",
+    "job": "Front Strut Mount Replacement LH & RH — OEM Revised Kit (per TSB 54-ST-013H)",
+    "file": "resources/labor_guide_samples/RO-2026-0406__01__front-strut-mount-replacement-lh-rh-oem-revised-kit-per-tsb-.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "string",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0406",
+    "job": "Front Sway Bar End Link Replacement — Both Sides",
+    "file": "resources/labor_guide_samples/RO-2026-0406__02__front-sway-bar-end-link-replacement-both-sides.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "string",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0406",
+    "job": "4-Wheel Alignment (post-suspension repair)",
+    "file": "resources/labor_guide_samples/RO-2026-0406__03__4-wheel-alignment-post-suspension-repair.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "job": "Engine Oil & Filter Change (0W-20 Full Synthetic, 4.8qt)",
+    "file": "resources/labor_guide_samples/RO-2026-0407__00__engine-oil-filter-change-0w-20-full-synthetic-4-8qt.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [
+              "string"
+            ],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "job": "Transmission Fluid Exchange (Toyota WS ATF, 4qt drain-and-fill)",
+    "file": "resources/labor_guide_samples/RO-2026-0407__01__transmission-fluid-exchange-toyota-ws-atf-4qt-drain-and-fill.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "job": "Rear Differential Fluid Replacement — AWD (per TSB 0095-21)",
+    "file": "resources/labor_guide_samples/RO-2026-0407__02__rear-differential-fluid-replacement-awd-per-tsb-0095-21.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [
+              "string"
+            ],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "job": "Spark Plug Replacement x4 (NGK Iridium ILZKR7A-11S — OEM spec)",
+    "file": "resources/labor_guide_samples/RO-2026-0407__03__spark-plug-replacement-x4-ngk-iridium-ilzkr7a-11s-oem-spec.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "string",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "job": "Engine Air Filter Replacement",
+    "file": "resources/labor_guide_samples/RO-2026-0407__04__engine-air-filter-replacement.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "string",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "job": "Cabin Air Filter Replacement",
+    "file": "resources/labor_guide_samples/RO-2026-0407__05__cabin-air-filter-replacement.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "job": "Brake Fluid Flush (Toyota DOT 3)",
+    "file": "resources/labor_guide_samples/RO-2026-0407__06__brake-fluid-flush-toyota-dot-3.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "job": "Tire Rotation & Balance (4-wheel)",
+    "file": "resources/labor_guide_samples/RO-2026-0407__07__tire-rotation-balance-4-wheel.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "job": "Multi-Point Safety Inspection (56-pt)",
+    "file": "resources/labor_guide_samples/RO-2026-0407__08__multi-point-safety-inspection-56-pt.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0408",
+    "job": "Engine Diagnostic & DTC Analysis",
+    "file": "resources/labor_guide_samples/RO-2026-0408__00__engine-diagnostic-dtc-analysis.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0408",
+    "job": "Timing Chain Kit Replacement — Primary & Secondary (per TSB PIP5765G)",
+    "file": "resources/labor_guide_samples/RO-2026-0408__01__timing-chain-kit-replacement-primary-secondary-per-tsb-pip57.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "string",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "string",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0408",
+    "job": "VVT Solenoid Replacement x2 — Intake & Exhaust Bank 1",
+    "file": "resources/labor_guide_samples/RO-2026-0408__02__vvt-solenoid-replacement-x2-intake-exhaust-bank-1.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "string",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0408",
+    "job": "Engine Oil & Filter Change — Post-Timing (Mobil 1 0W-20, 8qt)",
+    "file": "resources/labor_guide_samples/RO-2026-0408__03__engine-oil-filter-change-post-timing-mobil-1-0w-20-8qt.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [
+              "string"
+            ],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "number",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0408",
+    "job": "Spark Plug Replacement",
+    "file": "resources/labor_guide_samples/RO-2026-0408__04__spark-plug-replacement.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  },
+  {
+    "roNumber": "RO-2026-0408",
+    "job": "Brake Fluid Flush",
+    "file": "resources/labor_guide_samples/RO-2026-0408__05__brake-fluid-flush.json",
+    "structure": {
+      "parts": {
+        "labor_list": [
+          {
+            "Note": "string",
+            "Skill": "string",
+            "Labor (Hours)": "number",
+            "Warranty": "string",
+            "LaborTypeName": "string",
+            "LaborComponent": "string"
+          }
+        ],
+        "part_list": [
+          {
+            "part_key": "string",
+            "pt": "string",
+            "part_number": "string",
+            "part_description": "string",
+            "system_group": "null",
+            "display_term": "string",
+            "part_location": "string",
+            "category": "string",
+            "system": "string",
+            "image_id": "string",
+            "suggested_price": "number",
+            "fluid": [],
+            "labor": [
+              {
+                "Note": "string",
+                "Skill": "string",
+                "Labor (Hours)": "number",
+                "Warranty": "string",
+                "LaborTypeName": "string",
+                "LaborComponent": "string"
+              }
+            ],
+            "stats": "null",
+            "qty": "string",
+            "usage": [
+              "string"
+            ],
+            "supersession": "null",
+            "local_reman_parts": "null"
+          }
+        ]
+      },
+      "maintenance": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "repair_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "dtc_parts": {
+        "labor_list": [],
+        "part_list": []
+      },
+      "pt": "string",
+      "labor_hours": "null",
+      "input": {
+        "vin": "string",
+        "text": "string",
+        "part_number": "boolean",
+        "price": "boolean",
+        "labor": "boolean",
+        "failsafe": "boolean",
+        "make": "string",
+        "catalog_code": "string"
+      }
+    }
+  }
+]

@@ -21,6 +21,7 @@ export async function logLLMRequest({
   provider,       // 'azure-openai' | 'anthropic'
   route,          // Express route that triggered the call, e.g. '/api/claude'
   model,
+  baseUrl,        // the resolved profile's endpoint actually called
   promptTokens,   // estimated or actual
   completionTokens,
   totalTokens,
@@ -33,6 +34,7 @@ export async function logLLMRequest({
     provider,
     route:   route || 'unknown',
     model:   model || 'unknown',
+    baseUrl: baseUrl || null,
     promptTokens:     promptTokens ?? null,
     completionTokens: completionTokens ?? null,
     totalTokens:      totalTokens ?? null,
@@ -45,9 +47,9 @@ export async function logLLMRequest({
 
   const tag = `[LLM ${provider}]`;
   if (status === 'error') {
-    console.error(`${tag} ERROR model=${model} route=${route} dur=${durationMs}ms err=${error}`);
+    console.error(`${tag} ERROR endpoint=${baseUrl || 'unknown'} model=${model} route=${route} dur=${durationMs}ms err=${error}`);
   } else {
-    console.log(`${tag} model=${model} route=${route} tokens=${totalTokens ?? '?'} dur=${durationMs}ms`);
+    console.log(`${tag} endpoint=${baseUrl || 'unknown'} model=${model} route=${route} tokens=${totalTokens ?? '?'} dur=${durationMs}ms`);
   }
 
   try {

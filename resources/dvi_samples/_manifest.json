@@ -1,0 +1,107 @@
+[
+  {
+    "roNumber": "RO-2026-0401",
+    "file": "resources/dvi_samples/RO-2026-0401.json",
+    "counts": {
+      "good": 6,
+      "monitor": 2,
+      "urgent": 1
+    },
+    "urgentItems": [
+      "Front CV Axle / Boot"
+    ]
+  },
+  {
+    "roNumber": "RO-2026-0402",
+    "file": "resources/dvi_samples/RO-2026-0402.json",
+    "counts": {
+      "good": 4,
+      "monitor": 3,
+      "urgent": 2
+    },
+    "urgentItems": [
+      "Front Brake Pads — Left",
+      "Front Brake Pads — Right"
+    ]
+  },
+  {
+    "roNumber": "RO-2026-0403",
+    "file": "resources/dvi_samples/RO-2026-0403.json",
+    "counts": {
+      "good": 5,
+      "monitor": 2,
+      "urgent": 1
+    },
+    "urgentItems": [
+      "Engine Air Filter"
+    ]
+  },
+  {
+    "roNumber": "RO-2026-0404",
+    "file": "resources/dvi_samples/RO-2026-0404.json",
+    "counts": {
+      "good": 6,
+      "monitor": 2,
+      "urgent": 1
+    },
+    "urgentItems": [
+      "Engine Air Filter"
+    ]
+  },
+  {
+    "roNumber": "RO-2026-0405",
+    "file": "resources/dvi_samples/RO-2026-0405.json",
+    "counts": {
+      "good": 3,
+      "monitor": 2,
+      "urgent": 2
+    },
+    "urgentItems": [
+      "Rear Brake Pads",
+      "Rear Brake Rotors"
+    ]
+  },
+  {
+    "roNumber": "RO-2026-0406",
+    "file": "resources/dvi_samples/RO-2026-0406.json",
+    "counts": {
+      "good": 6,
+      "monitor": 1,
+      "urgent": 3
+    },
+    "urgentItems": [
+      "Front Strut Mounts — LH",
+      "Front Strut Mounts — RH",
+      "Front Sway Bar End Links — Both Sides"
+    ]
+  },
+  {
+    "roNumber": "RO-2026-0407",
+    "file": "resources/dvi_samples/RO-2026-0407.json",
+    "counts": {
+      "good": 4,
+      "monitor": 1,
+      "urgent": 3
+    },
+    "urgentItems": [
+      "Engine Air Filter",
+      "Cabin Air Filter",
+      "Spark Plugs"
+    ]
+  },
+  {
+    "roNumber": "RO-2026-0408",
+    "file": "resources/dvi_samples/RO-2026-0408.json",
+    "counts": {
+      "good": 2,
+      "monitor": 2,
+      "urgent": 4
+    },
+    "urgentItems": [
+      "Timing Chain Assembly",
+      "VVT Solenoids (Intake/Exhaust)",
+      "Spark Plugs",
+      "Engine Oil Filter"
+    ]
+  }
+]

@@ -1,0 +1,102 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE ENGINE AIR FILTER - Standard Service",
+        "Skill": "A",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "ENGINE AIR FILTER"
+      },
+      {
+        "Note": "INSPECT AIR INTAKE DUCTING & HOSE CLAMPS - Check for cracks or debris",
+        "Skill": "A",
+        "Labor (Hours)": 0.1,
+        "Warranty": "",
+        "LaborTypeName": "INSPECTION",
+        "LaborComponent": "ENGINE AIR FILTER"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "17801",
+        "pt": "AIR FILTER",
+        "part_number": "17801-E0250",
+        "part_description": "ELEMENT, AIR CLEANER",
+        "system_group": null,
+        "display_term": "ENGINE AIR FILTER ELEMENT",
+        "part_location": "17-01 - AIR CLEANER ASSEMBLY",
+        "category": "MAIN",
+        "system": "ENGINE INTAKE SYSTEM",
+        "image_id": "44219",
+        "suggested_price": 28.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE ENGINE AIR FILTER - Standard Service",
+            "Skill": "A",
+            "Labor (Hours)": 0.3,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "ENGINE AIR FILTER"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1R,2T3P1V",
+          "RAV4 AXLE TYPE B"
+        ],
+        "supersession": "17801-0P050",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "17802",
+        "pt": "AIR CLEANER HOUSING",
+        "part_number": "17802-E0040",
+        "part_description": "HOUSING, AIR CLEANER",
+        "system_group": null,
+        "display_term": "AIR INTAKE HOUSING ASSEMBLY",
+        "part_location": "17-01 - AIR CLEANER ASSEMBLY",
+        "category": "RELATED",
+        "system": "ENGINE INTAKE SYSTEM",
+        "image_id": "44220",
+        "suggested_price": 115.75,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1R"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "ENGINE AIR FILTER",
+  "labor_hours": 0.4,
+  "input": {
+    "vin": "2T3P1RFV4LW284937",
+    "text": "Engine Air Filter Replacement",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "ENG-AIR-2020"
+  }
+}

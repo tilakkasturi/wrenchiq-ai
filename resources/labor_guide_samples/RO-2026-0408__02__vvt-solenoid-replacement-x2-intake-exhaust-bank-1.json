@@ -1,0 +1,161 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE VARIABLE VALVE TIMING SOLENOID - Bank 1 Intake",
+        "Skill": "A",
+        "Labor (Hours)": 0.8,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "VVT SOLENOID"
+      },
+      {
+        "Note": "REMOVE & REPLACE VARIABLE VALVE TIMING SOLENOID - Bank 1 Exhaust",
+        "Skill": "A",
+        "Labor (Hours)": 0.9,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "VVT SOLENOID"
+      },
+      {
+        "Note": "COMBINATION - ENGINE OIL SERVICE - Includes: Drain and refill engine oil and replace filter.",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "ENGINE OIL"
+      },
+      {
+        "Note": "COMBINATION - INSPECT ENGINE ELECTRICAL CONNECTIONS - Check for corrosion or damage at solenoid harness.",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "VVT SOLENOID"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "102944",
+        "pt": "VVT SOLENOID",
+        "part_number": "12662321",
+        "part_description": "SOLENOID, VARIABLE VALVE TIMING, INTAKE, BANK 1",
+        "system_group": null,
+        "display_term": "VVT SOLENOID, INTAKE B1",
+        "part_location": "12-04 - ENGINE TOP END / VALVE COVER AREA",
+        "category": "MAIN",
+        "system": "ENGINE CONTROL",
+        "image_id": "88210",
+        "suggested_price": 88.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE VARIABLE VALVE TIMING SOLENOID - Bank 1 Intake",
+            "Skill": "A",
+            "Labor (Hours)": 0.8,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "VVT SOLENOID"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "L5X,L84,L85 ENGINE",
+          "GM-VVT-B1-INT"
+        ],
+        "supersession": "12654321",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "102945",
+        "pt": "VVT SOLENOID",
+        "part_number": "12662325",
+        "part_description": "SOLENOID, VARIABLE VALVE TIMING, EXHAUST, BANK 1",
+        "system_group": null,
+        "display_term": "VVT SOLENOID, EXHAUST B1",
+        "part_location": "12-04 - ENGINE TOP END / VALVE COVER AREA",
+        "category": "MAIN",
+        "system": "ENGINE CONTROL",
+        "image_id": "88211",
+        "suggested_price": 89.25,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE VARIABLE VALVE TIMING SOLENOID - Bank 1 Exhaust",
+            "Skill": "A",
+            "Labor (Hours)": 0.9,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "VVT SOLENOID"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "L5X,L84,L85 ENGINE",
+          "GM-VVT-B1-EXH"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "55021",
+        "pt": "ENGINE OIL",
+        "part_number": "93700606",
+        "part_description": "OIL, SYNTHETIC 5W30",
+        "system_group": null,
+        "display_term": "ENGINE OIL 5W-30",
+        "part_location": "01-01 - ENGINE LUBRICATION",
+        "category": "RELATED",
+        "system": "ENGINE LUBRICATION",
+        "image_id": "11022",
+        "suggested_price": 34.99,
+        "fluid": [
+          "5W-30"
+        ],
+        "labor": [
+          {
+            "Note": "COMBINATION - ENGINE OIL SERVICE - Includes: Drain and refill engine oil and replace filter.",
+            "Skill": "B",
+            "Labor (Hours)": 0.5,
+            "Warranty": "",
+            "LaborTypeName": "COMBINATION",
+            "LaborComponent": "ENGINE OIL"
+          }
+        ],
+        "stats": null,
+        "qty": "06",
+        "usage": [
+          "ALL GM V8 ENGINES"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "VVT SOLENOID",
+  "labor_hours": null,
+  "input": {
+    "vin": "3GCUKREC6KG184723",
+    "text": "VVT Solenoid Replacement x2 — Intake & Exhaust Bank 1",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "CHEVROLET",
+    "catalog_code": "GM-VVT-2019"
+  }
+}

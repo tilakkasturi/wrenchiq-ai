@@ -1,0 +1,142 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "DRAIN AND REFILL REAR DIFFERENTIAL OIL - AWD - Includes: Inspection of seals for leaks.",
+        "Skill": "B",
+        "Labor (Hours)": 0.7,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "REAR DIFFERENTIAL FLUID"
+      },
+      {
+        "Note": "COMBINATION - INSPECT REAR DRIVE SHAFT & DIFFERENTIAL MOUNTS - Check for excessive play or damage.",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "REAR DIFFERENTIAL FLUID"
+      },
+      {
+        "Note": "COMBINATION - INSPECT REAR AXLE SEALS - Check for seepage at CV axle junctions.",
+        "Skill": "B",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "REAR DIFFERENTIAL FLUID"
+      },
+      {
+        "Note": "COMBINATION - TSB 0095-21 COMPLIANCE CHECK - Verify fluid viscosity and correct sealant application per technical bulletin.",
+        "Skill": "A",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "REAR DIFFERENTIAL FLUID"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "86840",
+        "pt": "DIFFERENTIAL OIL",
+        "part_number": "08885-99991",
+        "part_description": "GEAR OIL, SYNTHETIC 75W-85",
+        "system_group": null,
+        "display_term": "REAR DIFF SYNTHETIC OIL",
+        "part_location": "86-01 - REAR AXLE & DIFFERENTIAL ASSEMBLY",
+        "category": "MAIN",
+        "system": "DRIVETRAIN",
+        "image_id": "77210",
+        "suggested_price": 84.5,
+        "fluid": [
+          "75W-85 SYNTHETIC"
+        ],
+        "labor": [
+          {
+            "Note": "DRAIN AND REFILL REAR DIFFERENTIAL OIL - AWD - Includes: Inspection of seals for leaks.",
+            "Skill": "B",
+            "Labor (Hours)": 0.7,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "REAR DIFFERENTIAL FLUID"
+          }
+        ],
+        "stats": null,
+        "qty": "04",
+        "usage": [
+          "2T3P1RFV4LW284937",
+          "RAV4 AWD SERIES"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "86841",
+        "pt": "GASKET",
+        "part_number": "00116-S0010",
+        "part_description": "GASKET, DIFFERENTIAL COVER",
+        "system_group": null,
+        "display_term": "DIFF COVER SEAL",
+        "part_location": "86-01 - REAR AXLE & DIFFERENTIAL ASSEMBLY",
+        "category": "RELATED",
+        "system": "DRIVETRAIN",
+        "image_id": "77215",
+        "suggested_price": 18.25,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1RFV4LW284937"
+        ],
+        "supersession": "00116-S0012",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "86842",
+        "pt": "WASHER",
+        "part_number": "90430-12031",
+        "part_description": "WASHER, DRAIN PLUG",
+        "system_group": null,
+        "display_term": "DRAIN PLUG SEAL",
+        "part_location": "86-01 - REAR AXLE & DIFFERENTIAL ASSEMBLY",
+        "category": "RELATED",
+        "system": "DRIVETRAIN",
+        "image_id": "77220",
+        "suggested_price": 1.15,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "ALL AWD MODELS"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "REAR DIFFERENTIAL FLUID",
+  "labor_hours": 1.6,
+  "input": {
+    "vin": "2T3P1RFV4LW284937",
+    "text": "Rear Differential Fluid Replacement — AWD (per TSB 0095-21)",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "DIFF-AWD-2020"
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "DIAGNOSTIC - BRAKE SYSTEM PERFORMANCE TEST - Full system scan and hydraulic pressure verification.",
+        "Skill": "A",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "BRAKE SYSTEM"
+      },
+      {
+        "Note": "DIAGNOSTIC - ABS SENSOR SIGNAL CHECK - Check individual wheel speed sensor resistance and voltage.",
+        "Skill": "B",
+        "Labor (Hours)": 0.7,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "ABS SENSOR"
+      },
+      {
+        "Note": "DIAGNOSTIC - BRAKE FLUID CONTAMINATION ANALYSIS - Test for moisture content and boiling point degradation.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "BRAKE FLUID"
+      },
+      {
+        "Note": "DIAGNOSTIC - MECHANICAL BRAKE INSPECTION - Visual and physical check of calipers, pads, and rotors for wear/leakage.",
+        "Skill": "B",
+        "Labor (Hours)": 0.8,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "BRAKE SYSTEM"
+      },
+      {
+        "Note": "COMBINATION - SCAN TOOL - BRAKE SYSTEM MODULE COMMUNICATION TEST",
+        "Skill": "A",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "BRAKE SYSTEM"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "99010",
+        "pt": "BRAKE FLUID",
+        "part_number": "DOT3-HND-442",
+        "part_description": "HYDRAULIC BRAKE FLUID, DOT 3, 500ML",
+        "system_group": null,
+        "display_term": "BRAKE FLUID DOT3",
+        "part_location": "BRAKE RESERVOIR SYSTEM",
+        "category": "MAINTENANCE",
+        "system": "BRAKE SYSTEM",
+        "image_id": "55210",
+        "suggested_price": 14.5,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2HKRW2H83JH607249",
+          "CR-V 2018-2022"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "88210",
+        "pt": "WHEEL SPEED SENSOR",
+        "part_number": "46430-T0A-001",
+        "part_description": "SENSOR, WHEEL SPEED, REAR LH",
+        "system_group": null,
+        "display_term": "ABS WHEEL SPEED SENSOR, REAR LH",
+        "part_location": "REAR AXLE HUB ASSEMBLY",
+        "category": "ELECTRONIC",
+        "system": "ABS SYSTEM",
+        "image_id": "11042",
+        "suggested_price": 88.25,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "DIAGNOSTIC - ABS SENSOR SIGNAL CHECK - Check individual wheel speed sensor resistance and voltage.",
+            "Skill": "B",
+            "Labor (Hours)": 0.7,
+            "Warranty": "",
+            "LaborTypeName": "DIAGNOSTIC",
+            "LaborComponent": "ABS SENSOR"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "CR-V 2018-2022"
+        ],
+        "supersession": "46430-T0A-002",
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "BRAKE SYSTEM DIAGNOSTIC",
+  "labor_hours": null,
+  "input": {
+    "vin": "2HKRW2H83JH607249",
+    "text": "Brake System Diagnostic",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "HONDA",
+    "catalog_code": "HND-BRK-09"
+  }
+}

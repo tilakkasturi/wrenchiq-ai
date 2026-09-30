@@ -1,0 +1,195 @@
+{
+  "roId": "RO-2026-0406",
+  "vehicleId": "5NMJFCAE3PH264144",
+  "techId": "tech-882",
+  "inspectedAt": "2026-04-06T14:22:00",
+  "categories": [
+    {
+      "name": "Suspension & Steering",
+      "items": [
+        {
+          "id": "dvi-901",
+          "name": "Front Strut Mounts — LH",
+          "status": "urgent",
+          "measurement": "Excessive play/clunking",
+          "newSpec": "N/A",
+          "minSpec": "Zero movement",
+          "wearPct": 100,
+          "hasPhoto": true,
+          "photoLabel": "strut_mount_lh_top",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Front left strut mount assembly shows significant structural play and bearing failure.",
+            "recommendation": "REPLACE — Critical for noise reduction and steering stability. Use OEM Revised Kit per TSB 54-ST-013H.",
+            "reasoning": "Visual inspection and tactile test confirm bearing seizure and rubber degradation. Correlates with customer complaint of 'clunking' over bumps. Hyundai TSB 54-ST-013H specifically addresses this component failure on 2022-2023 models."
+          }
+        },
+        {
+          "id": "dvi-902",
+          "name": "Front Strut Mounts — RH",
+          "status": "urgent",
+          "measurement": "Excessive play/clunking",
+          "newSpec": "N/A",
+          "minSpec": "Zero movement",
+          "wearPct": 100,
+          "hasPhoto": true,
+          "photoLabel": "strut_mount_rh_top",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 97,
+            "finding": "Front right strut mount assembly shows significant structural play.",
+            "recommendation": "REPLACE — Critical for noise reduction and steering stability. Use OEM Revised Kit per TSB 54-ST-013H.",
+            "reasoning": "Mirroring the LH side, the RH mount shows similar bearing wear and structural instability. Both sides must be replaced to ensure even ride height and damping."
+          }
+        },
+        {
+          "id": "dvi-903",
+          "name": "Front Sway Bar End Links — Both Sides",
+          "status": "urgent",
+          "measurement": "Loose/Rattling",
+          "newSpec": "N/A",
+          "minSpec": "Tight/No play",
+          "wearPct": 95,
+          "hasPhoto": true,
+          "photoLabel": "sway_bar_link_front",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 94,
+            "finding": "Front sway bar end links exhibit significant lateral play in the ball joints.",
+            "recommendation": "REPLACE — Both sides required to eliminate chassis rattle and stabilize cornering.",
+            "reasoning": "Physical inspection shows boot tearing and excessive movement in the link joints. This is a primary source of the 'rattle' reported during chassis inspection."
+          }
+        },
+        {
+          "id": "dvi-904",
+          "name": "Steering Rack Boots",
+          "status": "good",
+          "measurement": "No tears",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 92,
+            "finding": "Steering rack bellows/boots are intact with no signs of grease leakage.",
+            "recommendation": "GOOD — No action required.",
+            "reasoning": "Visual inspection shows rubber is supple and no hydraulic fluid is present on the boot surfaces."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brakes",
+      "items": [
+        {
+          "id": "dvi-905",
+          "name": "Front Brake Pads",
+          "status": "monitor",
+          "measurement": "6mm",
+          "newSpec": "12mm",
+          "minSpec": "3mm",
+          "wearPct": 50,
+          "hasPhoto": true,
+          "photoLabel": "front_pads_left",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 95,
+            "finding": "Front brake pads are at 50% life with 6mm remaining.",
+            "recommendation": "MONITOR — Replace during next scheduled service interval.",
+            "reasoning": "Measurement taken via caliper. Wear is even. Sufficient thickness remains for current driving conditions."
+          }
+        },
+        {
+          "id": "dvi-906",
+          "name": "Rear Brake Pads",
+          "status": "good",
+          "measurement": "9mm",
+          "newSpec": "10mm",
+          "minSpec": "2mm",
+          "wearPct": 10,
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 96,
+            "finding": "Rear brake pads show minimal wear at 9mm.",
+            "recommendation": "GOOD — No action needed.",
+            "reasoning": "Rear pads are barely worn, typical for a newer vehicle with electronic brake force distribution."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drivetrain & Axles",
+      "items": [
+        {
+          "id": "dvi-907",
+          "name": "CV Axle Boots",
+          "status": "good",
+          "measurement": "No leaks/tears",
+          "hasPhoto": true,
+          "photoLabel": "cv_boot_inspection",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 93,
+            "finding": "CV axle boots are in excellent condition with no visible cracks or grease expulsion.",
+            "recommendation": "GOOD — No action required.",
+            "reasoning": "Visual inspection of inner and outer boots shows no signs of failure. Grease integrity is maintained."
+          }
+        },
+        {
+          "id": "dvi-908",
+          "name": "Drive Axle CV Joints",
+          "status": "good",
+          "measurement": "No clicking",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 88,
+            "finding": "CV joints operating quietly during test drive.",
+            "recommendation": "GOOD — No action required.",
+            "reasoning": "No audible clicking or popping during low-speed steering maneuvers, indicating joint integrity."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Under Hood",
+      "items": [
+        {
+          "id": "dvi-909",
+          "name": "Engine Air Filter",
+          "status": "good",
+          "measurement": "Clean",
+          "hasPhoto": true,
+          "photoLabel": "air_filter_check",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 94,
+            "finding": "Engine air filter is clean with minimal particulate.",
+            "recommendation": "GOOD — No action required.",
+            "reasoning": "Filter pleats show no significant clogging. Airflow capacity is optimal."
+          }
+        },
+        {
+          "id": "dvi-910",
+          "name": "Serpentine Belt",
+          "status": "good",
+          "measurement": "No cracking",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 91,
+            "finding": "Serpentine belt shows no visible signs of glazing or rib cracking.",
+            "recommendation": "GOOD — No action required.",
+            "reasoning": "Belt surface is smooth and tension is within factory specification."
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "urgent": 3,
+    "monitor": 1,
+    "good": 7,
+    "totalItems": 11
+  }
+}

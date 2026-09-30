@@ -1,0 +1,174 @@
+{
+  "roId": "RO-2026-0401",
+  "vehicleId": "vin-5tdgzrbh5ls503482",
+  "techId": "tech-882",
+  "inspectedAt": "2026-04-01T14:20:00",
+  "categories": [
+    {
+      "name": "Brakes",
+      "items": [
+        {
+          "id": "dvi-101",
+          "name": "Front Brake Pads — Left",
+          "status": "good",
+          "measurement": "8mm",
+          "newSpec": "12mm",
+          "minSpec": "2mm",
+          "wearPct": 33,
+          "hasPhoto": true,
+          "photoLabel": "front_left_pad",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 97,
+            "finding": "Front left brake pad thickness is 8mm. 33% wear.",
+            "recommendation": "GOOD — plenty of life remaining. Continue monitoring during regular oil changes.",
+            "reasoning": "Visual inspection via borescope shows healthy friction material thickness. Wear is consistent with standard Highlander braking profiles."
+          }
+        },
+        {
+          "id": "dvi-102",
+          "name": "Front Brake Pads — Right",
+          "status": "good",
+          "measurement": "7.5mm",
+          "newSpec": "12mm",
+          "minSpec": "2mm",
+          "wearPct": 37,
+          "hasPhoto": true,
+          "photoLabel": "front_right_pad",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 95,
+            "finding": "Front right brake pad thickness is 7.5mm. 37% wear.",
+            "recommendation": "GOOD — no immediate service required.",
+            "reasoning": "Minor 0.5mm variance between left and right is within acceptable tolerance for this vehicle class."
+          }
+        },
+        {
+          "id": "dvi-103",
+          "name": "Rear Brake Pads",
+          "status": "monitor",
+          "measurement": "4mm",
+          "newSpec": "10mm",
+          "minSpec": "2mm",
+          "wearPct": 60,
+          "hasPhoto": true,
+          "photoLabel": "rear_pads",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 93,
+            "finding": "Rear brake pads at 4mm. 60% wear.",
+            "recommendation": "MONITOR — plan for replacement within the next 8,000–12,000 miles.",
+            "reasoning": "Rear pads are wearing faster than front due to electronic brake distribution settings. Approaching the 3mm threshold for scheduled maintenance."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suspension & Steering",
+      "items": [
+        {
+          "id": "dvi-201",
+          "name": "Front CV Axle / Boot",
+          "status": "urgent",
+          "measurement": "Torn boot",
+          "hasPhoto": true,
+          "photoLabel": "front_cv_boot",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Front driver-side CV boot is torn, exposing grease and allowing contaminants in.",
+            "recommendation": "URGENT — replace CV axle assembly immediately to prevent drivetrain failure.",
+            "reasoning": "Visual confirmation of grease spray on the inner wheel well and a visible puncture in the rubber boot. Failure to replace will lead to joint seizure."
+          }
+        },
+        {
+          "id": "dvi-202",
+          "name": "Struts & Shocks",
+          "status": "good",
+          "measurement": "No leaks",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 91,
+            "finding": "Suspension components show no signs of hydraulic fluid leakage.",
+            "recommendation": "GOOD — no action needed.",
+            "reasoning": "Visual inspection of strut bodies and shock absorbers shows clean surfaces and no evidence of weeping."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Engine & Belts",
+      "items": [
+        {
+          "id": "dvi-301",
+          "name": "Engine Air Filter",
+          "status": "monitor",
+          "measurement": "Heavy dust accumulation",
+          "hasPhoto": true,
+          "photoLabel": "engine_air_filter",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 94,
+            "finding": "Engine air filter is visibly dirty with significant particulate buildup.",
+            "recommendation": "MONITOR — replace during next scheduled service or if MPG decreases.",
+            "reasoning": "Filter pleats show high density of dust. While not fully clogged, airflow is being slightly restricted."
+          }
+        },
+        {
+          "id": "dvi-302",
+          "name": "Drive Belt (Serpentine)",
+          "status": "good",
+          "measurement": "No cracking",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 96,
+            "finding": "Drive belt shows no signs of glazing, cracking, or fraying.",
+            "recommendation": "GOOD — no action needed.",
+            "reasoning": "Inspected ribs and tensioner area; belt maintains good elasticity and surface integrity."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Electrical",
+      "items": [
+        {
+          "id": "dvi-401",
+          "name": "Battery Health",
+          "status": "good",
+          "measurement": "12.7V / 710 CCA",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 99,
+            "finding": "Battery is holding a full charge at 12.7V with strong CCA output.",
+            "recommendation": "GOOD — battery is in excellent condition.",
+            "reasoning": "Load test results indicate the battery is well within the manufacturer's operating parameters for a 2020 model."
+          }
+        },
+        {
+          "id": "dvi-402",
+          "name": "Battery Terminals",
+          "status": "good",
+          "measurement": "Clean",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 92,
+            "finding": "Terminals are clean with no evidence of corrosion or loose connections.",
+            "recommendation": "GOOD — no action needed.",
+            "reasoning": "Visual inspection shows secure clamping and absence of acid buildup/oxidation."
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "urgent": 1,
+    "monitor": 2,
+    "good": 7,
+    "totalItems": 10
+  }
+}

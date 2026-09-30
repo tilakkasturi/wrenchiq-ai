@@ -1,0 +1,179 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REPLACE TIMING CHAIN ASSEMBLY - PRIMARY & SECONDARY - Includes: Timing cover removal and installation.",
+        "Skill": "A",
+        "Labor (Hours)": 8.5,
+        "Warranty": "36/36k",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "TIMING CHAIN"
+      },
+      {
+        "Note": "COMBINATION - REPLACE VARIABLE VALVE TIMING (VVT) SOLENOIDS - Includes: Inspecting oil passages.",
+        "Skill": "B",
+        "Labor (Hours)": 1.2,
+        "Warranty": "36/36k",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "TIMING CHAIN"
+      },
+      {
+        "Note": "COMBINATION - REPLACE ENGINE FRONT COVER GASKET & SEALANT",
+        "Skill": "B",
+        "Labor (Hours)": 0.8,
+        "Warranty": "36/36k",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "TIMING CHAIN"
+      },
+      {
+        "Note": "COMBINATION - REPLACE ENGINE OIL PUMP & DRIVE SHAFT",
+        "Skill": "B",
+        "Labor (Hours)": 2.5,
+        "Warranty": "36/36k",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "TIMING CHAIN"
+      },
+      {
+        "Note": "COMBINATION - INSPECT CAMSHAFT AND PHASER CLEARANCE",
+        "Skill": "A",
+        "Labor (Hours)": 1,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "TIMING CHAIN"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "TC-9921",
+        "pt": "TIMING CHAIN KIT",
+        "part_number": "12654382-X",
+        "part_description": "TIMING CHAIN ASSY, PRIMARY/SECONDARY KIT",
+        "system_group": "ENGINE",
+        "display_term": "TIMING CHAIN KIT - COMPLETE",
+        "part_location": "12-01 - ENGINE TIMING DRIVE",
+        "category": "MAIN",
+        "system": "ENGINE INTERNAL",
+        "image_id": "77210",
+        "suggested_price": 485.5,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REPLACE TIMING CHAIN ASSEMBLY - PRIMARY & SECONDARY",
+            "Skill": "A",
+            "Labor (Hours)": 8.5,
+            "Warranty": "36/36k",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "TIMING CHAIN"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "L5F ENGINE CODE",
+          "V8 5.3L/6.2L"
+        ],
+        "supersession": "12654382-A",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "G-4421",
+        "pt": "GASKET",
+        "part_number": "55432109-X",
+        "part_description": "GASKET, TIMING COVER",
+        "system_group": null,
+        "display_term": "TIMING COVER GASKET",
+        "part_location": "12-05 - ENGINE COVER",
+        "category": "RELATED",
+        "system": "ENGINE INTERNAL",
+        "image_id": "77215",
+        "suggested_price": 32.15,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "ALL 5.3L V8"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "P-8832",
+        "pt": "TENSIONER",
+        "part_number": "12667834-X",
+        "part_description": "TENSIONER, HYDRAULIC TIMING CHAIN",
+        "system_group": null,
+        "display_term": "CHAIN TENSIONER",
+        "part_location": "12-02 - TIMING DRIVE",
+        "category": "MAIN",
+        "system": "ENGINE INTERNAL",
+        "image_id": "77220",
+        "suggested_price": 88.4,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "V8 L5F"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "V-1102",
+        "pt": "SOLENOID",
+        "part_number": "12632412-X",
+        "part_description": "SOLENOID, VVT, INTAKE",
+        "system_group": null,
+        "display_term": "VVT SOLENOID",
+        "part_location": "14-02 - VALVETRAIN",
+        "category": "RELATED",
+        "system": "ENGINE INTERNAL",
+        "image_id": "77250",
+        "suggested_price": 112.99,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "COMBINATION - REPLACE VARIABLE VALVE TIMING (VVT) SOLENOIDS",
+            "Skill": "B",
+            "Labor (Hours)": 1.2,
+            "Warranty": "36/36k",
+            "LaborTypeName": "COMBINATION",
+            "LaborComponent": "TIMING CHAIN"
+          }
+        ],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "V8 L5F"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "TIMING CHAIN",
+  "labor_hours": 13.5,
+  "input": {
+    "vin": "3GCUKREC6KG184723",
+    "text": "Timing Chain Kit Replacement — Primary & Secondary (per TSB PIP5765G)",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "CHEVROLET",
+    "catalog_code": "GM-V8-992"
+  }
+}

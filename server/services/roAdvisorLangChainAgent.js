@@ -254,7 +254,7 @@ function buildChatModel() {
   });
   chat.client = getClient(endpoint);
 
-  return { chat, model: profile.model };
+  return { chat, model: profile.model, baseUrl: endpoint.baseURL };
 }
 
 /**
@@ -294,7 +294,7 @@ function rawOf(message) {
  * survives a run that ends in an error, matching the hand-rolled loop's habit of
  * keeping the tokens spent on turns that led nowhere.
  */
-function makeCollector(fallbackModel) {
+function makeCollector(fallbackModel, baseUrl) {
   const startedAt = new Map();
   const collected = { usage: null, model: null };
 
@@ -317,6 +317,7 @@ function makeCollector(fallbackModel) {
         provider: 'llm',
         route: ROUTE,
         model: raw?.model || fallbackModel,
+        baseUrl,
         promptTokens: usage.prompt_tokens,
         completionTokens: usage.completion_tokens,
         totalTokens: usage.total_tokens,
@@ -330,6 +331,7 @@ function makeCollector(fallbackModel) {
         provider: 'llm',
         route: ROUTE,
         model: fallbackModel,
+        baseUrl,
         durationMs: elapsed(startedAt, runId),
         status: 'error',
         error: err?.message ?? String(err),
@@ -359,8 +361,8 @@ function elapsed(startedAt, runId) {
  *   still returned in that case, so the tokens already spent are not lost.
  */
 export async function runCreateAgentLoop({ system, preloaded }) {
-  const { chat, model } = buildChatModel();
-  const { handler, collected } = makeCollector(model);
+  const { chat, model, baseUrl } = buildChatModel();
+  const { handler, collected } = makeCollector(model, baseUrl);
   const langfuseHandler = await buildLangfuseHandler({ tags: ['ro-advisor'] });
   const callbacks = langfuseHandler ? [handler, langfuseHandler] : [handler];
 

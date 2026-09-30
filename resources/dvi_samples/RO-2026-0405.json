@@ -1,0 +1,141 @@
+{
+  "roId": "RO-2026-0405",
+  "vehicleId": "vin-4s4bsacc5j3308906",
+  "techId": "tech-882",
+  "inspectedAt": "2026-04-05T14:20:00",
+  "categories": [
+    {
+      "name": "Brakes",
+      "items": [
+        {
+          "id": "dvi-901",
+          "name": "Rear Brake Pads",
+          "status": "urgent",
+          "measurement": "1mm",
+          "newSpec": "12mm",
+          "minSpec": "3mm",
+          "wearPct": 92,
+          "hasPhoto": true,
+          "photoLabel": "rear_pads_worn",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Rear brake pads are at 1mm thickness, well below the 3mm safety threshold.",
+            "recommendation": "URGENT — Replace immediately with Akebono OE-spec pads per TSB 05-187-20R to prevent caliper damage.",
+            "reasoning": "Visual inspection and caliper measurement confirm critical wear. This aligns with the current open repair job for rear brake replacement."
+          }
+        },
+        {
+          "id": "dvi-902",
+          "name": "Rear Brake Rotors",
+          "status": "urgent",
+          "measurement": "Surface Cracking",
+          "newSpec": "28mm",
+          "minSpec": "26mm",
+          "wearPct": 85,
+          "hasPhoto": true,
+          "photoLabel": "rear_rotor_cracks",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 95,
+            "finding": "Heat-induced radial cracking observed on the surface of both rear rotors.",
+            "recommendation": "URGENT — Replace both rear rotors. Cracks are too deep for resurfacing and pose a risk of structural failure.",
+            "reasoning": "Thermal stress cracks detected via high-res imaging. Non-resurfaceable due to crack depth and proximity to minimum thickness. Matches open RO for rotor replacement."
+          }
+        },
+        {
+          "id": "dvi-903",
+          "name": "Front Brake Pads",
+          "status": "good",
+          "measurement": "8mm",
+          "newSpec": "13mm",
+          "minSpec": "3mm",
+          "wearPct": 38,
+          "hasPhoto": true,
+          "photoLabel": "front_pads_left",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 93,
+            "finding": "Front brake pads show healthy remaining thickness of 8mm.",
+            "recommendation": "GOOD — No action required at this time.",
+            "reasoning": "Measurement indicates sufficient material for several thousand miles of operation. Wear is even across the front axle."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drivetrain & Steering",
+      "items": [
+        {
+          "id": "dvi-905",
+          "name": "CV Axle Boots (Front)",
+          "status": "monitor",
+          "measurement": "Minor weeping",
+          "hasPhoto": true,
+          "photoLabel": "cv_boot_front",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 87,
+            "finding": "Slight grease seepage noted on the passenger side front CV boot.",
+            "recommendation": "MONITOR — Inspect during next oil change for increased seepage or tearing.",
+            "reasoning": "Small amount of lubricant present on the boot exterior, but no active tearing or heavy spray detected. Likely early-stage degradation."
+          }
+        },
+        {
+          "id": "dvi-906",
+          "name": "CV Axle Boots (Rear)",
+          "status": "good",
+          "measurement": "Intact",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 94,
+            "finding": "Rear CV boots are in excellent condition with no signs of wear.",
+            "recommendation": "GOOD — No action needed.",
+            "reasoning": "Visual inspection shows no cracks, dry rot, or grease leakage."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Engine & Electrical",
+      "items": [
+        {
+          "id": "dvi-907",
+          "name": "Engine Air Filter",
+          "status": "monitor",
+          "measurement": "25% obstruction",
+          "hasPhoto": true,
+          "photoLabel": "air_filter_dirty",
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 91,
+            "finding": "Engine air filter shows light particulate accumulation.",
+            "recommendation": "MONITOR — Replace during next scheduled maintenance interval.",
+            "reasoning": "Filter is not currently restrictive but is beginning to show signs of debris buildup in the pleats."
+          }
+        },
+        {
+          "id": "dvi-908",
+          "name": "Battery Terminal Condition",
+          "status": "good",
+          "measurement": "Clean",
+          "hasPhoto": false,
+          "aiAnalysis": {
+            "model": "Claude Sonnet 4.6",
+            "confidence": 98,
+            "finding": "Battery terminals are clean and free of oxidation.",
+            "recommendation": "GOOD — No action required.",
+            "reasoning": "Electrical contact points show no signs of corrosion or loose connections."
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "urgent": 3,
+    "monitor": 2,
+    "good": 3,
+    "totalItems": 8
+  }
+}

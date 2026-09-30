@@ -1,0 +1,151 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "TRANSMISSION FLUID SERVICE - DRAIN & FILL - CVT - All",
+        "Skill": "B",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "CVT FLUID"
+      },
+      {
+        "Note": "COMBINATION - INSPECT TRANSMISSION PAN & FILTER - Check for metal debris/sludge.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "CVT FLUID"
+      },
+      {
+        "Note": "COMBINATION - FLUSH TRANSMISSION SYSTEM - Complete system flush using specialized machine.",
+        "Skill": "A",
+        "Labor (Hours)": 2.5,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "CVT FLUID"
+      },
+      {
+        "Note": "COMBINATION - INSPECT CVT COOLER LINES - Check for leaks or obstruction.",
+        "Skill": "B",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "CVT FLUID"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "98022",
+        "pt": "CVT FLUID",
+        "part_number": "08200-H5M-A01",
+        "part_description": "HONDAS CVTF FLUID TYPE 2",
+        "system_group": null,
+        "display_term": "CVT TRANSMISSION FLUID",
+        "part_location": "TRANS - TRANSMISSION SYSTEM",
+        "category": "MAIN",
+        "system": "TRANSMISSION",
+        "image_id": "77210",
+        "suggested_price": 84.5,
+        "fluid": [
+          "CVT"
+        ],
+        "labor": [
+          {
+            "Note": "TRANSMISSION FLUID SERVICE - DRAIN & FILL - CVT - All",
+            "Skill": "B",
+            "Labor (Hours)": 1.2,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "CVT FLUID"
+          }
+        ],
+        "stats": null,
+        "qty": "04",
+        "usage": [
+          "2HKRW2H83JH607249",
+          "CRV-2018-ALL"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "98023",
+        "pt": "TRANSMISSION FILTER",
+        "part_number": "2023-R12-X9",
+        "part_description": "FILTER, CVT INTERNAL",
+        "system_group": null,
+        "display_term": "CVT INTERNAL FILTER",
+        "part_location": "TRANS - TRANSMISSION PAN",
+        "category": "MAIN",
+        "system": "TRANSMISSION",
+        "image_id": "77215",
+        "suggested_price": 42.15,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "COMBINATION - INSPECT TRANSMISSION PAN & FILTER - Check for metal debris/sludge.",
+            "Skill": "B",
+            "Labor (Hours)": 0.4,
+            "Warranty": "",
+            "LaborTypeName": "COMBINATION",
+            "LaborComponent": "CVT FLUID"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2HKRW2H83JH607249"
+        ],
+        "supersession": "2023-R11-X8",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "98024",
+        "pt": "DRAIN WASHER",
+        "part_number": "90471-S4A-A01",
+        "part_description": "WASHER, DRAIN PLUG",
+        "system_group": null,
+        "display_term": "DRAIN PLUG SEAL",
+        "part_location": "TRANS - TRANSMISSION PAN",
+        "category": "RELATED",
+        "system": "TRANSMISSION",
+        "image_id": "77220",
+        "suggested_price": 2.35,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2HKRW2H83JH607249"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "CVT FLUID",
+  "labor_hours": null,
+  "input": {
+    "vin": "2HKRW2H83JH607249",
+    "text": "transmission fluid service",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "HONDA",
+    "catalog_code": "CVT-9921"
+  }
+}

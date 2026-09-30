@@ -15,8 +15,7 @@ import { COLORS } from "../../theme/colors";
 import { fetchDetailedHealth } from "../../services/healthService";
 import { useSelectedCustomer } from "../../context/SelectedCustomerContext";
 import { useDemo } from "../../context/DemoContext";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "";
+import { hoursSince } from "../../utils/waitTime";
 
 // Same stage labels/colors as the Sidecar's RO Queue (RepairOrderQueue.jsx) —
 // kept in sync so a stage reads the same way everywhere in the app.
@@ -68,38 +67,6 @@ export default function HealthCheckScreen({ onContinue }) {
 
   useEffect(() => { runCheck(); }, []);
 
-  const [endpointStatus, setEndpointStatus] = useState(null);
-  const [switchingEndpoint, setSwitchingEndpoint] = useState(null);
-  const [endpointError, setEndpointError] = useState(null);
-
-  const loadEndpointStatus = () => {
-    fetch(`${API_BASE}/api/llm-provider-config`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data) setEndpointStatus(data); })
-      .catch(() => {});
-  };
-
-  useEffect(() => { loadEndpointStatus(); }, []);
-
-  async function switchEndpoint(key) {
-    setSwitchingEndpoint(key);
-    setEndpointError(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/llm-provider-config`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activeEndpoint: key }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      setEndpointStatus(data);
-      await runCheck();
-    } catch (err) {
-      setEndpointError(err.message);
-    } finally {
-      setSwitchingEndpoint(null);
-    }
-  }
-
   const today = new Date().toLocaleDateString(undefined, {
     weekday: "long", month: "long", day: "numeric",
   });
@@ -145,13 +112,6 @@ export default function HealthCheckScreen({ onContinue }) {
         }
       />
 
-      <EndpointSwitcher
-        status={endpointStatus}
-        switching={switchingEndpoint}
-        error={endpointError}
-        onSwitch={switchEndpoint}
-      />
-
       <HealthRow
         icon={Database}
         label={`Shop Management System — ${smsName || "SMS"}`}
@@ -190,11 +150,6 @@ export default function HealthCheckScreen({ onContinue }) {
       <style>{"@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }"}</style>
     </div>
   );
-}
-
-function hoursSince(dateStr) {
-  if (!dateStr) return 0;
-  return Math.max(0, (Date.now() - new Date(dateStr).getTime()) / 3600000);
 }
 
 // Today's queue at a glance — count by stage, total wait time, and the
@@ -372,56 +327,6 @@ function AvailableOnStrip() {
   );
 }
 
-// Lets an advisor/engineer switch which physical "Predii LLM" box the
-// default profile hits (e.g. testing a new self-hosted model) right from
-// the Home screen, without touching .env.local or restarting the server.
-// Separate from the Settings "AI Engine" toggle (Predii LLM vs. Azure) —
-// this only chooses which Predii LLM host is live.
-function EndpointSwitcher({ status, switching, error, onSwitch }) {
-  if (!status?.endpoints) return null;
-
-  return (
-    <div>
-      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
-        LLM Endpoint
-      </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        {Object.entries(status.endpoints).map(([key, e]) => {
-          const active = status.activeEndpoint === key;
-          const disabled = !e.configured || switching !== null;
-          return (
-            <button
-              key={key}
-              disabled={disabled}
-              onClick={() => onSwitch(key)}
-              title={e.configured ? `${e.baseUrl}${e.model && key !== "secondary" ? ` — ${e.model}` : ""}` : "Not configured in .env.local"}
-              style={{
-                flex: 1, textAlign: "left",
-                border: `1.5px solid ${active ? COLORS.gold : "rgba(255,255,255,0.12)"}`,
-                background: active ? "rgba(250,204,21,0.08)" : "rgba(255,255,255,0.03)",
-                borderRadius: 8, padding: "8px 10px",
-                cursor: disabled ? "default" : "pointer",
-                opacity: e.configured ? 1 : 0.45,
-              }}
-            >
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: "#F1F5F9" }}>
-                {switching === key ? "Switching…" : e.label}
-              </div>
-              {key !== "secondary" && (
-                <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.65)", marginTop: 1 }}>
-                  {e.configured ? (e.model || "—") : "Not configured"}
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      {error && (
-        <div style={{ fontSize: 10.5, color: "#F87171", marginTop: 5 }}>{error}</div>
-      )}
-    </div>
-  );
-}
 
 function HealthRow({ icon: Icon, label, checking, status, detail }) {
   const style = checking ? null : (STATUS_STYLE[status] || STATUS_STYLE.error);

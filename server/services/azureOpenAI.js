@@ -34,10 +34,7 @@ import { getDefaultProfile } from './llmProviderConfig.js';
  *   (recommendations, ARO Agent, RO Score Agent, Knowledge Graph, RO
  *   Advisor) always uses the "default" Predii LLM profile, regardless of
  *   what that toggle is set to — explicit product requirement, not an
- *   oversight. "Default" itself still resolves to whichever physical
- *   endpoint (primary/secondary) is active — see getDefaultProfile() —
- *   since that's a separate, WrenchIQ-Home-driven switch, not the Azure
- *   toggle.
+ *   oversight. See getDefaultProfile().
  * @param {string}   [opts.profileKey] - Force a specific LLM_PROFILES entry
  *   (e.g. 'frontier') regardless of useConfiguredProvider — its own
  *   base URL/key/model, not just a model-name override on top of whichever

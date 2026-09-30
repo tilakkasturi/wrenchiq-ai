@@ -1,0 +1,149 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "DIAGNOSE A/C SYSTEM - Pressure Test and Leak Detection",
+        "Skill": "A",
+        "Labor (Hours)": 1.5,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "A/C SYSTEM"
+      },
+      {
+        "Note": "DIAGNOSE A/C SYSTEM - Electronic Control & Sensor Verification",
+        "Skill": "B",
+        "Labor (Hours)": 0.8,
+        "Warranty": "",
+        "LaborTypeName": "DIAGNOSTIC",
+        "LaborComponent": "A/C SYSTEM"
+      },
+      {
+        "Note": "COMBINATION - RECHARGE A/C SYSTEM - R134a/R1234yf - Includes: Vacuum pull and leak test",
+        "Skill": "B",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "A/C SYSTEM"
+      },
+      {
+        "Note": "COMBINATION - INSPECT A/C CONDENSER - Check for debris or external damage",
+        "Skill": "C",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "A/C SYSTEM"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "95011",
+        "pt": "REFRIGERANT",
+        "part_number": "65-440-122-X",
+        "part_description": "R1234yf REFRIGERANT, 12OZ CAN",
+        "system_group": null,
+        "display_term": "R1234yf REFRIGERANT",
+        "part_location": "REFRIGERATION SYSTEM",
+        "category": "CONSUMABLE",
+        "system": "HVAC SYSTEM",
+        "image_id": "77210",
+        "suggested_price": 45,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "RECHARGE A/C SYSTEM - Includes: Evacuation and recharge procedure",
+            "Skill": "B",
+            "Labor (Hours)": 1.2,
+            "Warranty": "",
+            "LaborTypeName": "COMBINATION",
+            "LaborComponent": "A/C SYSTEM"
+          }
+        ],
+        "stats": null,
+        "qty": "02",
+        "usage": [
+          "BMW X3 G01",
+          "G02 SERIES"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "95012",
+        "pt": "A/C SEAL KIT",
+        "part_number": "95012-X882-B",
+        "part_description": "O-RING SEAL KIT, A/C SERVICE",
+        "system_group": null,
+        "display_term": "A/C SERVICE SEAL KIT",
+        "part_location": "HVAC SERVICE ACCESS",
+        "category": "RELATED",
+        "system": "HVAC SYSTEM",
+        "image_id": "77215",
+        "suggested_price": 22.5,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "BMW X3 2018-2023"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "95013",
+        "pt": "A/C DESICCANT",
+        "part_number": "88-301-992-Z",
+        "part_description": "REPLACEMENT DESICCANT BAG, A/C RECEIVER",
+        "system_group": null,
+        "display_term": "A/C RECEIVER DESICCANT",
+        "part_location": "A/C RECEIVER/DRIER ASSEMBLY",
+        "category": "MAIN",
+        "system": "HVAC SYSTEM",
+        "image_id": "77219",
+        "suggested_price": 58.75,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE A/C RECEIVER/DRIER",
+            "Skill": "B",
+            "Labor (Hours)": 1.4,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "A/C SYSTEM"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "BMW X3 G01"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "A/C SYSTEM DIAGNOSIS",
+  "labor_hours": 2.3,
+  "input": {
+    "vin": "5UX43DP04LL839271",
+    "text": "A/C System Diagnosis & Pressure Test",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "BMW",
+    "catalog_code": "HVAC-DIAG-001"
+  }
+}

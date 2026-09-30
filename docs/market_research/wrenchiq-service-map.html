@@ -1,0 +1,1377 @@
+<!doctype html>
+<title>WrenchIQ Service Map</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  :root{
+    --paper:#eef1f2;
+    --ink:#101820;
+    --panel:#ffffff;
+    --line:#d7dee2;
+    --muted:#5b6570;
+    --accent:#0e7c86;      /* sync — deep diagnostic teal */
+    --accent-2:#c97a2e;    /* async/event — dashboard amber */
+    --agentic:#6b63c9;     /* agentic graph — indigo */
+    --accent-soft:#e1eff0;
+    --accent-2-soft:#f6e9d8;
+    --agentic-soft:#eae8fa;
+    --code-bg:#f5f7f7;
+    --row-hover:#f3f5f5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0c1116;
+      --ink:#e8edf0;
+      --panel:#161e25;
+      --line:#28333c;
+      --muted:#8b98a3;
+      --accent:#39b8c2;
+      --accent-2:#e0964c;
+      --agentic:#9c92ec;
+      --accent-soft:#122a2c;
+      --accent-2-soft:#2b2115;
+      --agentic-soft:#201d38;
+      --code-bg:#101820;
+      --row-hover:#1c252e;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0c1116;
+    --ink:#e8edf0;
+    --panel:#161e25;
+    --line:#28333c;
+    --muted:#8b98a3;
+    --accent:#39b8c2;
+    --accent-2:#e0964c;
+    --agentic:#9c92ec;
+    --accent-soft:#122a2c;
+    --accent-2-soft:#2b2115;
+    --agentic-soft:#201d38;
+    --code-bg:#101820;
+    --row-hover:#1c252e;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", system-ui, sans-serif;
+    line-height:1.45;
+    margin:0;
+    padding:clamp(10px,1.6vw,18px) clamp(12px,2vw,22px);
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    gap:8px;
+  }
+  h1,h2,h3{
+    font-family:"IBM Plex Sans Condensed", "IBM Plex Sans", sans-serif;
+    font-weight:700;
+    text-wrap:balance;
+    margin:0;
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11.5px;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  header{
+    flex:none;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line);
+  }
+  .header-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+  }
+  h1{ font-size:clamp(18px,2.2vw,22px); }
+  .subhead{
+    max-width:80ch;
+    color:var(--muted);
+    font-size:12.5px;
+    line-height:1.35;
+    margin:0;
+  }
+
+  .theme-toggle{
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11.5px;
+    letter-spacing:.03em;
+    color:var(--muted);
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:5px 6px 5px 12px;
+    cursor:pointer;
+  }
+  .theme-toggle .icon{ font-size:13px; line-height:1; }
+  .theme-toggle .pip{
+    display:flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:50%;
+    background:var(--code-bg); border:1px solid var(--line);
+  }
+
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 16px;
+  }
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    color:var(--muted);
+  }
+  .swatch{ width:10px; height:10px; border-radius:3px; flex:none; }
+  .swatch.sync{ background:var(--accent); }
+  .swatch.async{ background:var(--accent-2); }
+  .swatch.agentic{ border:2px dashed var(--agentic); background:transparent; }
+
+  main{
+    flex:1 1 auto;
+    min-height:0;
+    display:grid;
+    grid-template-columns:minmax(230px,270px) 1fr;
+    gap:16px;
+  }
+
+  /* left: service list */
+  .service-list{
+    min-height:0;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding-right:2px;
+  }
+  .row{
+    text-align:left;
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:4px solid var(--line);
+    border-radius:8px;
+    padding:9px 11px;
+    cursor:pointer;
+    font:inherit;
+    color:inherit;
+  }
+  .row:hover{ background:var(--row-hover); }
+  .row:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  .row[data-pattern="sync"]{ border-left-color:var(--accent); }
+  .row[data-pattern="async"]{ border-left-color:var(--accent-2); }
+  .row[data-pattern="agentic"]{ border-left-color:var(--agentic); border-left-style:dashed; }
+  .row.active{ background:var(--row-hover); box-shadow:inset 0 0 0 1px var(--muted); }
+  .row .num{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px;
+    color:var(--muted);
+    flex:none;
+    width:16px;
+    margin-top:2px;
+  }
+  .row .rowtext{ min-width:0; flex:1; }
+  .row h3{
+    font-size:13.5px;
+    font-weight:600;
+    font-family:"IBM Plex Sans", sans-serif;
+    white-space:normal;
+    overflow-wrap:break-word;
+  }
+  .row p{
+    margin:2px 0 0;
+    font-size:11px;
+    color:var(--muted);
+    white-space:normal;
+    overflow-wrap:break-word;
+  }
+
+  /* right: detail panel */
+  .panel{
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .panel-head{
+    flex:none;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    padding:8px 16px 7px;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .panel-head h2{ font-size:15.5px; }
+  .panel-head .pattern-tag{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:.04em;
+    padding:4px 9px;
+    border-radius:6px;
+    white-space:nowrap;
+  }
+  .tabs{
+    flex:none;
+    display:flex;
+    gap:2px;
+    padding:0 18px;
+    background:var(--code-bg);
+    border-bottom:1px solid var(--line);
+  }
+  .tab{
+    font:inherit;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    background:none;
+    border:none;
+    color:var(--muted);
+    padding:6px 13px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  .tab.active{ color:var(--ink); border-bottom-color:var(--ink); }
+  .tab-body{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    padding:10px 16px 12px;
+  }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+  #tab-visual.active{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    min-height:0;
+  }
+
+  .endpoint{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12.5px;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .endpoint b{ color:var(--ink); font-weight:500; }
+  pre{
+    margin:0;
+    background:var(--code-bg);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+    overflow-x:auto;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    line-height:1.55;
+  }
+  .key{ color:var(--accent); }
+  .str{ color:#8a6b1f; }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .str{ color:#d8b567; } }
+  :root[data-theme="dark"] .str{ color:#d8b567; }
+  .bool{ color:var(--agentic); font-weight:500; }
+  .num{ color:var(--accent-2); font-weight:500; }
+
+  .decide-note{
+    font-size:11.5px;
+    line-height:1.35;
+    color:var(--muted);
+    margin:0 0 6px;
+    max-width:none;
+    flex:none;
+  }
+  figure{ margin:0; flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; }
+  figure svg{ display:block; width:100%; height:auto; max-height:100%; color:var(--ink); overflow:visible; }
+  .diagram-scroll{
+    flex:1 1 auto;
+    min-height:220px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:2px;
+  }
+  figcaption{ font-size:11px; color:var(--muted); margin-top:4px; flex:none; }
+  #decide-example{ flex:none; }
+  .worked-example{
+    margin-top:8px;
+    padding:9px 12px;
+    background:var(--agentic-soft);
+    border-radius:8px;
+    font-size:12px;
+  }
+  .worked-example b{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--agentic);
+    display:block;
+    margin-bottom:6px;
+  }
+  .worked-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
+    gap:10px;
+  }
+  .worked-item{
+    background:var(--panel);
+    border:1px solid var(--agentic);
+    border-radius:6px;
+    padding:9px 10px;
+  }
+  .worked-item-type{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10px;
+    letter-spacing:.03em;
+    color:var(--agentic);
+    margin-bottom:5px;
+  }
+  .worked-item-ask{
+    font-size:11.5px;
+    font-style:italic;
+    color:var(--muted);
+    margin-bottom:5px;
+  }
+  .worked-item-response{
+    font-size:12px;
+    line-height:1.4;
+  }
+
+  .flow-toolbar{
+    flex:none;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px;
+    margin-bottom:6px;
+  }
+  .flow-toolbar-label{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-right:2px;
+  }
+  .flow-btn{
+    font-family:"IBM Plex Sans", sans-serif;
+    font-size:11.5px;
+    padding:4px 11px;
+    border-radius:999px;
+    border:1.3px solid var(--agentic);
+    background:transparent;
+    color:var(--ink);
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .flow-btn:hover{ background:var(--agentic-soft); }
+  .flow-btn.active{ background:var(--agentic); border-color:var(--agentic); color:#fff; }
+  .flow-btn-reset{ border-style:dashed; border-color:var(--muted); color:var(--muted); }
+  .flow-btn-reset:hover{ background:var(--panel); }
+  .flow-caption{
+    flex:none;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11.5px;
+    color:var(--muted);
+    min-height:16px;
+    margin-bottom:6px;
+  }
+  .flow-node rect{ transition:stroke-width .25s ease, filter .25s ease; }
+  .flow-node.flow-active rect{ stroke-width:2.8; filter:drop-shadow(0 0 7px var(--agentic)); }
+  .flow-node.flow-visited rect{ stroke-width:1.8; }
+  .flow-dot{ fill:var(--agentic); filter:drop-shadow(0 0 4px var(--agentic)); }
+
+  @media (prefers-reduced-motion:no-preference){
+    .row{ transition:background .12s ease; }
+  }
+
+  @media (max-width:760px){
+    main{ grid-template-columns:1fr; grid-template-rows:auto 1fr; }
+    .service-list{ flex-direction:row; overflow-x:auto; overflow-y:visible; }
+    .row{ flex:none; min-width:200px; }
+  }
+</style>
+
+<header>
+  <div class="header-top">
+    <div>
+      <span class="eyebrow">WrenchIQ &middot; headless architecture</span>
+      <h1>All the decisions, one WrenchIQ.</h1>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme">
+      <span class="pip"><span class="icon" id="theme-icon">&#9728;&#65039;</span></span>
+      <span id="theme-label">System</span>
+    </button>
+  </div>
+  <p class="subhead">Every screen the advisor or manager sees belongs to the SMS. WrenchIQ's job ends at a JSON payload. Pick a service on the left to see its request, its response, and what actually runs in between.</p>
+  <div class="legend">
+    <span class="legend-item"><span class="swatch sync"></span>Sync — called inline, in front of a customer</span>
+    <span class="legend-item"><span class="swatch async"></span>Async / event — fires on a trigger</span>
+    <span class="legend-item"><span class="swatch agentic"></span>Agentic graph — reasons over the rest as tools</span>
+  </div>
+</header>
+
+<main>
+  <nav class="service-list" id="list" aria-label="WrenchIQ services"></nav>
+
+  <section class="panel" id="panel">
+    <div class="panel-head">
+      <div>
+        <h2 id="panel-title"></h2>
+        <div class="endpoint" id="panel-sub"></div>
+      </div>
+      <span class="pattern-tag" id="panel-tag"></span>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="request">Request</button>
+      <button class="tab" data-tab="response">Response</button>
+      <button class="tab" data-tab="decide">How it decides</button>
+      <button class="tab" data-tab="visual">Visual</button>
+    </div>
+    <div class="tab-body">
+      <div class="tab-panel active" id="tab-request">
+        <div class="endpoint" id="req-endpoint"></div>
+        <pre><code id="req-body"></code></pre>
+      </div>
+      <div class="tab-panel" id="tab-response">
+        <div class="endpoint" id="res-endpoint"></div>
+        <pre><code id="res-body"></code></pre>
+      </div>
+      <div class="tab-panel" id="tab-decide">
+        <p class="decide-note" id="decide-note"></p>
+        <div id="decide-example"></div>
+      </div>
+      <div class="tab-panel" id="tab-visual">
+        <div class="diagram-scroll" id="decide-diagram"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const PATTERN_LABEL = { sync: "SYNC", async: "ASYNC / EVENT", agentic: "AGENTIC GRAPH" };
+
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  function hlJSON(obj){
+    const json = esc(JSON.stringify(obj, null, 2));
+    return json.split("\n").map(line=>{
+      const m = line.match(/^(\s*)"([^"]+?)":\s*(.*)$/);
+      if(!m) return line;
+      const [, indent, key, rest] = m;
+      let restHtml;
+      if(/^"/.test(rest)) restHtml = `<span class="str">${rest}</span>`;
+      else if(/^(true|false|null)/.test(rest)) restHtml = `<span class="bool">${rest}</span>`;
+      else if(/^-?\d/.test(rest)) restHtml = `<span class="num">${rest}</span>`;
+      else restHtml = rest;
+      return `${indent}<span class="key">"${key}"</span>: ${restHtml}`;
+    }).join("\n");
+  }
+
+  function pipelineSVG(steps, colorVar, ariaLabel){
+    const boxW = 172, boxH = 56, gap = 44, marginX = 22, y = 34;
+    const n = steps.length;
+    const totalW = n*boxW + (n-1)*gap + marginX*2;
+    const h = y + boxH + 26;
+    const arrowId = "arr-" + colorVar.replace("--","");
+    let svg = `<svg viewBox="0 0 ${totalW} ${h}" role="img" aria-label="${esc(ariaLabel)}">`;
+    svg += `<defs><marker id="${arrowId}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(${colorVar})"/></marker></defs>`;
+    steps.forEach((lines, i)=>{
+      const x = marginX + i*(boxW+gap);
+      svg += `<rect x="${x}" y="${y}" width="${boxW}" height="${boxH}" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>`;
+      const cx = x + boxW/2;
+      const startY = y + boxH/2 - (lines.length-1)*8 + 4;
+      lines.forEach((line,li)=>{
+        svg += `<text x="${cx}" y="${startY+li*16}" text-anchor="middle" font-size="12" font-family="IBM Plex Sans, sans-serif" fill="currentColor">${esc(line)}</text>`;
+      });
+      if(i < n-1){
+        const ax1 = x+boxW+3, ax2 = x+boxW+gap-7, ay = y+boxH/2;
+        svg += `<line x1="${ax1}" y1="${ay}" x2="${ax2}" y2="${ay}" stroke="var(${colorVar})" stroke-width="1.6" marker-end="url(#${arrowId})"/>`;
+      }
+    });
+    svg += `</svg>`;
+    return svg;
+  }
+
+  const AGENTIC_GRAPH_SVG = `
+  <figure>
+    <svg viewBox="0 0 1170 600" role="img" aria-label="WrenchIQ harness as a hub-and-spoke graph: a central Reason node calls out to five tool nodes — customer_history, shop_intelligence, TSB match, OEM scheduled maintenance, and the Estimation Agent — reads each result back, and loops until confident before handing off to Synthesize, which produces one Total Recommendation.">
+      <defs>
+        <marker id="agentic-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--agentic)"/>
+        </marker>
+      </defs>
+
+      <rect x="60" y="40" width="640" height="530" rx="10" fill="none" stroke="var(--agentic)" stroke-width="1.2" stroke-dasharray="3 4"/>
+      <text x="76" y="62" font-size="12.5" fill="var(--agentic)">WrenchIQ Harness — ReAct loop (reason ↔ act)</text>
+
+      <!-- central reason node -->
+      <rect x="295" y="290" width="170" height="80" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <text x="380" y="325" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">Reason</text>
+      <text x="380" y="343" text-anchor="middle" font-size="11" fill="currentColor">(agent)</text>
+
+      <!-- self-loop: harness keeps calling tools until it has enough -->
+      <path d="M295,308 C255,308 255,352 295,352" fill="none" stroke="var(--agentic)" stroke-width="1.4" marker-end="url(#agentic-arrow)"/>
+      <text x="248" y="321" text-anchor="end" font-size="10.5" fill="var(--muted)">repeats until</text>
+      <text x="248" y="335" text-anchor="end" font-size="10.5" fill="var(--muted)">confident</text>
+
+      <!-- satellite tool nodes, arranged around the hub -->
+      <rect x="300" y="79" width="160" height="62" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="380" y="105" text-anchor="middle" font-size="11.5" fill="currentColor">Act:</text>
+      <text x="380" y="121" text-anchor="middle" font-size="11" fill="currentColor">customer_history</text>
+
+      <rect x="509" y="231" width="160" height="62" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="589" y="257" text-anchor="middle" font-size="11.5" fill="currentColor">Act:</text>
+      <text x="589" y="273" text-anchor="middle" font-size="11" fill="currentColor">shop_intelligence</text>
+
+      <rect x="429" y="477" width="160" height="62" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="509" y="503" text-anchor="middle" font-size="11.5" fill="currentColor">Act:</text>
+      <text x="509" y="519" text-anchor="middle" font-size="11" fill="currentColor">TSB match</text>
+
+      <rect x="171" y="477" width="160" height="62" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="251" y="503" text-anchor="middle" font-size="11.5" fill="currentColor">Act:</text>
+      <text x="251" y="519" text-anchor="middle" font-size="10.5" fill="currentColor">OEM sched. maint.</text>
+
+      <rect x="91" y="231" width="160" height="62" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="171" y="257" text-anchor="middle" font-size="11.5" fill="currentColor">Act:</text>
+      <text x="171" y="273" text-anchor="middle" font-size="10.5" fill="currentColor">Estimation Agent</text>
+
+      <!-- spokes: bidirectional, hub calls out, tool reports back -->
+      <line x1="380" y1="245" x2="380" y2="195" stroke="var(--agentic)" stroke-width="1.5" marker-start="url(#agentic-arrow)" marker-end="url(#agentic-arrow)"/>
+      <line x1="461" y1="304" x2="508" y2="288" stroke="var(--agentic)" stroke-width="1.5" marker-start="url(#agentic-arrow)" marker-end="url(#agentic-arrow)"/>
+      <line x1="430" y1="399" x2="459" y2="439" stroke="var(--agentic)" stroke-width="1.5" marker-start="url(#agentic-arrow)" marker-end="url(#agentic-arrow)"/>
+      <line x1="330" y1="399" x2="301" y2="439" stroke="var(--agentic)" stroke-width="1.5" marker-start="url(#agentic-arrow)" marker-end="url(#agentic-arrow)"/>
+      <line x1="299" y1="304" x2="252" y2="288" stroke="var(--agentic)" stroke-width="1.5" marker-start="url(#agentic-arrow)" marker-end="url(#agentic-arrow)"/>
+
+      <!-- exits the loop once confident -->
+      <line x1="465" y1="330" x2="737" y2="330" stroke="var(--agentic)" stroke-width="1.6" marker-end="url(#agentic-arrow)"/>
+      <text x="601" y="318" text-anchor="middle" font-size="10.5" fill="var(--muted)">confident — exit loop</text>
+
+      <rect x="740" y="295" width="150" height="70" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <text x="815" y="325" text-anchor="middle" font-size="12" fill="currentColor">Synthesize</text>
+      <text x="815" y="342" text-anchor="middle" font-size="11" fill="currentColor">+ estimate</text>
+
+      <line x1="890" y1="330" x2="917" y2="330" stroke="var(--agentic)" stroke-width="1.6" marker-end="url(#agentic-arrow)"/>
+
+      <rect x="920" y="295" width="230" height="70" rx="8" fill="var(--agentic-soft)" stroke="var(--agentic)" stroke-width="1.6"/>
+      <text x="1035" y="325" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Total Recommendation</text>
+      <text x="1035" y="342" text-anchor="middle" font-size="10.5" fill="var(--muted)">recommendations + estimates</text>
+    </svg>
+    <figcaption>Solid border = a reasoning (agent) node; dashed border = a tool-calling (Act) node. Reason sits at the hub and calls out to whichever tool it needs — customer_history, shop_intelligence, TSB match, OEM scheduled maintenance, the Estimation Agent — reading each result back before deciding whether to call another, not marching through them in a fixed order. Once satisfied, it exits to Synthesize, which produces one Total Recommendation.</figcaption>
+  </figure>`;
+
+  const RO_AGENT_SVG = `
+  <figure>
+    <svg viewBox="0 0 1030 320" role="img" aria-label="RO Agent: an RO's complaint, cause, correction, parts and labor lines fan out to three checks in parallel — a cleanse-and-rewrite call to Agentic Runtime (Chat), a parts-vs-labor quantity cross-check, and a labor-guide cross-check for parts implied but missing — then merge into cleansed text plus a list of flagged issues.">
+      <defs>
+        <marker id="ro-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+        </marker>
+      </defs>
+
+      <rect x="16" y="135" width="190" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="111" y="156" text-anchor="middle" font-size="11.5" fill="currentColor">RO: complaint/cause/</text>
+      <text x="111" y="172" text-anchor="middle" font-size="11.5" fill="currentColor">correction, parts, labor</text>
+
+      <rect x="290" y="18" width="250" height="54" rx="8" fill="none" stroke="var(--agentic)" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="415" y="40" text-anchor="middle" font-size="11.5" fill="currentColor">Cleanse + rewrite text</text>
+      <text x="415" y="56" text-anchor="middle" font-size="10.5" fill="var(--muted)">(calls Agentic Runtime (Chat))</text>
+
+      <rect x="290" y="133" width="250" height="54" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="415" y="155" text-anchor="middle" font-size="11.5" fill="currentColor">Qty cross-check:</text>
+      <text x="415" y="171" text-anchor="middle" font-size="11.5" fill="currentColor">parts vs. labor line</text>
+
+      <rect x="290" y="248" width="250" height="54" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="415" y="270" text-anchor="middle" font-size="11.5" fill="currentColor">Labor guide cross-check:</text>
+      <text x="415" y="286" text-anchor="middle" font-size="10.5" fill="currentColor">parts the labor line implies but RO lacks</text>
+
+      <rect x="790" y="133" width="224" height="56" rx="8" fill="var(--agentic-soft)" stroke="var(--agentic)" stroke-width="1.6"/>
+      <text x="902" y="155" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Cleansed text +</text>
+      <text x="902" y="172" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">flagged issues</text>
+
+      <line x1="208" y1="150" x2="286" y2="55" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#ro-arrow)"/>
+      <line x1="208" y1="160" x2="286" y2="160" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#ro-arrow)"/>
+      <line x1="208" y1="170" x2="286" y2="270" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#ro-arrow)"/>
+      <text x="222" y="112" font-size="11" fill="var(--muted)">checked in parallel</text>
+
+      <line x1="542" y1="55" x2="787" y2="145" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#ro-arrow)"/>
+      <line x1="542" y1="160" x2="787" y2="160" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#ro-arrow)"/>
+      <line x1="542" y1="270" x2="787" y2="178" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#ro-arrow)"/>
+    </svg>
+    <figcaption>RO Agent: the same RO fans out to a rewrite call (Agentic Runtime (Chat) cleans up the free text) and two rule-based cross-checks against the labor guide — quantity consistency and implied-but-missing parts — before merging into one review the advisor sees prior to close.</figcaption>
+  </figure>`;
+
+  const HISTORY_PREMIUM_SVG = `
+  <figure>
+    <svg viewBox="0 0 1030 250" role="img" aria-label="Repair History Intelligence Premium: vehicle and complaint fan out to two lookups in parallel — this shop's own history index and Predii's cross-shop Market RO Intelligence — then blend into one ranked diagnosis.">
+      <defs>
+        <marker id="premium-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+        </marker>
+      </defs>
+
+      <rect x="20" y="95" width="170" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="105" y="124" text-anchor="middle" font-size="12" fill="currentColor">Vehicle + complaint</text>
+
+      <rect x="270" y="24" width="220" height="48" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="380" y="44" text-anchor="middle" font-size="11.5" fill="currentColor">This shop's own</text>
+      <text x="380" y="60" text-anchor="middle" font-size="11.5" fill="currentColor">history index</text>
+
+      <rect x="270" y="168" width="240" height="48" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="390" y="188" text-anchor="middle" font-size="11.5" fill="currentColor">Predii Market RO Intelligence</text>
+      <text x="390" y="204" text-anchor="middle" font-size="11.5" fill="currentColor">(cross-shop, processed by Predii)</text>
+
+      <rect x="560" y="95" width="160" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="640" y="118" text-anchor="middle" font-size="12" fill="currentColor">Weighted</text>
+      <text x="640" y="134" text-anchor="middle" font-size="12" fill="currentColor">blend + rank</text>
+
+      <rect x="770" y="95" width="240" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="890" y="118" text-anchor="middle" font-size="12" fill="currentColor">Diagnosis + confidence</text>
+      <text x="890" y="134" text-anchor="middle" font-size="12" fill="currentColor">+ dual citations</text>
+
+      <line x1="192" y1="112" x2="266" y2="55" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#premium-arrow)"/>
+      <line x1="192" y1="128" x2="266" y2="188" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#premium-arrow)"/>
+      <text x="205" y="86" font-size="11" fill="var(--muted)">queried in parallel</text>
+
+      <line x1="492" y1="60" x2="557" y2="110" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#premium-arrow)"/>
+      <line x1="512" y1="188" x2="557" y2="132" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#premium-arrow)"/>
+
+      <line x1="723" y1="120" x2="767" y2="120" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#premium-arrow)"/>
+    </svg>
+    <figcaption>Repair History Intelligence (Premium): the same shop-specific match as the standard service, blended with Predii's cross-shop Market RO Intelligence before ranking.</figcaption>
+  </figure>`;
+
+  const ESTIMATION_AGENT_SVG = `
+  <figure>
+    <svg viewBox="0 0 1100 290" role="img" aria-label="Estimation Agent: a VIN or YMME plus component query fans out to four sources in parallel — labor guide notes, shop-specific part pricing, the canned job catalog, and historical estimates for this YMME — which reasoning merges into the full matched job.">
+      <defs>
+        <marker id="estimate-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+        </marker>
+      </defs>
+
+      <rect x="20" y="120" width="170" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="105" y="142" text-anchor="middle" font-size="11.5" fill="currentColor">VIN or YMME +</text>
+      <text x="105" y="158" text-anchor="middle" font-size="11.5" fill="currentColor">component</text>
+
+      <rect x="260" y="40" width="270" height="42" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="395" y="66" text-anchor="middle" font-size="11.5" fill="currentColor">Labor guide notes</text>
+
+      <rect x="260" y="96" width="290" height="42" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="405" y="122" text-anchor="middle" font-size="11.5" fill="currentColor">Shop-specific part pricing</text>
+
+      <rect x="260" y="152" width="260" height="42" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="390" y="178" text-anchor="middle" font-size="11.5" fill="currentColor">Canned job catalog</text>
+
+      <rect x="260" y="208" width="320" height="42" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="420" y="230" text-anchor="middle" font-size="11" fill="currentColor">Historical estimates / ROs</text>
+      <text x="420" y="243" text-anchor="middle" font-size="10" fill="currentColor">(this YMME)</text>
+
+      <rect x="600" y="120" width="220" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="710" y="140" text-anchor="middle" font-size="11.5" fill="currentColor">Estimation reasoning</text>
+      <text x="710" y="156" text-anchor="middle" font-size="11.5" fill="currentColor">combination ops + quantities</text>
+
+      <rect x="860" y="120" width="220" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="970" y="140" text-anchor="middle" font-size="11.5" fill="currentColor">Matched labor ops</text>
+      <text x="970" y="156" text-anchor="middle" font-size="11.5" fill="currentColor">+ parts + estimate</text>
+
+      <line x1="192" y1="135" x2="257" y2="61" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#estimate-arrow)"/>
+      <line x1="192" y1="140" x2="257" y2="117" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#estimate-arrow)"/>
+      <line x1="192" y1="150" x2="257" y2="173" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#estimate-arrow)"/>
+      <line x1="192" y1="158" x2="257" y2="229" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#estimate-arrow)"/>
+      <text x="205" y="100" font-size="10.5" fill="var(--muted)">queried in parallel</text>
+
+      <line x1="533" y1="61" x2="597" y2="132" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#estimate-arrow)"/>
+      <line x1="553" y1="117" x2="597" y2="140" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#estimate-arrow)"/>
+      <line x1="523" y1="173" x2="597" y2="150" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#estimate-arrow)"/>
+      <line x1="583" y1="229" x2="597" y2="158" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#estimate-arrow)"/>
+
+      <line x1="823" y1="145" x2="857" y2="145" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#estimate-arrow)"/>
+    </svg>
+    <figcaption>Estimation Agent: one component request fans out to four sources, then reasoning merges them into the full job — the related operations, and their correct quantities, not just the one line asked for.</figcaption>
+  </figure>`;
+
+  const DIAGNOSIS_AGENT_SVG = `
+  <figure>
+    <svg viewBox="0 0 1430 340" role="img" aria-label="Diagnosis Agent: raw symptom text and optional DTC codes are normalized by NER_service, then an agent decides whether it has enough confidence to proceed. Low confidence loops back with a follow-up question for the customer. Confident cases fan out to two cluster lookups in parallel — symptom-to-repairs and DTC-to-repairs — which merge into one ranked, sourced list of the top candidate component repairs.">
+      <defs>
+        <marker id="diag-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+        </marker>
+        <marker id="diag-arrow-muted" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+        </marker>
+      </defs>
+
+      <rect x="20" y="150" width="190" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="115" y="176" text-anchor="middle" font-size="11.5" fill="currentColor">Raw symptom text</text>
+      <text x="115" y="192" text-anchor="middle" font-size="10.5" fill="currentColor">(+ optional DTC codes)</text>
+
+      <rect x="250" y="150" width="190" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="345" y="176" text-anchor="middle" font-size="11.5" fill="currentColor">NER_service: extract</text>
+      <text x="345" y="192" text-anchor="middle" font-size="11.5" fill="currentColor">normalized symptom entity</text>
+
+      <rect x="480" y="150" width="160" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <text x="560" y="176" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Reason</text>
+      <text x="560" y="192" text-anchor="middle" font-size="10.5" fill="currentColor">(confident enough?)</text>
+
+      <rect x="480" y="252" width="160" height="52" rx="8" fill="none" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="560" y="273" text-anchor="middle" font-size="11" fill="currentColor">Ask a follow-up</text>
+      <text x="560" y="288" text-anchor="middle" font-size="11" fill="currentColor">question</text>
+
+      <rect x="700" y="76" width="220" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="810" y="98" text-anchor="middle" font-size="11.5" fill="currentColor">Act:</text>
+      <text x="810" y="114" text-anchor="middle" font-size="11" fill="currentColor">symptom_to_repairs cluster</text>
+
+      <rect x="700" y="208" width="220" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="810" y="230" text-anchor="middle" font-size="11.5" fill="currentColor">Act:</text>
+      <text x="810" y="246" text-anchor="middle" font-size="11" fill="currentColor">dtc_to_repairs cluster</text>
+
+      <rect x="970" y="150" width="180" height="60" rx="8" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <text x="1060" y="176" text-anchor="middle" font-size="11.5" fill="currentColor">Rank + merge</text>
+      <text x="1060" y="192" text-anchor="middle" font-size="11.5" fill="currentColor">candidates</text>
+
+      <rect x="1200" y="140" width="210" height="80" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+      <text x="1305" y="170" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Top 5 component</text>
+      <text x="1305" y="187" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">repairs, sourced</text>
+      <text x="1305" y="204" text-anchor="middle" font-size="10" fill="var(--muted)">→ forwarded to Estimation Agent</text>
+
+      <line x1="210" y1="180" x2="248" y2="180" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#diag-arrow)"/>
+      <line x1="440" y1="180" x2="478" y2="180" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#diag-arrow)"/>
+
+      <line x1="640" y1="164" x2="698" y2="112" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#diag-arrow)"/>
+      <line x1="640" y1="196" x2="698" y2="244" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#diag-arrow)"/>
+      <text x="655" y="150" font-size="10" fill="var(--muted)">confident</text>
+
+      <line x1="565" y1="210" x2="565" y2="250" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#diag-arrow-muted)"/>
+      <text x="663" y="235" text-anchor="middle" font-size="10" fill="var(--muted)">low confidence</text>
+
+      <path d="M 480,278 C 300,320 150,290 115,212" fill="none" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="2 4" marker-end="url(#diag-arrow-muted)"/>
+      <text x="300" y="318" text-anchor="middle" font-size="10" fill="var(--muted)">customer answers — re-query</text>
+
+      <line x1="920" y1="112" x2="967" y2="164" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#diag-arrow)"/>
+      <line x1="920" y1="244" x2="967" y2="196" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#diag-arrow)"/>
+
+      <line x1="1150" y1="180" x2="1197" y2="180" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#diag-arrow)"/>
+    </svg>
+    <figcaption>Diagnosis Agent: a raw symptom (plus any DTC codes already on hand) is normalized by NER_service, then reasoned over. Low confidence loops back with a follow-up question instead of guessing; once confident, it calls the symptom-to-repairs and DTC-to-repairs cluster lookups in parallel and merges them into one ranked, sourced top-5 — the same repair_job shape TSB Matching produces, ready for the Estimation Agent.</figcaption>
+  </figure>`;
+
+  function buildFullFlowSVG(){
+    const W = 1220, H = 575;
+    const arrow = (id,color)=> `<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${color}"/></marker>`;
+
+    function box(id,x,y,w,h,lines,opts={}){
+      const stroke = opts.stroke || "currentColor";
+      const dash = opts.dash ? ` stroke-dasharray="${opts.dash}"` : "";
+      const fill = opts.fill || "none";
+      const fs = opts.fs || 11.5;
+      const cx = x + w/2;
+      const startY = y + h/2 - (lines.length-1)*7.5 + 4;
+      let s = `<g id="fg-${id}" class="flow-node"><rect id="fn-${id}" x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fill}" stroke="${stroke}" stroke-width="1.3"${dash}/>`;
+      lines.forEach((line,li)=>{
+        const weight = opts.bold && li===0 ? ` font-weight="600"` : "";
+        s += `<text x="${cx}" y="${startY+li*15}" text-anchor="middle" font-size="${fs}" fill="currentColor"${weight}>${line}</text>`;
+      });
+      s += `</g>`;
+      return { svg: s, cx, top: y, bottom: y+h, left: x, right: x+w, midY: y+h/2, id };
+    }
+
+    function edge(id,x1,y1,x2,y2,color,markerId,opts={}){
+      const dash = opts.dash ? ` stroke-dasharray="${opts.dash}"` : "";
+      const w = opts.w || 1.5;
+      return `<path id="fe-${id}" d="M ${x1},${y1} L ${x2},${y2}" fill="none" stroke="${color}" stroke-width="${w}"${dash} marker-end="url(#${markerId})"/>`;
+    }
+
+    let defs = arrow("flow-a","var(--accent)") + arrow("flow-b","var(--agentic)");
+    let body = "";
+
+    // Band 1: intake
+    const b1a = box("ro-created",30,20,210,64, ["RO created","(raw complaint / cause /","correction, parts, labor)"], {fs:10.5});
+    const b1b = box("ingestion",300,20,240,64, ["RO Ingestion","(Predii LLM Pipeline —","Olympus)"], {stroke:"var(--accent-2)", fs:10.5});
+    const b1c = box("ro-agent",600,20,230,64, ["RO Agent","(cleanse text +","flag mismatches)"], {bold:true, fs:10.5});
+    body += b1a.svg + b1b.svg + b1c.svg;
+    body += edge("ro-ingestion",b1a.right,b1a.midY,b1b.left,b1b.midY,"var(--accent)","flow-a");
+    body += edge("ingestion-agent",b1b.right,b1b.midY,b1c.left,b1c.midY,"var(--accent)","flow-a");
+
+    // Band 2: structured tool services, evenly spaced
+    const band2defs = [
+      ["history", ["Repair History","Intelligence (+Premium)"]],
+      ["tsb", ["TSB Matching"]],
+      ["shopintel", ["Shop Intelligence"]],
+      ["estimation", ["Estimation Agent"]],
+      ["oemrecs", ["Proactive Recs Engine","(OEM sched. maint.)"]]
+    ];
+    const n2 = band2defs.length, marginX2 = 30, gap2 = 20;
+    const w2 = (W - marginX2*2 - gap2*(n2-1)) / n2;
+    const y2 = 170, h2 = 64;
+    const band2 = band2defs.map(([key,lines],i)=> box(key, marginX2 + i*(w2+gap2), y2, w2, h2, lines, {stroke:"var(--accent)", fs:10.5}));
+    band2.forEach(b=> body += b.svg);
+
+    // RO Agent fans out into every structured tool (they read the cleansed, flagged RO)
+    band2.forEach(b=> body += edge(`agent-${b.id}`, b1c.cx, b1c.bottom, b.cx, b.top, "var(--accent)", "flow-a", {w:1.2}));
+    body += `<text x="${b1c.cx}" y="${(b1c.bottom+y2)/2 - 2}" text-anchor="middle" font-size="9.5" fill="var(--muted)">cleansed RO feeds every structured lookup</text>`;
+
+    // Band 3: two agentic hubs
+    const hubY = 290, hubH = 78;
+    const hubRec = box("hub-rec",140,hubY,340,hubH, ["Agentic Runtime","(Recommendations)","ReAct — full sweep, all 5 tools"], {stroke:"var(--agentic)", bold:true, fs:10.5});
+    const hubChat = box("hub-chat",740,hubY,340,hubH, ["Agentic Runtime (Chat)","ReAct — scoped, 1–2 tools,","on demand, any time"], {stroke:"var(--agentic)", dash:"4 3", bold:true, fs:10.5});
+    body += hubRec.svg + hubChat.svg;
+
+    band2.forEach(b=>{
+      body += edge(`${b.id}-hubrec`, b.cx, b.bottom, hubRec.cx + (b.cx - hubRec.cx)*0.15, hubRec.top, "var(--agentic)", "flow-b", {w:1.3});
+    });
+    body += `<text x="${hubRec.cx}" y="${hubY-6}" text-anchor="middle" font-size="9.5" fill="var(--muted)">calls all five, cycling reason ↔ act until confident</text>`;
+
+    band2.forEach(b=>{
+      body += edge(`${b.id}-hubchat`, b.cx, b.bottom, hubChat.cx + (b.cx - hubChat.cx)*0.15, hubChat.top, "var(--agentic)", "flow-b", {w:1, dash:"3 3"});
+    });
+    body += `<text x="${hubChat.cx}" y="${hubY-6}" text-anchor="middle" font-size="9.5" fill="var(--muted)">calls only what that request_type needs</text>`;
+
+    // Chat also serves RO Agent's cleanse/rewrite step directly
+    body += `<path id="fe-chat-to-agent" d="M ${hubChat.left+40},${hubChat.top} C ${hubChat.left-140},${hubY-110} ${b1c.right+40},${b1c.bottom+110} ${b1c.cx+20},${b1c.bottom}" fill="none" stroke="var(--agentic)" stroke-width="1.3" stroke-dasharray="2 4" marker-end="url(#flow-b)"/>`;
+    body += `<text x="${(hubChat.left+b1c.right)/2 - 20}" y="${hubY-170}" text-anchor="middle" font-size="9.5" fill="var(--muted)">also answers RO Agent's rewrite/cleanse call</text>`;
+
+    // Band 4: outputs
+    const outY = 410, outH = 62;
+    const outRec = box("out-rec",220,outY,220,outH, ["Total Recommendation","talk_track + priced,","sourced recommendations"], {stroke:"var(--agentic)", fill:"var(--agentic-soft)", bold:true, fs:10.5});
+    const outChat = box("out-chat",780,outY,220,outH, ["Chat response","summary / talk track /","translation / rewrite / Q&A"], {stroke:"var(--agentic)", fill:"var(--agentic-soft)", bold:true, fs:10.5});
+    body += outRec.svg + outChat.svg;
+    body += edge("hubrec-outrec", hubRec.cx, hubRec.bottom, outRec.cx, outRec.top, "var(--agentic)", "flow-b");
+    body += edge("hubchat-outchat", hubChat.cx, hubChat.bottom, outChat.cx, outChat.top, "var(--agentic)", "flow-b");
+
+    // Final unification
+    const finalY = 495, finalH = 58;
+    const final = box("final",430,finalY,360,finalH, ["Advisor / shop-owner screen","one RO, one thread — recommendations,","estimate, and Q&A all in the same place"], {stroke:"currentColor", bold:true, fs:10.5});
+    body += final.svg;
+    body += edge("outrec-final", outRec.cx, outRec.bottom, final.cx-60, final.top, "var(--agentic)", "flow-b");
+    body += edge("outchat-final", outChat.cx, outChat.bottom, final.cx+60, final.top, "var(--agentic)", "flow-b");
+
+    return `<svg class="full-flow-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Full WrenchIQ flow end to end: an RO is ingested by Predii's LLM pipeline (Olympus), cleansed and checked for mistakes by RO Agent, then read by five structured tool services — Repair History Intelligence, TSB Matching, Shop Intelligence, Estimation Agent, and the Proactive Recommendations Engine. Agentic Runtime (Recommendations) sweeps all five to produce one Total Recommendation; Agentic Runtime (Chat) calls a scoped subset of the same tools on demand — including serving RO Agent's own rewrite step — to answer summaries, talk tracks, translations, and questions at any point. Both land on the same advisor screen.">
+      <defs>${defs}</defs>
+      ${body}
+    </svg>`;
+  }
+
+  // Named entry points into the animated full-flow diagram. Each step optionally travels a
+  // set of edges (a moving dot per edge id, in parallel) and then marks a set of nodes "active".
+  const FLOW_STEPS = {
+    newro: [
+      { activate: ["ro-created"], label: "1/7 — RO created: raw complaint, cause, correction, parts, labor." },
+      { edges: ["ro-ingestion"], activate: ["ingestion"], label: "2/7 — Olympus (RO Ingestion) structures the free text into typed entities." },
+      { edges: ["ingestion-agent"], activate: ["ro-agent"], label: "3/7 — RO Agent cleanses the text and cross-checks parts vs. labor." },
+      { edges: ["agent-history","agent-tsb","agent-shopintel","agent-estimation","agent-oemrecs"], activate: ["history","tsb","shopintel","estimation","oemrecs"], label: "4/7 — The cleansed RO feeds all five structured tools." },
+      { edges: ["history-hubrec","tsb-hubrec","shopintel-hubrec","estimation-hubrec","oemrecs-hubrec"], activate: ["hub-rec"], label: "5/7 — Agentic Runtime (Recommendations) sweeps all five, reasoning until confident." },
+      { edges: ["hubrec-outrec"], activate: ["out-rec"], label: "6/7 — Synthesis produces one Total Recommendation." },
+      { edges: ["outrec-final"], activate: ["final"], label: "7/7 — The advisor sees it on one screen." }
+    ],
+    roagent: [
+      { activate: ["ro-agent"], label: "1/7 — RO Agent spots a quantity mismatch mid-review." },
+      { edges: ["chat-to-agent"], reverse: true, activate: ["hub-chat"], label: "2/7 — It calls Agentic Runtime (Chat) to rewrite the flagged text." },
+      { edges: ["chat-to-agent"], activate: ["ro-agent"], label: "3/7 — Chat hands back a plain-language rewrite; RO Agent attaches the flag." },
+      { edges: ["agent-history","agent-tsb","agent-shopintel","agent-estimation","agent-oemrecs"], activate: ["history","tsb","shopintel","estimation","oemrecs"], label: "4/7 — The cleansed, flagged RO still feeds all five structured tools." },
+      { edges: ["history-hubrec","tsb-hubrec","shopintel-hubrec","estimation-hubrec","oemrecs-hubrec"], activate: ["hub-rec"], label: "5/7 — Agentic Runtime (Recommendations) sweeps them as usual." },
+      { edges: ["hubrec-outrec"], activate: ["out-rec"], label: "6/7 — Synthesis produces the Total Recommendation." },
+      { edges: ["outrec-final"], activate: ["final"], label: "7/7 — Advisor sees the flag alongside the recommendation, before the RO closes." }
+    ],
+    estimation: [
+      { activate: ["ro-agent"], label: "1/5 — Starting from a cleansed RO already in flight." },
+      { edges: ["agent-estimation"], activate: ["estimation"], label: "2/5 — Estimation Agent reasons over labor guide notes for this VIN/component." },
+      { edges: ["estimation-hubrec"], activate: ["hub-rec"], label: "3/5 — Agentic Runtime (Recommendations) calls it as one of five tools." },
+      { edges: ["hubrec-outrec"], activate: ["out-rec"], label: "4/5 — Synthesis prices the matched job into the Total Recommendation." },
+      { edges: ["outrec-final"], activate: ["final"], label: "5/5 — Advisor sees the priced recommendation." }
+    ],
+    chat: [
+      { activate: ["hub-chat"], label: "1/5 — Advisor asks Agentic Runtime (Chat) a question, any time." },
+      { edges: ["history-hubchat","shopintel-hubchat"], reverse: true, activate: ["history","shopintel"], label: "2/5 — Chat calls just the one or two tools this question needs." },
+      { edges: ["history-hubchat","shopintel-hubchat"], activate: ["hub-chat"], label: "3/5 — Results come back; Chat reasons over just what it asked for." },
+      { edges: ["hubchat-outchat"], activate: ["out-chat"], label: "4/5 — One scoped answer — no full sweep." },
+      { edges: ["outchat-final"], activate: ["final"], label: "5/5 — Advisor sees it in the same thread." }
+    ]
+  };
+
+  const FULL_FLOW_SVG = `
+    <div class="flow-toolbar" role="group" aria-label="Start the flow animation at a key entry point">
+      <span class="flow-toolbar-label">Start at:</span>
+      <button type="button" class="flow-btn" data-flow="newro">New RO (full pipeline)</button>
+      <button type="button" class="flow-btn" data-flow="roagent">RO Agent flags a mistake</button>
+      <button type="button" class="flow-btn" data-flow="estimation">Estimation Agent</button>
+      <button type="button" class="flow-btn" data-flow="chat">Agentic Chat Q&amp;A</button>
+      <button type="button" class="flow-btn flow-btn-reset" data-flow="reset">Reset</button>
+    </div>
+    <div class="flow-caption" id="flow-caption">Pick a starting point above to animate the flow.</div>
+    <figure>${buildFullFlowSVG()}<figcaption>One RO's full lifecycle, every service on this map in one picture: Olympus structures the raw text, RO Agent cleanses it and flags mistakes, five structured services reason over it as tools, Agentic Runtime (Recommendations) sweeps all five into one Total Recommendation, and Agentic Runtime (Chat) — reusing the same tools, scoped down — answers on-demand questions and even handles RO Agent's own rewrite step. Solid purple = the full-sweep graph; dashed purple = the scoped chat graph.</figcaption></figure>`;
+
+  let flowRunToken = 0;
+
+  function animateFlowDot(svgEl, pathEl, duration, reverse){
+    return new Promise(resolve=>{
+      const ns = "http://www.w3.org/2000/svg";
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("r", "5.5");
+      dot.setAttribute("class", "flow-dot");
+      svgEl.appendChild(dot);
+      const len = pathEl.getTotalLength();
+      const start = performance.now();
+      function frame(now){
+        const t = Math.min(1, (now - start) / duration);
+        const tt = reverse ? 1 - t : t;
+        const pt = pathEl.getPointAtLength(len * tt);
+        dot.setAttribute("cx", pt.x);
+        dot.setAttribute("cy", pt.y);
+        if(t < 1){ requestAnimationFrame(frame); }
+        else { dot.remove(); resolve(); }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  async function runFlowStep(svgEl, step, token){
+    const captionEl = document.getElementById("flow-caption");
+    if(captionEl) captionEl.textContent = step.label;
+    if(step.edges && step.edges.length){
+      await Promise.all(step.edges.map(eid=>{
+        const p = svgEl.querySelector("#fe-" + eid);
+        if(!p || token !== flowRunToken) return Promise.resolve();
+        return animateFlowDot(svgEl, p, step.duration || 700, !!step.reverse);
+      }));
+    }
+    if(token !== flowRunToken) return;
+    (step.activate || []).forEach(nid=>{
+      const g = svgEl.querySelector("#fg-" + nid);
+      if(g) g.classList.add("flow-active");
+    });
+    await new Promise(r=> setTimeout(r, step.hold || 450));
+    if(token !== flowRunToken) return;
+    (step.activate || []).forEach(nid=>{
+      const g = svgEl.querySelector("#fg-" + nid);
+      if(g){ g.classList.remove("flow-active"); g.classList.add("flow-visited"); }
+    });
+  }
+
+  function resetFlowVisual(diagramEl){
+    const svgEl = diagramEl.querySelector("svg.full-flow-svg");
+    if(svgEl){
+      svgEl.querySelectorAll(".flow-node").forEach(g=> g.classList.remove("flow-active","flow-visited"));
+      svgEl.querySelectorAll(".flow-dot").forEach(d=> d.remove());
+    }
+    diagramEl.querySelectorAll(".flow-btn").forEach(b=> b.classList.remove("active"));
+    const captionEl = diagramEl.querySelector("#flow-caption");
+    if(captionEl) captionEl.textContent = "Pick a starting point above to animate the flow.";
+  }
+
+  async function runFullFlow(diagramEl, entry){
+    const myToken = ++flowRunToken;
+    resetFlowVisual(diagramEl);
+    diagramEl.querySelectorAll(".flow-btn").forEach(b=> b.classList.toggle("active", b.dataset.flow === entry));
+    const svgEl = diagramEl.querySelector("svg.full-flow-svg");
+    const steps = FLOW_STEPS[entry];
+    if(!svgEl || !steps) return;
+    for(const step of steps){
+      if(myToken !== flowRunToken) return;
+      await runFlowStep(svgEl, step, myToken);
+    }
+    if(myToken === flowRunToken){
+      const captionEl = diagramEl.querySelector("#flow-caption");
+      if(captionEl) captionEl.textContent += "  (done — pick another entry point, or Reset)";
+    }
+  }
+
+  function initFullFlowAnimation(){
+    const diagramEl = document.getElementById("decide-diagram");
+    diagramEl.querySelectorAll(".flow-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const entry = btn.dataset.flow;
+        flowRunToken++;
+        if(entry === "reset"){ resetFlowVisual(diagramEl); return; }
+        runFullFlow(diagramEl, entry);
+      });
+    });
+  }
+
+  const SERVICES = [
+    {
+      id: "full-flow", pattern: "agentic",
+      name: "Full WrenchIQ Flow (End-to-End)",
+      blurb: "One RO, start to finish — RO Agent, Estimation Agent, and both Agentic Runtimes stitched together with everything else on this map",
+      latency: "spans the RO's lifecycle: ingestion (event) → RO Agent (sync) → structured tools (sync) → Recommendations (autonomous) → Chat (on demand, anytime)",
+      req: { endpoint: "conceptual — no single call", body: {
+        trigger: "RO created in the SMS",
+        ro_id: "ro_88213",
+        note: "not one API call — this is every service on this map acting on the same RO, start to finish"
+      }},
+      res: { endpoint: "outcome — one advisor screen", body: {
+        ro_id: "ro_88213",
+        ro_agent: { cleansed: true, flags: 2 },
+        total_recommendation: "talk_track + priced, sourced recommendations",
+        chat: "available on demand — summaries, talk tracks, translation, CCC rewrites, Q&A",
+        trace_id: "trace_flow_88213"
+      }},
+      decideNote: "Read left to right, top to bottom: an RO lands and Olympus (RO Ingestion) structures the free text into typed entities. RO Agent then cleanses that text and cross-checks it against the labor guide in parallel — quantity mismatches, parts a labor line implies but the RO never listed — calling out to Agentic Runtime (Chat) for the rewrite itself, one of the six predefined request_types Chat handles. The cleansed, flagged RO is now legible to every structured tool: Repair History Intelligence (+Premium), TSB Matching, Shop Intelligence, the Estimation Agent, and the Proactive Recommendations Engine (the mileage/interval/prior-decline source shown elsewhere as 'OEM sched. maint.'). Agentic Runtime (Recommendations) is the one service that owns orchestration across all five — a ReAct loop that keeps cycling reason↔act until it's confident, then synthesizes one Total Recommendation. Agentic Runtime (Chat) runs the identical graph beside it, but enters scoped to a single question and exits after calling just the one or two tools it needs — available to the advisor or shop owner at any point in this flow, not only at the end. Both runtimes land on the same screen: the advisor never sees eight separate services, just one recommendation and one place to ask questions.",
+      customDiagram: "fullFlow",
+      worked: "A customer calls in about a squeaking noise. Olympus structures the intake; RO Agent cleans up the shorthand complaint and — cross-checking the labor guide — flags that the parts list is short one wear sensor for the rear-brake job already on the RO, catching it before the estimate is quoted. Repair History, TSB Matching, Shop Intelligence, the Estimation Agent, and the Proactive Recommendations Engine all reason over the now-clean RO. Agentic Runtime (Recommendations) sweeps all five and hands the advisor one Total Recommendation: a talk_track, a categorized and priced list, sourced back to whichever tool produced each item. Midway through the conversation the advisor asks Agentic Runtime (Chat) for this customer's history — one scoped call, an instant summary — and later asks for a Spanish translation of the final recommendation for the customer-facing screen. One RO, one thread, every service on this map doing exactly its part."
+    },
+    {
+      id: "ingestion", pattern: "async",
+      name: "RO Ingestion with Predii LLM RO pipeline (Olympus)",
+      blurb: "Structures raw RO/inbox text into typed entities",
+      latency: "fires on RO create/update",
+      req: { endpoint: "event: ro.created", body: {
+        event: "ro.created",
+        tenant_id: "sms_op_12/shop_9142",
+        ro_id: "ro_88213",
+        raw_text: { complaint: "customer states squeaking noise, front end" }
+      }},
+      res: { endpoint: "emits: ro.entities_extracted", body: {
+        event: "ro.entities_extracted",
+        ro_id: "ro_88213",
+        entities: { complaint: "squeaking noise, front end", cause: "pad_wear", correction: "brake_pad_replacement", parts: ["FBP-2201"] }
+      }},
+      decideNote: "No decision, no confidence score — this service structures text so the other five have something typed to reason over.",
+      steps: [ ["Raw RO / inbox / SMS", "text"], ["Predii LLM RO Pipeline", "(Olympus)"], ["Typed entities:", "complaint / cause /", "correction / parts"], ["Written to", "tenant-scoped store"] ]
+    },
+    {
+      id: "ro-agent", pattern: "sync",
+      name: "RO Agent",
+      blurb: "Cleans up complaint/cause/correction text and flags RO-level mistakes before the RO closes",
+      latency: "sync: on RO save/close, target <2s",
+      req: { endpoint: "POST /v1/ro-agent/review", body: {
+        tenant_id: "sms_op_12", shop_id: "shop_9142", ro_id: "ro_88213",
+        complaint: "customer said breaks are squeeky in the back",
+        cause: "worn pads", correction: "replaced pads",
+        parts: [ { part_number: "BP-4421", description: "Rear brake pad set", qty: 1 } ],
+        labor_lines: [ { labor_code: "BRK-RR-PAD-ROTOR", description: "R&R rear brake pads and rotors", qty: 1 } ]
+      }},
+      res: { endpoint: "200 OK", body: {
+        run_id: "run_5162", status: "completed",
+        cleansed: {
+          complaint: "Customer reports squeaking noise from the rear brakes.",
+          cause: "Worn rear brake pads.",
+          correction: "Replaced rear brake pads."
+        },
+        flags: [
+          { type: "qty_mismatch", detail: "Labor line covers both rear brakes (R&R pads and rotors, qty 2) but only 1 pad set is on the parts list.", severity: "high" },
+          { type: "missing_part", detail: "Labor guide note for BRK-RR-PAD-ROTOR lists 2 wear sensors as included; none are on the parts list.", severity: "medium" }
+        ],
+        trace_id: "trace_5f10"
+      }},
+      decideNote: "Runs three checks on the same RO in parallel, not in sequence: a rewrite call to Agentic Runtime (Chat) cleans up the free-text complaint/cause/correction (typos, shorthand, run-ons) into something a customer-facing screen or CCC line item can use as-is; a quantity cross-check compares the parts list against what the labor line actually covers (one pad set listed, but the labor line is for both rear brakes); and a labor-guide cross-check reads the same labor-guide notes the Estimation Agent reasons over, this time to catch parts the note implies but the RO never listed (wear sensors bundled with a pad job). All three merge into one review — cleansed text plus a severity-tagged list of flags — that the advisor sees and can act on before the RO closes, rather than a rewrite that quietly hides the mismatches underneath it.",
+      customDiagram: "roAgent",
+      worked: "Advisor writes the RO by hand: “customer said breaks are squeeky in the back,” one rear brake pad set on parts, one R&R rear brake pads and rotors labor line. RO Agent returns the cleaned-up sentence for the customer screen, plus two flags: the labor line is for both rear brakes but only one pad set was ordered, and the labor guide's own note for that labor code calls for two wear sensors that never made it onto the parts list — both catchable before the RO closes, not after the comeback."
+    },
+    {
+      id: "diagnosis-agent", pattern: "sync",
+      name: "Diagnosis Agent",
+      blurb: "Turns a raw symptom (plus any DTC codes) into a ranked, sourced list of candidate component repairs",
+      latency: "sync: on-demand from advisor screen or chat handoff, target <2s (excludes any follow-up round-trip)",
+      req: { endpoint: "POST /v1/diagnosis-agent/query", body: {
+        tenant_id: "sms_op_12", shop_id: "shop_9142", vin: "1FTFW1E5XNFA12345",
+        query: "customer says the car makes a rattling noise on cold start, goes away after a few minutes",
+        dtc_codes: []
+      }},
+      res: { endpoint: "200 OK", body: {
+        run_id: "run_7734", status: "completed", confidence: "high",
+        normalized_entity: { symptom: "cold_start_rattle", location: "engine_bay", condition: "transient_resolves_when_warm" },
+        candidate_repairs: [
+          { repair_job: "timing_chain_tensioner_replacement", score: 0.81, sources: ["symptom_to_repairs"] },
+          { repair_job: "serpentine_belt_tensioner_replacement", score: 0.64, sources: ["symptom_to_repairs"] },
+          { repair_job: "heat_shield_fastener_repair", score: 0.58, sources: ["symptom_to_repairs", "dtc_to_repairs"] },
+          { repair_job: "vvt_solenoid_replacement", score: 0.51, sources: ["dtc_to_repairs"] },
+          { repair_job: "engine_mount_replacement", score: 0.39, sources: ["symptom_to_repairs"] }
+        ],
+        trace_id: "trace_77a2"
+      }},
+      decideNote: "NER_service first turns the raw symptom text (and any DTC codes already on hand) into a normalized entity — symptom, location, condition — the same way the RO pipeline normalizes complaint text, just applied before an RO exists. The agent then reasons over that entity's confidence: too vague or ambiguous, and it asks a single follow-up question (where/when it happens, whether a code is present) instead of guessing, and re-queries once the customer answers. Once confident, it invokes two tools in parallel — the symptom_to_repairs cluster lookup and, when codes are present, the dtc_to_repairs cluster lookup — and merges/ranks the results into a top-5 sourced list. The output is the same repair_job shape TSB Matching already forwards downstream, so it drops into the Estimation Agent the same way: this closes the gap between 'customer says something is wrong' and 'here's what to estimate,' upstream of where TSB Matching and Repair History Intelligence pick up once an RO exists.",
+      customDiagram: "diagnosisAgent",
+      worked: "Customer tells the advisor: “it rattles on cold start, stops after a few minutes.” No DTC yet. NER_service normalizes that to a cold-start, transient, engine-bay rattle; the agent judges it confident enough to skip a follow-up question, calls symptom_to_repairs alone (no codes to feed dtc_to_repairs), and returns five ranked candidates topped by timing chain tensioner and serpentine belt tensioner — ready to hand to the Estimation Agent for parts and labor, before an RO or a technician inspection exists. If the customer's description had been vaguer (“it makes a noise sometimes”), the agent would have asked one clarifying question — where, and under what conditions — before spending a lookup on it."
+    },
+    {
+      id: "history", pattern: "sync",
+      name: "Repair History Intelligence",
+      blurb: "What's the likely diagnosis given vehicle + complaint + history?",
+      latency: "p95 &lt; 500ms &middot; called when advisor opens the RO",
+      req: { endpoint: "POST /v1/ros/{ro_id}/diagnose", body: {
+        vin: "5YFB4MDE7JP004821", complaint: "squeaking noise, front end", mileage: 42100
+      }},
+      res: { endpoint: "200 OK", body: {
+        diagnosis: "front brake pad wear", confidence: 0.81,
+        supporting_prior_repairs: [{ ro_id: "ro_81004", date: "2025-02-11", service: "brake_inspection" }]
+      }},
+      decideNote: "A straight lookup, not a graph: match vehicle + complaint against this tenant's own history index, rank, return with citations.",
+      steps: [ ["Vehicle + complaint"], ["Match against tenant", "repair-history index"], ["Rank by similarity"], ["Diagnosis + confidence", "+ citations"] ]
+    },
+    {
+      id: "history-premium", pattern: "sync",
+      name: "Repair History Intelligence (Premium)",
+      blurb: "Diagnosis blended with Predii's cross-shop Market RO Intelligence",
+      latency: "p95 &lt; 600ms &middot; blends shop history + market-wide signal",
+      req: { endpoint: "POST /v1/ros/{ro_id}/diagnose?tier=premium", body: {
+        vin: "5YFB4MDE7JP004821", complaint: "squeaking noise, front end", mileage: 42100, shop_id: "shop_9142"
+      }},
+      res: { endpoint: "200 OK", body: {
+        diagnosis: "front brake pad wear", confidence: 0.92,
+        supporting_prior_repairs: [{ ro_id: "ro_81004", date: "2025-02-11", service: "brake_inspection" }],
+        market_ro_intelligence: { source: "Predii Market RO Intelligence", sample_size: 8400, matched_pattern: "front brake pad wear", market_confidence: 0.86 }
+      }},
+      decideNote: "Same shop-specific lookup as the standard tier, plus a second, parallel query against Predii's Market RO Intelligence — repair orders processed and aggregated across the network, not just this shop's own history. The two results blend into one ranked diagnosis, confidence lifted by corroborating cross-shop signal. This is the one structured service that deliberately crosses the single-tenant boundary §4 sets everywhere else — the same tension already flagged for cross-shop Shop Intelligence benchmarking.",
+      customDiagram: "historyPremium"
+    },
+    {
+      id: "warranty", pattern: "sync",
+      name: "TSB Matching",
+      blurb: "Which TSB or recall applies to this repair — warranty claim or not",
+      latency: "p95 &lt; 500ms &middot; must return before quoting the customer",
+      req: { endpoint: "POST /v1/ros/{ro_id}/tsb-check", body: {
+        vin: "4T1BF1FK5GU123456", complaint_code: "TRANS_SHUDDER", cause_code: "CL_WEAR", mileage: 31500
+      }},
+      res: { endpoint: "200 OK", body: {
+        tsb_id: "TSB-23-0071", repair_job: "transmission_clutch_replacement", confidence: 0.88, is_warranty: true,
+        rationale: "matches known shudder pattern for this transmission, TSB issued 2023"
+      }},
+      decideNote: "Runs on every RO, not just suspected warranty claims — is_warranty is one field in the result, not the reason the call gets made. A matched TSB is unstructured bulletin text, not a priceable job, so an NER_service extracts a canonical repair_job (e.g. transmission_clutch_replacement) from it before anything downstream can quote it. That repair_job — plus the VIN already on the RO — is exactly the {vin, component} query the Estimation Agent expects; warranty_match_id rides alongside it only when is_warranty is true, so the line prices off the warranty rate table instead of customer-pay.",
+      steps: [ ["VIN + complaint /", "cause codes"], ["Match against OEM", "TSB / recall catalog"], ["NER_service: extract", "repair_job from TSB text"], ["Score confidence", "+ warranty flag"], ["repair_job (+ tsb_id)", "→ forwarded to Estimation Agent"] ]
+    },
+    {
+      id: "pricing", pattern: "sync",
+      name: "Estimation Agent",
+      blurb: "VIN/YMME + component — reasons across labor guide notes to surface the whole related job",
+      latency: "p95 &lt; 350ms &middot; reasons over labor guide notes + shop history",
+      req: { endpoint: "POST /v1/estimates/{id}/estimate-component", body: {
+        vin: "1G1ZD5ST9JF123456", ymme: null, component: "ignition_coil", shop_id: "shop_9142"
+      }},
+      res: { endpoint: "200 OK", body: {
+        matched_operations: [
+          { labor_op: "Ignition coils — replace (V6)", labor_hours: 1.4, part: "Ignition coil", quantity: 6, source: "labor_guide_notes" },
+          { labor_op: "Spark plugs — replace (combination, same access)", labor_hours: 0.0, part: "Spark plug", quantity: 6, source: "combination_repair" }
+        ],
+        local_part_price_per_unit: { ignition_coil: 38.0, spark_plug: 9.5 },
+        canned_job_match: "cj_ignition_coils_v6", historical_estimates_for_ymme: 64,
+        rationale: "labor guide notes for this V6 read '6 ignition coils included' and note spark plugs share the same access — quantity is parsed from the note text (6) and applied to both parts, not defaulted to 1"
+      }},
+      decideNote: "Takes a VIN or a bare YMME (year/make/model/engine) when there's no VIN yet — a phone quote, a fleet estimate — plus the one component asked about. The reasoning step is what makes this an agent rather than a lookup, and it isn't only 'which other operation is implied' — it has to read quantity out of the note text too, not just presence. The labor guide's notes for a V6's ignition coils say '6 ignition coils included'; matching the operation name alone would select one spark plug where the note means all six. The agent parses the stated count and carries it through every matched part, not just the one explicitly requested — a rear brake job pulls both wheels' worth of pads for the same reason. Getting this wrong isn't a rounding error: it's quoting a customer for one spark plug on a six-cylinder job.",
+      customDiagram: "estimationAgent",
+      worked: "Advisor requests 'ignition coil replacement' for a V6 sedan. The labor guide's note under that operation reads '6 ignition coils included' — plural, with a count — so the agent doesn't return one coil and one spark plug: it reads the 6 out of the note and applies it to every part in the matched job, coils and the spark plugs the same note implies, priced at this shop's per-unit part cost rather than the single-unit default a naive name-match would produce."
+    },
+    {
+      id: "recommend", pattern: "async",
+      name: "Proactive Recommendations Engine",
+      blurb: "What should we recommend to this customer, and when?",
+      latency: "precomputed at T-48h &middot; read at p95 &lt; 200ms",
+      req: { endpoint: "GET /v1/ros/{ro_id}/recommendations", body: {
+        ro_id: "ro_88240", filtered_by: "reconcile_state"
+      }},
+      res: { endpoint: "200 OK — read against a precomputed set", body: {
+        state: "pending", confidence: 0.81, reason: "pad wear ~15% remaining per last inspection",
+        history: [{ ro_id: "ro_88001", outcome: "declined", date: "2026-08-05" }]
+      }},
+      decideNote: "Never a live inference call in front of a customer. Scored two days ahead of the visit, re-scored two hours out, and reconciled against whatever the advisor actually adds to the estimate.",
+      steps: [ ["T-48h: triggered on", "ingestion + history"], ["Scored vs. mileage,", "interval, prior declines"], ["State machine:", "pending → presented →", "accepted / declined"], ["2 declines →", "retired until new signal"] ]
+    },
+    {
+      id: "shopintel", pattern: "sync",
+      name: "Shop Intelligence",
+      blurb: "What does this shop's own history say about this job?",
+      latency: "internal &middot; queried by Estimation Agent &amp; Recommendations",
+      req: { endpoint: "internal: ShopIntelligence.decay_status()", body: {
+        shop_id: "shop_9142", job_id: "cj_front_brake_pads"
+      }},
+      res: { endpoint: "200 OK", body: {
+        hourly_rate: 128, decline_count: 1, retirement_threshold: 2, still_active: true, shop_avg_acceptance_rate: 0.62
+      }},
+      decideNote: "Derived entirely from WrenchIQ's own outcome() and ingestion streams — zero net-new integration work for the SMS. Also the one source of truth for this shop's current hourly_rate and its history with a given combination job, both of which the Estimation Agent reads live rather than assuming a fixed regional figure. Per-shop analytics fit the sovereignty model cleanly; cross-shop benchmarking would break it, and is still an open decision.",
+      steps: [ ["outcome() + ingestion", "streams (already flowing)"], ["Per-shop, per-job", "aggregation"], ["Feeds Estimation Agent,", "Recommendations, decay"] ]
+    },
+    {
+      id: "chat", pattern: "agentic",
+      name: "Agentic Runtime (Chat)",
+      blurb: "Same ReAct harness, scoped to one predefined chat request at a time — summaries, talk tracks, translation, and Q&A on demand",
+      latency: "reactive: advisor/shop-owner chat, sub-turn",
+      req: { endpoint: "POST /v1/agent/chat", body: {
+        tenant_id: "sms_op_12", shop_id: "shop_9142", ro_id: "ro_88213", session_id: "sess_51",
+        request_type: "qa_service_advisor",
+        message: "show me list of recommendations based on previous declines, reminders",
+        locale: "en-US"
+      }},
+      res: { endpoint: "200 OK", body: {
+        run_id: "run_7745", status: "completed",
+        request_type: "qa_service_advisor",
+        response_text: "Two things worth raising today: the rear brake pad job declined on 8/12 — this shop closes that exact combination 81% of the time on a second offer — and the 30K mile service, due per OEM schedule at this vehicle's current mileage.",
+        recommendations: [
+          { item: "Rear brake pad replacement — re-offer", source: "customer_history", note: "declined once on 8/12; 81% accept rate here on second offer" },
+          { item: "30K mile service", source: "oem_scheduled_maintenance", note: "due at 42,100 miles" }
+        ],
+        citations: [{ source_type: "customer_history", source_id: "rec_4421" }, { source_type: "oem_scheduled_maintenance", source_id: "svc_30k" }],
+        trace_id: "trace_9c31"
+      }},
+      decideNote: "Runs the identical harness and graph as Agentic Runtime (Recommendations) — same Reason node, same five tools — but enters scoped to one of a small set of predefined request_types (customer_history_summary, greeting_talk_track, translate_es, rewrite_ccc, qa_shop_owner, qa_service_advisor) instead of a free-ranging sweep. Reason calls only the one or two tools that request type needs, then exits as soon as it can answer; translate_es and rewrite_ccc are both synthesis-time rewrites of an existing answer, not separate tool calls. Where Recommendations always visits all five sources and returns a full priced list, Chat visits what it needs and returns just an answer.",
+      isGraph: true,
+      workedList: [
+        { type: "customer_history_summary", ask: "give me this customer's history with us", response: "Three visits in 14 months, all routine maintenance until last month's declined rear brake job — first decline on file for this customer, on a job type this shop closes at 81% on the second offer." },
+        { type: "greeting_talk_track", ask: "give me an opener for this RO", response: "Hey Maria, good to see you back — last time was the 30K service in March, so today should be quick. While the car's in, I do want to revisit the rear brake pads we talked about." },
+        { type: "translate_es", ask: "translate that last recommendation for the customer screen", response: "Se recomienda el reemplazo de las pastillas de freno traseras según el patrón de desgaste observado. Es un trabajo que la mayoría de nuestros clientes acepta." },
+        { type: "rewrite_ccc", ask: "rewrite this CCC line item in plain language: “RR BRK PAD & ROTOR — INCL (2) SENSORS PER OEM POSITION STMT”", response: "Rear brake pads and rotors, plus the two wear sensors that come with them per this manufacturer's position statement — not an upsell, the sensors are required any time these pads are replaced." },
+        { type: "qa_service_advisor", ask: "show me list of recommendations based on previous declines, reminders", response: "Rear brake pad replacement — re-offer (declined 8/12, 81% accept rate here on second offer); 30K mile service — due at 42,100 miles per OEM schedule." },
+        { type: "qa_shop_owner", ask: "how's our brake-job acceptance trend this quarter?", response: "Up from 74% to 81%, driven mostly by the second-offer pattern — first declines that get re-offered once and close." }
+      ]
+    },
+    {
+      id: "agent", pattern: "agentic",
+      name: "Agentic Runtime (Recommendations)",
+      blurb: "ReAct loop over the other services as tools — sweeps all five sources to reason its way to a full, priced recommendation set",
+      latency: "autonomous: event-triggered, tier-gated",
+      req: { endpoint: "POST /v1/agent/runs", body: {
+        tenant_id: "sms_op_12", shop_id: "shop_9142", ro_id: "ro_88213", session_id: "sess_44",
+        message: "customer states squeaking noise heard from brakes",
+        context: { screen: "ro_writeup", mileage: 42100 }
+      }},
+      res: { endpoint: "200 OK", body: {
+        run_id: "run_7731", status: "completed",
+        talk_track: "Squeaking points to the rear pads — this shop's replaced this exact combination before, and customers here accept it about 81% of the time. While the car's in: there's a TSB pattern for rotor wear on this platform, it's due for its 30K service at this mileage, and the cabin filter is worth a mention too. Full estimate below.",
+        recommendations: [
+          { category: "brakes", item: "Rear brake pad replacement", source: "customer_history", confidence: 0.81, estimated_price: 214.0 },
+          { category: "brakes", item: "Rotor resurface — matches wear pattern", source: "TSB", confidence: 0.74, estimated_price: 96.0 },
+          { category: "maintenance", item: "30K mile service due", source: "oem_scheduled_maintenance", confidence: 0.95, estimated_price: 189.0 },
+          { category: "cabin", item: "Cabin air filter — high accept rate here", source: "shop_intelligence", confidence: 0.62, estimated_price: 42.0 }
+        ],
+        citations: [{ source_type: "customer_history", source_id: "rec_4421" }, { source_type: "shop_intelligence", source_id: "decay_status" }, { source_type: "estimation_agent", source_id: "est_2201" }],
+        proposed_actions: [], trace_id: "trace_9c2f"
+      }},
+      decideNote: "The one service that's genuinely a graph, not a pipeline — and the one place WrenchIQ is allowed to own orchestration, because it's WrenchIQ's own reasoning being exposed to the shop, not the SMS's UI flow. The WrenchIQ harness runs this as a ReAct loop: every node is either a reasoning (agent) step or a tool-calling (Act) step against one source — customer_history, shop_intelligence, TSB, OEM scheduled maintenance, or the Estimation Agent — and the harness keeps cycling reason↔act across all five until it has enough to finalize. The payoff is a Total Recommendation, not a single answer: a talk_track the advisor can say verbatim, plus every live recommendation grouped by category, each tagged with its source and — because the Estimation Agent is one of the tools in the loop, not a separate step afterward — priced. Agentic Runtime (Chat) runs the identical graph but enters scoped to a single predefined question and exits early, instead of sweeping all five.",
+      isGraph: true,
+      worked: "Advisor types: “customer states squeaking noise heard from brakes.” The harness reasons about what's needed, then acts against customer_history (has this vehicle had brake work before, and how often does this shop's customers accept it), shop_intelligence (this shop's acceptance rate and decay status for the matching job), TSB match (a bulletin for this platform's noise pattern), and OEM scheduled maintenance (mileage-specific — is a service due anyway at 42,100 miles) — reasoning between each call about what's still missing — before handing off to the Estimation Agent, which itself reasons over canned jobs and labor guide notes to price the matched combination. Only once every source has answered does synthesis produce one Total Recommendation: a talk_track plus a categorized, sourced, and priced list — not a diagnosis with the estimate bolted on afterward."
+    }
+  ];
+
+  const list = document.getElementById("list");
+  SERVICES.forEach((svc, i)=>{
+    const row = document.createElement("button");
+    row.className = "row";
+    row.type = "button";
+    row.dataset.pattern = svc.pattern;
+    row.dataset.id = svc.id;
+    row.setAttribute("role","tab");
+    row.innerHTML = `
+      <span class="num">0${i+1}</span>
+      <span class="rowtext">
+        <h3>${svc.name}</h3>
+        <p>${svc.blurb}</p>
+      </span>`;
+    row.addEventListener("click", ()=> selectService(svc.id));
+    list.appendChild(row);
+  });
+
+  let activeTab = "request";
+
+  function selectService(id){
+    const svc = SERVICES.find(s=>s.id===id);
+    if(!svc) return;
+
+    document.querySelectorAll(".row").forEach(r=> r.classList.toggle("active", r.dataset.id===id));
+
+    document.getElementById("panel-title").innerHTML = svc.name;
+    document.getElementById("panel-sub").textContent = svc.latency.replace(/&lt;/g,"<").replace(/&middot;/g,"·").replace(/&amp;/g,"&");
+    const tag = document.getElementById("panel-tag");
+    tag.textContent = PATTERN_LABEL[svc.pattern];
+    tag.style.background = svc.pattern==="sync" ? "var(--accent-soft)" : svc.pattern==="async" ? "var(--accent-2-soft)" : "var(--agentic-soft)";
+
+    document.getElementById("req-endpoint").innerHTML = `<b>${svc.req.endpoint}</b>`;
+    document.getElementById("req-body").innerHTML = hlJSON(svc.req.body);
+    document.getElementById("res-endpoint").innerHTML = `<b>${svc.res.endpoint}</b>`;
+    document.getElementById("res-body").innerHTML = hlJSON(svc.res.body);
+
+    document.getElementById("decide-note").textContent = svc.decideNote;
+    const diagramEl = document.getElementById("decide-diagram");
+    const exampleEl = document.getElementById("decide-example");
+    if(svc.isGraph){
+      diagramEl.innerHTML = AGENTIC_GRAPH_SVG;
+    } else if(svc.customDiagram === "historyPremium"){
+      diagramEl.innerHTML = HISTORY_PREMIUM_SVG;
+    } else if(svc.customDiagram === "roAgent"){
+      diagramEl.innerHTML = RO_AGENT_SVG;
+    } else if(svc.customDiagram === "diagnosisAgent"){
+      diagramEl.innerHTML = DIAGNOSIS_AGENT_SVG;
+    } else if(svc.customDiagram === "fullFlow"){
+      diagramEl.innerHTML = FULL_FLOW_SVG;
+      initFullFlowAnimation();
+    } else if(svc.customDiagram === "estimationAgent"){
+      diagramEl.innerHTML = ESTIMATION_AGENT_SVG;
+    } else {
+      const colorVar = svc.pattern==="sync" ? "--accent" : "--accent-2";
+      diagramEl.innerHTML = `<figure>${pipelineSVG(svc.steps, colorVar, svc.name + " decision pipeline")}<figcaption>${svc.name}: input to output, left to right.</figcaption></figure>`;
+    }
+    if(svc.workedList){
+      exampleEl.innerHTML = `<div class="worked-example"><b>Examples by request_type</b><div class="worked-grid">${svc.workedList.map(w=>`
+        <div class="worked-item">
+          <div class="worked-item-type">${esc(w.type)}</div>
+          <div class="worked-item-ask">&ldquo;${esc(w.ask)}&rdquo;</div>
+          <div class="worked-item-response">${esc(w.response)}</div>
+        </div>`).join("")}</div></div>`;
+    } else {
+      exampleEl.innerHTML = svc.worked ? `<div class="worked-example"><b>Example</b>${svc.worked}</div>` : "";
+    }
+
+    setTab(activeTab);
+  }
+
+  function setTab(name){
+    activeTab = name;
+    document.querySelectorAll(".tab").forEach(t=> t.classList.toggle("active", t.dataset.tab===name));
+    document.querySelectorAll(".tab-panel").forEach(p=> p.classList.toggle("active", p.id==="tab-"+name));
+  }
+
+  document.querySelectorAll(".tab").forEach(t=> t.addEventListener("click", ()=> setTab(t.dataset.tab)));
+
+  selectService("history");
+
+  /* theme toggle: system -> light -> dark -> system */
+  const THEME_ICON = { system: "☀️", light: "\u{1F324}️", dark: "\u{1F319}" };
+  const THEME_LABEL = { system: "System", light: "Light", dark: "Dark" };
+  let themeMode = "system";
+  try{
+    const saved = localStorage.getItem("wrenchiq-theme");
+    if(saved === "light" || saved === "dark") themeMode = saved;
+  }catch(e){}
+
+  function applyTheme(mode){
+    themeMode = mode;
+    const root = document.documentElement;
+    if(mode === "system") root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", mode);
+    document.getElementById("theme-icon").textContent = THEME_ICON[mode];
+    document.getElementById("theme-label").textContent = THEME_LABEL[mode];
+    try{
+      if(mode === "system") localStorage.removeItem("wrenchiq-theme");
+      else localStorage.setItem("wrenchiq-theme", mode);
+    }catch(e){}
+  }
+
+  document.getElementById("theme-toggle").addEventListener("click", ()=>{
+    const next = themeMode === "system" ? "light" : themeMode === "light" ? "dark" : "system";
+    applyTheme(next);
+  });
+
+  applyTheme(themeMode);
+</script>

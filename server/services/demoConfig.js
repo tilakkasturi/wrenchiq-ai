@@ -9,9 +9,9 @@
  * doesn't fire reliably across separate Tauri windows, so a shop's SMS/DMS
  * choice could silently diverge between windows. Rather than work around
  * that, this moves the single fact that actually needs to be shared (which
- * SMS/DMS is selected) onto the server — same fix as the LLM primary/
- * secondary endpoint switch in llmProviderConfig.js. Every other demo
- * setting (shop name, owner name, module config, etc.) stays in
+ * SMS/DMS is selected) onto the server — same fix as the LLM active-profile
+ * switch in llmProviderConfig.js. Every other demo setting (shop name,
+ * owner name, module config, etc.) stays in
  * localStorage, unaffected — this is scoped to the one thing that broke.
  *
  * Collection: demo_config (single doc, _id: 'active')

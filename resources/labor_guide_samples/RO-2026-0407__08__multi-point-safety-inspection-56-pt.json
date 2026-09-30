@@ -1,0 +1,156 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "PERFORM MULTI-POINT SAFETY INSPECTION - 56-POINT CHECKLIST",
+        "Skill": "A",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "SAFETY INSPECTION"
+      },
+      {
+        "Note": "INSPECT EXTERIOR LIGHTING - Headlights, Turn Signals, Brake, Reverse, Fog",
+        "Skill": "A",
+        "Labor (Hours)": 0.3,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "LIGHTING SYSTEM"
+      },
+      {
+        "Note": "INSPECT BRAKE SYSTEM - Pads, Rotors, Lines, Fluid Condition",
+        "Skill": "B",
+        "Labor (Hours)": 0.5,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "BRAKE SYSTEM"
+      },
+      {
+        "Note": "INSPECT UNDERBODY - Suspension, Steering, Exhaust, Driveshaft",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "CHASSIS"
+      },
+      {
+        "Note": "INSPECT ENGINE BAY - Belts, Hoses, Fluids, Battery, Battery Terminals",
+        "Skill": "A",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "ENGINE"
+      },
+      {
+        "Note": "INSPECT TIRES - Tread Depth, Pressure, Wear Pattern, Condition",
+        "Skill": "A",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "TIRES"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "99001",
+        "pt": "INSPECTION SERVICE",
+        "part_number": "SVC-56PT-RAV4",
+        "part_description": "56-POINT MULTI-POINT SAFETY INSPECTION PACKAGE",
+        "system_group": null,
+        "display_term": "56-PT SAFETY INSPECTION",
+        "part_location": "SERVICE",
+        "category": "MAIN",
+        "system": "MAINTENANCE",
+        "image_id": "1001",
+        "suggested_price": 45,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1RFV4LW284937"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "99002",
+        "pt": "CLEANING AGENT",
+        "part_number": "CL-772-BRK",
+        "part_description": "BRAKE CLEANER SPRAY - 12OZ",
+        "system_group": null,
+        "display_term": "BRAKE CLEANER",
+        "part_location": "SHOP SUPPLY",
+        "category": "RELATED",
+        "system": "MAINTENANCE",
+        "image_id": "1002",
+        "suggested_price": 8.5,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "GENERAL SERVICE"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [
+      {
+        "Note": "PERFORM MULTI-POINT SAFETY INSPECTION - 56-POINT CHECKLIST",
+        "Skill": "A",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "SAFETY INSPECTION"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "99001",
+        "pt": "INSPECTION SERVICE",
+        "part_number": "SVC-56PT-RAV4",
+        "part_description": "56-POINT MULTI-POINT SAFETY INSPECTION PACKAGE",
+        "system_group": null,
+        "display_term": "56-PT SAFETY INSPECTION",
+        "part_location": "SERVICE",
+        "category": "MAIN",
+        "system": "MAINTENANCE",
+        "image_id": "1001",
+        "suggested_price": 45,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1RFV4LW284937"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "SAFETY INSPECTION",
+  "labor_hours": 1.2,
+  "input": {
+    "vin": "2T3P1RFV4LW284937",
+    "text": "Multi-Point Safety Inspection (56-pt)",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "INSP-56"
+  }
+}

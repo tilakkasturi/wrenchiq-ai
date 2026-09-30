@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# bin/ner-service — Start the ro-ner-demo FastAPI service (Predii Learn's
+# backend) on port 8090, the address server/config.js's RO_NER_BASE_URL
+# defaults to (see server/routes/prediiLearn.js).
+#
+# Shares next-gen's .env.local so it points at the same Mongo/LLM endpoints
+# (ner_server.py reads MONGODB_URI, MONGODB_DB, LLM_BASE_URL, LLM_MODEL from
+# env, overriding ner_config.yaml — see the comment at the top of that file).
+#
+# Run from any directory; always cds into ro-ner-demo/ first because
+# ner_server.py opens ner_config.yaml relative to cwd, not __file__.
+
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if [[ -f .env.local ]]; then
+  set -a
+  source .env.local
+  set +a
+fi
+
+cd ro-ner-demo
+exec python3 ner_server.py

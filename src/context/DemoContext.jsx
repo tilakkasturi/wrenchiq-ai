@@ -15,10 +15,10 @@
  * call, because cross-window localStorage "storage"-event sync isn't
  * reliable across separate Tauri windows — a shop's SMS/DMS picker
  * selection could silently diverge between the Sidecar and Admin windows.
- * Moving just this one fact to the server (same fix as the LLM primary/
- * secondary endpoint switch in llmProviderConfig.js) fixes that at the
- * root instead of working around it — every window reads the same
- * value, and the Settings picker actually works.
+ * Moving just this one fact to the server (same fix as the LLM active-profile
+ * switch in llmProviderConfig.js) fixes that at the root instead of working
+ * around it — every window reads the same value, and the Settings picker
+ * actually works.
  */
 
 import { createContext, useContext, useState, useCallback, useEffect } from "react";

@@ -1,0 +1,120 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REPLACE EVAPORATOR OUTLET FITTING O-RING - TSB 64 13 24 - Includes: Evacuation and Recharge of A/C System.",
+        "Skill": "C",
+        "Labor (Hours)": 2.4,
+        "Warranty": "24mo/36k",
+        "LaborTypeName": "COMBINATION",
+        "LaborComponent": "A/C SYSTEM"
+      },
+      {
+        "Note": "RECHARGE A/C SYSTEM - R134a/R1234yf - Full Capacity",
+        "Skill": "B",
+        "Labor (Hours)": 1.2,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "A/C SYSTEM"
+      },
+      {
+        "Note": "EVACUATE A/C SYSTEM - Vacuum Leak Test Required",
+        "Skill": "B",
+        "Labor (Hours)": 0.8,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "A/C SYSTEM"
+      },
+      {
+        "Note": "INSPECT A/C LINE CONNECTIONS - Evaporator Outlet - Check for refrigerant seepage.",
+        "Skill": "B",
+        "Labor (Hours)": 0.4,
+        "Warranty": "",
+        "LaborTypeName": "INSPECTION",
+        "LaborComponent": "A/C SYSTEM"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "99201",
+        "pt": "O-RING",
+        "part_number": "38331-S1K-A15",
+        "part_description": "O-RING, SEAL, A/C OUTLET FITTING",
+        "system_group": "HVAC",
+        "display_term": "O-RING, EVAPORATOR OUTLET",
+        "part_location": "64-13 - A/C EVAPORATOR & OUTLET CONNECTIONS",
+        "category": "MAIN",
+        "system": "AIR CONDITIONING",
+        "image_id": "88210",
+        "suggested_price": 8.45,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REPLACE EVAPORATOR OUTLET FITTING O-RING - TSB 64 13 24 - Includes: Evacuation and Recharge of A/C System.",
+            "Skill": "C",
+            "Labor (Hours)": 2.4,
+            "Warranty": "24mo/36k",
+            "LaborTypeName": "COMBINATION",
+            "LaborComponent": "A/C SYSTEM"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "G02,G01 X3 SERIES",
+          "BMS-EVAP-OUT"
+        ],
+        "supersession": "38331-S1K-A12",
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "99202",
+        "pt": "REFRIGERANT",
+        "part_number": "R1234yf-GEN2",
+        "part_description": "REFRIGERANT GAS, R1234yf",
+        "system_group": null,
+        "display_term": "A/C REFRIGERANT",
+        "part_location": "64-01 - A/C REFRIGERANT STORAGE",
+        "category": "FLUID",
+        "system": "AIR CONDITIONING",
+        "image_id": "77102",
+        "suggested_price": 145,
+        "fluid": [
+          "R1234yf"
+        ],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "ALL 2020+ BMW X3 MODELS"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "O-RING",
+  "labor_hours": 2.4,
+  "input": {
+    "vin": "5UX43DP04LL839271",
+    "text": "Evaporator Outlet Fitting O-Ring Replacement",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "BMW",
+    "catalog_code": "641324TSB"
+  }
+}

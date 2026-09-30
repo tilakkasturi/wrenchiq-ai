@@ -65,6 +65,21 @@ export async function updateStoryRO(roId, updates) {
 }
 
 /**
+ * Rewrite just the customer's intake concern via the grounded 3C-style
+ * rewrite prompt (server/services/threeCScoreService.js's rewriteConcern).
+ * Returns { concern } on success, throws on failure.
+ */
+export async function rewriteConcern({ concern, vehicle }) {
+  const res = await fetch(`${API_BASE}/api/three-c-score/rewrite-concern`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ concern, vehicle }),
+  });
+  if (!res.ok) throw new Error(`Failed to rewrite concern: ${res.statusText}`);
+  return res.json();
+}
+
+/**
  * Update a repair order's Kanban stage.
  * @param {string} roId  - ro_number (e.g. "RO-PA-2025-00001")
  * @param {string} status - one of the 6 kanban stages

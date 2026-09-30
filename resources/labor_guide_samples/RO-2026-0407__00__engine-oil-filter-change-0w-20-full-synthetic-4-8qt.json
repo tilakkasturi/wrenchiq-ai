@@ -1,0 +1,144 @@
+{
+  "parts": {
+    "labor_list": [
+      {
+        "Note": "REMOVE & REPLACE ENGINE OIL AND FILTER - Full Synthetic",
+        "Skill": "A",
+        "Labor (Hours)": 0.6,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "ENGINE OIL SERVICE"
+      },
+      {
+        "Note": "INSPECT ENGINE OIL SYSTEM - Check for leaks at drain plug and filter seal",
+        "Skill": "C",
+        "Labor (Hours)": 0.2,
+        "Warranty": "",
+        "LaborTypeName": "INSPECTION",
+        "LaborComponent": "ENGINE OIL SERVICE"
+      },
+      {
+        "Note": "RESET ENGINE OIL MAINTENANCE REQUIRED LIGHT",
+        "Skill": "B",
+        "Labor (Hours)": 0.1,
+        "Warranty": "",
+        "LaborTypeName": "OPERATION",
+        "LaborComponent": "ENGINE OIL SERVICE"
+      }
+    ],
+    "part_list": [
+      {
+        "part_key": "10212",
+        "pt": "ENGINE OIL",
+        "part_number": "0W20-SYN-4.8",
+        "part_description": "OIL, ENGINE, 0W-20 FULL SYNTHETIC",
+        "system_group": null,
+        "display_term": "0W-20 FULL SYNTHETIC OIL",
+        "part_location": "ENGINE - LUBRICATION SYSTEM",
+        "category": "MAIN",
+        "system": "ENGINE",
+        "image_id": "55210",
+        "suggested_price": 54.95,
+        "fluid": [
+          "0W-20"
+        ],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE ENGINE OIL AND FILTER - Full Synthetic",
+            "Skill": "A",
+            "Labor (Hours)": 0.6,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "ENGINE OIL SERVICE"
+          }
+        ],
+        "stats": null,
+        "qty": "05",
+        "usage": [
+          "2T3P1RFV4LW284937",
+          "RAV4 2.5L 4-CYL"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "90915",
+        "pt": "OIL FILTER",
+        "part_number": "90915-YZZD4",
+        "part_description": "FILTER, OIL, SPIN-ON TYPE",
+        "system_group": null,
+        "display_term": "OIL FILTER ELEMENT",
+        "part_location": "ENGINE - LUBRICATION SYSTEM",
+        "category": "MAIN",
+        "system": "ENGINE",
+        "image_id": "55211",
+        "suggested_price": 11.42,
+        "fluid": [],
+        "labor": [
+          {
+            "Note": "REMOVE & REPLACE ENGINE OIL AND FILTER - Full Synthetic",
+            "Skill": "A",
+            "Labor (Hours)": 0.6,
+            "Warranty": "",
+            "LaborTypeName": "OPERATION",
+            "LaborComponent": "ENGINE OIL SERVICE"
+          }
+        ],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1RFV4LW284937",
+          "A25A-FKS ENGINE"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      },
+      {
+        "part_key": "90345",
+        "pt": "DRAIN PLUG WASHER",
+        "part_number": "90345-M41-S01",
+        "part_description": "GASKET, DRAIN PLUG",
+        "system_group": null,
+        "display_term": "CRUSH WASHER, OIL DRAIN",
+        "part_location": "ENGINE - LUBRICATION SYSTEM",
+        "category": "RELATED",
+        "system": "ENGINE",
+        "image_id": "55215",
+        "suggested_price": 1.25,
+        "fluid": [],
+        "labor": [],
+        "stats": null,
+        "qty": "01",
+        "usage": [
+          "2T3P1RFV4LW284937"
+        ],
+        "supersession": null,
+        "local_reman_parts": null
+      }
+    ]
+  },
+  "maintenance": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "repair_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "dtc_parts": {
+    "labor_list": [],
+    "part_list": []
+  },
+  "pt": "ENGINE OIL & FILTER CHANGE",
+  "labor_hours": 0.9,
+  "input": {
+    "vin": "2T3P1RFV4LW284937",
+    "text": "Engine Oil & Filter Change",
+    "part_number": true,
+    "price": true,
+    "labor": true,
+    "failsafe": false,
+    "make": "TOYOTA",
+    "catalog_code": "ENG-0W20-SYN"
+  }
+}
