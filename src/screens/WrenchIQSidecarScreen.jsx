@@ -22,6 +22,7 @@ import { openExternalUrl, openSmsRepresentativeSplit, openAdminSettingsWindow } 
 import { useSidecarRO } from "../hooks/useSidecarRO";
 import TransferSimulationModal from "../components/sidecar/TransferSimulationModal";
 import TSBReferenceModal from "../components/sidecar/TSBReferenceModal";
+import { LLMProfileBadge } from "../components/LLMProfileBadge";
 import HealthCheckScreen from "./sidecar/HealthCheckScreen";
 import RepairOrderQueue from "./sidecar/RepairOrderQueue";
 
@@ -181,7 +182,7 @@ export default function WrenchIQSidecarScreen({ windowMode = "sidecar", onToggle
     storyRO, agentData, loading,
     activeTab, setActiveTab,
     roScorePct, setRoScorePct,
-    advisorFetchedAt, llmProfile, notifications,
+    advisorFetchedAt, llmProfile, llmStatus, llmDetailVisible, notifications,
     addedJobs, acceptedServices,
     transferOpen, handleTransfer, cancelTransfer, confirmTransfer,
     runAdvisorFetch, handleConfirmRecommendation, handleConcernUpdate, handleInspectionItemSelect,
@@ -210,20 +211,7 @@ export default function WrenchIQSidecarScreen({ windowMode = "sidecar", onToggle
           <span style={{ fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
             WrenchIQ Intelligence
           </span>
-          {llmProfile && (
-            <span
-              title="Which LLM endpoint is currently active — switch it under Settings → Integrations → AI Engine"
-              style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase",
-                padding: "2px 6px", borderRadius: 5,
-                background: llmProfile === "azure" ? "rgba(56,189,248,0.15)" : "rgba(255,214,10,0.15)",
-                color: llmProfile === "azure" ? "#7DD3FC" : COLORS.gold,
-                border: `1px solid ${llmProfile === "azure" ? "rgba(56,189,248,0.35)" : "rgba(255,214,10,0.3)"}`,
-              }}
-            >
-              {llmProfile === "azure" ? "Microsoft/OpenAI" : "PrediiLLM"}
-            </span>
-          )}
+          <LLMProfileBadge llmProfile={llmProfile} llmStatus={llmStatus} showDetail={llmDetailVisible} />
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 3 }}>
             <button
               onClick={zoomOut}
@@ -374,7 +362,7 @@ export default function WrenchIQSidecarScreen({ windowMode = "sidecar", onToggle
             )}
 
             {storyRO && activeTab === "trace" && (
-              <AgentTraceTab key={storyRO.roNumber} ro={storyRO} agentData={agentData} agentLoading={loading} llmProfile={llmProfile} />
+              <AgentTraceTab key={storyRO.roNumber} ro={storyRO} agentData={agentData} agentLoading={loading} llmProfile={llmProfile} llmStatus={llmStatus} llmDetailVisible={llmDetailVisible} />
             )}
           </div>
 
@@ -2130,7 +2118,7 @@ function CatalogMatchPreview({ service, estimatedCost, cannedJobs }) {
   );
 }
 
-export function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
+export function AgentTraceTab({ ro, agentData, agentLoading, llmProfile, llmStatus, llmDetailVisible }) {
   const { bz } = useZoom();
   const [showPrompt, setShowPrompt] = useState(false);
   const [revealCount, setRevealCount] = useState(TRACE_STAGE_COUNT); // fully shown by default
@@ -2461,7 +2449,11 @@ export function AgentTraceTab({ ro, agentData, agentLoading, llmProfile }) {
         </div>
 
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>
-          Model: {llmProfile === "azure" ? "Microsoft/OpenAI" : "PrediiLLM"} · generated{" "}
+          Model: {llmProfile === "azure" ? "Microsoft/OpenAI" : "PrediiLLM"}
+          {llmDetailVisible && llmStatus?.profiles?.[llmProfile] && (
+            <> ({llmStatus.profiles[llmProfile].model || "—"} · {llmStatus.profiles[llmProfile].baseUrl || "—"})</>
+          )}{" "}
+          · generated{" "}
           {agentData?.generatedAt ? new Date(agentData.generatedAt).toLocaleTimeString() : "just now"} · source:
           server/services/roAdvisorService.js
         </div>

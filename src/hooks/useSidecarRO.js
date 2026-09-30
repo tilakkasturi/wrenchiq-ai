@@ -16,6 +16,7 @@ import { fetchStoryRO, updateStoryRO, rewriteConcern } from "../services/repairO
 import { useInsightNotifier } from "../services/insightNotifier";
 import { computeRepairJobsTotal } from "../services/roTotals";
 import { notifyROUpdated } from "../services/roUpdatesChannel";
+import { useLLMProfileStatus } from "./useLLMProfileStatus";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -39,24 +40,9 @@ export function useSidecarRO({ autoFetch }) {
   // manual refresh button does. Reset whenever the RO itself changes.
   const fetchedRoIdRef = useRef(null);
   const advisorRequestRef = useRef(0);
-  // Which LLM profile is actually powering "Predii LLM" right now (see
-  // Settings → Integrations → AI Engine / server/services/llmProviderConfig.js).
-  const [llmProfile, setLlmProfile] = useState(null);
-
-  useEffect(() => {
-    const fetchProfile = () => {
-      fetch(`${API_BASE}/api/llm-provider-config`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => { if (data) setLlmProfile(data.activeProfile); })
-        .catch(() => {});
-    };
-    fetchProfile();
-    // Poll so a profile switch made in Settings while the Sidecar is already
-    // open (no restart, no reload) shows up here without the user having to
-    // relaunch the app.
-    const interval = setInterval(fetchProfile, 15000);
-    return () => clearInterval(interval);
-  }, []);
+  // Which LLM profile is actually powering "Predii LLM" right now, and the
+  // Ctrl+P reveal toggle — see useLLMProfileStatus.js.
+  const { llmProfile, llmStatus, llmDetailVisible } = useLLMProfileStatus();
 
   const { notifications } = useInsightNotifier(customers);
 
@@ -247,7 +233,7 @@ export function useSidecarRO({ autoFetch }) {
     storyRO, agentData, loading,
     activeTab, setActiveTab,
     roScorePct, setRoScorePct,
-    advisorFetchedAt, llmProfile, notifications,
+    advisorFetchedAt, llmProfile, llmStatus, llmDetailVisible, notifications,
     addedJobs, acceptedServices,
     transferOpen, handleTransfer, cancelTransfer, confirmTransfer,
     runAdvisorFetch, handleConfirmRecommendation, handleConcernUpdate, handleInspectionItemSelect,

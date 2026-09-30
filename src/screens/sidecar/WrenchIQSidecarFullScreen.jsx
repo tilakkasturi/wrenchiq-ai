@@ -17,6 +17,7 @@ import { COLORS } from "../../theme/colors";
 import { useDemo } from "../../context/DemoContext";
 import { useSidecarRO } from "../../hooks/useSidecarRO";
 import TransferSimulationModal from "../../components/sidecar/TransferSimulationModal";
+import { LLMProfileBadge } from "../../components/LLMProfileBadge";
 import RepairOrderQueue from "./RepairOrderQueue";
 import {
   headerIconStyle, TabButton, RepairOrderCard, EmptyState, IntelligencePanel, ROScoreTab, ChatTab, AgentTraceTab,
@@ -30,7 +31,7 @@ export default function WrenchIQSidecarFullScreen({ onToggleWindowMode }) {
     storyRO, agentData, loading,
     activeTab, setActiveTab,
     setRoScorePct,
-    advisorFetchedAt, llmProfile,
+    advisorFetchedAt, llmProfile, llmStatus, llmDetailVisible,
     addedJobs, acceptedServices,
     transferOpen, handleTransfer, cancelTransfer, confirmTransfer,
     runAdvisorFetch, handleConfirmRecommendation, handleConcernUpdate, handleInspectionItemSelect,
@@ -57,17 +58,7 @@ export default function WrenchIQSidecarFullScreen({ onToggleWindowMode }) {
         <span style={{ fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
           WrenchIQ Intelligence
         </span>
-        {llmProfile && (
-          <span style={{
-            fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase",
-            padding: "2px 6px", borderRadius: 5,
-            background: llmProfile === "azure" ? "rgba(56,189,248,0.15)" : "rgba(255,214,10,0.15)",
-            color: llmProfile === "azure" ? "#7DD3FC" : COLORS.gold,
-            border: `1px solid ${llmProfile === "azure" ? "rgba(56,189,248,0.35)" : "rgba(255,214,10,0.3)"}`,
-          }}>
-            {llmProfile === "azure" ? "Microsoft/OpenAI" : "PrediiLLM"}
-          </span>
-        )}
+        <LLMProfileBadge llmProfile={llmProfile} llmStatus={llmStatus} showDetail={llmDetailVisible} />
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 3 }}>
           <button
             onClick={() => openSurfaceC(smsName)}
@@ -158,7 +149,7 @@ export default function WrenchIQSidecarFullScreen({ onToggleWindowMode }) {
                 )}
 
                 {storyRO && activeTab === "trace" && (
-                  <AgentTraceTab key={storyRO.roNumber} ro={storyRO} agentData={agentData} agentLoading={loading} llmProfile={llmProfile} />
+                  <AgentTraceTab key={storyRO.roNumber} ro={storyRO} agentData={agentData} agentLoading={loading} llmProfile={llmProfile} llmStatus={llmStatus} llmDetailVisible={llmDetailVisible} />
                 )}
               </div>
 

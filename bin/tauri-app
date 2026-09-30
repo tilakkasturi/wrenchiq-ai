@@ -33,7 +33,7 @@ stop() {
   # comes from checking each match's actual cwd equals this repo, not from
   # the pattern being narrow, so this never touches another project's
   # vite/node process running elsewhere on the machine.
-  for pattern in "target/debug/wrenchiq" "node_modules/.bin/tauri" "node_modules/.bin/vite" "npm run tauri:dev" "node server/index.js" "ner_server.py"; do
+  for pattern in "target/debug/wrenchiq" "node_modules/.bin/tauri" "node_modules/.bin/vite" "npm run tauri:dev" "server/index.js" "ner_server.py"; do
     for pid in $(pgrep -f "$pattern" 2>/dev/null || true); do
       cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' || true)
       # cwd is this repo itself, or a subdirectory of it (e.g. src-tauri/,

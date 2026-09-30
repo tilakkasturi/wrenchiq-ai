@@ -1,6 +1,8 @@
 // PersonaShell — wraps each persona with their own nav + top bar
 import { useState } from "react";
 import { useAppVersion, useAppBuilt } from "../hooks/useAppVersion";
+import { useLLMProfileStatus } from "../hooks/useLLMProfileStatus";
+import { LLMProfileBadge } from "./LLMProfileBadge";
 import {
   Wrench, ClipboardList, ClipboardCheck, Package, Shield, Calendar,
   BarChart3, Settings, Building2, Sparkles, Bell, Search,
@@ -114,6 +116,7 @@ export default function PersonaShell({
   const { shopName, ownerName, ownerInitials, smsName, moduleConfig } = useDemo();
   const appVersion = useAppVersion();
   const appBuilt = useAppBuilt();
+  const { llmProfile, llmStatus, llmDetailVisible } = useLLMProfileStatus();
   // Filter nav: embedded screens first, then disabled modules
   const enabledModules = moduleConfig?.modules ?? {};
   const allNavItems = PERSONA_NAV[persona] || [];
@@ -226,6 +229,27 @@ export default function PersonaShell({
                 <BrandWordmark size="bar" />
             </button>
 
+            {/* PrediiLLM mark + app version — next to the wordmark */}
+            <span style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <path d="M4 8 Q12 2 20 8"  stroke="#FF6B35" strokeWidth="2.8" strokeLinecap="round" fill="none"/>
+                <path d="M4 12 Q12 6 20 12" stroke="#FF6B35" strokeWidth="2.8" strokeLinecap="round" fill="none"/>
+                <path d="M4 16 Q12 10 20 16" stroke="#FF6B35" strokeWidth="2.8" strokeLinecap="round" fill="none"/>
+              </svg>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#6B7280", letterSpacing: 0.1 }}>
+                PrediiLLM
+              </span>
+              {appVersion && (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, color: "#9CA3AF",
+                  background: "#F3F4F6", border: "1px solid #E5E7EB",
+                  borderRadius: 4, padding: "1px 5px",
+                }}>
+                  {appVersion}
+                </span>
+              )}
+            </span>
+
             {/* Persona badge */}
             <span style={{
               fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
@@ -333,6 +357,9 @@ export default function PersonaShell({
               <Bell size={18} color={COLORS.textSecondary} />
               <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: 4, background: COLORS.accent, border: "2px solid #fff" }} />
             </div>
+
+            {/* Active LLM endpoint — Ctrl+P reveals resolved model/endpoint */}
+            <LLMProfileBadge llmProfile={llmProfile} llmStatus={llmStatus} showDetail={llmDetailVisible} dark={false} />
 
             {/* User */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
