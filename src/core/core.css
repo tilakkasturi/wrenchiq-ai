@@ -1,0 +1,176 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+/* All rules are scoped under .wiq-core so nothing leaks into the classic UI. */
+.wiq-core{
+  --bg:#eceff2; --surface:#ffffff; --surface-2:#f4f6f8; --line:#d3dae1;
+  --fg:#15202b; --muted:#56646f;
+  --accent:#0a6a6c; --accent-fg:#ffffff; --accent-soft:#d9eeed;
+  --good:#17703f; --good-soft:#dcf2e4; --warn:#94560a; --warn-soft:#faebcb;
+  --info:#2456a8; --info-soft:#e0e9f8;
+  --font-sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){.wiq-core{
+  --bg:#0f151b; --surface:#172029; --surface-2:#1d2934; --line:#2b3946;
+  --fg:#e3e9ee; --muted:#93a1ad;
+  --accent:#4fc2bc; --accent-fg:#06201f; --accent-soft:#163a3b;
+  --good:#5fd08d; --good-soft:#153020; --warn:#efb45b; --warn-soft:#382a10;
+  --info:#82b1f5; --info-soft:#172945; color-scheme:dark;}
+}
+.wiq-core{height:100%;overflow-y:auto;background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:14px;line-height:1.45;padding-inline:16px;-webkit-font-smoothing:auto}
+.wiq-core *{box-sizing:border-box;margin:0;padding:0}
+.wiq-core button, .wiq-core input, .wiq-core textarea, .wiq-core select{font:inherit;color:inherit}
+.wiq-core button{cursor:pointer}
+.wiq-core .app{max-width:1360px;margin-inline:auto}
+.wiq-core :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wiq-core .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.wiq-core .muted{color:var(--muted)}
+.wiq-core .small{font-size:12px}
+.wiq-core p{margin:0}
+.wiq-core .top{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;padding-block:12px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.wiq-core .brand{display:flex;align-items:center;gap:10px}
+.wiq-core .brand svg{width:28px;height:28px;color:var(--accent)}
+.wiq-core .brand b{display:block;font-size:15px;font-weight:600}
+.wiq-core .brand small{display:block;color:var(--muted);font-size:12px}
+.wiq-core .modes{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.wiq-core .modes button{border:0;background:transparent;padding:8px 16px;font-weight:500;color:var(--muted)}
+.wiq-core .modes button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+.wiq-core .proto{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.wiq-core .proto i{font-style:normal;background:var(--warn-soft);color:var(--warn);border-radius:4px;padding:2px 7px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:11px}
+.wiq-core .stage{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(250px,1fr);gap:16px;align-items:start;padding-bottom:24px}
+.wiq-core .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+.wiq-core .label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+.wiq-core .chatpanel{position:relative;display:flex;flex-direction:column;height:calc(100vh - 156px);height:calc(100dvh - 156px);min-height:480px;max-height:920px}
+.wiq-core .chathead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.wiq-core .scroll{flex:1;overflow-y:auto;padding:16px;min-height:0}
+.wiq-core .thread{display:flex;flex-direction:column;gap:12px}
+.wiq-core .msg{max-width:86%;padding:9px 12px;border-radius:var(--r);white-space:pre-wrap;overflow-wrap:anywhere}
+.wiq-core .msg.agent{background:var(--surface-2);align-self:flex-start}
+.wiq-core .msg.user{background:var(--accent);color:var(--accent-fg);align-self:flex-end}
+.wiq-core .msg .why{display:block;margin-top:6px;color:var(--muted);font-size:12px}
+.wiq-core .event{align-self:flex-start;font-family:var(--font-mono);font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:baseline}
+.wiq-core .event::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good);flex:none;transform:translateY(-1px)}
+.wiq-core .typing{align-self:flex-start;background:var(--surface-2);border-radius:var(--r);padding:12px 14px;display:flex;gap:4px}
+.wiq-core .typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:wiq-blink 1s infinite ease-in-out}
+.wiq-core .typing i:nth-child(2){animation-delay:.15s}
+.wiq-core .typing i:nth-child(3){animation-delay:.3s}
+@keyframes wiq-blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.wiq-core .tr{display:flex;flex-wrap:wrap;gap:4px 14px;list-style:none;font-size:12px;color:var(--muted);align-self:flex-start}
+.wiq-core .tr li::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--line);margin-right:6px}
+.wiq-core .tr li.run{color:var(--fg)}
+.wiq-core .tr li.run::before{background:var(--warn)}
+.wiq-core .tr li.done::before{background:var(--good)}
+.wiq-core .cardgroup{align-self:stretch}
+.wiq-core .card{border:1px solid var(--line);border-radius:var(--r);padding:12px;background:var(--surface)}
+.wiq-core .card + .card{margin-top:10px}
+.wiq-core .card.on{border-color:var(--accent);background:var(--accent-soft)}
+.wiq-core .card.off{opacity:.6}
+.wiq-core .card h3{font-size:14px;font-weight:600;margin:0}
+.wiq-core .top-row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;justify-content:space-between}
+.wiq-core .why-line{margin:6px 0 0;color:var(--muted);font-size:12px}
+.wiq-core .why-line.mv{color:var(--info);font-weight:500}
+.wiq-core .parts{margin:6px 0 0;font-size:12px;color:var(--muted)}
+.wiq-core .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.wiq-core .quick{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px}
+.wiq-core .quick:not(:empty){padding-bottom:10px}
+.wiq-core .chat-toast{position:absolute;left:50%;bottom:70px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:7px 12px;border-radius:var(--r);font-size:12px}
+.wiq-core .composer{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);align-items:flex-end}
+.wiq-core .composer textarea{flex:1;min-width:0;resize:none;border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r);padding:10px 12px;max-height:120px;line-height:1.4}
+.wiq-core .composer textarea:focus{border-color:var(--accent);outline:none}
+.wiq-core .btn{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:7px 12px;font-weight:500}
+.wiq-core .btn:hover{border-color:var(--accent)}
+.wiq-core .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.wiq-core .btn.ghost{border-color:transparent;background:transparent;color:var(--accent);padding:4px 6px}
+.wiq-core .btn.sm{padding:4px 9px;font-size:12px}
+.wiq-core .chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 13px;font-weight:500}
+.wiq-core .chip:hover{border-color:var(--accent)}
+.wiq-core .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.wiq-core .chip.done{border-color:var(--accent);color:var(--accent)}
+.wiq-core .tag{display:inline-block;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:600;letter-spacing:.03em}
+.wiq-core .tag.high{background:var(--good-soft);color:var(--good)}
+.wiq-core .tag.med{background:var(--warn-soft);color:var(--warn)}
+.wiq-core .tag.low{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.wiq-core .tag.adv{background:var(--info-soft);color:var(--info)}
+.wiq-core details.cite{margin-top:8px;font-size:12px}
+.wiq-core details.cite summary{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;cursor:pointer;list-style:none;background:var(--info-soft);color:var(--info);border-radius:4px;padding:3px 8px}
+.wiq-core details.cite summary::-webkit-details-marker{display:none}
+.wiq-core details.cite summary b{font-weight:600}
+.wiq-core details.cite .cite-body{margin-top:6px;padding:8px 10px;border-left:3px solid var(--info);background:var(--surface-2);border-radius:0 var(--r) var(--r) 0;color:var(--fg)}
+.wiq-core .maint-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:start}
+.wiq-core .side{padding:16px;position:sticky;top:72px;max-height:calc(100vh - 128px);max-height:calc(100dvh - 128px);overflow-y:auto}
+.wiq-core .head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.wiq-core .mem{list-style:none}
+.wiq-core .mem li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.wiq-core .mem li:first-child{border-top:0}
+.wiq-core .mem .k{font-family:var(--font-mono);font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.wiq-core .mem .v{font-weight:600}
+.wiq-core .mem .v.none{font-weight:400;color:var(--muted)}
+.wiq-core .ro-sec{padding-block:10px;border-top:1px solid var(--line)}
+.wiq-core .head + .ro-sec{border-top:0}
+.wiq-core .ro-sec p{margin:4px 0 0}
+.wiq-core .tablewrap{overflow-x:auto}
+.wiq-core table.lines{width:100%;border-collapse:collapse;font-size:13px}
+.wiq-core table.lines th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:4px 6px 4px 0}
+.wiq-core table.lines td{padding:6px 6px 6px 0;border-top:1px solid var(--line);vertical-align:top}
+.wiq-core table.lines td.n, .wiq-core table.lines th.n{text-align:right;white-space:nowrap}
+.wiq-core .totals{display:flex;justify-content:space-between;gap:12px;font-weight:600;padding-top:8px}
+.wiq-core .srcbadge{font-size:10px;font-weight:600;letter-spacing:.05em;border-radius:3px;padding:1px 5px;background:var(--info-soft);color:var(--info)}
+.wiq-core .flash{animation:wiq-flash 1.4s ease-out}
+@keyframes wiq-flash{from{background:var(--accent-soft)}to{background:transparent}}
+.wiq-core .copybox{display:block;width:100%;min-height:120px;margin-top:8px;font-family:var(--font-mono);font-size:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:8px}
+.wiq-core .fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wiq-core .fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+.wiq-core .fld input, .wiq-core .fld textarea, .wiq-core .manual input{width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r);padding:6px 8px;min-width:0}
+.wiq-core .fld input:focus, .wiq-core .fld textarea:focus, .wiq-core .manual input:focus, .wiq-core input.hrs:focus{border-color:var(--accent);outline:none}
+.wiq-core input.hrs{width:64px;text-align:right;border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r);padding:4px 6px}
+.wiq-core .manual{display:flex;gap:6px;margin-top:10px;align-items:center}
+.wiq-core .manual input:first-child{flex:1}
+.wiq-core .manual input.hrs{width:64px;flex:none}
+.wiq-core .mobtabs{display:none;margin-bottom:12px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.wiq-core .mobtabs button{flex:1;border:0;background:transparent;padding:9px;font-weight:500;color:var(--muted)}
+.wiq-core .mobtabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.wiq-core .mobtabs button.dot::after{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--warn);margin-left:7px}
+.wiq-core .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--good)}
+.wiq-core .live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good);animation:wiq-blink 1.6s infinite}
+@media (max-width:640px){.wiq-core .stage{grid-template-columns:minmax(0,1fr)}
+.wiq-core .mobtabs{display:flex}
+
+.wiq-core .chatpanel{height:calc(100vh - 266px);height:calc(100dvh - 266px)}
+.wiq-core .side{position:static;max-height:none}
+.wiq-core .stage[data-view="chat"] .side{display:none}
+.wiq-core .stage[data-view="side"] .chatpanel{display:none}
+.wiq-core .proto{margin-left:0}
+}
+@media (max-width:900px){.wiq-core .msg{max-width:94%}
+.wiq-core .side, .wiq-core .scroll{padding:12px}
+.wiq-core table.lines{font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){.wiq-core .flash{animation:none}
+.wiq-core .typing i{animation:none;opacity:.6}
+.wiq-core .live::before{animation:none}
+}
+
+.wiq-core .parts{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.wiq-core .pchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.wiq-core .pchip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:500}
+.wiq-core .pchip:hover:not(:disabled){border-color:var(--accent)}
+.wiq-core .pchip:disabled,.wiq-core .btn:disabled{opacity:.5;cursor:not-allowed}
+.wiq-core .pit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.wiq-core .pit .nm{font-weight:500}
+.wiq-core .pit .pr{text-align:right;font-weight:600}
+
+.wiq-core .calls{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.wiq-core .calls li{border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;background:var(--surface-2);overflow-wrap:anywhere}
+
+.wiq-core .seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.wiq-core .seg button{border:0;background:transparent;padding:3px 10px;font-size:12px;font-weight:500;color:var(--muted)}
+.wiq-core .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+
+.wiq-core .total-card{position:sticky;bottom:-16px;z-index:3;margin:12px -16px -16px;padding:12px 16px 14px;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -6px 12px -8px rgba(0,0,0,.25)}
+.wiq-core .total-card .trow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-block:2px}
+.wiq-core .total-card .grand{margin-top:4px;padding-top:6px;border-top:1px solid var(--line);font-weight:700;font-size:16px}
+.wiq-core .total-card p{margin:4px 0 0}
+
+.wiq-core .flash-solid{animation:wiq-flash-solid 1.4s ease-out}
+@keyframes wiq-flash-solid{from{background:var(--accent-soft)}to{background:var(--surface)}}
+@media (prefers-reduced-motion:reduce){.wiq-core .flash-solid{animation:none}}

@@ -61,6 +61,20 @@ function checkStatus(response, responseKey) {
   return node;
 }
 
+/** Every make NAPA lists for a year. Trucks and SUVs are separate makes ("Ford" vs "Ford Truck"). */
+export async function listMakes(year) {
+  const response = await callApi("MakeListRequest", { VehYear: year, VehicleTypeID: VEHICLE_TYPE_ID });
+  const node = checkStatus(response, "MakeListResponse");
+  return asArray(node.MakeItem).map((m) => ({ id: m.MakeID, desc: String(m.MakeDesc) }));
+}
+
+/** Every model NAPA lists for a year and MakeID. */
+export async function listModels(year, makeId) {
+  const response = await callApi("ModelListRequest", { VehYear: year, MakeID: makeId, VehicleTypeID: VEHICLE_TYPE_ID });
+  const node = checkStatus(response, "ModelListResponse");
+  return asArray(node.ModelItem).map((m) => ({ id: m.ModelID, desc: String(m.ModelDesc) }));
+}
+
 /** Resolve a Year + Make name to NAPA's MakeID. */
 export async function findMakeId(year, makeName) {
   const response = await callApi("MakeListRequest", { VehYear: year, VehicleTypeID: VEHICLE_TYPE_ID });

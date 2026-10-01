@@ -191,7 +191,7 @@ export default function WrenchIQSidecarScreen({ windowMode = "sidecar", onToggle
 
   return (
     <div style={{
-      display: "flex", flexDirection: "column", height: "100vh",
+      display: "flex", flexDirection: "column", height: "100%",
       background: COLORS.navyDark, fontFamily: "'Inter', system-ui, sans-serif",
       overflow: "hidden",
     }}>

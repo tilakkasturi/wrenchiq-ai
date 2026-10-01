@@ -110,6 +110,7 @@ tar -czf "${BUILD_HOME}/${MODULE}.tar.gz" \
   --exclude='.DS_Store' \
   dist \
   server \
+  napa/searchParts.js \
   src/data \
   ro-ner-demo \
   package.json \

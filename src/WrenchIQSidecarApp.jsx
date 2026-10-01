@@ -6,6 +6,7 @@ import { ZoomProvider } from "./context/ZoomContext";
 import { getWindowMode, setWindowMode } from "./services/externalLink";
 import WrenchIQSidecarScreen from "./screens/WrenchIQSidecarScreen";
 import WrenchIQSidecarFullScreen from "./screens/sidecar/WrenchIQSidecarFullScreen";
+import SidecarUiSwitch from "./core/SidecarUiSwitch";
 
 // Bridge: reads shopId from DemoContext to pass into SelectedCustomerProvider,
 // same pattern as main.jsx's AppWithObjectives. Also owns which window mode
@@ -27,7 +28,7 @@ export default function WrenchIQSidecarApp() {
     setLocalWindowMode(next);
   }, [windowMode]);
 
-  return (
+  const classic = (
     <SelectedCustomerProvider shopId={activeShopId || "cornerstone"} edition="am">
       <BrandingProvider>
         <ZoomProvider>
@@ -38,4 +39,7 @@ export default function WrenchIQSidecarApp() {
       </BrandingProvider>
     </SelectedCustomerProvider>
   );
+
+  // Classic | Core switch lives in a thin strip above the sidecar; Core is the new agentic assistant.
+  return <SidecarUiSwitch classic={classic} />;
 }

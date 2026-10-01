@@ -71,3 +71,6 @@ releases/
 ro-ner-demo/ro/
 ro-ner-demo/ner_output/*
 !ro-ner-demo/ner_output/.gitkeep
+
+# Python virtualenv for ro-ner-demo (local install, not source)
+ro-ner-demo/.venv/
