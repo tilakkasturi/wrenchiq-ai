@@ -137,7 +137,7 @@ export function computeMaintenanceDue(mileage, schedule) {
     const names = inspectionItems.map(x => x.item.name.replace(/, (inspect|check|tighten)$/i, ''));
     MAINT_ITEM_CACHE.set(inspectionId, {
       id: inspectionId, name: nearest.toLocaleString() + ' mi multi-point inspection (' + inspectionItems.length + ' checks)',
-      hours: HOUR_DEFAULT.INSPECT, src: 'sm',
+      hours: HOUR_DEFAULT.INSPECT, src: 'sm', checks: names,
       ref: schedule.vinMask + ' @ ' + nearest.toLocaleString() + ' mi',
       detail: 'OEM scheduled maintenance (' + schedule.match + ', source ' + schedule.source + '). Bundled inspection: ' + names.join(', ') + '.',
     });
@@ -150,7 +150,7 @@ export function computeMaintenanceDue(mileage, schedule) {
     status,
     at: nearest,
     note: status === 'DUE_NOW'
-      ? (delta >= 0 ? delta.toLocaleString() + ' mi past the ' + nearest.toLocaleString() + ' mi service' : 'due in ' + (-delta).toLocaleString() + ' mi')
+      ? (delta === 0 ? 'right at the ' + nearest.toLocaleString() + ' mi service' : delta > 0 ? delta.toLocaleString() + ' mi past the ' + nearest.toLocaleString() + ' mi service' : 'due in ' + (-delta).toLocaleString() + ' mi')
       : status === 'COMING_UP'
         ? 'coming up in ' + (-delta).toLocaleString() + ' mi'
         : (next ? (next - mileage).toLocaleString() + ' mi away' : 'at ' + nearest.toLocaleString() + ' mi'),

@@ -1,5 +1,5 @@
 {
- "_about": "The demo shop the Core assistant runs as. Shown at the top of Shop profile and kept in shop memory as fixed facts (the advisor cannot change them in the chat).",
+ "_about": "The demo shop the Core assistant runs as. Shown at the top of Shop profile and kept in shop memory as fixed facts (the advisor cannot change them in the chat). maintenancePresentation is the default for how scheduled maintenance is presented (\"prioritized\": by severity, the important items first; \"all\": the full schedule as is); the shop can change it in Shop profile. laborGuidePresentation is the same choice for labor-guide recommendations, the add-on labor that goes with a repair (\"prioritized\": part-of-the-job and recommended add-ons first, only-if-needed and optional ones offered as conditional; \"all\": every add-on the labor guide lists, in guide order).",
  "shopId": "cornerstone",
  "name": "Cornerstone Automotive",
  "address": "2341 El Camino Real, Sunnyvale, California",
@@ -10,6 +10,8 @@
   "say": "When I pick parts, availability comes first: the part that can be here soonest, then the lowest list price among those.",
   "why": "A part that is not here holds up the bay and the customer's car, so a few dollars of price never beats a part that is in stock."
  },
+ "maintenancePresentation": "prioritized",
+ "laborGuidePresentation": "prioritized",
  "examples": [
   "Labor rate is $165 an hour",
   "We mark up parts 45%",

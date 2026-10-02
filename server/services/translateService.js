@@ -12,18 +12,16 @@
  */
 
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
+import { prompt } from './promptLoader.js';
 
 export async function translateToEnglish(text) {
   const trimmed = (text || '').trim();
   if (!trimmed) return '';
 
-  const prompt = `Translate the following text into English. Respond with ONLY the translation — no quotes, no explanation, no "Here's the translation:" preamble.
-
-Text:
-${trimmed}`;
+  const content = prompt('reply-translate-to-english', { text: trimmed });
 
   const data = await callAzureOpenAI({
-    messages:   [{ role: 'user', content: prompt }],
+    messages:   [{ role: 'user', content }],
     max_tokens: Math.max(200, trimmed.length * 2),
     temperature: 0,
     _route:     '/api/ro-chat/translate',

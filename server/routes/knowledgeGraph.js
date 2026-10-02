@@ -15,6 +15,7 @@ import {
   CLAUDE_MAX_TOKENS_CHAT,
 } from '../config.js';
 import { callAzureOpenAI, getTextFromResponse } from '../services/azureOpenAI.js';
+import { prompt, promptSection } from '../services/promptLoader.js';
 
 const router = Router();
 const RO_COLL      = 'wrenchiq_ro';
@@ -452,9 +453,10 @@ router.post('/ask', async (req, res) => {
         : Promise.resolve(null),
     ]);
 
-    // ── Build extraContext from parallel results ───────────────────────────────
+    // ── Build the prompt's data blocks from parallel results ──────────────────
+    // Wording lives in prompts/kg-advisor-system.md; this only computes the rows.
     const dataSources = ['wrenchiq_clusters (top 10)', 'wrenchiq_ro (aggregate stats)'];
-    let extraContext = '';
+    const ctx = { location: location || '' };
 
     if (makeROs) {
       const jobFreq = {};
@@ -465,7 +467,12 @@ router.post('/ask', async (req, res) => {
         }
       }
       const topJobs = Object.entries(jobFreq).sort((a,b) => b[1]-a[1]).slice(0,8);
-      extraContext += `\n### ${mentionedMake.toUpperCase()} specific data (${makeROs.length} ROs found)\nTop repair jobs: ${topJobs.map(([j,c]) => `${j} (${c}x)`).join(', ')}\n`;
+      Object.assign(ctx, {
+        make: true,
+        makeLabel: mentionedMake.toUpperCase(),
+        makeCount: makeROs.length,
+        makeTopJobs: topJobs.map(([j,c]) => `${j} (${c}x)`).join(', '),
+      });
       dataSources.push(`wrenchiq_ro filtered by make=${mentionedMake} (${makeROs.length} records)`);
     }
 
@@ -476,15 +483,14 @@ router.post('/ask', async (req, res) => {
           .slice(0, 4)
       );
       if (rules.length) {
-        extraContext += `\n### Association rules for "${mentionedJob}"\n`;
-        extraContext += rules.map(r => `  IF ${r.antecedent} → THEN ${r.consequent} (confidence=${(r.confidence*100).toFixed(0)}%, lift=${r.lift?.toFixed(2)})`).join('\n');
-        extraContext += '\n';
+        ctx.mentionedJob = mentionedJob;
+        ctx.rules = rules.map(r => `  IF ${r.antecedent} → THEN ${r.consequent} (confidence=${(r.confidence*100).toFixed(0)}%, lift=${r.lift?.toFixed(2)})`).join('\n');
       }
       dataSources.push(`wrenchiq_clusters filtered for job="${mentionedJob}" (${relevantClusters.length} clusters)`);
     }
 
     if (priceData?.length) {
-      extraContext += `\n### Top parts by average price\n${priceData.map(p => `${p._id}: $${p.avg_price?.toFixed(2)} avg (${p.count} occurrences)`).join('\n')}\n`;
+      ctx.prices = priceData.map(p => `${p._id}: $${p.avg_price?.toFixed(2)} avg (${p.count} occurrences)`).join('\n');
       dataSources.push('wrenchiq_ro parts price aggregation');
     }
 
@@ -493,21 +499,26 @@ router.post('/ask', async (req, res) => {
         (c.part_affinity || []).slice(0, 3).map(p => `${p.part_a} + ${p.part_b} (support=${(p.support*100).toFixed(1)}%)`)
       ).slice(0, 10);
       if (topAffinity.length) {
-        extraContext += `\n### Part affinity pairs (frequently bought together)\n${topAffinity.join('\n')}\n`;
+        ctx.affinity = topAffinity.join('\n');
         dataSources.push('wrenchiq_clusters.part_affinity');
       }
     }
 
     if (shopStats?.length) {
-      extraContext += `\n### Shop performance\n${shopStats.map(s => `${s._id}: ${s.ro_count} ROs, avg mileage ${s.avg_mileage?.toFixed(0)}`).join('\n')}\n`;
+      ctx.shops = shopStats.map(s => `${s._id}: ${s.ro_count} ROs, avg mileage ${s.avg_mileage?.toFixed(0)}`).join('\n');
       dataSources.push('wrenchiq_ro grouped by shop');
     }
 
     if (customerROs?.length) {
-      const custName = customerROs[0]?.customer?.name || customer_name;
       const custJobs = customerROs.flatMap(ro => (ro.repair_jobs || []).map(j => j.repair_job || j.description)).filter(Boolean);
       const custVehicles = [...new Set(customerROs.map(ro => `${ro.vehicle?.year} ${ro.vehicle?.make} ${ro.vehicle?.model}`))];
-      extraContext += `\n### Customer: ${custName} (${customerROs.length} ROs on file)\nVehicles: ${custVehicles.join(', ')}\nPast repairs: ${custJobs.slice(0, 10).join(', ')}\n`;
+      Object.assign(ctx, {
+        customer: true,
+        custName: customerROs[0]?.customer?.name || customer_name,
+        custCount: customerROs.length,
+        custVehicles: custVehicles.join(', '),
+        custJobs: custJobs.slice(0, 10).join(', '),
+      });
       dataSources.push(`wrenchiq_ro for customer "${customer_name}" (${customerROs.length} records)`);
     }
 
@@ -519,29 +530,17 @@ router.post('/ask', async (req, res) => {
         return (now - new Date(ro.waitingSince).getTime()) / 3600000 > 1;
       });
       const ready = queueROs.filter(ro => ro.kanbanStatus === 'ready');
-
-      if (queueROs.length === 0) {
-        extraContext += `\n### Today's open RO queue\nNo open repair orders on file right now.\n`;
-      } else {
-        extraContext += `\n### Today's open RO queue (${queueROs.length} open ROs)\n`;
-        if (unassigned.length) {
-          extraContext += `Unassigned (no tech yet): ${unassigned.map(ro => `${ro.roNumber} (${ro.customer?.name || 'unknown customer'})`).join(', ')}\n`;
-        }
-        if (longWaiting.length) {
-          extraContext += `Waiting on customer response >1hr: ${longWaiting.map(ro => `${ro.roNumber} (${ro.customer?.name || 'unknown customer'})`).join(', ')}\n`;
-        }
-        if (ready.length) {
-          extraContext += `Ready for pickup: ${ready.map(ro => ro.roNumber).join(', ')}\n`;
-        }
-        if (!unassigned.length && !longWaiting.length) {
-          extraContext += `Nothing flagged — no unassigned ROs or estimates waiting over an hour.\n`;
-        }
-      }
+      const roWithCustomer = ro => promptSection('kg-advisor-rows', 'ro_with_customer', { roNumber: String(ro.roNumber), customer: ro.customer?.name || '' });
+      Object.assign(ctx, {
+        queue: true,
+        queueEmpty: queueROs.length === 0,
+        queueCount: queueROs.length,
+        queueUnassigned: unassigned.map(roWithCustomer).join(', '),
+        queueWaiting: longWaiting.map(roWithCustomer).join(', '),
+        queueReady: ready.map(ro => ro.roNumber).join(', '),
+        queueNothingFlagged: !unassigned.length && !longWaiting.length,
+      });
       dataSources.push(`RepairOrder live queue for shop "${shopId || 'cornerstone'}" (${queueROs.length} open ROs)`);
-    }
-
-    if (location) {
-      extraContext += `\n### Active filter: Location = "${location}"\nAll data above is scoped to this location.\n`;
     }
 
     // ── 2. Build structured context ───────────────────────────────────────────
@@ -553,34 +552,7 @@ router.post('/ask', async (req, res) => {
 
     const filterNote = [location && `location: ${location}`, customer_name && `customer: ${customer_name}`].filter(Boolean).join(', ');
 
-    const systemPrompt = `You are a service advisor assistant at an auto repair shop. You have access to real repair history data for ${roCount} repair orders across ${clusterCount} vehicle clusters.
-${filterNote ? `\nACTIVE FILTERS: ${filterNote}\n` : ''}
-REPAIR HISTORY DATA:
-${clusterSummary}
-${extraContext}
-
-RESPONSE FORMAT — use exactly this structure, written for a service advisor on the shop floor:
-
-**Bottom Line:**
-[One plain-English sentence — the single most useful takeaway. Write like you're telling a colleague, not a report. Example: "Almost every Toyota that comes in for brakes also needs an alignment."]
-
-**What the data shows:**
-1. [Specific finding — use real numbers, written simply. "7 out of 13 Toyotas needed an oil change" not "53.8%"]
-2. [Next finding]
-3. [Next finding — max 4 items total]
-
-**Why this answer:**
-- [Name the actual data that backs this up. "Based on 13 Toyota repair orders in the database" or "The 4-cylinder engine cluster (22 ROs) shows this pattern consistently"]
-- [Second evidence point if relevant]
-
-**At the counter:**
-[A single practical script or action. Write as a direct quote or instruction the advisor can use TODAY. Example: "When a customer brings in a Honda Civic for an oil change, ask: 'When did you last have your air filter checked? We're seeing that come up a lot on Civics right now.'"]
-
-RULES:
-- Use ONLY the data provided above — no invented numbers
-- Avoid technical jargon: say "engine group" not "cluster ID", say "oil change" not "LOF SERVICE"
-- Be specific with numbers but keep language conversational
-- The "At the counter" section must be actionable TODAY, not generic advice`;
+    const systemPrompt = prompt('kg-advisor-system', { ...ctx, roCount, clusterCount, filterNote, clusterSummary });
 
     // ── 3. Build messages array (with history) ────────────────────────────────
     const messages = [

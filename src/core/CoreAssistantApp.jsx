@@ -5,6 +5,7 @@ import { boot, setMode, newJob, setUseAgent, runDemo, demoList } from './harness
 import ChatPanel from './components/ChatPanel';
 import MemoryPanel from './components/MemoryPanel';
 import RepairOrderPanel from './components/RepairOrderPanel';
+import TracePanel from './components/TracePanel';
 import './core.css';
 
 // Everything the side panel shows, as one string, to notice when it changed.
@@ -16,6 +17,7 @@ export default function CoreAssistantApp() {
   useCore();
   const [view, setView] = useState('chat');
   const [dot, setDot] = useState(false);
+  const [tracing, setTracing] = useState(false); // the Agent trace tab; the harness mode underneath is kept
   const prev = useRef({ sig: panelSig(), mode: S.mode });
 
   useEffect(() => { if (!S.booted) { loadProfile(); boot(); } }, []);
@@ -30,7 +32,7 @@ export default function CoreAssistantApp() {
 
   const mode = S.mode;
   const sideLabel = mode === 'ro' ? 'Repair order' : 'Shop memory';
-  const pick = m => { setView('chat'); setDot(false); setMode(m); };
+  const pick = m => { setTracing(false); setView('chat'); setDot(false); setMode(m); };
   const showSide = () => { setView('side'); setDot(false); };
 
   return (
@@ -42,19 +44,20 @@ export default function CoreAssistantApp() {
             <div><b>WrenchIQ Core</b><small>Agentic shop assistant</small></div>
           </div>
           <nav className="modes" role="tablist" aria-label="Mode">
-            <button role="tab" aria-selected={mode === 'profile'} onClick={() => pick('profile')}>Shop profile</button>
-            <button role="tab" aria-selected={mode === 'ro'} onClick={() => pick('ro')}>Repair order</button>
+            <button role="tab" aria-selected={!tracing && mode === 'profile'} onClick={() => pick('profile')}>Shop profile</button>
+            <button role="tab" aria-selected={!tracing && mode === 'ro'} onClick={() => pick('ro')}>Repair order</button>
+            <button role="tab" aria-selected={tracing} onClick={() => setTracing(true)}>Agent trace{S.trace && S.trace.turns.length ? <span className="tr-count mono">{S.trace.turns.length}</span> : null}</button>
           </nav>
           <div className="proto"><i>Prototype</i><span>Sample data. Nothing is sent to a shop system.</span></div>
         </header>
 
-        <div className="mobtabs">
+        {!tracing && <div className="mobtabs">
           <button aria-pressed={view === 'chat'} onClick={() => setView('chat')}>Chat</button>
           <button aria-pressed={view === 'side'} className={dot ? 'dot' : ''} onClick={showSide}>{sideLabel}</button>
-        </div>
+        </div>}
 
-        <div className="stage" data-view={view}>
-          {mode === 'profile' ? (
+        <div className={'stage' + (tracing ? ' single' : '')} data-view={view}>
+          {tracing ? <TracePanel /> : mode === 'profile' ? (
             <>
               <ChatPanel key="profile" mode="profile" title="Shop profile" placeholder="Tell me how your shop works, in your own words"
                 note={<span className="small muted mono">{Object.keys(S.profile).filter(k => !FIXEDMAP[k]).length} saved</span>} />

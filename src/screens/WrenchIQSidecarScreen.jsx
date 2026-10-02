@@ -18,6 +18,7 @@ import { COLORS } from "../theme/colors";
 import { useDemo } from "../context/DemoContext";
 import { updateStoryRO } from "../services/repairOrderService";
 import { fetchCannedJobs } from "../services/prediiLearnService";
+import { prompt, promptSection } from "../services/promptLoader";
 import { openExternalUrl, openSmsRepresentativeSplit, openAdminSettingsWindow } from "../services/externalLink";
 import { useSidecarRO } from "../hooks/useSidecarRO";
 import TransferSimulationModal from "../components/sidecar/TransferSimulationModal";
@@ -1991,49 +1992,33 @@ const REACT_TOOLS = [
   },
 ];
 
-// Mirrors buildSystemPrompt() in server/services/roAdvisorService.js — same
-// header fields and rules, populated from this RO so what's shown here is
-// the real prompt shape, not a paraphrase. Rules are abridged for length.
+// The RO Advisor's real system prompt (prompts/ro-advisor-system.md — the same file
+// buildSystemPrompt() in server/services/roAdvisorService.js renders), filled from this RO
+// with the same variable shapes the server passes (see systemPromptVars() there). The shop
+// profile isn't loaded on this screen, so those two values show as placeholders.
+const DISPLAY_SHOP_NAME = "Cornerstone Auto Group"; // the server's SHOP_NAME
+const FROM_SHOP_SETTINGS = "(from shop settings)";
+
 function buildDisplaySystemPrompt(ro) {
   const veh = ro?._vehicle;
-  const vehicleStr = veh?.make
-    ? `${veh.year || ""} ${veh.make || ""} ${veh.model || ""} — ${(veh.mileage ?? veh.odometer ?? 0).toLocaleString()} miles`
-    : "vehicle details not available";
-  const existing = (ro?.services || []).map((s) => s.name).filter(Boolean);
+  const existing = (ro?.services || [])
+    .map((s) => (typeof s === "string" ? s : s?.name || s?.description || s?.service || ""))
+    .map((s) => s.toLowerCase().trim())
+    .filter(Boolean);
 
-  return `You are WrenchIQ Intelligence, an AI agent briefing a human service advisor before they walk out to greet a customer.
-
-Current RO:
-  Customer: ${[ro?._customer?.firstName, ro?._customer?.lastName].filter(Boolean).join(" ") || "Unknown"}
-  Vehicle:  ${vehicleStr}
-  In for:   ${ro?.customerConcern || ro?.serviceType || "General service"}
-  DTCs:     ${(ro?.dtcs || []).join(", ") || "none"}
-  Shop:     Cornerstone Auto Group
-  Advisor:  ${ro?.advisorName || "not on file"}
-
-Shop profile (Settings → ARO & Margin — situational awareness only, never quoted to the customer):
-  Labor rate / parts margin target — used only to judge whether a recommendation is realistically priced for this shop.
-
-Line items already on this RO (never re-recommended, in any wording):
-${existing.length ? existing.map((s) => `  - ${s}`).join("\n") : "  (none)"}
-
-Your job:
-1. Call get_customer_history to understand this customer's visit history and any declined services.
-2. Call get_shop_objectives to get today's active shop priorities and promotions.
-3. Call get_mileage_services to identify what's due at this vehicle's mileage.
-4. Call get_canned_jobs to see the shop's real priced job menu.
-5. Call get_seasonal_trends to see what's historically busy at this shop right now.
-6. Call get_tsbs to check for active manufacturer Technical Service Bulletins filed for this exact vehicle year/make/model.
-7. Cross-reference all six sources to produce a prioritized, non-redundant recommendation set (max 4).
-
-Rules (abridged):
-- A service declined in the last 12 months becomes an alert, never a fresh recommendation.
-- Only surface shop priorities that apply to this specific vehicle (trigger filters: vehicle_make, mileage_range, any_ro).
-- Never recommend anything already a line item on this RO, worded differently or not.
-- category = "year_round" for interval-based items (oil, filters, etc.); "seasonal" only for genuinely calendar-driven work; "tsb" for a get_tsbs-driven fix (cite the TSB number in the reason).
-- Use a matching canned job's real totalPrice instead of estimating a cost; a TSB with no canned-job match is priced from the bulletin's own described scope.
-
-Respond ONLY with valid JSON: { advisorBrief, serviceRecommendations[], ings[], alerts[], suggestedCustomerMessage }`;
+  return prompt("ro-advisor-system", {
+    customer: [ro?._customer?.firstName, ro?._customer?.lastName].filter(Boolean).join(" ") || ro?.customerName || ro?.customerId || "",
+    vehicle: veh
+      ? { year: veh.year || "", make: veh.make || "", model: veh.model || "", miles: (veh.mileage ?? veh.odometer ?? 0).toLocaleString() }
+      : null,
+    inFor: ro?.customerConcern || ro?.serviceType || "",
+    dtcs: (ro?.dtcs || []).join(", "),
+    shopName: DISPLAY_SHOP_NAME,
+    advisorName: ro?.advisorName || "",
+    laborCost: FROM_SHOP_SETTINGS,
+    partsMarginTarget: FROM_SHOP_SETTINGS,
+    existingServices: existing.map((s) => `  - ${s}`).join("\n"),
+  });
 }
 
 // Azure AI Foundry list pricing ($ per 1M tokens) — illustrative only, matched
@@ -2499,24 +2484,20 @@ function buildPresetTasks(ro) {
     id: "lookUpPrice",
     label: "Look up a price",
     icon: DollarSign,
-    prompt: primaryService
-      ? `What's our shop's typical price for "${primaryService}"? Use our canned job pricing if we have one on file for it.`
-      : `What's our shop's typical price for an oil change? Use our canned job pricing if we have one on file.`,
+    prompt: promptSection("sidecar-ro-chat-tasks", "lookUpPrice", { primaryService }),
   });
   tasks.push({
     id: "lookUpSymptom",
     label: "Look up a symptom",
     icon: Stethoscope,
-    prompt: concern
-      ? `A customer describes this symptom: "${concern}". Based on our shop profile, what's the likely related repair, and do we have a canned job for it?`
-      : `A customer says their car makes a grinding noise when braking. What's the likely related repair, and do we have a canned job for it?`,
+    prompt: promptSection("sidecar-ro-chat-tasks", "lookUpSymptom", { concern }),
   });
 
   // Structured (not LLM-summarized) visit-by-date timeline — real MongoDB
   // history (see roChat.js's GET /customer-history, same lookup the chat's
   // own grounding already uses), rendered as a scannable list rather than
   // asking the model to restate dates from prose.
-  const customerName = ro._customer?.firstName || "this customer";
+  const customerName = ro._customer?.firstName;
   tasks.push({
     id: "visitHistory",
     label: "Visit history",
@@ -2531,7 +2512,7 @@ function buildPresetTasks(ro) {
     id: "talkingPoints",
     label: "Talking points for today",
     icon: Sparkles,
-    prompt: `Based on ${customerName}'s full visit history, give me specific talking points for my conversation with them today: any recurring issue worth mentioning, previously declined work worth re-offering, their tenure/loyalty if it's notable, and anything to watch for. Write it as short bullet points I can glance at while talking to them — not a script to read verbatim.`,
+    prompt: promptSection("sidecar-ro-chat-tasks", "talkingPoints", { customerName }),
   });
 
   return tasks;
@@ -2656,19 +2637,19 @@ function buildShopPresetTasks(selectedCustomerName) {
       id: "shopPerformance",
       label: "Shop performance",
       icon: Layers,
-      prompt: "Summarize this shop's overall performance — RO count, average RO value, margin, and top repair jobs.",
+      prompt: promptSection("sidecar-shop-chat-tasks", "shopPerformance"),
     },
     {
       id: "topCannedJobs",
       label: "Top canned jobs",
       icon: DollarSign,
-      prompt: "What are our most common canned jobs and their prices?",
+      prompt: promptSection("sidecar-shop-chat-tasks", "topCannedJobs"),
     },
     {
       id: "seasonalTrends",
       label: "Seasonal trends",
       icon: Stethoscope,
-      prompt: "What seasonal patterns should we be planning around right now?",
+      prompt: promptSection("sidecar-shop-chat-tasks", "seasonalTrends"),
     },
     // Deterministic (not LLM-guessed) candidate discovery — see
     // cannedJobCandidatesService.js. Finds RO jobs that recur often but
@@ -2686,7 +2667,7 @@ function buildShopPresetTasks(selectedCustomerName) {
       id: "summarizeVisits",
       label: `Summarize ${selectedCustomerName}'s visits`,
       icon: History,
-      prompt: `Summarize ${selectedCustomerName}'s past visits — what's been done before, any patterns, and anything worth following up on.`,
+      prompt: promptSection("sidecar-shop-chat-tasks", "summarizeVisits", { customerName: selectedCustomerName }),
     });
   }
   return tasks;

@@ -12,44 +12,33 @@
 import { RO_CHAT_MAX_TOKENS } from '../config.js';
 import { formatCannedJobsList, formatShopProfileSummary } from './chatFormatters.js';
 import { runGroundedChatCompletion } from './chatSkill.js';
+import { promptSection } from './promptLoader.js';
 
-function formatCustomerHistory(customerName, history) {
-  if (!customerName) return null;
-  if (!history || history.length === 0) return `${customerName}: no past visits on file`;
-  const lines = history.map((v) => {
-    const date = v.date ? new Date(v.date).toLocaleDateString() : 'unknown date';
-    const services = (v.services || []).join(', ') || 'no line items listed';
+const FILE = 'shop-chat-system';
+
+// The named customer's past visits, one line each ('' when there are none).
+function formatCustomerHistoryLines(history) {
+  if (!history || history.length === 0) return '';
+  return history.map((v) => {
+    const date = v.date ? new Date(v.date).toLocaleDateString() : promptSection(FILE, 'date-unknown');
+    const services = (v.services || []).join(', ') || promptSection(FILE, 'history-no-items');
     const total = v.totalEstimate ? ` — $${v.totalEstimate}` : '';
     return `  - ${date} (${v.roNumber || 'RO?'}): ${v.serviceType || 'service'} — ${services}${total}`;
   }).join('\n');
-  return `${customerName}'s visit history (most recent first):\n${lines}`;
 }
 
+// The prompt wording lives in prompts/shop-chat-system.md (section "system");
+// this only computes the values it renders.
 export function buildShopChatSystemPrompt({ shopName, cannedJobs, shopProfile, customerName, customerHistory, customerMatches } = {}) {
-  const cannedJobsList = formatCannedJobsList(cannedJobs);
-  const shopProfileSummary = formatShopProfileSummary(shopProfile);
-  const customerHistoryBlock = formatCustomerHistory(customerName, customerHistory);
-
-  const customerNote = customerMatches?.length > 1
-    ? `\nNote: "${customerName}" matched more than one customer (${customerMatches.map((c) => c.name).join(', ')}) — the history below is for the first match only. If the advisor needs a different one, ask them to be more specific.`
-    : '';
-
-  return `You are the WrenchIQ Assistant, a bilingual (English and Spanish) shop-wide assistant for ${shopName || 'this shop'}. This is a free-form chat at the queue/dashboard level — no specific RO is open. Answer using only the real, shop-owned data below; never invent a price, part, or visit that isn't actually on file.
-
-Shop's canned job menu (labor price + priced parts package per job):
-${cannedJobsList}
-
-Shop Profile (Predii Learn's persisted analysis of this shop's history — top repair jobs, top parts, repeat customers, seasonal patterns):
-${shopProfileSummary}
-${customerHistoryBlock ? `\n${customerHistoryBlock}${customerNote}` : '\nNo customer selected for this question — if the advisor asks about a specific customer, tell them to name the customer (there is a "Customer" field above the message box) so their history can be looked up.'}
-
-Rules:
-- Detect the language of the user's message and reply in that same language (English or Spanish).
-- Keep replies short and directly usable. Lead with the answer; add at most one short follow-up line only if something needs clarifying.
-- When asked for a price, match against the canned job menu above. If nothing is a reasonable match, say plainly it's not on file — never invent a price.
-- When asked about shop patterns (repeat customers, seasonal trends, common parts/jobs), answer from the Shop Profile above. If it says "none on file yet," say so plainly.
-- When asked about a customer's history, answer only from the customer history block above (if present). If no customer is selected or none was found, say so and ask the advisor to name the customer.
-- Stay in scope: this shop's own pricing, patterns, or named-customer history. If asked something genuinely unrelated, briefly redirect back to what you're for.`;
+  return promptSection(FILE, 'system', {
+    shopName:           shopName || '',
+    cannedJobsList:     formatCannedJobsList(cannedJobs),
+    shopProfileSummary: formatShopProfileSummary(shopProfile),
+    customerName:       customerName || '',
+    historyLines:       customerName ? formatCustomerHistoryLines(customerHistory) : '',
+    multipleMatches:    customerMatches?.length > 1,
+    matchNames:         (customerMatches || []).map((c) => c.name).join(', '),
+  });
 }
 
 /**

@@ -19,6 +19,7 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { prompt } from '../server/services/promptLoader.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SAMPLES_PATH = join(__dirname, '..', 'docs', 'market_research', 'API_Request_Response_Samples.md');
@@ -53,19 +54,7 @@ async function main() {
   const markdown = readFileSync(SAMPLES_PATH, 'utf8');
   const sectionText = extractSection(markdown, section);
 
-  const systemPrompt = [
-    'You analyze sample API request/response payloads and report ONLY their',
-    'structural shape — object/array nesting, field names, and inferred',
-    'types (string, number, boolean, array, object).',
-    '',
-    'Rules:',
-    '- Do NOT reproduce any actual sample values (VINs, part numbers, IDs,',
-    '  prices, names, descriptions, etc). Replace every leaf value with its',
-    '  type only, e.g. "vin": "<string>", "price": "<number>".',
-    '- Preserve the real key names and nesting exactly as they appear.',
-    '- For arrays, describe the shape of one representative element.',
-    '- Output valid JSON only — a schema-shaped structure, no prose.',
-  ].join('\n');
+  const systemPrompt = prompt('api-sample-structure-system');
 
   const res = await fetch(`${LLM_BASE_URL.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
@@ -77,7 +66,7 @@ async function main() {
       model: LLM_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Section: ${section}\n\n${sectionText}` },
+        { role: 'user', content: prompt('api-sample-structure-user', { section, sectionText }) },
       ],
       max_tokens: 2000,
       temperature: 0,

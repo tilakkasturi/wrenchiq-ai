@@ -265,7 +265,7 @@
     "won't start",
     "no start",
     "dead",
-    "click",
+    "just click",
     "crank"
    ],
    "parts": [
@@ -282,7 +282,7 @@
    "kw": [
     "won't start",
     "no start",
-    "click",
+    "just click",
     "crank",
     "starter"
    ],
@@ -740,7 +740,7 @@
    ],
    "kw": [
     "won't start",
-    "click",
+    "just click",
     "dim",
     "no crank",
     "slow crank"
@@ -1061,7 +1061,11 @@
    "id": "axle-asm-fwd-both",
    "row": "LG-AXL-0001",
    "name": "Axle shaft assembly, remove & install/replace (FWD, both sides)",
-   "strong": [],
+   "strong": [
+    "clicking when turning",
+    "clicks when turning",
+    "popping when turning"
+   ],
    "kw": [
     "axle",
     "cv joint",
@@ -1080,7 +1084,11 @@
    "id": "axle-asm-fwd-left",
    "row": "LG-AXL-0002",
    "name": "Axle shaft assembly, remove & install/replace (FWD, left side)",
-   "strong": [],
+   "strong": [
+    "clicking when turning",
+    "clicks when turning",
+    "popping when turning"
+   ],
    "kw": [
     "axle",
     "cv joint",
@@ -1099,7 +1107,11 @@
    "id": "axle-asm-fwd-right",
    "row": "LG-AXL-0003",
    "name": "Axle shaft assembly, remove & install/replace (FWD, right side)",
-   "strong": [],
+   "strong": [
+    "clicking when turning",
+    "clicks when turning",
+    "popping when turning"
+   ],
    "kw": [
     "axle",
     "cv joint",
@@ -1365,7 +1377,7 @@
    "note": "INSPECT BRAKE SYSTEM (COMPLETE) - All Wheels",
    "id": "brake-sys-inspect-all",
    "row": "LG-BRKSYS-0001",
-   "name": "Brake system (complete), inspect — all wheels",
+   "name": "Brake system (complete), inspect \u2014 all wheels",
    "strong": [
     "brake inspection",
     "brake check"
@@ -1383,7 +1395,7 @@
    "note": "REMOVE & REPLACE BRAKE SYSTEM (COMPLETE) - All Wheels",
    "id": "brake-sys-rr-all",
    "row": "LG-BRKSYS-0002",
-   "name": "Brake system (complete), remove & replace — all wheels",
+   "name": "Brake system (complete), remove & replace \u2014 all wheels",
    "strong": [],
    "kw": [
     "brake",
@@ -1814,7 +1826,7 @@
    "note": "COMBINATION - REPLACE WHEEL BEARING - FWD Front, One Side - DOES NOT include wheel alignment.",
    "id": "replace-wheel-bearing-front-fwd",
    "row": "LG-BRKSYS-0012",
-   "name": "Wheel bearing, replace (FWD front, one side) — does not include wheel alignment",
+   "name": "Wheel bearing, replace (FWD front, one side) \u2014 does not include wheel alignment",
    "strong": [],
    "kw": [
     "humming",

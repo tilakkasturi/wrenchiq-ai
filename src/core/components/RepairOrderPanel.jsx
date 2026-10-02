@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCore, S } from '../state';
 import { PQMAP, FIXEDMAP } from '../data';
+import { settingOption } from '../shopSettings';
 import { ITEM, hrs, rate, miles, vehicleLine, vehicleOk, concern, money, roSummary, partsTotals, orderTotals } from '../logic';
 import { saveVehicle, saveConcern, removeItem, lineWhy, addManual, changeHours, searchPart, removePart, setPartQty } from '../harness';
 import { useFlash } from './useFlash';
@@ -302,6 +303,7 @@ export default function RepairOrderPanel() {
   const mem = [];
   if (rate()) mem.push('Labor rate ' + S.profile['shop.labor_rate'].display);
   ['parts.supplier', 'parts.policy', 'comms.tone'].forEach(k => { if (S.profile[k]) mem.push((FIXEDMAP[k] || PQMAP[k]).label + ': ' + S.profile[k].display); });
+  mem.push('Scheduled maintenance: ' + settingOption('maint.presentation').label);
   return (
     <aside className="panel side" aria-label="Repair order">
       <div className="head"><h2 className="label">Repair order</h2><span className="live">Live</span><span className="tag adv">Draft</span></div>

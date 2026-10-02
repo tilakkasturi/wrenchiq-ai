@@ -3,8 +3,8 @@
  *
  * One model call per request. The browser owns the repair order and runs the tools (vehicle,
  * concern, labor guide ranking, maintenance, NAPA lookup) against it; this file holds what must
- * stay on the server: the system prompt, the worked examples and the tool allowlist, and the call
- * to the shared LLM gateway.
+ * stay on the server: the tool allowlist, assembling the prompt (its wording is in /prompts:
+ * core-ro-agent-system, -examples, -context, -rows) and the call to the shared LLM gateway.
  *
  * Tracing: with LANGFUSE_ENABLED each step is one Langfuse trace (tag core-ro-agent). The browser
  * sends a per-repair-order sessionId and a per-advisor-message turnId, so a whole conversation
@@ -12,75 +12,31 @@
  * like the RO Advisor; a tracing failure never fails the step.
  */
 
+import { prompt, promptSection } from './promptLoader.js';
+
 /** Gemma can emit its thinking-channel markers in the visible text; drop them. */
 export const cleanText = t => String(t || '').replace(/<\|channel>[\s\S]*?<channel\|>/g, '').replace(/<\|?channel\|?>/g, '').trim();
 
 export const RO_TOOL_NAMES = ['update_vehicle', 'set_concern', 'rank_repairs', 'get_maintenance_due', 'add_repair_line', 'search_napa_parts'];
 
-const RO_ROLE = `You are the WrenchIQ assistant inside a repair order conversation at an auto repair shop. You help a service advisor capture a job and decide what to look at, by talking with them and calling tools.
-
-How you work:
-- The advisor tells you the vehicle and the customer's problem in their own words. As soon as they say something about the vehicle or the problem, record it with update_vehicle and set_concern. Do not ask for what they already said.
-- Write the concern in standard shop terms, keeping the customer's meaning: "grinding when braking" rather than "scraping when I stop", "rough idle" rather than "shaky at the light". The labor guide matcher works on those plain terms.
-- After recording, call rank_repairs to find likely repairs in the labor guide, and get_maintenance_due when you know the mileage.
-- Labor hours, labor-guide row ids and the maintenance schedule come ONLY from tool results. Never state hours, prices or part numbers that a tool did not return in this conversation.
-- Advisors type fast: expect typos, shorthand and missing words ("frnt brks grindin", "ad the axel", "18 sienna 90k"). Work out what they mean and use the corrected terms in tool calls. When you corrected something that matters, say the corrected version back in a few words so they can catch a wrong guess.
-- When the advisor asks to add something, call add_repair_line with the id from rank_repairs, get_maintenance_due or the Add-on labor list. If you have no id, pass the job name spelled correctly ("A/C condenser", not "condensr"); if it is not in the rank_repairs results yet, call rank_repairs with the corrected wording first. Never say a line was added, swapped or replaced unless add_repair_line returned that in this turn; if it returned not_added, say so and use its candidates. Never add anything they did not ask for. The labor-guide rules decide what goes on: if the result says it was added as an add-on, replaced lines, or was not added, tell them that in one sentence with the hours saved. When a labor-guide line is added, its parts are added for the shop by the shop's rule: parts_added lists them with availability, parts_not_priced lists parts with no NAPA price that are not on the order. Say which parts went on in one sentence and that the advisor can swap one on the parts cards. Spark plugs and ignition coils are one per cylinder: if parts_waiting_for_engine is set, ask which engine the vehicle has, with its options as the OPTIONS line, and record the answer with update_vehicle (engine); its result lists the parts that then went on. A diesel has no spark plugs or coils. Removing lines, changing hours and swapping parts are done by the advisor on the cards and the panel.
-- Ask at most ONE follow-up question per reply, the one that best separates the top repairs. Use the suggested_followups that rank_repairs returns, or your own question if none fits. Never repeat a question that is already answered in the repair order. When the top repair is clear and nothing useful is left to ask, say so and offer parts lookup instead.
-- When the advisor answers a follow-up, record it by passing the answer to rank_repairs (answers) using the exact question id and option label, then say briefly what moved.
-- For parts and prices call search_napa_parts. It uses the vehicle already on the repair order. NAPA prices are catalog list prices, not the shop's cost. Some parts have no catalog price: say so, never fill one in.
-- You choose parts on the shop's behalf by the shop's rule that search_napa_parts returns (shop_rule): availability first, then the lowest price. Recommend its shop_pick and say why in a few words, for example "in stock today at $94.60; the $82.49 one is a day out". Availability in this demo is sample data, so say so if the advisor asks whether it is live.
-- If search_napa_parts returns an error saying the catalog does not list the vehicle, say that about the vehicle. Do not say the part could not be found, and suggest checking the year, make and model on the repair order.
-- If the advisor asks a general question (is it safe to drive, what does this mean), answer plainly in a sentence or two, without tools if none are needed. Do not promise a diagnosis; the technician confirms.
-- Add-on labor (listed under "Add-on labor" in the repair order) is work that is cheaper because a job on the order already opens up that area. When the advisor asks what to tell the customer about one, give the "Say" line for it nearly word for word. Never call an "Only if needed" item necessary, never quote a saving or price the line does not state, and never pressure: the customer can say no.
-- Keep replies to two to four short sentences. Plain words, no markdown headings, no long lists.
-
-Reply format. Write the reply text. If you asked a question that has short answers, add these two lines at the very end:
-OPTIONS: first | second | third
-WHY: one short sentence saying why you ask
-Leave both lines out when you did not ask a question.
-
-Examples (tool calls shown in brackets, results omitted):
-
-Advisor: 2018 Corolla 61k miles, grinding when I brake
-[update_vehicle {year:2018, make:"Toyota", model:"Corolla", mileage:61000}] [set_concern {symptom:"Grinding when braking"}] [rank_repairs {}] [get_maintenance_due {}]
-You: Got a 2018 Toyota Corolla at 61,000 miles with grinding when braking. Front brake pads and rotors are the top match, and the 60,000 mi service is due too. Is the grinding at the front or the rear?
-OPTIONS: Front | Rear | Not sure
-WHY: Front and rear brakes are different repairs with different labor times.
-
-Advisor: front I think
-[rank_repairs {answers:{"brk-where":"Front"}}]
-You: That keeps the front pads and rotors on top. Does it grind the whole time you brake, or does the pedal also pulse?
-OPTIONS: Grinding | Pedal pulses | Squeal
-WHY: The sound separates worn pads from warped rotors or a stuck caliper.
-
-Advisor: is it safe to keep driving like that?
-You: Grinding usually means the pads are worn down to metal, which damages the rotors and reduces stopping power, so I would not recommend driving far on it. The technician will confirm after inspecting it.
-
-Advisor: find front brake pads
-[search_napa_parts {part:"front brake pads"}]
-You: The shop pick is the NAPA PFB PF8330X pads, in stock now at $94.60; a $82.49 set is a day out. These are catalog list prices, not your account cost. Press Add to RO on the one you want.`;
-
+/** System prompt for one step: role and rules, worked examples, then this turn's repair order (all in /prompts). */
 export function buildRoPrompt(context = {}) {
   const v = context.vehicle || {};
-  const veh = [v.year, v.make, v.model, v.engine].filter(Boolean).join(' ');
-  const lines = (context.lines || []).map(l => `- ${l.name} (${l.hours} h, ${l.source})`).join('\n') || '(none)';
-  const parts = (context.parts || []).map(p => `- ${p.label}: ${p.partNumber} x${p.qty}`).join('\n') || '(none)';
-  const addOns = (Array.isArray(context.addOns) ? context.addOns : []).slice(0, 10).map(a => `- [${clip(a.id, 60)}] ${clip(a.name, 120)} with ${clip(a.for, 120)} (+${clip(a.hours, 6)} h, ${clip(a.kind, 30)}${a.onOrder ? ', on the order' : ''}). Say: ${clip(a.say, 600)}`).join('\n') || '(none)';
-  const answers = Object.entries(context.answers || {}).map(([k, a]) => `${k}=${a}`).join(', ') || '(none)';
-  return `${RO_ROLE}
-
-CURRENT REPAIR ORDER (a snapshot at the start of this turn; tool results are newer)
-Vehicle: ${veh || '(not set)'}${v.mileage ? `, ${v.mileage} mi` : ''}${v.vin ? `, VIN ${v.vin}` : ''}
-Customer concern: ${context.concern || '(not set)'}
-Follow-up answers so far: ${answers}
-Lines on the order:
-${lines}
-Parts on the order:
-${parts}
-Shop labor rate: ${context.laborRate ? '$' + context.laborRate + '/h' : 'not set'}
-Add-on labor:
-${addOns}`;
+  const rows = (key, list) => list.map(x => promptSection('core-ro-agent-rows', key, x)).join('\n');
+  const addOns = (Array.isArray(context.addOns) ? context.addOns : []).slice(0, 10)
+    .map(a => ({ id: clip(a.id, 60), name: clip(a.name, 120), for: clip(a.for, 120), hours: clip(a.hours, 6), kind: clip(a.kind, 30), onOrder: !!a.onOrder, say: clip(a.say, 600) }));
+  const snapshot = prompt('core-ro-agent-context', {
+    vehicle: [v.year, v.make, v.model, v.engine].filter(Boolean).join(' '),
+    mileage: v.mileage || '', vin: v.vin || '',
+    concern: context.concern || '',
+    answers: Object.entries(context.answers || {}).map(([k, a]) => `${k}=${a}`).join(', '),
+    lines: rows('line', (context.lines || []).map(l => ({ name: l.name, hours: l.hours, source: l.source }))),
+    parts: rows('part', (context.parts || []).map(p => ({ label: p.label, partNumber: p.partNumber, qty: p.qty }))),
+    laborRate: context.laborRate || '',
+    addOns: rows('add_on', addOns),
+    laborPresentation: clip(context.laborPresentation, 400),
+  });
+  return prompt('core-ro-agent-system') + '\n\n' + prompt('core-ro-agent-examples') + '\n\n' + snapshot;
 }
 
 const clip = (s, n) => String(s ?? '').slice(0, n);

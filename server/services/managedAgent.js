@@ -10,17 +10,9 @@
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
 import { LLM_MODEL } from '../config.js';
 import { logLLMRequest } from './llmLogger.js';
+import { prompt } from './promptLoader.js';
 
-const SYSTEM_PROMPT = [
-  'You are WrenchIQ, an AI-powered shop management assistant for Peninsula Precision Auto.',
-  'You help service advisors, technicians, and shop owners with:',
-  '  - Analyzing repair orders and technician efficiency',
-  '  - Diagnosing vehicle issues using DTCs and TSBs',
-  '  - Generating 3C (Concern / Cause / Correction) service narratives',
-  '  - Identifying upsell and revenue opportunities',
-  '  - Answering questions about shop performance metrics',
-  'Be concise, precise, and professional. Always prioritize vehicle safety.',
-].join('\n');
+// System prompt wording: prompts/managed-agent-system.md (re-read when it changes).
 
 // In-memory session store: sessionId → messages[]
 const sessions = new Map();
@@ -58,7 +50,7 @@ export async function streamMessage(sessionId, message, onEvent) {
 
   try {
     const data = await callAzureOpenAI({
-      system:     SYSTEM_PROMPT,
+      system:     prompt('managed-agent-system'),
       messages:   history,
       max_tokens: 1024,
       _route:     '/api/agent (managed)',

@@ -22,6 +22,7 @@ import { MongoClient } from 'mongodb';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { prompt } from '../server/services/promptLoader.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SAMPLES_PATH = join(__dirname, '..', 'docs', 'market_research', 'API_Request_Response_Samples.md');
@@ -115,43 +116,21 @@ async function main() {
 
   console.log(`Found ${openROs.length} open RO(s) in the "${shopId}" queue.`);
 
-  const systemPrompt = [
-    'You generate SYNTHETIC, entirely fictional automotive labor-guide data',
-    'for a demo/simulation environment. You will be given: (1) a real sample',
-    '/api/labors request+response as a STRUCTURE TEMPLATE ONLY, and (2) a',
-    'specific repair job + vehicle.',
-    '',
-    'Produce ONE realistic /api/labors-style response for that job, matching',
-    'the template\'s exact JSON shape (same keys, same nesting).',
-    '',
-    'Rules:',
-    '- All values must be FABRICATED but plausible for the given vehicle and',
-    '  job (realistic labor hours, skill level, OEM-style part numbers that',
-    '  are NOT real, realistic prices for the job type).',
-    '- Do NOT reuse any value from the template verbatim — it is structure',
-    '  reference only.',
-    '- Populate labor_list/part_list with entries relevant to the actual job',
-    '  described (e.g. a brake job should not return alternator parts).',
-    '- Output valid JSON only, no prose, no markdown fences.',
-  ].join('\n');
+  const systemPrompt = prompt('synthetic-labor-guide-system');
 
   const manifest = [];
 
   for (const ro of openROs) {
     const jobs = ro.repairJobs || [];
-    const vehicleDesc = ro.vehicle ? `${ro.vehicle.year} ${ro.vehicle.make} ${ro.vehicle.model} (VIN ${ro.vehicle.vin})` : 'unknown vehicle';
+    // fields stringified so a missing one renders as before ("undefined") instead of throwing
+    const vehicle = ro.vehicle
+      ? Object.fromEntries(['year', 'make', 'model', 'vin'].map((k) => [k, String(ro.vehicle[k])]))
+      : null;
 
     for (let i = 0; i < jobs.length; i++) {
       const job = jobs[i];
       const description = job.description || job.name || job.service || `job-${i}`;
-      const userPrompt = [
-        `Structure template (/api/labors — real sample, for shape reference only):`,
-        laborsTemplate,
-        '',
-        `Now generate a synthetic /api/labors response for:`,
-        `Vehicle: ${vehicleDesc}`,
-        `Repair job: ${description}`,
-      ].join('\n');
+      const userPrompt = prompt('synthetic-labor-guide-user', { laborsTemplate, vehicle, description });
 
       let result;
       try {

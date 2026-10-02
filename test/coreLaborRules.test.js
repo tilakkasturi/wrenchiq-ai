@@ -189,9 +189,10 @@ describe('agent add_repair_line goes through the guardrails', () => {
 });
 
 describe('click-through demos', () => {
-  it('every scenario loads from resources/demo and its steps are short, misspelled shorthand', () => {
+  it('every scenario loads from resources/demo: short owner fragments, then advisor shorthand', () => {
     expect(demoList().map(d => d.id)).toEqual(['cv-axle', 'ac', 'water-pump', 'valve-cover']);
-    DEMOS.scenarios.forEach(d => d.steps.forEach(st => {
+    DEMOS.starters.forEach(st => { expect(st.text, st.text).toMatch(/^\d\d [a-z0-9]+ \d+k /); expect(st.text.length, st.text).toBeLessThan(70); });
+    DEMOS.scenarios.forEach(d => d.steps.forEach((st, i) => {
       expect(st.text.length, st.text).toBeLessThan(100);
       expect(/^\s*(please\s+)?(add|include)\b/i.test(st.text), st.text).toBe(false); // so the model, not the keyword rule, reads it
     }));
@@ -268,5 +269,171 @@ describe('update_vehicle: year from the VIN', () => {
     const r = await TOOLS.update_vehicle({ make: 'Toyota', model: 'Sienna', vin: '5TDYZ3DC2JS901691', mileage: 60000 }, Cr);
     expect(S.ro.year).toBe('2018');
     expect(r.changed).toContain('year (from VIN)');
+  });
+});
+
+import { interpretMaint } from '../src/core/maintAdvice.js';
+import { maintState } from '../src/core/logic.js';
+import { addAllMaint } from '../src/core/harness.js';
+describe('scheduled maintenance, interpreted for the advisor', () => {
+  const at60 = () => { Object.assign(S.ro, { vin: '5TDYZ3DC2JS901691', year: '2018', make: 'Toyota', model: 'Sienna', mileage: '60000' }); return maintState(); };
+  it('groups the 60k service by severity, with why each matters', () => {
+    const a = interpretMaint(at60(), { rate: 150, make: 'Toyota' });
+    const tier = id => a.tiers.find(t => t.id === id).items.map(i => i.name);
+    expect(tier('safety')).toEqual(['Tires, rotate']);
+    expect(tier('protect')).toEqual(expect.arrayContaining(['Engine oil & filter, replace', 'Spark plug, replace']));
+    expect(tier('comfort')).toEqual(expect.arrayContaining(['Cabin air filter, replace', 'Engine air filter, replace']));
+    expect(a.tiers.find(t => t.id === 'comfort').recommend).toBe(false);
+    expect(a.inspection.groups).toEqual(expect.arrayContaining(['brakes', 'steering and suspension']));
+    expect(a.tiers.flatMap(t => t.items).every(i => i.why)).toBe(true);
+  });
+  it('writes a script that leads with what matters and offers comfort items as optional', () => {
+    const { script } = interpretMaint(at60(), { rate: 150, make: 'Toyota' });
+    expect(script).toMatch(/^At this mileage Toyota's factory maintenance schedule calls for the 60,000 mile service/);
+    expect(script.indexOf('For safety')).toBeLessThan(script.indexOf('To protect the engine'));
+    expect(script).toMatch(/change the oil and filter and replace the spark plugs/);
+    expect(script).toMatch(/If you would like, we can also replace the (cabin|engine) air filter and replace the (cabin|engine) air filter\..*can wait/);
+    expect(script).toMatch(/multi-point inspection, covering the brakes, steering and suspension, cooling system and fluids and more/);
+    expect((script.match(/change the oil and filter/g) || []).length).toBe(1); // oil + filter rows said once
+  });
+  it('a repair already doing a scheduled job is not sold twice', () => {
+    const ms = at60();
+    S.ro.accepted.add('syn-vc-rear'); S.ro.accepted.add('syn-vc-plugs');
+    const a = interpretMaint(ms, { rate: 150, accepted: [...S.ro.accepted], make: 'Toyota' });
+    const plug = a.tiers.flatMap(t => t.items).find(i => /spark plug/i.test(i.name));
+    expect(plug.coveredBy).toMatch(/spark plugs/i);
+    expect(a.recommendedIds).not.toContain(plug.id);
+    expect(a.script).toMatch(/already going to replace the spark plugs as part of today's/);
+  });
+  it('"Add recommended" adds safety and engine items and the inspection, not comfort items', async () => {
+    const ms = at60();
+    addAllMaint('recommended'); await settle();
+    const names = [...S.ro.accepted].map(id => ITEM(id).name);
+    expect(names).toEqual(expect.arrayContaining(['Tires, rotate', 'Engine oil & filter, replace', 'Spark plug, replace']));
+    expect(names.some(n => /cabin air filter/i.test(n))).toBe(false);
+    expect(names.some(n => /inspection/i.test(n))).toBe(true);
+    expect(ms.ids.length).toBeGreaterThan(names.length);
+  });
+});
+describe('maintenance script after the recommended work is on the order', () => {
+  it('says the recommended work is on the order and offers only what is left', () => {
+    Object.assign(S.ro, { vin: '5TDYZ3DC2JS901691', make: 'Toyota', mileage: '60000' });
+    const ms = maintState();
+    const first = interpretMaint(ms, { make: 'Toyota' });
+    first.recommendedIds.forEach(id => S.ro.accepted.add(id));
+    const a = interpretMaint(ms, { accepted: [...S.ro.accepted], make: 'Toyota' });
+    expect(a.scriptLines[0]).toBe('The recommended work for the 60,000 mile service is on today\'s order.');
+    expect(a.script).not.toMatch(/For safety|To protect the engine/);
+    expect(a.script).toMatch(/If you would like, we can also/);
+    expect(ms.note).toBe('right at the 60,000 mi service');
+  });
+});
+
+describe('resource reloads are debugging detail', () => {
+  it('go to the Agent trace, not the chat', () => {
+    S.chats.ro = { items: [], chips: [], nextId: 1 }; S.chats.profile = { items: [], chips: [], nextId: 1 };
+    resourceLoaded('trace probe'); resourceLoaded('trace probe'); // first load is quiet, the second is a reload
+    const steps = S.trace.turns.flatMap(t => t.steps);
+    expect(steps.some(s => s.kind === 'note' && s.title === 'Reloaded trace probe')).toBe(true);
+    const chat = [...S.chats.ro.items, ...S.chats.profile.items].map(i => i.text || '').join(' ');
+    expect(chat).not.toMatch(/Reloaded/);
+  });
+});
+
+import { pendingQuestions, applyAnswers, nextStep, buildRecs, flow } from '../src/core/recommend.js';
+import { answerQuestions } from '../src/core/harness.js';
+describe('before recommendations: one combined question, at most two rounds', () => {
+  const cards = type => S.chats.ro.items.filter(i => i.kind === 'cards' && i.card.type === type).map(i => i.card);
+  beforeEach(() => { S.useAgent = false; });
+  it('asks vehicle gaps and the follow-ups that move the top repairs, in one card', async () => {
+    await Cr.send('grinding when I brake'); await settle();
+    const q = cards('questions');
+    expect(q).toHaveLength(1);
+    expect(q[0].parts.map(p => p.id)).toEqual(['veh', 'mi', expect.any(String)]);
+    expect(q[0].parts.length).toBeLessThanOrEqual(3);
+    expect(cards('recs')).toHaveLength(0); // nothing recommended yet
+    expect(cards('repairs')).toHaveLength(0);
+  });
+  it('one typed line can answer several parts; recommendations come by the second round at the latest', async () => {
+    await Cr.send('2018 Toyota Corolla, grinding when I brake'); await settle();
+    expect(cards('questions')).toHaveLength(1);
+    await Cr.send('61k, front, grinding'); await settle();
+    expect(S.ro.mileage).toBe('61000');
+    expect(S.ro.answers['brk-where']).toBe('Front');
+    const left = pendingQuestions().length;
+    if (left) { expect(cards('questions')).toHaveLength(2); await Cr.send('not sure'); await settle(); }
+    expect(cards('recs')).toHaveLength(1);
+    expect(flow().rounds).toBeLessThanOrEqual(2);
+  });
+  it('Skip on the card shows the recommendations now', async () => {
+    await Cr.send('2018 Toyota Corolla 61k, grinding when I brake'); await settle();
+    answerQuestions({}, cards('questions')[0].parts); await settle();
+    expect(cards('recs')).toHaveLength(1);
+  });
+  it('the three sections each have a customer talk track', async () => {
+    Object.assign(S.ro, { year: '2018', make: 'Toyota', model: 'Sienna', vin: '5TDYZ3DC2JS901691', mileage: '60000', symptom: 'Clicking when turning and grease on the inside of the front left tire.' });
+    S.profile['shop.labor_rate'] = { value: 150 };
+    const r = buildRecs();
+    expect(r.repairs.items.length).toBeGreaterThan(0);
+    expect(r.repairs.say).toMatch(/^You told us: "Clicking when turning/);
+    expect(r.maint.say[0]).toMatch(/60,000 mile service/);
+    expect(r.labor.anchor).toMatch(/^axle-asm/);
+    expect(r.labor.items.length).toBeGreaterThan(0);
+    expect(r.labor.items.every(i => i.say)).toBe(true);
+    expect(r.labor.say).toMatch(/costs much less to do at the same time/);
+  });
+  it('an advisor who adds work skips the questions', async () => {
+    await Cr.send('2018 Toyota Corolla 61k, grinding when I brake'); await settle();
+    acceptItem('brk-front'); await settle();
+    expect(nextStep().do).not.toBe('ask');
+    expect(cards('recs')).toHaveLength(1);
+  }, 20000);
+});
+describe('second question round only when it still matters', () => {
+  beforeEach(() => { S.useAgent = false; });
+  it('a clear top repair after round one goes straight to recommendations', async () => {
+    await Cr.send('2018 Toyota Corolla 61k, grinding when I brake and the steering wheel shakes on the highway'); await settle();
+    await Cr.send('front, grinding, highway speeds'); await settle();
+    const types = S.chats.ro.items.filter(i => i.kind === 'cards').map(i => i.card.type);
+    expect(types.filter(t => t === 'questions')).toHaveLength(1);
+    expect(types).toContain('recs');
+  }, 20000);
+});
+
+import { laborMode, setSetting, orderAddOns } from '../src/core/shopSettings.js';
+import { SHOP } from '../src/core/data.js';
+import { roContext } from '../src/core/roAgent.js';
+import { buildRoPrompt } from '../server/services/coreAgentService.js';
+describe('shop setting: how labor-guide recommendations are presented', () => {
+  const axle = () => { Object.assign(S.ro, { year: '2018', make: 'Toyota', model: 'Sienna', mileage: '90000', symptom: 'Clicking when turning and grease on the inside of the front left tire.' }); S.ro.accepted.add('axle-asm-fwd-left'); };
+  it('defaults to prioritized from the shop profile resource', () => {
+    expect(SHOP.laborGuidePresentation).toBe('prioritized');
+    expect(laborMode()).toBe('prioritized');
+  });
+  it('prioritized: part-of-the-job and recommended first, the rest offered as conditional', () => {
+    axle();
+    const l = buildRecs().labor;
+    expect(l.mode).toBe('prioritized');
+    expect(l.lead.every(i => ['required', 'recommended'].includes(i.kindId))).toBe(true);
+    expect(l.lead.map(i => i.id)).toContain('transaxle-seal-each');
+    expect(l.more.length).toBeGreaterThan(0);
+    expect(l.more.every(i => ['if-needed', 'optional'].includes(i.kindId))).toBe(true);
+    expect(l.say).toMatch(/With this job we would also put in a new transmission output seal\./);
+    expect(l.say).toMatch(/only done if the technician finds they are needed/);
+    expect(orderAddOns(['axle-boot-each', 'transaxle-seal-each'])).toEqual(['transaxle-seal-each', 'axle-boot-each']);
+  });
+  it('all: every add-on in the guide order, one list, nothing marked conditional', () => {
+    axle();
+    setSetting('labor.presentation', 'all');
+    const l = buildRecs().labor;
+    expect(l.more).toEqual([]);
+    expect(l.lead.map(i => i.id)).toEqual(l.items.map(i => i.id));
+    expect(l.say).toMatch(/The labor guide lists \d+ items with this job/);
+    expect(orderAddOns(['axle-boot-each', 'transaxle-seal-each'])).toEqual(['axle-boot-each', 'transaxle-seal-each']);
+  });
+  it('the agent is told the shop setting in the repair order snapshot', () => {
+    axle();
+    const p = buildRoPrompt(roContext());
+    expect(p).toMatch(/How the shop wants add-on labor presented: Lead with add-on labor that is part of the job/);
   });
 });

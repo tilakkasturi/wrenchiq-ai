@@ -2,6 +2,26 @@ import { useCore, S } from '../state';
 import { FIXED, PQ, SHOP } from '../data';
 import { forgetFact, resetProfile } from '../harness';
 import { useFlash } from './useFlash';
+import { SETTINGS, setting, setSetting, isDefault } from '../shopSettings';
+
+/** A shop instruction with its options; the chosen one is what the assistant follows. */
+function Setting({ s }) {
+  const cur = setting(s.key);
+  return (
+    <li className="setting">
+      <div className="k">{s.label}{isDefault(s.key) && <span className="small muted"> · default</span>}</div>
+      <p className="small muted" style={{ margin: '2px 0 6px' }}>{s.why}</p>
+      <div className="setting-opts" role="radiogroup" aria-label={s.label}>
+        {s.options.map(o => (
+          <button key={o.value} type="button" role="radio" aria-checked={cur === o.value} className={'setting-opt' + (cur === o.value ? ' on' : '')} onClick={() => setSetting(s.key, o.value)}>
+            <b>{o.label}</b>
+            <span className="small">{o.say}</span>
+          </button>
+        ))}
+      </div>
+    </li>
+  );
+}
 
 function Row({ k, label, f, fixed }) {
   const flash = useFlash(f && f.at);
@@ -38,6 +58,8 @@ export default function MemoryPanel() {
         {FIXED.map(f => <Row key={f.key} k={f.key} label={f.label} f={S.profile[f.key] || { display: f.value }} fixed />)}
         {mine.map(m => <Row key={m.k} k={m.k} label={m.label} f={S.profile[m.k]} />)}
       </ul>
+      <div className="label" style={{ margin: '14px 0 6px' }}>How I present work</div>
+      <ul className="mem settings">{SETTINGS.map(s => <Setting key={s.key} s={s} />)}</ul>
       {!mine.length && <p className="small muted" style={{ marginTop: 8 }}>Nothing else yet. Tell me about your shop in the chat, like your labor rate or work you never take.</p>}
     </aside>
   );

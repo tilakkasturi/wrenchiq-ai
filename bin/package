@@ -69,6 +69,7 @@ tar -czf "${RELEASES_DIR}/${FILENAME}" \
   dist/ \
   server/ \
   src/data/ \
+  prompts/ \
   server.py \
   package.json \
   package-lock.json \

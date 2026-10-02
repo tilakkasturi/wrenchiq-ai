@@ -5,15 +5,20 @@
 // labor-guide guardrails (laborRules.js) as the Add buttons.
 import { policy, rankParts, shopPick, pickReason } from './partPolicy';
 import { engineSpec } from './engineCylinders';
+import { trace } from './trace';
 import { S, notify } from './state';
 import { QB, QBY, MAKES, MODELS, MAKE_RX, MODEL_RX, REPMAP } from './data';
 import {
-  miles, vehicleLine, vehicleOk, computeRepairs, shownRepairs, applicableQs, maintState, conf, qtyFromName, partQty,
-  ITEM, hrs, rankItems, combinationsFor, yearFromVin,
+  miles, vehicleLine, vehicleOk, computeRepairs, shownRepairs, applicableQs, maintState, conf, qtyFromName, partQty, rankingDetail,
+  ITEM, hrs, rate, rankItems, combinationsFor, yearFromVin,
 } from './logic';
 import { getMaintItem } from './maintenanceSchedule';
 import { searchNapa } from './partsApi';
 import { standalonesOf, parentsOnOrder, sameJob } from './laborRules';
+import { interpretMaint } from './maintAdvice';
+import { pendingQuestions, resetFlow } from './recommend';
+import { maintMode, fullSchedule, settingOption } from './shopSettings';
+import { promptSection } from '../services/promptLoader';
 
 // The harness owns how a line is placed and announced; it hands those in here so this module does
 // not import harness.js (which imports the agent, which imports this).
@@ -22,91 +27,29 @@ export const useLineOps = ops => { LINES = ops; };
 
 const questionCatalog = QB.map(q => `${q.id}: ${q.opts.map(o => o.l).join(' | ')}`).join('; ');
 
-export const TOOL_SCHEMAS = [
-  {
-    type: 'function',
-    function: {
-      name: 'update_vehicle',
-      description: 'Record vehicle details the advisor stated. Pass only the fields that were stated. Use this as soon as the advisor mentions the vehicle.',
-      parameters: {
-        type: 'object',
-        properties: {
-          year: { type: 'integer', description: 'Model year, e.g. 2018' },
-          make: { type: 'string', description: 'e.g. Toyota' },
-          model: { type: 'string', description: 'e.g. Corolla' },
-          engine: { type: 'string', description: 'e.g. "2.5L I4" or "3.5L V6". Include the layout (I4, V6, V8) when known: spark plugs and ignition coils are one per cylinder.' },
-          mileage: { type: 'integer', description: 'Odometer in miles, e.g. 61000 for "61k"' },
-          vin: { type: 'string', description: '17-character VIN' },
-        },
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'set_concern',
-      description: "Record the customer's problem in their own words. Use append=true to add detail to what is already recorded.",
-      parameters: {
-        type: 'object',
-        properties: {
-          symptom: { type: 'string', description: "The customer's complaint, e.g. 'Grinding when braking'" },
-          append: { type: 'boolean', description: 'Add to the existing concern instead of replacing it' },
-        },
-        required: ['symptom'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'rank_repairs',
-      description: 'Match the recorded concern against the labor guide and return the likely repairs with labor hours and guide row ids, plus follow-up questions that would separate them. '
-        + 'Optionally record answers to earlier follow-up questions. Valid question ids and option labels: ' + questionCatalog + '.',
-      parameters: {
-        type: 'object',
-        properties: {
-          answers: { type: 'object', description: 'Map of question id to the exact option label, e.g. {"brk-where":"Front"}' },
-        },
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_maintenance_due',
-      description: 'Look up the scheduled maintenance due at the current mileage from the interval table. Needs the mileage to be recorded.',
-      parameters: { type: 'object', properties: {} },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'add_repair_line',
-      description: 'Put a repair, maintenance item or add-on labor on the repair order. Only when the advisor asks to add something. '
-        + 'Pass the id from rank_repairs, get_maintenance_due or the Add-on labor list; if you only know what they called it, pass name. '
-        + 'The labor-guide rules decide what actually goes on: they may use a cheaper add-on version, replace lines it covers, or refuse a duplicate. Tell the advisor what the result says.',
-      parameters: {
-        type: 'object',
-        properties: {
-          id: { type: 'string', description: 'Line id, e.g. "axle-asm-fwd-left"' },
-          name: { type: 'string', description: 'The job name with spelling corrected, e.g. "right axle shaft assembly" for "rite axel", when no id is known' },
-        },
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'search_napa_parts',
-      description: 'Look up NAPA catalog parts with list prices for the vehicle on the repair order. Needs year, make and model recorded. Call once per part.',
-      parameters: {
-        type: 'object',
-        properties: { part: { type: 'string', description: 'Part name as a mechanic says it, e.g. "front brake pads"' } },
-        required: ['part'],
-      },
-    },
-  },
+// Structure only: every description the model reads is in prompts/core-ro-agent-tools.md.
+const SCHEMA = [
+  ['update_vehicle', { year: 'integer', make: 'string', model: 'string', engine: 'string', mileage: 'integer', vin: 'string' }],
+  ['set_concern', { symptom: 'string', append: 'boolean' }, ['symptom']],
+  ['rank_repairs', { answers: 'object' }],
+  ['get_maintenance_due', {}],
+  ['add_repair_line', { id: 'string', name: 'string' }],
+  ['search_napa_parts', { part: 'string' }, ['part']],
 ];
+const describe = key => promptSection('core-ro-agent-tools', key, { questionCatalog });
+
+export const TOOL_SCHEMAS = SCHEMA.map(([name, props, required]) => ({
+  type: 'function',
+  function: {
+    name,
+    description: describe(name),
+    parameters: {
+      type: 'object',
+      properties: Object.fromEntries(Object.entries(props).map(([k, type]) => [k, { type, description: describe(name + '.' + k) }])),
+      ...(required ? { required } : {}),
+    },
+  },
+}));
 
 const clean = v => (typeof v === 'string' ? v.trim() : v);
 
@@ -122,11 +65,30 @@ function canonVehicle(a) {
   return out;
 }
 
-const maintSummary = ms => (ms ? {
-  due_now: ms.due, status: ms.status, interval_mi: ms.at, note: ms.note,
-  schedule: { source: ms.source, match: ms.match, vin_mask: ms.vinMask },
-  items: ms.ids.map(id => { const it = getMaintItem(id); return { id, name: it.name, hours: it.hours, schedule_row: it.ref }; }),
-} : null);
+/** The schedule interpreted for the advisor (maintAdvice.js): items by severity, and the customer script. */
+const maintSummary = ms => {
+  if (!ms) return null;
+  const base = { due_now: ms.due, status: ms.status, interval_mi: ms.at, note: ms.note, schedule: { source: ms.source, match: ms.match, vin_mask: ms.vinMask } };
+  const adv = ms.ids.length && interpretMaint(ms, { rate: rate(), accepted: [...S.ro.accepted], make: S.ro.make });
+  if (!adv) return { ...base, items: [] };
+  const presentation = { setting: maintMode(), instruction: settingOption('maint.presentation').say };
+  if (presentation.setting === 'all') {
+    const full = fullSchedule(ms, { rate: rate(), accepted: [...S.ro.accepted], make: S.ro.make });
+    return {
+      ...base, presentation,
+      items: full.items.map(i => ({ id: i.id, name: i.name, hours: i.hours, already_in: i.coveredBy || undefined, on_order: i.onOrder || undefined })),
+      all_ids: full.openIds, hours: Math.round(full.hours * 10) / 10,
+      advisor_script: full.script,
+    };
+  }
+  return {
+    ...base, presentation,
+    by_severity: adv.tiers.map(t => ({ tier: t.label, recommend_today: t.recommend, items: t.items.map(i => ({ id: i.id, name: i.name, hours: i.hours, why: i.why, if_skipped: i.skip || undefined, already_in: i.coveredBy || undefined, on_order: i.onOrder || undefined })) })),
+    inspection: adv.inspection && { id: adv.inspection.id, name: adv.inspection.name, checks: adv.inspection.count, covers: adv.inspection.groups },
+    recommended: { ids: adv.recommendedIds, hours: Math.round(adv.recommended.hours * 10) / 10 },
+    advisor_script: adv.script,
+  };
+};
 
 export const TOOLS = {
   async update_vehicle(args, C) {
@@ -168,6 +130,7 @@ export const TOOLS = {
     if (!text) return { error: 'symptom is empty' };
     const R = S.ro;
     R.symptom = args.append && R.symptom ? R.symptom.replace(/[.!?]?$/, '.') + ' ' + text : text;
+    if (!args.append) resetFlow(); // a new concern gets its own question round and recommendations
     notify();
     C.event('Repair order updated · concern');
     return { concern: R.symptom };
@@ -183,24 +146,15 @@ export const TOOLS = {
     });
     const list = shownRepairs(), ids = list.map(x => x.id);
     if (!list.length) { notify(); return { matches: [], note: 'Nothing in the labor guide matches this concern.', rejected_answers: bad }; }
-    const same = ids.join() === R.lastTop.join() && !Object.keys(args.answers || {}).length;
-    if (!same) {
-      const first = !R.lastTop.length;
-      const top = list.slice(0, 3).map(x => {
-        const oi = R.lastTop.indexOf(x.id), ni = ids.indexOf(x.id);
-        let mv = null;
-        if (!first) mv = oi < 0 ? 'New in the top three' : ni < oi ? 'Moved up' : ni > oi ? 'Moved down' : null;
-        return { mv, ...x };
-      });
-      C.card({ type: 'repairs', snap: top, title: first ? 'Likely repairs' : 'Updated ranking' });
-    }
+    // no card here: the app shows the combined question, then the Recommendations card (recommend.js)
     R.lastTop = ids;
+    trace('rule', 'Rank repairs (labor guide)', 'Top: ' + list.slice(0, 3).map(x => REPMAP[x.id].name + ' (' + x.score + ')').join(', '), rankingDetail(list));
     notify();
-    const followups = applicableQs().filter(q => !R.answers[q.id]).slice(0, 2).map(q => ({ id: q.id, ask: q.ask, options: q.opts.map(o => o.l) }));
+    const pending = pendingQuestions().filter(p => p.kind === 'choice').map(p => ({ id: p.id, ask: p.ask, options: p.options }));
     return {
       matches: list.slice(0, 5).map(x => ({ id: x.id, name: REPMAP[x.id].name, hours: REPMAP[x.id].hours, guide_row: REPMAP[x.id].ref, match: conf(x.score)[1], why: x.why.slice(0, 3) })),
       answers_so_far: R.answers,
-      suggested_followups: followups,
+      pending_questions: pending.length ? pending : undefined, // the app asks these on one card; record answers, do not ask them
       rejected_answers: bad.length ? bad : undefined,
     };
   },
@@ -209,7 +163,7 @@ export const TOOLS = {
     const ms = maintState();
     if (!ms) return { error: 'No mileage recorded yet. Call update_vehicle with the mileage first.' };
     const R = S.ro, key = ms.at + '|' + ms.due;
-    if (ms.due && R.shownMaint !== key) { R.shownMaint = key; C.card({ type: 'maint', ms }); notify(); }
+    if (R.shownMaint !== key) { R.shownMaint = key; notify(); } // shown in the Recommendations card's maintenance section
     return maintSummary(ms);
   },
 

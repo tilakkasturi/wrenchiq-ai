@@ -42,7 +42,10 @@ import {
 } from '../config.js';
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
 import { getVoiceSettings } from '../routes/shopVoiceSettings.js';
-import { buildVoiceDirective } from './voicePrompt.js';
+import { voiceDirectiveText } from './voicePrompt.js';
+import { prompt, promptSection } from './promptLoader.js';
+
+const DATA_PROMPT = 'aro-agent-data-wrapper';
 
 // ── Goal store (in-memory; extend to MongoDB for persistence) ─────────────────
 const _goals = new Map();
@@ -177,75 +180,28 @@ function buildAnalyticsViews(data, goals) {
         avg_revenue: s.avgCost,
         total_rev:   s.totalRevenue,
       })),
-      note: 'Based on full RO history — services with the highest average revenue per visit.',
+      note: promptSection(DATA_PROMPT, 'declined-services-note'),
     },
     service_opportunities: {
       opportunities: serviceOpportunities.slice(0, 10),
       total_found:   serviceOpportunities.length,
-      note: 'Services with high average revenue but low frequency — best candidates for service campaigns.',
+      note: promptSection(DATA_PROMPT, 'service-opportunities-note'),
     },
   };
 }
 
-// ── ARO Agent system prompt ───────────────────────────────────────────────────
+// ── ARO Agent system prompt (prompts/aro-agent-instructions.md) ─────────────
 function buildSystemPrompt(goals, standingPriorities = [], voice) {
-  const customBlock = standingPriorities.length
-    ? `\n\nShop-defined standing priorities (this shop's own free-form targets — weigh these \
-alongside the numeric goals above when synthesizing recommendations):\n${
-        standingPriorities.map(p => `  - ${p.note}`).join('\n')
-      }`
-    : '';
-
-  return `You are the ARO Agent for WrenchIQ — an AI that monitors shop performance KPIs \
-outside the core SMS workflow. All analytics below are already computed from the shop's \
-full repair order database (100,000+ ROs) — there are no tools to call, everything you \
-need is provided.
-
-Shop goals:
-  - ARO (Average Repair Order): $${goals.aro}
-  - Minimum ELR (Effective Labor Rate): $${goals.minELR}/hr
-  - Bay Utilization target: ${goals.bayUtilization}%
-  - Max comeback rate: ${goals.comebackRate}%${customBlock}
-
-Your mission:
-1. Review the KPI, trend, technician, customer, vehicle-segment, and service-opportunity
-   data provided below to understand current ARO vs. goal and the root causes of any gap
-2. Synthesize findings into structured alerts and actionable recommendations
-3. Return ONLY a JSON object — no prose, no markdown, no code fences, just raw JSON
-
-Output schema (strict):
-{
-  "status": "on_track" | "below_goal" | "at_risk",
-  "current_aro": number,
-  "goal_aro": number,
-  "gap": number,
-  "gap_pct": number,
-  "trend_label": "Improving" | "Declining" | "Stable",
-  "trend_detail": string,
-  "declined_revenue_opportunity": number,
-  "top_segment": string,
-  "repeat_customer_share": number,
-  "alerts": [
-    { "severity": "high" | "medium" | "low", "message": string }
-  ],
-  "recommendations": [
-    { "action": string, "impact": string, "priority": "high" | "medium" | "low" }
-  ],
-  "tech_alerts": [
-    { "tech_id": string, "issue": string, "metric": string }
-  ],
-  "summary": string
-}
-
-Rules:
-- status "at_risk"    if ARO is >20% below goal or ELR below minimum for >50% of techs
-- status "below_goal" if ARO is 1-20% below goal
-- status "on_track"   if ARO meets or exceeds goal
-- trend_label based on the 12-month trajectory from get_aro_trend
-- trend_detail: one sentence describing the multi-month ARO trend
-- Include 2-4 alerts, 3-5 recommendations, 0-3 tech alerts
-- All dollar amounts as integers
-- summary: one punchy sentence the service advisor sees at the top of the screen${buildVoiceDirective(voice)}`;
+  return prompt('aro-agent-instructions', {
+    goals: {
+      aro:            String(goals.aro),
+      minELR:         String(goals.minELR),
+      bayUtilization: String(goals.bayUtilization),
+      comebackRate:   String(goals.comebackRate),
+    },
+    standingPriorities: standingPriorities.map(p => `  - ${p.note}`).join('\n'),
+    voiceDirective:     voiceDirectiveText(voice),
+  });
 }
 
 // ── Main agent runner ─────────────────────────────────────────────────────────
@@ -275,16 +231,13 @@ export async function runAROAgent(shopId = 'shop-001', db) {
   console.log(`[aroAgent] Analytics ready — ${analyticsData.aroTrend.length} months of trend data`);
 
   const analyticsViews = buildAnalyticsViews(analyticsData, goals);
-  const prompt = `${buildSystemPrompt(goals, standingPriorities, voice)}
-
-DATA ALREADY LOADED (no tool calls available):
-
-${JSON.stringify(analyticsViews, null, 2)}
-
-Now produce the JSON analysis object.`;
+  const userPrompt = promptSection(DATA_PROMPT, 'message', {
+    instructions:  buildSystemPrompt(goals, standingPriorities, voice),
+    analyticsJson: JSON.stringify(analyticsViews, null, 2),
+  });
 
   const data = await callAzureOpenAI({
-    messages:   [{ role: 'user', content: prompt }],
+    messages:   [{ role: 'user', content: userPrompt }],
     max_tokens: 4096,
     jsonMode:   true,
     _route:     '/api/aro-agent',

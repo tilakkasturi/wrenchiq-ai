@@ -126,6 +126,16 @@ export function computeRepairs() {
   return kept.slice(0, 8);
 }
 export const shownRepairs = () => computeRepairs().filter(x => !S.ro.dismissed.has(x.id));
+
+/** For the Agent trace: how the labor-guide ranking scored this concern. */
+export function rankingDetail(list = shownRepairs()) {
+  return {
+    rule: 'Score each labor-guide OPERATION row: +4 per strong keyword in the concern, +1 per keyword, plus the boost each follow-up answer gives that row; drop services the shop never offers and rows set aside; keep the best of rows that are the same job; top 8.',
+    concern: symptomText(),
+    answers: { ...S.ro.answers },
+    ranked: list.map(x => ({ id: x.id, name: REPMAP[x.id] ? REPMAP[x.id].name : x.id, guide_row: REPMAP[x.id] ? REPMAP[x.id].ref : '', hours: REPMAP[x.id] ? REPMAP[x.id].hours : null, score: x.score, match: conf(x.score)[1], why: x.why })),
+  };
+}
 export const conf = s => (s >= 7 ? ['high', 'High match'] : s >= 4 ? ['med', 'Medium match'] : ['low', 'Possible']);
 
 /**

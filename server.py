@@ -18,10 +18,19 @@ from pymongo import MongoClient
 
 # ── Config ──────────────────────────────────────────────────────────────────
 DIST_DIR   = os.path.join(os.path.dirname(__file__), "dist")
+PROMPTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts")
 MONGO_URI  = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 DB_NAME    = os.getenv("MONGO_DB",  "wrenchiq")
 PORT       = int(os.getenv("PORT",  "8000"))
 API_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
+
+# ── Prompts (one file per prompt in prompts/, see prompts/README.md) ───────────
+def load_prompt(name: str) -> str:
+    """Raw text of prompts/<name>.md with the leading <!-- editor note --> stripped (see prompts/README.md)."""
+    with open(os.path.join(PROMPTS_DIR, name + ".md"), encoding="utf-8") as f:
+        text = f.read()
+    return re.sub(r"^\ufeff?(?:\s*<!--[\s\S]*?-->)+\s*", "", text).strip()
+
 
 # ── Mongo ────────────────────────────────────────────────────────────────────
 client = MongoClient(MONGO_URI)
@@ -237,17 +246,7 @@ def ask_claude(question: str, history: list, context: str) -> dict:
 
     c = ac.Anthropic(api_key=API_KEY)
 
-    system = (
-        "You are WrenchIQ, an AI assistant for auto repair shops. "
-        "Answer questions using the repair order data provided. "
-        "Be specific, cite numbers, and keep answers actionable for service advisors. "
-        "Format your answer with these exact sections (use the bold headers):\n"
-        "**Bottom Line:** One sentence summary.\n"
-        "**What the data shows:**\n1. Finding one\n2. Finding two\n3. Finding three\n"
-        "**Why this answer:** Brief explanation of how you derived this.\n"
-        "**At the counter:** One concrete action the service advisor should take.\n\n"
-        f"SHOP DATA:\n{context}"
-    )
+    system = load_prompt("legacy-flask-kg-system").replace("{{context}}", context)
 
     messages = []
     for h in (history or []):

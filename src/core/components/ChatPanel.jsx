@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCore, S } from '../state';
 import { Cp, Cr } from '../harness';
 import { RepairsCard, MaintCard, PartsCard, CombosCard } from './Cards';
+import { QuestionsCard, RecsCard } from './FlowCards';
 
 const CHATS = { profile: Cp, ro: Cr };
 
@@ -30,6 +31,8 @@ function Item({ item }) {
         {item.card.type === 'repairs' ? <RepairsCard card={item.card} />
           : item.card.type === 'parts' ? <PartsCard card={item.card} />
           : item.card.type === 'combos' ? <CombosCard card={item.card} />
+          : item.card.type === 'questions' ? <QuestionsCard card={item.card} />
+          : item.card.type === 'recs' ? <RecsCard card={item.card} />
           : <MaintCard card={item.card} />}
       </div>
     );

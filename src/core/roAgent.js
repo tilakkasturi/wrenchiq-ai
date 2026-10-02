@@ -2,11 +2,15 @@
 // repair order snapshot, calls tools, and answers. The tools in roTools.js run here against the same
 // state the rest of the UI shows, so the cards and the panel stay in step with what the agent did.
 import { S, notify, newId } from './state';
+import { trace, markAgentTurn } from './trace';
+import { prompt } from '../services/promptLoader';
 import { agentStep } from './agentApi';
 import { TOOL_SCHEMAS, TOOLS, toolLabel } from './roTools';
 import { ITEM, hrs, rate, miles, combinationsFor } from './logic';
 import { talkFor } from './talkTrack';
 import { combosOf } from './laborRules';
+import { flow } from './recommend';
+import { settingOption, orderAddOns } from './shopSettings';
 import { sleep, REDUCED } from './chat';
 
 const MAX_STEPS = 6;
@@ -40,7 +44,8 @@ export function roContext() {
     laborRate: rate(),
     // add-on labor the advisor can still offer, with the customer talk track from the labor guide
     // ones already on the order are listed too, so "what do I tell the customer" still has the line
-    addOns: [...R.accepted].flatMap(id => [...combosOf(id).filter(c => R.accepted.has(c)), ...combinationsFor(id)].map(c => {
+    laborPresentation: settingOption('labor.presentation').say,
+    addOns: [...R.accepted].flatMap(id => orderAddOns([...combosOf(id).filter(c => R.accepted.has(c)), ...combinationsFor(id)]).map(c => {
       const tk = talkFor(c, id, rate());
       return tk && { id: c, for: ITEM(id).name, name: ITEM(c).name, hours: ITEM(c).hours.toFixed(1), kind: tk.label, say: tk.text, onOrder: R.accepted.has(c) };
     })).filter(Boolean).slice(0, 10),
@@ -67,16 +72,19 @@ export function parseReply(raw) {
  */
 export async function runRoAgent(C, userText) {
   const hist = S.ro.agent.history, sessionId = S.ro.agent.sessionId, turnId = newId();
+  markAgentTurn(turnId);
   hist.push({ role: 'user', content: userText });
   const turn = [];
   let stop = C.typing(), added = false, nudged = false;
   try {
     for (let step = 1; step <= MAX_STEPS; step++) {
       const req = () => agentStep({ messages: [...hist.slice(-10), ...turn], context: roContext(), tools: TOOL_SCHEMAS, trace: { sessionId, turnId, step } });
+      const t0 = Date.now();
       let out = await req();
       // one retry on a dropped connection before falling back to the scripted rules
-      if (!out.ok && step === 1) { await sleep(REDUCED ? 0 : 800); out = await req(); }
+      if (!out.ok && step === 1) { trace('note', 'Retry', out.message); await sleep(REDUCED ? 0 : 800); out = await req(); }
       if (!out.ok) {
+        trace('model', 'Model step ' + step, 'Failed: ' + out.message + (step === 1 ? ' · falling back to the scripted rules' : ''), { step, error: out.message, roundTripMs: Date.now() - t0 });
         stop();
         if (step === 1) { hist.pop(); return { ok: false, message: out.message }; }
         await C.agent(out.message);
@@ -91,14 +99,18 @@ export async function runRoAgent(C, userText) {
         if (tc.calls.length) { msg.tool_calls = tc.calls; msg.content = tc.rest || null; }
       }
       const calls = msg.tool_calls || [];
+      trace('model', 'Model step ' + step, (calls.length ? 'Calls ' + calls.map(c => c.function?.name).join(', ') : 'Answers') + ' · ' + (out.model || 'model') + ' · ' + (out.durationMs ?? Date.now() - t0) + ' ms',
+        { step, model: out.model, finish_reason: out.finish_reason, modelMs: out.durationMs, roundTripMs: Date.now() - t0, context: step === 1 ? roContext() : undefined,
+          content: msg.content || null, tool_calls: calls.map(c => ({ name: c.function?.name, arguments: c.function?.arguments })) });
 
       // The model must not claim a change it did not make: if it says it added something but no
       // add_repair_line call succeeded this turn, send it back once to make the call or correct itself.
       if (!calls.length && !added && CLAIMS_ADD.test(msg.content || '')) {
+        trace('note', 'Self-check', nudged ? 'Still claimed a change it did not make; reply replaced' : 'Reply claimed a line was added without a successful add_repair_line; sent back once');
         if (!nudged) {
           nudged = true;
           turn.push({ role: 'assistant', content: msg.content });
-          turn.push({ role: 'user', content: '(system check) Your reply says something was added, but add_repair_line was not called successfully in this turn, so the repair order did not change. Respond with only an add_repair_line tool call, using the id from the Add-on labor list or rank_repairs, or the corrected job name.' });
+          turn.push({ role: 'user', content: prompt('core-ro-agent-claim-check') });
           continue;
         }
         // still claiming a change that did not happen: never show that as fact
@@ -106,7 +118,10 @@ export async function runRoAgent(C, userText) {
       }
       if (!calls.length) {
         stop();
-        const { text, options, why } = parseReply(msg.content);
+        const reply = parseReply(msg.content), { text } = reply;
+        // before recommendations the app's question card does the asking; the model's own options are dropped
+        const asking = !flow().shown && S.ro.symptom.trim();
+        const options = asking ? [] : reply.options, why = asking ? '' : reply.why;
         const shown = text || 'I did not get that. Tell me the vehicle and what the customer is describing.';
         await C.agent(shown, why ? 'Why I ask: ' + why : undefined);
         if (options.length) C.chips(options.map(o => ({ t: o, text: o })));
@@ -123,11 +138,13 @@ export async function runRoAgent(C, userText) {
         const label = toolLabel(name, args);
         C.event('Tool · ' + name + (label ? ' · ' + label : ''));
         let result;
+        const tt = Date.now();
         try {
           result = TOOLS[name] ? await TOOLS[name](args, C) : { error: 'Unknown tool: ' + name };
         } catch (err) {
           result = { error: 'tool failed: ' + err.message };
         }
+        trace('tool', name + (label ? ' · ' + label : ''), result && result.error ? 'Error: ' + (result.message || result.error) : (result && result.result ? result.result + ' · ' : 'OK · ') + (Date.now() - tt) + ' ms', { arguments: args, result, ms: Date.now() - tt });
         if (name === 'add_repair_line' && result && result.result && result.result !== 'not_added') added = true;
         turn.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) });
         await sleep(REDUCED ? 0 : 200);

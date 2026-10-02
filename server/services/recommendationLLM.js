@@ -14,50 +14,23 @@ import {
   CLAUDE_MAX_TOKENS_RECOMMENDATIONS,
 } from '../config.js';
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
-import { buildVoiceDirective } from './voicePrompt.js';
+import { voiceDirectiveText } from './voicePrompt.js';
+import { prompt } from './promptLoader.js';
 
 /**
- * Build the system prompt for the recommendations engine.
+ * Build the system prompt for the recommendations engine
+ * (prompts/recommendations-system.md).
  */
 function buildSystemPrompt(edition, voice) {
-  const editionContext = edition === 'oem'
-    ? `This is an OEM dealership fixed-ops edition. Emphasize:
-- Warranty capture rates and warranty labor hours
-- Fixed ops efficiency (hours sold per RO, tech productivity)
-- Service contract and maintenance schedule compliance
-- Recall and TSB follow-through
-- Customer pay vs warranty mix optimization`
-    : `This is an aftermarket independent shop edition. Emphasize:
-- Effective Labor Rate (ELR) vs posted rate — revenue leakage
-- Declined service upsell opportunities
-- Customer loyalty and retention signals
-- Multi-point inspection conversion rates
-- Bay utilization and tech efficiency`;
-
-  return `You are a shop analytics engine for WrenchIQ.
-${editionContext}
-
-Analyze the shop snapshot. Return a JSON object with a single key "recommendations" containing an array of exactly 4 items (one per domain: utilization, revenue, customer_risk, anomaly).
-
-STRICT RULES:
-- Valid JSON object only — absolutely no markdown, fences, or prose outside the JSON
-- Never reference customer IDs, tech IDs, or internal database identifiers in any text — use RO numbers only
-- headline: max 8 words
-- explanation: max 20 words
-- metrics: max 2 key-value pairs
-- signal.dataPoints: max 2 items, each max 10 words
-- Priority: high|medium|low
-- screenContext: 1-2 items from [dashboard,orders,analytics,dvi,advisor,scheduling]
-- roNumber: include only if a specific RO triggered this
-- NEVER generate recommendations about data quality, missing data, system limitations, or inability to advise — only actionable shop insights
-- If a domain has insufficient data, substitute the closest available actionable insight from another signal
-
-Compact schema (follow exactly):
-{"id":"rec-utilization-1","domain":"utilization","priority":"high","screenContext":["dashboard"],"personas":{"owner":{"headline":"short","explanation":"short","metrics":{"k":"v"}},"advisor":{"headline":"short","explanation":"short","metrics":{"k":"v"}},"tech":{"headline":"short","explanation":"short","metrics":{"k":"v"}}},"signal":{"description":"short","dataPoints":["dp1","dp2"]}}${buildVoiceDirective(voice)}`;
+  return prompt('recommendations-system', {
+    oem: edition === 'oem',
+    voiceDirective: voiceDirectiveText(voice),
+  });
 }
 
 /**
- * Build the user message containing the shop snapshot.
+ * Build the user message containing the shop snapshot
+ * (prompts/recommendations-snapshot-user.md).
  */
 function buildSnapshotMessage(snapshot) {
   const {
@@ -116,7 +89,7 @@ function buildSnapshotMessage(snapshot) {
     loyaltyRisk,
   };
 
-  return `Shop snapshot:\n${JSON.stringify(payload)}`;
+  return prompt('recommendations-snapshot-user', { snapshotJson: JSON.stringify(payload) });
 }
 
 /**

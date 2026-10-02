@@ -9,7 +9,7 @@ import { matchOne } from './match';
 import {
   money, ITEM, hrs, rate, miles, vehicleLine, vehicleOk, saveFact, parseFor,
   applicableQs, shownRepairs, maintState, extractVehicle, hasContent, findItem, explain,
-  partOn, qtyFromName, combinationsFor, partQty,
+  partOn, qtyFromName, combinationsFor, partQty, rankingDetail,
 } from './logic';
 import { checkAdd, orphanedCombos, followOnsFor } from './laborRules';
 import { searchNapa } from './partsApi';
@@ -18,11 +18,34 @@ import { engineSpec } from './engineCylinders';
 import { runRoAgent } from './roAgent';
 import { useLineOps } from './roTools';
 import { DEMOS } from './demoScenarios';
+import { interpretMaint } from './maintAdvice';
+import { flow, resetFlow, nextStep, applyAnswers, recordPicked, MAX_ROUNDS } from './recommend';
+import { maintMode, settingOption, orderAddOns } from './shopSettings';
 import { onResourceChange } from './liveResource';
+import { beginTurn, endTurn, trace } from './trace';
+import { prompt } from '../services/promptLoader';
+import { policy, rankParts, pickReason } from './partPolicy';
 
 const handlers = {};
 export const Cp = createChat('profile', () => handlers.profile);
-export const Cr = createChat('ro', () => handlers.ro);
+export const Cr = createChat('ro', () => runRo);
+
+/** What a chat token stands for, as a turn title in the Agent trace. */
+function turnTitle(t) {
+  if (t.indexOf('__engine__') === 0) return 'Engine chosen: ' + t.slice(10);
+  if (t.indexOf('__add__') === 0) return 'Add ' + (ITEM(t.slice(7)) ? ITEM(t.slice(7)).name : t.slice(7));
+  if (t.indexOf('__swap__') === 0) return 'Swap lines';
+  if (t === '__refresh__') return 'Vehicle edited on the RO';
+  if (t === '__refresh__concern') return 'Concern edited on the RO';
+  if (t === '__sample__') return 'Sample message';
+  if (t === '__demo_next__') return 'Demo step';
+  return t;
+}
+/** One advisor message (typed or a chip) = one Agent trace turn. */
+async function runRo(text) {
+  const turn = beginTurn('scripted', turnTitle(String(text).trim()));
+  try { return await handlers.ro(text); } finally { endTurn(turn); }
+}
 
 const harness = {
   nextQuestion() {
@@ -99,10 +122,8 @@ async function nextPrompt() {
     Cr.chips([{ t: 'Grinding when braking', text: 'grinding noise when braking' }, { t: 'Check engine light on', text: 'check engine light is on and it idles rough' }, { t: "Won't start", text: "won't start, just clicks" }]);
     return;
   }
-  if (!vehicleOk()) { R.awaiting = null; await Cr.agent("What's the year, make and model? I match the labor guide to the exact vehicle. A VIN works too."); return; }
-  if (!miles()) { R.awaiting = null; await Cr.agent("What's the mileage? I check the maintenance schedule with it."); return; }
-  const q = harness.nextQuestion();
-  if (q) { R.awaiting = q.id; await Cr.agent(q.ask, 'Why I ask: ' + q.why); Cr.chips(q.options.map(o => ({ t: o, text: o }))); return; }
+  // vehicle details and follow-ups are asked together on the question card (advanceFlow)
+  if (!flow().shown) return;
   R.awaiting = null;
   await Cr.agent("That's everything I need. Add anything you want to the repair order, or ask me for the total or why I suggested something.");
   const ms = maintState();
@@ -122,13 +143,25 @@ handlers.ro = async function (text) {
   if (t.indexOf('__refresh__') === 0) {
     notify();
     if (S.useAgent) {
-      const what = t === '__refresh__concern' ? 'the customer concern' : 'the vehicle details';
-      const out = await runRoAgent(C, 'I edited ' + what + ' on the repair order. Re-check the likely repairs and maintenance for the updated order.');
-      if (out.ok) return;
+      const out = await runRoAgent(C, prompt('core-ro-agent-edit-notice', { concern: t === '__refresh__concern' }));
+      if (out.ok) { await advanceFlow(C); return; }
     }
     return work({ refresh: true, symptomAdded: t === '__refresh__concern' });
   }
   if (t === '__demo_next__') { demoStep(); return; }
+  // a reply while the question card is open is an answer round, typed or not
+  const F = flow();
+  if (t.indexOf('__') !== 0 && R.symptom.trim() && !F.shown && F.askedRound === F.rounds) {
+    F.rounds++;
+    const got = applyAnswers(t, F.parts);
+    if (got.length && t.split(/\s+/).length <= 8) {
+      notify();
+      C.event('Answers recorded · ' + got.map(g => g.value).join(', '));
+      await C.agent('Thanks, noted: ' + got.map(g => g.value.toLowerCase()).join(', ') + '.');
+      if (!(await advanceFlow(C))) await nextPrompt();
+      return;
+    }
+  }
   if (t.indexOf('__engine__') === 0) {
     R.engine = t.slice(10);
     C.user(R.engine); // the chip is silent so its token is not shown; show the answer instead
@@ -166,7 +199,8 @@ handlers.ro = async function (text) {
       const res = placeLine(id);
       notify();
       if (res.action === 'add') await C.agent('Added. ' + (rate() ? '' : 'Tell me your labor rate and I will price it.'));
-      return afterPlace(res, C);
+      await afterPlace(res, C);
+      return advanceFlow(C); // work on the order means the advisor has decided: recommendations now
     }
     const top = shownRepairs().slice(0, 3);
     if (!top.length) return C.agent("I don't have any suggestions to add yet. Describe the symptom first.");
@@ -202,7 +236,8 @@ handlers.ro = async function (text) {
   // Everything else goes to the agent. If the model cannot be reached, the scripted rules below take over.
   if (S.useAgent) {
     const out = await runRoAgent(C, t);
-    if (out.ok) return;
+    // the model records and rewrites; asking the combined question and showing recommendations is the app's
+    if (out.ok) { await advanceFlow(C); return; }
     C.event('Assistant offline, using the scripted flow');
   }
   const PS = t.match(/^(?:please\s+|can you\s+|could you\s+)?(?:find|search(?:\s+for)?|look\s*up|lookup|quote|price\s+(?:of|for)|check\s+(?:the\s+)?price\s+(?:of|for)|what(?:'s|\s+is)\s+the\s+price\s+(?:of|for))\s+(?:me\s+)?(.+?)\s*$/i);
@@ -261,45 +296,70 @@ async function work(o) {
   const R = S.ro, C = Cr, hasSym = R.symptom.trim().length >= 3, ms = maintState();
   if (hasSym && (o.symptomAdded || o.answeredQ || !R.lastTop.length)) {
     await C.trace(['Read concern', 'Match repairs', 'Check labor guide', 'Check schedule', 'Harness picks follow-up']);
-    const list = shownRepairs(), ids = list.map(x => x.id), beforeTop = o.beforeTop || [];
-    if (!list.length) {
-      await C.agent('Nothing in the labor guide matches that yet. Can you describe it a bit more?');
-    } else if (o.answeredQ && R.lastTop.length) {
-      const top = list.slice(0, 3).map(x => {
-        const oi = R.lastTop.indexOf(x.id), ni = ids.indexOf(x.id);
-        let mv = null;
-        if (oi < 0) mv = 'New in the top three'; else if (ni < oi) mv = 'Moved up'; else if (ni > oi) mv = 'Moved down';
-        return { mv, ...x };
-      });
-      const changedTop = beforeTop[0] !== ids[0];
-      await C.agent(changedTop ? 'That moves ' + ITEM(ids[0]).name.toLowerCase() + ' to the top.' : ITEM(ids[0]).name + ' stays on top, and the match is stronger.');
-      C.card({ type: 'repairs', snap: top, title: 'Updated ranking' });
-    } else {
-      const top = list.slice(0, 3).map(x => ({ mv: null, ...x }));
-      await C.agent(o.refresh ? 'I re-checked the labor guide with your change.' : 'Here are the most likely repairs. Each one shows where the labor time comes from.');
-      C.card({ type: 'repairs', snap: top, title: 'Likely repairs' });
-    }
+    const list = shownRepairs(), ids = list.map(x => x.id);
+    // the repairs are shown in the Recommendations card once the question round is done
+    if (!list.length && !(ms && ms.due)) await C.agent('Nothing in the labor guide matches that yet. Can you describe it a bit more?');
+    trace('rule', 'Rank repairs (labor guide)', list.length ? 'Top: ' + list.slice(0, 3).map(x => ITEM(x.id).name + ' (' + x.score + ')').join(', ') : 'No labor-guide row matches', rankingDetail(list));
     R.lastTop = ids;
   }
   if (ms) {
     const key = ms.at + '|' + ms.due;
     if (R.shownMaint !== key) {
       R.shownMaint = key;
-      if (ms.due) {
-        if (!hasSym) await C.trace(['Check schedule']);
-        await C.agent('At ' + miles().toLocaleString() + ' mi the ' + ms.at.toLocaleString() + ' mi service is due. Here is what the schedule lists.');
-        C.card({ type: 'maint', ms });
-      } else {
-        await C.agent('Nothing is due on the maintenance schedule at ' + miles().toLocaleString() + ' mi. The next interval is ' + ms.at.toLocaleString() + ' mi, ' + ms.note + '.');
-      }
+      trace('rule', 'Maintenance schedule', (ms.due ? ms.at.toLocaleString() + ' mi service due: ' + ms.ids.length + ' items' : 'Nothing due; next ' + ms.at.toLocaleString() + ' mi') + ' · ' + ms.source,
+        { rule: 'Pick the schedule by VIN mask, else the make default, else generic; due when mileage is within the window of a milestone. Presented per the shop setting: ' + settingOption('maint.presentation').label + '.', presentation: maintMode(), mileage: miles(), source: ms.source, match: ms.match, vinMask: ms.vinMask, interval_mi: ms.at, due: ms.due, items: ms.ids.map(i => ITEM(i) ? ITEM(i).name : i) });
+      // shown in the Recommendations card's maintenance section
     }
   }
   if (hasSym && !rate() && !R.rateNudged && R.accepted.size === 0) {
     R.rateNudged = true;
     await C.agent('One more thing. I do not know your labor rate yet, so I can only show hours. Tell me your rate here, like "labor rate is 145", and I will price every line.');
   }
-  if (o.refresh && R.awaiting && vehicleOk() && miles()) return;
+  if (await advanceFlow(C)) return;
   return nextPrompt();
+}
+
+/* ----- the flow before recommendations: one combined question, at most two rounds (recommend.js) ----- */
+const RECS_CHIPS = () => [{ t: 'Add the top repair', text: 'add the top repair' }].concat(
+  maintState() && maintState().due ? [{ t: 'Add all due maintenance', text: 'add all due maintenance' }] : [],
+  [{ t: "What's the total?", text: "what's the total" }]);
+
+/** Ask the combined question or show the recommendations, whichever is next. True if it posted. */
+async function advanceFlow(C) {
+  const st = nextStep(), f = flow();
+  if (st.do === 'ask') {
+    f.askedRound = f.rounds; f.parts = st.parts;
+    trace('rule', 'Combined question', 'Round ' + st.round + ': ' + st.parts.map(p => p.short).join(' · '),
+      { rule: 'One question with everything still needed: vehicle details first, then the follow-ups that move the most top repairs. Recommendations show when nothing is left or after ' + MAX_ROUNDS + ' answer rounds.', round: st.round, parts: st.parts });
+    await C.agent(st.parts.length > 1 ? 'Before I recommend anything, ' + st.parts.length + ' quick questions. Answer on the card, or type it all in one line.' : 'Before I recommend anything, one quick question.');
+    C.card({ type: 'questions', parts: st.parts, askedAt: f.rounds, round: st.round });
+    return true;
+  }
+  if (st.do === 'show') {
+    f.shown = true;
+    trace('rule', 'Recommendations', 'Shown after ' + f.rounds + ' answer round' + (f.rounds === 1 ? '' : 's'),
+      { rule: 'Three sections: likely repairs, scheduled maintenance, labor-guide recommendations, each with a customer talk track.', rounds: f.rounds, answers: { ...S.ro.answers } });
+    await C.agent('Here is what I recommend, in three parts: likely repairs, scheduled maintenance, and labor-guide recommendations. Each has what to say to the customer; open any line for the detail.');
+    C.card({ type: 'recs' });
+    C.chips(RECS_CHIPS());
+    return true;
+  }
+  return false;
+}
+
+/** Answers picked on the question card. Nothing picked (Skip) shows the recommendations now. */
+export function answerQuestions(picked, parts) {
+  const f = flow();
+  const got = recordPicked(picked);
+  Cr.user(got.length ? got.map(g => g.value).join(' · ') : 'Skip the questions');
+  f.rounds = got.length ? f.rounds + 1 : MAX_ROUNDS;
+  if (got.some(g => g.id === 'veh' || g.id === 'mi')) Cr.event('Repair order updated · vehicle');
+  if (got.length) Cr.event('Answers recorded · ' + got.map(g => g.value).join(', '));
+  notify();
+  Cr.run(async () => {
+    if (got.length) await Cr.agent('Thanks, noted: ' + got.map(g => g.value.toLowerCase()).join(', ') + '.');
+    if (!(await advanceFlow(Cr))) await nextPrompt();
+  });
 }
 
 /* ----- adding a repair also prices the parts it needs ----- */
@@ -334,6 +394,7 @@ async function autoPriceParts(it, quiet = false) {
   let ask = null;
   found.forEach(r => {
     const pick = shopPick(r.res.parts), q = partQty(r.n, it);
+    traceParts(r.n, r.res, pick, q, it);
     if (!pick) { unpriced.push(r.n.replace(/\s*\(.*?\)\s*/g, ' ').trim()); return; }
     if (R.parts.added.some(x => x.label === r.n || x.key === pick.lineCode + '|' + pick.partNumber)) return;
     if (q.need === 'diesel') { diesel.push(r.n); return; }
@@ -359,6 +420,18 @@ async function autoPriceParts(it, quiet = false) {
   return { added, notPriced: none, waitingForEngine: waiting.length ? { parts: waiting, options: (ask.options || []).map(e => e.engine + ' (' + e.cylinders + ' cyl)') } : null, diesel };
 }
 
+/** Agent trace: how the shop pick and the quantity were chosen for one part. */
+function traceParts(part, res, pick, q, line) {
+  const sp = q.perCyl ? engineSpec() : null;
+  const qtyRule = q.perCyl
+    ? (q.need === 'diesel' ? 'none: diesel engine' : q.qty === null ? 'one per cylinder; engine unknown (' + q.need + '), asking which engine' : 'one per cylinder: ' + q.qty + ' (from ' + (sp.source === 'engine' ? 'the engine on the RO' : 'engine_cylinders.json, every engine for this vehicle') + ')')
+    : (q.qty > 1 ? q.qty + ' from "(' + q.qty + ')" in the part name' : '1');
+  trace('rule', 'Parts pick · ' + part, pick ? (pick.lineCode + ' ' + pick.partNumber + ' · ' + money(pick.listPrice) + (pick.availability ? ' · ' + pick.availability.short : '') + ' · qty ' + (q.qty === null ? '?' : q.qty)) : 'No NAPA option with a price',
+    { rule: 'Shop parts policy: ' + policy().label + '. Unpriced options last. Availability is ' + (res.availabilityBasis || 'not provided') + '.',
+      for_line: line ? line.name : null, quantity_rule: qtyRule, pick: pick ? pick.lineCode + ' ' + pick.partNumber : null, why: pickReason(res.parts, pick),
+      ranked: rankParts(res.parts).map(r => ({ part_number: r.lineCode + ' ' + r.partNumber, brand: r.brand, list_price: r.listPrice, availability: r.availability ? r.availability.label : null })) });
+}
+
 /** Ask which engine, because spark plugs and coils are one per cylinder. Options come from the resource. */
 async function askEngine(C, parts, q) {
   const names = parts.map(n => n.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()).join(' and ');
@@ -377,6 +450,10 @@ async function askEngine(C, parts, q) {
 export function resolveCylinderParts(C = Cr) {
   const R = S.ro, sp = engineSpec(), out = { cylinders: sp.cylinders, diesel: sp.diesel, updated: [], added: [], removed: [] };
   if (!sp.cylinders && !sp.diesel) return out;
+  if (R.needCyl.length || R.parts.added.some(x => x.perCyl)) {
+    trace('rule', 'Cylinder count', (sp.diesel ? 'Diesel' : sp.cylinders + ' cylinders') + ' · from ' + (sp.source === 'engine' ? 'engine ' + R.engine : 'engine_cylinders.json'),
+      { rule: 'Engine layout on the RO (V6, I4, ...), else its displacement matched in engine_cylinders.json, else the file when every engine for the vehicle has the same count. Spark plugs and ignition coils on replace-all jobs are one per cylinder; none on a diesel.', engine: R.engine, spec: sp, waiting: R.needCyl.map(x => x.part) });
+  }
   if (sp.diesel) {
     R.parts.added.filter(x => x.perCyl).forEach(x => { out.removed.push(x.label); C.event('Removed from RO · ' + x.label + ' · diesel engine'); });
     R.parts.added = R.parts.added.filter(x => !x.perCyl);
@@ -430,6 +507,7 @@ async function runParts(part) {
     return;
   }
   const q = partQty(part), qty = q.qty;
+  traceParts(part, res, shopPick(res.parts), q, null);
   await C.agent('Here is ' + part.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase() + ' for the ' + vehicleLine() + ' from NAPA, availability first, then lowest price. The shop pick is marked.' + (res.cached ? ' (Saved result, under 5 minutes old.)' : ''));
   C.card({ type: 'parts', res, part, qty, perCyl: q.perCyl, fit: vehicleLine() });
   if (q.need === 'ask' || q.need === 'unknown') await askEngine(C, [part], q);
@@ -532,6 +610,8 @@ function logAdd(id, extra = '') {
 function placeLine(id) {
   if (!ITEM(id)) return { action: 'block', kind: 'unknown', reason: 'I could not find that line.' };
   const R = S.ro, d = checkAdd(id, [...R.accepted]);
+  trace('rule', 'Labor rules · ' + ITEM(id).name, d.action === 'add' ? 'Added: no duplicate, covered or add-on conflict' : d.action + (d.kind ? ' (' + d.kind + ')' : '') + ': ' + d.reason,
+    { rule: 'checkAdd: block duplicates and lines another line already covers; an add-on needs its main job on the order; a job with a cheaper add-on version while its main job is on the order is added as the add-on; a both-sides row replaces left + right.', line: ITEM(id).name, guide_row: ITEM(id).ref, on_order: [...R.accepted].map(x => ITEM(x) ? ITEM(x).name : x), decision: d });
   if (d.action === 'block') { Cr.event('Not added · ' + ITEM(id).name + ' · ' + d.reason); return { ...d, want: id }; }
   if (d.action === 'substitute') { R.accepted.add(d.id); logAdd(d.id, ' · add-on to ' + ITEM(d.parent).name); return { ...d, added: d.id }; }
   if (d.action === 'replace') {
@@ -571,12 +651,18 @@ async function afterPlace(res, C, { quiet = false } = {}) {
 
 /** Add-on labor for a job just added, each with a line the advisor can read to the customer. */
 async function offerAddOns(id, C, quiet = false) {
-  const ids = combinationsFor(id);
+  const ids = orderAddOns(combinationsFor(id)); // shop setting: what matters first, or the guide's order
+  if (ITEM(id) && ITEM(id).laborType === 'OPERATION') {
+    trace('rule', 'Add-on labor for ' + ITEM(id).name, ids.length ? ids.length + ' offered: ' + ids.map(c => ITEM(c).name).join(', ') : 'None offered',
+      { rule: 'COMBINATION rows in the labor guide with the same LaborComponent as this OPERATION, minus any already on the order, the same job as a line on the order, covered by one, or set aside. Labels and customer wording come from the enrichment file (talk.kind).', component: ITEM(id).component,
+        offered: ids.map(c => ({ name: ITEM(c).name, guide_row: ITEM(c).ref, hours: ITEM(c).hours, kind: ITEM(c).talk ? ITEM(c).talk.kind : null })) });
+  }
   if (ids.length) {
     if (!quiet) await C.agent('This labor goes with ' + ITEM(id).name.toLowerCase() + ' and is cheaper to do now than on a separate visit. Each one has a line you can read to the customer.');
     C.card({ type: 'combos', parent: id, ids });
   }
   for (const f of followOnsFor(id, [...S.ro.accepted])) {
+    trace('rule', 'Not included: ' + ITEM(f.id).name, f.why, { rule: 'followOn: the labor row note says this job is not included, so it is offered separately.', for: ITEM(id).name, note: ITEM(id).note, suggest: ITEM(f.id).name });
     if (!quiet) await C.agent(ITEM(id).name + ' does not include ' + ITEM(f.id).name.toLowerCase() + '. ' + f.why);
     C.chips([{ t: 'Add ' + ITEM(f.id).name, text: '__add__' + f.id, silent: true }]);
   }
@@ -599,30 +685,35 @@ function takeOff(id, C) {
 }
 
 /** Add every due maintenance item through the same rules; report what was skipped and why. */
-function placeMaint(ms) {
+function placeMaint(ms, ids = ms.ids) {
   const added = [], skipped = [];
-  ms.ids.forEach(i => { const r = placeLine(i); (r.added ? added : skipped).push({ id: i, r }); });
+  ids.filter(i => !S.ro.accepted.has(i)).forEach(i => { const r = placeLine(i); (r.added ? added : skipped).push({ id: i, r }); });
   return { added, skipped };
 }
 const maintSaid = (r, ms) => 'Added ' + r.added.length + ' item' + (r.added.length === 1 ? '' : 's') + ' due at the ' + ms.at.toLocaleString() + ' mi service.'
   + (r.skipped.length ? ' Skipped ' + r.skipped.map(x => ITEM(x.id).name.toLowerCase() + ' (' + x.r.reason.replace(/\.$/, '') + ')').join('; ') + '.' : '');
 
 useLineOps({ place: placeLine, after: afterPlace, cylinders: resolveCylinderParts });
-// say so in both chats when a file under resources/ changed and was reloaded
-onResourceChange('harness.log', name => { Cr.event('Reloaded ' + name + ' from resources/'); Cp.event('Reloaded ' + name + ' from resources/'); });
+// a file under resources/ changed and was reloaded: a debugging detail, so it goes to the Agent trace, not the chat
+onResourceChange('harness.log', name => trace('note', 'Reloaded ' + name, 'from resources/ (dev server hot update)'));
 
 export function acceptItem(id) {
+  const turn = beginTurn('ui', 'Add to RO · ' + (ITEM(id) ? ITEM(id).name : id));
   const res = placeLine(id);
   notify();
-  Cr.run(() => afterPlace(res, Cr));
+  Cr.run(async () => { try { await afterPlace(res, Cr); await advanceFlow(Cr); } finally { endTurn(turn); } });
 }
 export function removeItem(id) { takeOff(id, Cr); notify(); }
 export function dismissItem(id) { S.ro.dismissed.add(id); Cr.event('Set aside · ' + ITEM(id).name); notify(); }
 export function restoreItem(id) { S.ro.dismissed.delete(id); notify(); }
-export function addAllMaint() {
+/** which: 'recommended' (safety + engine items and the inspection, see maintAdvice.js) or 'all'. */
+export function addAllMaint(which = 'all') {
   const ms = maintState();
   if (!ms || !ms.due) return;
-  const r = placeMaint(ms);
+  const turn = beginTurn('ui', which === 'recommended' ? 'Add recommended maintenance' : 'Add all due maintenance');
+  const adv = which === 'recommended' && interpretMaint(ms, { rate: rate(), accepted: [...S.ro.accepted], make: S.ro.make });
+  const r = placeMaint(ms, adv ? adv.recommendedIds : ms.ids);
+  endTurn(turn);
   notify();
   Cr.run(() => Cr.agent(maintSaid(r, ms)));
 }
@@ -634,14 +725,15 @@ export function saveVehicle(v) {
   const said = cylSaid(resolveCylinderParts(Cr));
   notify();
   if (said) Cr.run(() => Cr.agent(said));
-  Cr.run(() => handlers.ro('__refresh__'));
+  Cr.run(() => runRo('__refresh__'));
 }
 export function saveConcern(symptom) {
   const R = S.ro;
   R.symptom = symptom.trim(); R.answers = {}; R.awaiting = null; R.lastTop = [];
+  resetFlow();
   Cr.event('Concern edited by you');
   notify();
-  Cr.run(() => handlers.ro('__refresh__concern'));
+  Cr.run(() => runRo('__refresh__concern'));
 }
 export function lineWhy(id) { Cr.user('Why is ' + ITEM(id).name + ' on the repair order?'); Cr.run(() => Cr.agent(explain(id))); }
 export function addManual(name, hours) {

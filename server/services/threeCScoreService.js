@@ -20,6 +20,7 @@
 
 import { createHash } from 'crypto';
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
+import { prompt as renderPrompt } from './promptLoader.js';
 
 // Score cache, keyed by a hash of the exact scoring inputs — this is what
 // actually guarantees repeated calls agree, not temperature alone.
@@ -44,20 +45,22 @@ function scoreCacheKey({ concern, diagnosis, correction, vehicle, dtcs, services
   return createHash('sha256').update(stable).digest('hex');
 }
 
+// "year make model", or '' when unknown — the prompt files supply the fallback wording.
+function vehicleLabel(vehicle) {
+  return vehicle ? `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''}`.trim() : '';
+}
+
+// The shared "Repair order context" block (prompts/three-c-context.md).
 function formatContext({ concern, diagnosis, correction, vehicle, dtcs, services }) {
-  const vehicleStr = vehicle
-    ? `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''}`.trim() || 'unknown vehicle'
-    : 'unknown vehicle';
-  const dtcStr = (dtcs || []).length ? (dtcs || []).join(', ') : 'none on file';
-  const servicesStr = (services || []).map(s => s.name).filter(Boolean).join(', ') || 'none listed';
-
-  return `Vehicle:    ${vehicleStr}
-DTCs on file: ${dtcStr}
-Services on RO: ${servicesStr}
-
-Complaint (as written): ${concern || 'not recorded'}
-Cause (as written):     ${diagnosis || 'not recorded'}
-Correction (as written): ${correction || 'not recorded'}`;
+  return renderPrompt('three-c-context', {
+    vehicle:   vehicleLabel(vehicle),
+    hasDtcs:   (dtcs || []).length > 0,
+    dtcs:      (dtcs || []).join(', '),
+    services:  (services || []).map(s => s.name).filter(Boolean).join(', '),
+    concern:   concern || '',
+    diagnosis: diagnosis || '',
+    correction: correction || '',
+  });
 }
 
 function extractJson(raw) {
@@ -85,24 +88,7 @@ export async function scoreThreeC({ concern, diagnosis, correction, vehicle, dtc
 
   const context = formatContext({ concern, diagnosis, correction, vehicle, dtcs, services });
 
-  const prompt = `You are WrenchIQ Intelligence, grading the quality of a technician's Complaint / Cause / Correction (3C) narrative on a repair order, 0-100.
-
-A Gold Standard 3C narrative:
-- Complaint: the customer's own words, with onset, frequency, and conditions — not a one-line paraphrase
-- Cause: names every DTC pulled and what it means, cites test results or inspection findings, and references a TSB if one applies
-- Correction: lists the parts installed (or diagnostic steps performed) and states how the repair was verified
-
-Score DOWN hard for a single vague sentence like "Customer states noise" with no detail. Score UP for narratives that are specific and cite real diagnostic data. If Cause or Correction is empty because the RO hasn't reached that stage yet, do not penalize those sections — mention that instead in gaps as "not yet reached" rather than treating it as a quality failure equivalent to a vague write-up.
-
-Repair order context:
-${context}
-
-Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
-{
-  "score": number (0-100),
-  "rationale": string (1-2 sentences explaining the score),
-  "gaps": string[] (specific missing elements, empty array if none)
-}`;
+  const prompt = renderPrompt('three-c-score', { context });
 
   let data;
   try {
@@ -145,20 +131,7 @@ Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
 export async function rewriteThreeC({ concern, diagnosis, correction, vehicle, dtcs, services }) {
   const context = formatContext({ concern, diagnosis, correction, vehicle, dtcs, services });
 
-  const prompt = `You are an expert automotive service writer improving a technician's Complaint / Cause / Correction (3C) narrative for this repair order.
-
-STRICT GROUNDING RULE — this is the most important instruction: use ONLY the facts given in "Repair order context" below. Do not invent a DTC, TSB number, part name/number, measurement, test result, or customer statement that isn't already there. You may rephrase, expand, and organize what's given into professional language, but if a Gold Standard narrative would normally include something (e.g. a diagnostic reading) and it simply isn't in the context, write "not yet documented" for that piece instead of making one up.
-
-Repair order context:
-${context}
-
-Write an improved version of each section:
-- Complaint: restate the customer's concern in clear, specific language — keep any onset/frequency detail already given, don't add new detail that wasn't stated
-- Cause: if DTCs are listed, name them and state what they indicate; if a cause/diagnosis was already recorded, expand its phrasing without adding new claims; if nothing is recorded yet, say diagnosis is pending
-- Correction: if a correction was already recorded, restate it clearly; if none yet, say correction is pending diagnostic completion
-
-Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
-{ "concern": string, "diagnosis": string, "correction": string }`;
+  const prompt = renderPrompt('three-c-rewrite', { context });
 
   let data;
   try {
@@ -220,19 +193,7 @@ export async function rewriteConcern({ concern, vehicle }) {
     return { concern: reattach('') };
   }
 
-  const vehicleStr = vehicle
-    ? `${vehicle.year || ''} ${vehicle.make || ''} ${vehicle.model || ''}`.trim() || 'unknown vehicle'
-    : 'unknown vehicle';
-
-  const prompt = `You are an expert automotive service writer cleaning up a customer's stated concern for a repair order intake.
-
-STRICT GROUNDING RULE — this is the most important instruction: use ONLY what the customer actually said below. Do not invent a symptom, DTC, part, measurement, or detail that isn't already there. You may fix grammar, spelling, and organize the wording into clear, professional language, but do not add new claims.
-
-Vehicle: ${vehicleStr}
-Customer's concern (as written): ${customerText}
-
-Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
-{ "concern": string }`;
+  const prompt = renderPrompt('concern-rewrite', { vehicle: vehicleLabel(vehicle), concern: customerText });
 
   let data;
   try {
@@ -271,23 +232,14 @@ Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
 export async function verifyThreeCGrounding({ rewritten, concern, diagnosis, correction, vehicle, dtcs, services }) {
   const context = formatContext({ concern, diagnosis, correction, vehicle, dtcs, services });
 
-  const prompt = `You are a strict fact-checker reviewing a rewritten repair-order narrative for fabrication.
-
-ORIGINAL CONTEXT (the only source of truth):
-${context}
-
-REWRITE TO CHECK:
-Complaint: ${rewritten.concern || ''}
-Cause: ${rewritten.diagnosis || ''}
-Correction: ${rewritten.correction || ''}
-
-Flag any statement in the rewrite that asserts a fact — a DTC, TSB number, part name/number, measurement, test result, specific customer statement, or other concrete claim — that is NOT present in the original context above, even if it sounds like a plausible detail for this kind of repair. Rephrasing, reorganizing, or elaborating on the *style* of something already in the context is fine and is not a fabrication. A generic phrase like "diagnosis is pending" or "not yet documented" is also fine.
-
-Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
-{
-  "grounded": boolean,
-  "fabrications": string[]
-}`;
+  const prompt = renderPrompt('three-c-grounding-check', {
+    context,
+    rewritten: {
+      concern:    rewritten.concern || '',
+      diagnosis:  rewritten.diagnosis || '',
+      correction: rewritten.correction || '',
+    },
+  });
 
   let data;
   try {

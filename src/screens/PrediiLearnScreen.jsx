@@ -7,6 +7,7 @@ import {
 import { usePrediiLearn } from "../context/PrediiLearnContext";
 import { useDemo } from "../context/DemoContext";
 import { fetchCannedJobs, persistShopProfile } from "../services/prediiLearnService";
+import { prompt } from "../services/promptLoader";
 import { ENTITY_TYPES, buildEntityFreqs, topN } from "../utils/entityFreqs";
 import { SHOP, EWG_LOCATIONS, technicians, financials, SHOP_INTEL_FACTS } from "../data/demoData";
 
@@ -385,8 +386,8 @@ function SummaryPanel({ type, top, color }) {
       const body = {
         model: "claude-haiku-4-5-20251001",
         max_tokens: 400,
-        system: "You are a shop-management analyst. Given a ranked list of frequently-extracted repair-order entities, write 3-5 concise bullet points of actionable business insight for an independent auto repair shop owner (patterns, upsell opportunities, parts-stocking or staffing recommendations). Return only the bullet points as plain lines starting with \"- \", no preamble or headers.",
-        messages: [{ role: "user", content: `Entity type: ${label}\nTop items (name: count):\n${top.map((t) => `${t.name}: ${t.value}`).join("\n")}` }],
+        system: prompt("predii-learn-entity-summary-system"),
+        messages: [{ role: "user", content: prompt("predii-learn-entity-summary-user", { label, items: top.map((t) => `${t.name}: ${t.value}`).join("\n") }) }],
       };
       const res = await fetch(`${API_BASE}/api/claude/messages`, {
         method: "POST",

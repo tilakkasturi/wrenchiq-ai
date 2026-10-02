@@ -1,0 +1,37 @@
+{
+ "_about": "How the Core assistant interprets a scheduled-maintenance milestone for the advisor: which tier each item belongs to (by PreferredTerm, or Component when there is none), what to call it to the customer, why it matters, and what skipping it risks. tiers are in the order the advisor should bring them up. recommend: true tiers are what 'Add recommended' adds. inspectionGroups names the systems the bundled multi-point inspection covers, by keyword in the check's name. Wording is customer-facing: plain, no pressure, no claims beyond the schedule.",
+ "tiers": [
+  { "id": "safety", "label": "Safety", "recommend": true, "say": "These affect how the vehicle stops, steers and grips the road." },
+  { "id": "protect", "label": "Protects the engine", "recommend": true, "say": "These keep the engine and drivetrain from wearing early; skipping them costs more later." },
+  { "id": "comfort", "label": "Comfort and efficiency", "recommend": false, "say": "These are nice to keep up but can wait if the customer wants to keep today's bill down." }
+ ],
+ "defaultTier": "protect",
+ "items": {
+  "engine oil": { "tier": "protect", "say": "change the oil and filter", "why": "Fresh oil keeps the engine's moving parts from wearing.", "skip": "Old oil breaks down and can sludge, which is how engines wear out early." },
+  "engine oil filter": { "tier": "protect", "say": "change the oil and filter", "why": "Fresh oil keeps the engine's moving parts from wearing.", "skip": "Old oil breaks down and can sludge, which is how engines wear out early." },
+  "spark plug": { "tier": "protect", "say": "replace the spark plugs", "why": "Worn plugs cause misfires, rough running and worse fuel economy.", "skip": "Misfires can damage the catalytic converter, which is an expensive part." },
+  "engine coolant": { "tier": "protect", "say": "replace the engine coolant", "why": "Coolant wears out and stops protecting against corrosion inside the engine.", "skip": "Old coolant corrodes the water pump and radiator from the inside." },
+  "transmission fluid": { "tier": "protect", "say": "service the transmission fluid", "why": "Clean fluid keeps shifts smooth and the transmission cool.", "skip": "Worn fluid is a common reason transmissions fail early." },
+  "differential fluid": { "tier": "protect", "say": "replace the differential fluid", "why": "It lubricates the gears that drive the wheels.", "skip": "Worn fluid lets the gears wear and whine." },
+  "transfer case fluid": { "tier": "protect", "say": "replace the transfer case fluid", "why": "It protects the all-wheel-drive gears.", "skip": "Worn fluid wears the all-wheel-drive system." },
+  "drive belt": { "tier": "protect", "say": "replace the drive belt", "why": "The belt runs the alternator, A/C and water pump.", "skip": "A broken belt can leave the customer stranded." },
+  "vacuum pump": { "tier": "protect", "say": "replace the brake vacuum pump", "why": "It supplies the power assist for the brakes on this engine.", "skip": "A failing pump makes the brake pedal hard to push." },
+  "battery": { "tier": "protect", "say": "service the battery", "why": "A weak battery is the most common reason a car will not start.", "skip": "It tends to fail on the first cold morning." },
+  "high voltage battery air filter": { "tier": "protect", "say": "clean the hybrid battery filter", "why": "It keeps the hybrid battery cool.", "skip": "A clogged filter makes the hybrid battery run hot and wear out faster." },
+  "FUEL ADDITIVE": { "tier": "comfort", "say": "add the fuel system cleaner", "why": "It keeps fuel injectors clean.", "skip": "Deposits build slowly and can hurt fuel economy." },
+  "tires": { "tier": "safety", "say": "rotate the tires", "why": "Rotating evens out wear so the tires grip evenly and last longer.", "skip": "Uneven wear shortens tire life and can affect handling in the rain." },
+  "disc brake pad": { "tier": "safety", "say": "check the brake pads", "why": "Pads wear with every stop.", "skip": "Worn-out pads damage the rotors and lengthen stopping distance." },
+  "brake system": { "tier": "safety", "say": "inspect the brakes", "why": "It catches worn parts before they affect stopping.", "skip": "Brake problems get more expensive the longer they go." },
+  "window wiper blade": { "tier": "safety", "say": "replace the wiper blades", "why": "Clear vision in the rain.", "skip": "Streaking blades make it hard to see in bad weather." },
+  "cabin air filter": { "tier": "comfort", "say": "replace the cabin air filter", "why": "It cleans the air coming through the vents and keeps the A/C blowing strong.", "skip": "A clogged one means weak airflow and a musty smell." },
+  "engine air filter": { "tier": "comfort", "say": "replace the engine air filter", "why": "A clean filter helps fuel economy and performance.", "skip": "A dirty one slowly costs fuel economy." },
+  "fuel cap seal": { "tier": "comfort", "say": "check the fuel cap seal", "why": "A bad seal can turn on the check engine light.", "skip": "It can set off the check engine light." }
+ },
+ "inspectionGroups": [
+  { "label": "brakes", "match": "brake|disc|drum" },
+  { "label": "steering and suspension", "match": "steering|ball joint|driveshaft|propeller|boots|chassis" },
+  { "label": "cooling system and fluids", "match": "coolant|cooling|radiator|fluid" },
+  { "label": "fuel and exhaust lines", "match": "fuel|exhaust" },
+  { "label": "belts", "match": "belt" }
+ ]
+}

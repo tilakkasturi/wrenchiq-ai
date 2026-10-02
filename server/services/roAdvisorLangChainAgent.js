@@ -65,6 +65,7 @@ import {
   thinkingModeFields,
 } from './azureOpenAILangChain.js';
 import { RO_TOOLS, executeTool, addUsage } from './roAdvisorService.js';
+import { prompt } from './promptLoader.js';
 import { buildLangfuseHandler } from './langfuseTracing.js';
 
 /** Same observability tag the hand-rolled loop logs under. */
@@ -378,7 +379,7 @@ export async function runCreateAgentLoop({ system, preloaded }) {
       {
         messages: [{
           role: 'user',
-          content: 'Analyze this repair order and produce recommendations for the service advisor.',
+          content: prompt('ro-advisor-kickoff'),
         }],
       },
       { recursionLimit: MAX_MODEL_CALLS * 2, callbacks },

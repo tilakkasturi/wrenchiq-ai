@@ -20,58 +20,48 @@
  */
 
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
+import { prompt as renderPrompt, promptSection } from './promptLoader.js';
 
+// Code computes the data rows; the wording lives in prompts/ro-gold-standard-score.md.
 function buildPrompt(ro, customer, vehicle, agentData, guidelines) {
-  const servicesList = (ro.services || []).map(s => {
-    const photoNote = (s.photos || []).length > 0 ? `, ${s.photos.length} photo(s) attached` : '';
-    return `- ${s.name} — labor $${s.laborCost || 0}, parts $${s.partsCost || 0}, status: ${s.status || 'pending'}${photoNote}`;
-  }).join('\n') || 'none listed';
+  const servicesList = (ro.services || []).map(s => promptSection('ro-gold-standard-rows', 'service', {
+    name: String(s.name), labor: String(s.laborCost || 0), parts: String(s.partsCost || 0), status: s.status || '', photos: (s.photos || []).length,
+  })).join('\n');
 
   const guidelineList = guidelines
-    .map(g => `${g.id}. ${g.guideline} [applies to: ${g.appliesTo}] — Gold Standard: ${g.whatA5LooksLike}`)
+    .map(g => promptSection('ro-gold-standard-rows', 'guideline', { id: String(g.id), guideline: String(g.guideline), appliesTo: String(g.appliesTo), whatA5LooksLike: String(g.whatA5LooksLike) }))
     .join('\n');
 
-  return `You are WrenchIQ Intelligence, scoring one repair order (RO) against the shop's Gold Standard checklist using every signal on file — the RO record, the advisor/customer conversation, and prior WrenchIQ findings.
+  const mileage = vehicle?.mileage ?? vehicle?.odometer;
+  const mc = agentData?.marginCheck;
+  const aro = agentData?.aroGap;
 
-Repair Order:
-  RO #:             ${ro.roNumber}
-  Customer:         ${customer?.firstName || ''} ${customer?.lastName || ''}
-  Vehicle:          ${vehicle?.year || ''} ${vehicle?.make || ''} ${vehicle?.model || ''} (${vehicle?.mileage ?? vehicle?.odometer ?? 'unknown'} mi)
-  Customer concern: ${ro.customerConcern || 'none recorded'}
-  Services on RO:
-${servicesList}
-  Total estimate:   $${ro.totalEstimate || 0}
-
-Diagnostic / conversation record on file:
-  Concern (3C):         ${ro.threeCConcern || 'not recorded'}
-  Diagnosis (3C):       ${ro.threeCDiagnosis || 'not recorded'}
-  Correction (3C):      ${ro.threeCCorrection || 'not recorded'}
-  Customer text status: ${ro.agenticTextStatus || 'none staged'}
-  Customer text sent:   ${agentData?.suggestedCustomerMessage || ro.agenticCustomerText || 'none on file'}
-
-WrenchIQ Intelligence findings already produced for this RO:
-  Advisor brief:  ${agentData?.advisorBrief || 'n/a'}
-  Margin check:   ${agentData?.marginCheck ? `${agentData.marginCheck.status} — ${agentData.marginCheck.marginPct}% vs ${agentData.marginCheck.target}% target` : 'n/a'}
-  ARO gap:        ${agentData?.aroGap?.gapAmount ? `$${agentData.aroGap.gapAmount} below target, recommendations cover $${agentData.aroGap.recommendationsCoverAmount || 0}` : 'n/a'}
-  Alerts:         ${(agentData?.alerts || []).map(a => `[${a.type}] ${a.message}`).join('; ') || 'none'}
-  Recommendations offered: ${(agentData?.serviceRecommendations || []).map(r => r.service).join(', ') || 'none'}
-
-Gold Standard guidelines to assess:
-${guidelineList}
-
-For EACH guideline id, decide:
-  "met"      — the record/conversation shows clear evidence this guideline was satisfied for this RO
-  "not_met"  — there's evidence it was missed or skipped
-  "unclear"  — not enough information on file to tell either way
-
-Be conservative: only mark "met" when the data actually shows it, not because it's merely plausible. A guideline with zero supporting data is "unclear", not "met". Cite the specific data point behind your call in "evidence" (one sentence); if there's no data, say "no data on file for this RO".
-
-Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
-{
-  "items": [
-    { "id": "G1", "status": "met" | "not_met" | "unclear", "evidence": string }
-  ]
-}`;
+  // Template literals (not raw values) wherever the old inline prompt interpolated a
+  // possibly-missing field, so "undefined" renders exactly as it did instead of throwing.
+  return renderPrompt('ro-gold-standard-score', {
+    roNumber:         `${ro.roNumber}`,
+    customerFirst:    customer?.firstName || '',
+    customerLast:     customer?.lastName || '',
+    vehicleYear:      vehicle?.year || '',
+    vehicleMake:      vehicle?.make || '',
+    vehicleModel:     vehicle?.model || '',
+    hasMileage:       mileage != null,
+    mileage:          `${mileage}`,
+    concern:          ro.customerConcern || '',
+    servicesList,
+    totalEstimate:    ro.totalEstimate || 0,
+    threeCConcern:    ro.threeCConcern || '',
+    threeCDiagnosis:  ro.threeCDiagnosis || '',
+    threeCCorrection: ro.threeCCorrection || '',
+    textStatus:       ro.agenticTextStatus || '',
+    textSent:         agentData?.suggestedCustomerMessage || ro.agenticCustomerText || '',
+    advisorBrief:     agentData?.advisorBrief || '',
+    marginCheck:      mc ? { status: `${mc.status}`, marginPct: `${mc.marginPct}`, target: `${mc.target}` } : null,
+    aroGap:           aro?.gapAmount ? { gapAmount: `${aro.gapAmount}`, coverAmount: aro.recommendationsCoverAmount || 0 } : null,
+    alerts:           (agentData?.alerts || []).map(a => `[${a.type}] ${a.message}`).join('; '),
+    recommendations:  (agentData?.serviceRecommendations || []).map(r => r.service).join(', '),
+    guidelineList,
+  });
 }
 
 /**

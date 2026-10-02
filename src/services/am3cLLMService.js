@@ -6,6 +6,8 @@
  * Falls back to local text transformations when the proxy is unavailable.
  */
 
+import { prompt, promptSection } from "./promptLoader";
+
 // This model name is sent in the request body but ignored by the proxy —
 // the proxy always uses the server-configured LLM_MODEL.
 const MODEL = "gpt-4o-mini";
@@ -13,100 +15,41 @@ const API_BASE = import.meta.env.VITE_API_BASE || "";
 const PROXY_URL = `${API_BASE}/api/claude/messages`;
 
 // ── Prompts ───────────────────────────────────────────────────
+// Wording lives in prompts/am3c-narrative-*.md; this only computes the data.
 
-const SYSTEM_SHORT = `You are an automotive repair documentation assistant.
-Rewrite the 3C (Complaint, Cause, Correction) narrative in SHORT, concise technical language.
-Rules:
-- Each section: 1–2 sentences maximum
-- Cause MUST cite every DTC by code (e.g. P0420) and tie it to the TSB number if provided
-- If a check engine light / MIL is on, say so explicitly in Cause
-- Correction MUST name each part installed with part number and quantity — no labor hours
-- Use precise automotive terminology, no filler words
-Return valid JSON only: { "complaint": "...", "cause": "...", "correction": "..." }`;
-
-const SYSTEM_VERBOSE = `You are an automotive repair communication specialist who writes for customers, not technicians.
-Rewrite the 3C narrative in VERBOSE, customer-friendly language that:
-- Avoids jargon — explain any technical terms in plain English
-- Sounds warm, professional, and reassuring
-- Explains WHY things happened, not just what was found
-- Uses "your vehicle", "we found", "we repaired" framing
-- Is 3–5 sentences per section
-- Cause: if a check engine light is on, explain what it means in plain English; mention the code briefly
-- Correction: describe each repair performed including parts replaced (plain name, no raw part numbers needed)
-Return valid JSON only: { "complaint": "...", "cause": "...", "correction": "..." }`;
-
-const SYSTEM_REWRITE = `You are an expert automotive service writer with 20 years of experience.
-Given the raw 3C data, write a PROFESSIONAL, complete narrative that meets OEM and insurance documentation standards.
-
-COMPLAINT (2 sentences):
-- Document customer's exact concern with onset, frequency, and conditions
-
-CAUSE (3–5 sentences):
-- State whether a diagnostic scan was performed and list every DTC found (code + short description)
-- If DTCs are present and the check engine / MIL light is on, state that explicitly
-- Cite the specific TSB number and full title for any applicable technical service bulletin
-- Tie each DTC directly to the TSB it matches
-- Include test results (pressure readings, voltage measurements, live data observations)
-
-CORRECTION (4–6 sentences, two logical sections — do NOT mention labor hours):
-SECTION A — Work Performed (based on approved estimate):
-- List every part replaced or installed: description, OEM part number, and quantity (e.g. "Upstream O2 Sensor, P/N 89467-06170, qty 1")
-- If no parts were installed (diagnostic only), state what diagnostic procedures were completed
-- State test/verification performed after completed work (road test miles, monitor status, recheck result)
-SECTION B — Work Recommended (based on inspection findings):
-- If additional repair was identified but is pending customer authorization, list the recommended parts (name + part number + qty)
-- Do NOT include labor hours — parts only
-- Phrase as: "Based on inspection, recommend: [repair description] — [part name, P/N, qty]. Pending customer authorization."
-
-Return valid JSON only: { "complaint": "...", "cause": "...", "correction": "..." }`;
+const SYSTEM_PROMPT = {
+  short:   "am3c-narrative-short-system",
+  verbose: "am3c-narrative-verbose-system",
+};
 
 // ── Build the user message ────────────────────────────────────
 
 function buildUserMessage({ complaint, cause, correction, vehicle, roId, dviFindings, tsbMatches, dtcCodes, techNotes, laborLines, parts }) {
-  const vehicleStr = vehicle
-    ? `${vehicle.year} ${vehicle.make} ${vehicle.model}${vehicle.trim ? " " + vehicle.trim : ""} (VIN: ${vehicle.vin || "N/A"})`
-    : "Unknown vehicle";
+  const vehicleName = vehicle
+    ? `${vehicle.year} ${vehicle.make} ${vehicle.model}${vehicle.trim ? " " + vehicle.trim : ""}`
+    : "";
 
-  const dtcStr = (dtcCodes || []).map(d => `${d.code || d}: ${d.description || ""}`).join("; ") || "None";
-  const milOn  = (dtcCodes || []).length > 0 ? "YES — MIL/CEL illuminated" : "No active DTCs — MIL off";
-  const tsbStr = (tsbMatches || [])
+  const dtcs = (dtcCodes || []).map(d => `${d.code || d}: ${d.description || ""}`).join("; ");
+  const tsbs = (tsbMatches || [])
     .filter(t => t.accepted !== false)
     .map(t => `${t.id || t.tsbId || ""}: ${t.title || t.summary || ""}`)
-    .join("\n  ") || "None";
-  const dviStr = (dviFindings || []).filter(f => f.severity === "red" || f.status === "red")
-    .map(f => f.finding || f.text || "").join("; ") || "None";
+    .join("\n  ");
+  const dviRed = (dviFindings || []).filter(f => f.severity === "red" || f.status === "red")
+    .map(f => f.finding || f.text || "").join("; ");
 
   const laborStr = (laborLines || []).map(l =>
-    `  - ${l.description || l.name || ""}`
-  ).join("\n") || "  None provided";
+    "  " + promptSection("am3c-narrative-rows", "labor", { description: l.description || l.name || "" })
+  ).join("\n");
 
-  const partsStr = (parts || []).map(p =>
-    `  - ${p.description || p.name || ""} | P/N: ${p.partNumber || p.partNum || "N/A"} | Qty: ${p.qty ?? 1}`
-  ).join("\n") || "  None provided";
+  const partLines = (parts || []).map(p =>
+    "  " + promptSection("am3c-narrative-rows", "part", { description: p.description || p.name || "", partNumber: p.partNumber || p.partNum || "", qty: String(p.qty ?? 1) })
+  ).join("\n");
 
-  return `RO: ${roId || "N/A"}
-Vehicle: ${vehicleStr}
-
-Current 3C (raw — rewrite this):
-COMPLAINT: ${complaint || "(empty)"}
-CAUSE: ${cause || "(empty)"}
-CORRECTION: ${correction || "(empty)"}
-
-Diagnostic findings:
-- Check Engine Light / MIL: ${milOn}
-- DTCs scanned: ${dtcStr}
-- Applicable TSBs:
-  ${tsbStr}
-- DVI red items: ${dviStr}
-- Tech notes: ${techNotes || "None"}
-
-Work performed (procedures completed):
-${laborStr}
-
-Parts installed/recommended (include in Correction with part numbers — no labor hours):
-${partsStr}
-
-Rewrite the 3C narrative per the instructions. Return JSON only.`;
+  return prompt("am3c-narrative-user", {
+    roId, vehicleName, vin: vehicle?.vin, complaint, cause, correction,
+    milOn: (dtcCodes || []).length > 0, dtcs, tsbs, dviRed, techNotes,
+    laborLines: laborStr, partLines,
+  });
 }
 
 // ── Local fallbacks (no API key) ──────────────────────────────
@@ -137,10 +80,7 @@ function localVerbose({ complaint, cause, correction, vehicle }) {
  * @returns {Promise<{ complaint: string, cause: string, correction: string, usedLLM: boolean }>}
  */
 export async function generateNarrative(mode, context) {
-  const systemPrompt =
-    mode === "short"   ? SYSTEM_SHORT   :
-    mode === "verbose" ? SYSTEM_VERBOSE :
-                         SYSTEM_REWRITE;
+  const systemPrompt = prompt(SYSTEM_PROMPT[mode] || "am3c-narrative-rewrite-system");
 
   const body = JSON.stringify({
     model: MODEL,

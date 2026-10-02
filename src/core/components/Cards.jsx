@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { S } from '../state';
 import { REPMAP } from '../data';
 import { getMaintItem } from '../maintenanceSchedule';
 import { hrs, rate, conf, money, partOn, vehicleOk } from '../logic';
 import { acceptItem, removeItem, dismissItem, restoreItem, addAllMaint, searchPart, addPart, removePart, swapPart } from '../harness';
 import { talkFor } from '../talkTrack';
+import { interpretMaint } from '../maintAdvice';
+import { maintMode, fullSchedule, settingOption } from '../shopSettings';
 import { partPrice, prefetchPartPrices } from '../partPrices';
 import { policy, rankParts, shopPick } from '../partPolicy';
 import { engineSpec, perCylinder } from '../engineCylinders';
@@ -123,25 +125,73 @@ export function CombosCard({ card }) {
   );
 }
 
-export function MaintCard({ card }) {
-  const ms = card.ms;
+const TIER_TAG = { safety: 'med', protect: 'adv', comfort: 'low' };
+
+/**
+ * Scheduled maintenance, interpreted (maintAdvice.js): what is due grouped by severity with why it
+ * matters, what today's repairs already cover, and the script the advisor can read to the customer.
+ */
+/** embedded: shown inside the Recommendations card's maintenance section, without its own label and frame. */
+export function MaintCard({ card, embedded = false }) {
+  const ms = card.ms, rt = rate();
+  const [copied, setCopied] = useState(false);
+  const all = maintMode() === 'all'; // shop setting: the full schedule as is, not prioritized
+  const adv = interpretMaint(ms, { rate: rt, accepted: [...S.ro.accepted], make: S.ro.make });
+  if (!adv) return null;
+  const full = all ? fullSchedule(ms, { rate: rt, accepted: [...S.ro.accepted], make: S.ro.make }) : null;
+  const left = adv.recommendedIds.length;
+  const script = all ? [full.script] : adv.scriptLines;
+  const copy = () => { try { navigator.clipboard.writeText(all ? full.script : adv.script).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }, () => {}); } catch (_) { /* clipboard blocked */ } };
+  const row = (it, extra) => {
+    const on = S.ro.accepted.has(it.id);
+    return (
+      <div className="maint-item" key={it.id}>
+        <div>
+          <div style={{ fontWeight: 500 }}>{it.name} <span className="mono small muted">{it.hours.toFixed(1)} h{it.price !== null && it.price !== undefined ? ' · ' + money(it.price) : ''}</span>{it.extended && <span className="tag low" style={{ marginLeft: 6 }}>Extended schedule</span>}</div>
+          {extra}
+        </div>
+        <div>{it.coveredBy
+          ? <span className="small muted">In today's {it.coveredBy.toLowerCase()}</span>
+          : on ? <button className="btn sm" onClick={() => removeItem(it.id)}>Remove</button>
+            : <button className="btn sm primary" onClick={() => acceptItem(it.id)}>Add</button>}</div>
+      </div>
+    );
+  };
   return (
     <>
-      <div className="label" style={{ marginBottom: 6 }}>Scheduled maintenance</div>
-      <div className="card">
-        <div className="top-row"><h3>{ms.at.toLocaleString()} mi service</h3><button className="btn sm" onClick={addAllMaint}>Add all due</button></div>
-        <p className="why-line">{ms.note} · {SCHEDULE_LABEL[ms.match] || ms.source}</p>
-        {ms.ids.map(id => {
-          const it = getMaintItem(id), on = S.ro.accepted.has(id);
-          return (
-            <div className="maint-item" key={id}>
-              <div><div style={{ fontWeight: 500 }}>{it.name}</div><Cite it={it} /></div>
-              <div>{on
-                ? <button className="btn sm" onClick={() => removeItem(id)}>Remove</button>
-                : <button className="btn sm primary" onClick={() => acceptItem(id)}>Add</button>}</div>
-            </div>
-          );
-        })}
+      {!embedded && <div className="label" style={{ marginBottom: 6 }}>Scheduled maintenance</div>}
+      <div className={embedded ? 'maint embedded' : 'card maint'}>
+        <div className="top-row">
+          <h3>{adv.headline} <span className={'tag ' + (adv.status === 'Due now' ? 'med' : 'low')}>{adv.status}</span></h3>
+          <span className="maint-actions">
+            {!all && left > 0 && <button className="btn sm primary" onClick={() => addAllMaint('recommended')}>Add recommended ({left})</button>}
+            <button className={'btn sm' + (all && full.openIds.length ? ' primary' : '')} onClick={() => addAllMaint('all')}>Add all{all ? ' (' + full.openIds.length + ')' : ''}</button>
+          </span>
+        </div>
+        <p className="why-line">{ms.note} · {SCHEDULE_LABEL[ms.match] || ms.source}{all
+          ? (full.hours ? ' · ' + full.hours.toFixed(1) + ' h' + (full.price !== null ? ' · ' + money(full.price) : '') : '')
+          : (adv.recommended.hours ? ' · recommended ' + adv.recommended.hours.toFixed(1) + ' h' + (adv.recommended.price !== null ? ' · ' + money(adv.recommended.price) : '') : '')}</p>
+        <p className="why-line small muted">Shop setting: {settingOption('maint.presentation').label}. Change it in Shop profile.</p>
+
+        <details className="maint-script" open>
+          <summary><span className="label">What to say to the customer</span></summary>
+          {script.map((l, i) => <p key={i}>{l}</p>)}
+          <button className="btn ghost sm" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
+        </details>
+
+        {all && <section className="maint-tier">{full.items.map(it => row(it, null))}</section>}
+        {!all && adv.tiers.map(t => (
+          <section className="maint-tier" key={t.id}>
+            <div className="maint-tier-head"><span className={'tag ' + TIER_TAG[t.id]}>{t.label}</span><span className="small muted">{t.recommend ? 'Recommend today' : 'Optional'}</span></div>
+            {t.items.map(it => row(it, it.why && <p className="why-line" title={it.skip ? 'If skipped: ' + it.skip : undefined}>{it.why}</p>))}
+          </section>
+        ))}
+        {!all && adv.inspection && (
+          <section className="maint-tier">
+            <div className="maint-tier-head"><span className="tag low">Inspection</span><span className="small muted">Included checks</span></div>
+            {row(adv.inspection, <p className="why-line">{adv.inspection.count ? adv.inspection.count + ' checks' : 'Multi-point checks'}{adv.inspection.groups.length ? ': ' + adv.inspection.groups.join(', ') : ''}. We call the customer before any extra work.</p>)}
+          </section>
+        )}
       </div>
     </>
   );

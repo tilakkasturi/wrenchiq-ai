@@ -113,6 +113,8 @@ Horizontal scrollable strip injected at the top of most screen components. Each 
 
 Express 5, MongoDB. All Claude/Anthropic settings in `server/config.js` — reads from env vars, never hardcode.
 
+**Prompts:** every LLM prompt (system prompts, user templates, examples, tool descriptions, nudges) is a Markdown file in `prompts/` — never inline prompt wording in code. Server code renders them with `prompt()` / `promptSection()` from `server/services/promptLoader.js`, browser code from `src/services/promptLoader.js`; syntax (`{{var}}`, `{{#if}}`, `## section`) is in `prompts/README.md`. Code passes only data. The NER service keeps its own prompts in `ro-ner-demo/prompts/`.
+
 | File | Purpose |
 |---|---|
 | `server/index.js` | Express app, MongoDB connect |

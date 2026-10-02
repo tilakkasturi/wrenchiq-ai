@@ -10,45 +10,42 @@
  */
 
 import { callAzureOpenAI, getTextFromResponse } from './azureOpenAI.js';
+import { prompt, promptSection } from './promptLoader.js';
 
+// Wording: prompts/shop-intel-spotlight.md. Scalars go through String() so a missing value still
+// reads "undefined", as the old template literal did.
 function buildPrompt({ shop, locations, technicians, financials }) {
   const locationsStr = (locations || [])
-    .map(l => `- ${l.name}: rank #${l.rank}, avg RO $${l.avgRO}, ${l.bays} bays, ${l.techs} techs, status "${l.status}", manager ${l.manager}`)
-    .join('\n') || 'none provided';
+    .map(l => promptSection('shop-intel-rows', 'location', { name: String(l.name), rank: String(l.rank), avgRO: String(l.avgRO), bays: String(l.bays), techs: String(l.techs), status: String(l.status), manager: String(l.manager) }))
+    .join('\n');
 
   const techsStr = (technicians || [])
-    .map(t => `- ${t.name} (${t.role}, ${t.location}): efficiency ${t.efficiency}%, ELR $${t.elr}, customer rating ${t.customerRating}, avg job value $${t.avgJobValue}. Note: ${t.note || 'none'}`)
-    .join('\n') || 'none provided';
+    .map(t => promptSection('shop-intel-rows', 'technician', { name: String(t.name), role: String(t.role), location: String(t.location), efficiency: String(t.efficiency), elr: String(t.elr), customerRating: String(t.customerRating), avgJobValue: String(t.avgJobValue), note: t.note || '' }))
+    .join('\n');
 
-  const finStr = financials
-    ? `YTD revenue: $${financials.ytd?.totalRevenue}, avg ARO: $${financials.ytd?.avgARO}, invoices: ${financials.ytd?.totalInvoices}, car count: ${financials.ytd?.carCount}
-MTD gross profit: ${financials.mtd?.grossProfitPct}%, labor margin: ${financials.mtd?.laborMargin}%, parts margin: ${financials.mtd?.partsMargin}%
-Revenue by month: ${(financials.revenueByMonth || []).map(m => `${m.month}: $${m.revenue} (target $${m.target})`).join('; ')}`
-    : 'none provided';
+  const fin = financials && {
+    ytdRevenue:        String(financials.ytd?.totalRevenue),
+    ytdAvgARO:         String(financials.ytd?.avgARO),
+    ytdInvoices:       String(financials.ytd?.totalInvoices),
+    ytdCarCount:       String(financials.ytd?.carCount),
+    mtdGrossProfitPct: String(financials.mtd?.grossProfitPct),
+    mtdLaborMargin:    String(financials.mtd?.laborMargin),
+    mtdPartsMargin:    String(financials.mtd?.partsMargin),
+    revenueByMonth:    (financials.revenueByMonth || []).map(m => `${m.month}: $${m.revenue} (target $${m.target})`).join('; '),
+  };
 
-  return `You are WrenchIQ Intelligence, writing a "Shop Intelligence Spotlight" — a short list of genuinely interesting, fun-to-read facts about this shop, surfaced after a Predii Learn run over its data.
-
-STRICT GROUNDING RULE: every fact must be directly derivable from the data given below. Do not invent a number, name, ranking, or comparison that isn't supported by this data. Where you compute something (a gap, a ratio, a "highest/lowest"), the underlying numbers must come straight from what's given.
-
-Shop: ${shop?.name || 'this shop'}, owner ${shop?.owner || 'unknown'}, target ELR $${shop?.targetElr}, ${shop?.locations} locations, network "${shop?.network}" (${shop?.networkFullName || ''}).
-
-Locations:
-${locationsStr}
-
-Technicians:
-${techsStr}
-
-Financials:
-${finStr}
-
-Write 6-9 facts. Favor genuinely surprising or noteworthy juxtapositions over generic summaries (e.g. a name repeated in two roles, a technician's rating beating a more senior peer's, a target nobody is hitting, a location's rank vs. a specific problem it has) — but only if the data actually supports it. Each fact needs a short punchy title (under 10 words) and a 1-2 sentence detail that cites the actual numbers/names behind it. Pick one emoji per fact that fits its content.
-
-Respond ONLY with valid JSON — no prose, no markdown fences. Schema:
-{
-  "facts": [
-    { "icon": "emoji", "title": string, "detail": string }
-  ]
-}`;
+  return prompt('shop-intel-spotlight', {
+    shopName:        shop?.name || '',
+    owner:           shop?.owner || '',
+    targetElr:       String(shop?.targetElr),
+    locationCount:   String(shop?.locations),
+    network:         String(shop?.network),
+    networkFullName: shop?.networkFullName || '',
+    locations:       locationsStr,
+    technicians:     techsStr,
+    financials:      !!financials,
+    fin,
+  });
 }
 
 /**

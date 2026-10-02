@@ -13,11 +13,14 @@
  * this shop/RO/customer back to what it's for.
  */
 
-import { buildVoiceDirective } from './voicePrompt.js';
+import { voiceDirectiveText } from './voicePrompt.js';
+import { promptSection } from './promptLoader.js';
 import { isProfileConfigured } from './llmProviderConfig.js';
 import { RO_CHAT_MAX_TOKENS } from '../config.js';
 import { formatCannedJobsList, formatShopProfileSummary } from './chatFormatters.js';
 import { runGroundedChatCompletion } from './chatSkill.js';
+
+const FILE = 'ro-chat-system';
 
 const MIN_MAX_TOKENS = 100;
 const MAX_MAX_TOKENS = 4000; // hard ceiling — the Tauri UI's override is clamped to this regardless of what's requested
@@ -92,10 +95,10 @@ function humanizeServiceCategory(cat) {
 // fetchCustomerHistory, reused here) — real MongoDB data, not the
 // shop-wide Shop Profile above.
 function formatCustomerHistory(history) {
-  if (!history || history.length === 0) return 'no past visits on file for this customer';
+  if (!history || history.length === 0) return promptSection(FILE, 'history-none');
   return history.map((v) => {
-    const date = v.date ? new Date(v.date).toLocaleDateString() : 'unknown date';
-    const services = (v.services || []).join(', ') || 'no line items listed';
+    const date = v.date ? new Date(v.date).toLocaleDateString() : promptSection(FILE, 'date-unknown');
+    const services = (v.services || []).join(', ') || promptSection(FILE, 'history-no-items');
     const total = v.totalEstimate ? ` — $${v.totalEstimate}` : '';
     return `- ${date} (${v.roNumber || 'RO?'}): ${humanizeServiceCategory(v.serviceType)} — ${services}${total}`;
   }).join('\n');
@@ -106,9 +109,9 @@ function formatCustomerHistory(history) {
 // are the one piece of context here that's *only* ever advisor-authored, so
 // they're presented as-is rather than summarized/interpreted.
 function formatCustomerNotes(notes) {
-  if (!notes || notes.length === 0) return 'none on file for this customer';
+  if (!notes || notes.length === 0) return promptSection(FILE, 'notes-none');
   return notes.map((n) => {
-    const date = n.createdAt ? new Date(n.createdAt).toLocaleDateString() : 'unknown date';
+    const date = n.createdAt ? new Date(n.createdAt).toLocaleDateString() : promptSection(FILE, 'date-unknown');
     return `- (${date}) ${n.note}`;
   }).join('\n');
 }
@@ -126,61 +129,31 @@ const LANGUAGE_NAMES = {
   fr: 'French',
 };
 
+// The prompt wording lives in prompts/ro-chat-system.md (section "system");
+// this only computes the values it renders.
 export function buildChatSystemPrompt({ ro, customer, vehicle, shop, cannedJobs, shopProfile, customerHistory, customerNotes, voice, language } = {}) {
-  const shopName  = shop?.name || 'the shop';
-  const laborRate = shop?.laborRate ? `$${shop.laborRate}/hr` : 'not on file';
-  const mileage   = vehicle?.mileage ?? vehicle?.odometer;
-  const vehicleStr = vehicle?.make
-    ? `${vehicle.year || ''} ${vehicle.make} ${vehicle.model || ''}${mileage ? ` — ${Number(mileage).toLocaleString()} miles` : ''}`.trim()
-    : 'not on file';
-  const servicesList = (ro?.services || []).map(s => `- ${s.name}`).join('\n') || 'none listed';
-  const cannedJobsList = formatCannedJobsList(cannedJobs);
-  const shopProfileSummary = formatShopProfileSummary(shopProfile);
-  const customerHistorySummary = formatCustomerHistory(customerHistory);
-  const customerNotesSummary = formatCustomerNotes(customerNotes);
-  const customerLabel = [customer?.firstName, customer?.lastName].filter(Boolean).join(' ') || 'this customer';
+  const mileage = vehicle?.mileage ?? vehicle?.odometer;
+  const vehicleBase = vehicle?.make ? `${vehicle.year || ''} ${vehicle.make} ${vehicle.model || ''}` : '';
+  const customerName = [customer?.firstName, customer?.lastName].filter(Boolean).join(' ');
 
-  return `You are the WrenchIQ Assistant, a multilingual (English, Spanish, Mandarin Chinese, Vietnamese, German, French) assistant embedded in ${shopName}'s repair order tool. It's a free-form chat, not a fixed menu — an advisor can ask anything grounded in this shop's own real data below.
-
-Your job has four parts:
-  1. Rewrite rough text into clear, correct "automotive speak." Two directions come up about equally — infer which one fits the message, defaulting to whichever direction the input suggests if it isn't stated:
-     a. Customer's own rough words → accurate, professional language for the RO record or a technician.
-     b. Technical/shop jargon or a tech's shorthand note → plain, friendly language a customer can understand (for a text message or approval request).
-  2. Answer "look up a price" or "look up a symptom" questions by searching the shop's canned job menu below — this is real, priced shop data, not a guess.
-  3. Answer questions about this shop's own patterns (repeat customers, seasonal trends, commonly-used parts) using the Shop Profile below — this is Predii Learn's persisted analysis of this shop's real history, not a guess either.
-  4. Summarize or answer questions about ${customerLabel}'s own past visits using the Customer History below — e.g. "summarize their past visits," "have they declined anything before," "what did we do for them last time."
-
-Current RO context (use this to keep rewrites accurate — don't invent parts, codes, or prices that aren't given below):
-  Shop:     ${shopName} (labor rate ${laborRate})
-  Customer: ${customer?.firstName || ''} ${customer?.lastName || ''}
-  Vehicle:  ${vehicleStr}
-  Concern:  ${ro?.customerConcern || 'not recorded'}
-  Services on this RO:
-${servicesList}
-
-Shop's canned job menu (labor price + priced parts package per job — this IS the shop's real, on-file pricing):
-${cannedJobsList}
-
-Shop Profile (Predii Learn's persisted analysis of this shop's history — top repair jobs, top parts, repeat customers, seasonal patterns):
-${shopProfileSummary}
-
-${customerLabel}'s visit history (most recent first):
-${customerHistorySummary}
-
-Personal notes an advisor saved about ${customerLabel} (advisor-authored, not derived from RO data — use these to inform tone/approach, e.g. a communication preference, but never state one back to the customer as if it were a documented vehicle fact):
-${customerNotesSummary}
-
-Rules:
-${language && LANGUAGE_NAMES[language]
-    ? `- Reply in ${LANGUAGE_NAMES[language]}, regardless of what language the advisor's own message is written in — they've explicitly selected ${LANGUAGE_NAMES[language]} for this chat (e.g. to draft a message for a ${LANGUAGE_NAMES[language]}-speaking customer). Don't switch languages unless asked to translate into a different one.`
-    : `- Detect the language of the user's message and reply in that same language (English, Spanish, Mandarin Chinese, Vietnamese, German, or French) — don't switch languages unless asked to translate.`}
-- Keep replies short and directly usable — lead with the answer itself, plainly; add at most one short follow-up line only if something needs clarifying. A visit-history summary can run to a few sentences if genuinely summarizing several visits.
-- When asked for a price, match the request against the canned job menu above (by name or by the closest matching symptom/repair) and quote its labor + parts + total. If nothing on the menu is a reasonable match, say plainly that it's not on file — never invent a price.
-- When asked to look up a symptom, name the likely related repair and, if it maps to one of the canned jobs above, name that job and its price too.
-- When asked about this shop's patterns (repeat customers, seasonal trends, common parts/jobs), answer from the Shop Profile above. If it says "none on file yet," say so plainly rather than guessing.
-- When asked about this customer's history, answer from the Customer History above. If it says "no past visits on file," say so plainly rather than guessing or inventing a visit.
-- When rewriting for a customer, follow Gold Standard tone: warm, honest about urgency (real urgency for safety, "worth doing" framing otherwise), no scare tactics, no oversell.
-- Stay in scope: rewriting/clarifying automotive text, or answering from this shop's/customer's own real data above. If asked something genuinely unrelated (general trivia, coding help, etc.), briefly redirect back to what you're actually for.${buildVoiceDirective(voice)}`;
+  return promptSection(FILE, 'system', {
+    shopName:               shop?.name || promptSection(FILE, 'shop-fallback'),
+    laborRate:              shop?.laborRate ? String(shop.laborRate) : '',
+    customerFirst:          String(customer?.firstName || ''),
+    customerLast:           String(customer?.lastName || ''),
+    customerLabel:          customerName || promptSection(FILE, 'customer-fallback'),
+    hasVehicle:             !!vehicle?.make,
+    vehicleDesc:            mileage ? vehicleBase.trimStart() : vehicleBase.trim(),
+    mileage:                mileage ? Number(mileage).toLocaleString() : '',
+    concern:                ro?.customerConcern ? String(ro.customerConcern) : '',
+    servicesList:           (ro?.services || []).map(s => `- ${s.name}`).join('\n'),
+    cannedJobsList:         formatCannedJobsList(cannedJobs),
+    shopProfileSummary:     formatShopProfileSummary(shopProfile),
+    customerHistorySummary: formatCustomerHistory(customerHistory),
+    customerNotesSummary:   formatCustomerNotes(customerNotes),
+    languageName:           (language && LANGUAGE_NAMES[language]) || '',
+    voiceDirective:         voiceDirectiveText(voice),
+  });
 }
 
 /**

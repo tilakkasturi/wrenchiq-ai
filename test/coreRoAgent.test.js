@@ -35,32 +35,30 @@ describe('repair order agent tools', () => {
     await TOOLS.set_concern({ symptom: 'Worse when cold', append: true }, C);
     expect(S.ro.symptom).toBe('Grinding when braking. Worse when cold');
   });
-  it('rank_repairs needs a concern, then returns guide hours and follow-ups, and shows one card', async () => {
+  it('rank_repairs needs a concern, then returns guide hours and the pending questions, without a card', async () => {
     expect(await TOOLS.rank_repairs({}, C)).toHaveProperty('error');
     await TOOLS.set_concern({ symptom: 'Grinding noise when I brake' }, C);
     const r = await TOOLS.rank_repairs({}, C);
     expect(r.matches[0]).toMatchObject({ id: 'brk-front', hours: 1.8, guide_row: 'LG-BRK-F-0142' });
-    expect(r.suggested_followups[0].id).toBe('brk-where');
-    expect(C.cards).toHaveLength(1);
-    await TOOLS.rank_repairs({}, C); // unchanged ranking: no duplicate card
-    expect(C.cards).toHaveLength(1);
+    expect(r.pending_questions.map(q => q.id)).toContain('brk-where');
+    expect(C.cards).toHaveLength(0); // the app asks the combined question and shows the Recommendations card
   });
-  it('rank_repairs records valid answers, rejects invalid ones, and shows the movement card', async () => {
+  it('rank_repairs records valid answers and rejects invalid ones', async () => {
     await TOOLS.set_concern({ symptom: 'Grinding noise when I brake' }, C);
     await TOOLS.rank_repairs({}, C);
     const r = await TOOLS.rank_repairs({ answers: { 'brk-where': 'rear', nonsense: 'x' } }, C);
     expect(S.ro.answers['brk-where']).toBe('Rear');
     expect(r.rejected_answers).toEqual(['nonsense=x']);
-    expect(C.cards.at(-1).card ?? C.cards.at(-1)).toMatchObject({ title: 'Updated ranking' });
+    expect(C.cards).toHaveLength(0);
   });
   it('get_maintenance_due needs mileage; at 61k it lists the 60k service once', async () => {
     expect(await TOOLS.get_maintenance_due({}, C)).toHaveProperty('error');
     await TOOLS.update_vehicle({ mileage: 61000 }, C);
     const r = await TOOLS.get_maintenance_due({}, C);
     expect(r).toMatchObject({ due_now: true, interval_mi: 60000 });
-    expect(r.items.some(i => i.name.toLowerCase().includes('spark plug'))).toBe(true);
-    await TOOLS.get_maintenance_due({}, C);
-    expect(C.cards.filter(c => c.type === 'maint')).toHaveLength(1);
+    expect(r.by_severity.flatMap(t => t.items).some(i => i.name.toLowerCase().includes('spark plug'))).toBe(true);
+    expect(r.advisor_script).toMatch(/60,000 mile service/);
+    expect(C.cards.filter(c => c.type === 'maint')).toHaveLength(0); // shown in the Recommendations card
   });
   it('search_napa_parts needs the vehicle, and reports unpriced parts honestly', async () => {
     expect(await TOOLS.search_napa_parts({ part: 'front brake pads' }, C)).toHaveProperty('error');

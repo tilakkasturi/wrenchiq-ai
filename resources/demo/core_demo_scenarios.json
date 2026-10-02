@@ -1,15 +1,15 @@
 {
- "_about": "Click-through demos for the Core repair order agent (Repair order mode, Demo menu). Each step is typed the way an advisor types: short, shorthand, misspelled, so the model has to decode it. Steps that do not start with a correctly spelled 'add' go to the model; 'total?' is answered by the deterministic rules. laborRate is used for the session only when the shop has not set one. starters are one-click openers shown on a new repair order: one message each, typed like an advisor, to show what the agent decodes and checks in a single turn.",
+ "_about": "Click-through demos for the Core repair order agent (Repair order mode). starters: one-click openers on a new repair order, short owner fragments (year, model, mileage, symptom, no full sentences): rewriting them into a proper customer concern is one of the agent's jobs. scenarios: the Demo menu; the first step is the owner's fragment, the steps after it are the advisor's own shorthand, so the model has to decode it. Steps that do not start with a correctly spelled 'add' go to the model; 'total?' is answered by the deterministic rules. laborRate is used for the session only when the shop has not set one.",
  "laborRate": 150,
  "scenarios": [
   {
    "id": "cv-axle",
    "title": "CV axle: typos to a priced job, both sides cheaper",
-   "intro": "Demo: an advisor's shorthand with typos and a VIN. Watch the agent decode it, match the OEM schedule from the VIN, offer add-on labor with a customer line, and price both sides as one job.",
+   "intro": "Demo: an owner's fragment with a VIN, then the advisor's shorthand with typos. Watch the agent rewrite the concern, match the OEM schedule from the VIN, offer add-on labor with a customer line, and price both sides as one job.",
    "steps": [
     {
-     "label": "Customer drops off the van",
-     "text": "18 sienna 5TDYZ3DC2JS901691 90k. clickin wen turnin, greese all ovr inside frnt lft tire"
+     "label": "Owner drops off the van",
+     "text": "18 sienna 90k 5TDYZ3DC2JS901691 clicks turning, grease on front left tire"
     },
     {
      "label": "Add the axle",
@@ -35,8 +35,8 @@
    "intro": "Demo: a compressor and a condenser on the same car. Each needs the A/C evacuated and recharged, but the system is only recharged once, so only one is billed.",
    "steps": [
     {
-     "label": "Customer complaint",
-     "text": "2019 camry 74k ac blowin hot, compresser grindin loud wen it kicks on"
+     "label": "Owner's complaint",
+     "text": "19 camry 74k ac blows hot, grinding when it kicks on"
     },
     {
      "label": "Add the compressor",
@@ -62,8 +62,8 @@
    "intro": "Demo: the advisor throws in a thermostat with a water pump. The labor guide prices it as add-on labor, not a second job, and the agent explains it to the customer.",
    "steps": [
     {
-     "label": "Customer complaint",
-     "text": "17 highlandr v6 98k coolnt drippin frnt of motor, temp gage creepin up in trafic"
+     "label": "Owner's complaint",
+     "text": "17 highlander 98k coolant drip front, temp climbs in traffic"
     },
     {
      "label": "Add the water pump",
@@ -85,8 +85,8 @@
    "intro": "Demo: a rear valve cover leak on a V6 means the intake comes off. Spark plugs added now are add-on labor instead of a separate job.",
    "steps": [
     {
-     "label": "Customer complaint",
-     "text": "18 sienna 112k oil leakin dwn back of engin on exhst, burnin smell, CEL misfire"
+     "label": "Owner's complaint",
+     "text": "18 sienna 112k oil leak on exhaust, burning smell, engine light"
     },
     {
      "label": "Add the rear valve cover",
@@ -105,36 +105,36 @@
  ],
  "starters": [
   {
-   "label": "Corolla: brakes + highway shake",
-   "text": "18 corolla 61k. grindin wen brakin and steerin wheel shakes on the fwy"
+   "label": "18 Corolla, brakes grind",
+   "text": "18 corolla 61k brakes grind, wheel shakes on hwy"
   },
   {
-   "label": "Camry: overheating, sweet smell",
-   "text": "16 camry 140k overheatin in trafic, sweet smell inside the car, coolnt low"
+   "label": "16 Camry, overheating",
+   "text": "16 camry 140k overheats in traffic, sweet smell"
   },
   {
-   "label": "RAV4: check engine, rough idle",
-   "text": "2019 rav4 52k CEL on, idles ruff at lights, gas mileage tanked"
+   "label": "19 RAV4, engine light",
+   "text": "19 rav4 52k engine light on, shaky at stops"
   },
   {
-   "label": "Sienna by VIN: what's due",
-   "text": "5TDYZ3DC2JS901691 sienna 60k in for svc. wat else is due?"
+   "label": "18 Sienna, 60k service",
+   "text": "18 sienna 60k service, what else due?"
   },
   {
-   "label": "Tacoma: clunk + tire wear",
-   "text": "17 tacoma 98k clunk over bumps frnt end, frnt tires wearin on the inside"
+   "label": "17 Tacoma, clunk on bumps",
+   "text": "17 tacoma 98k clunk on bumps, front tires wearing inside"
   },
   {
-   "label": "Highlander: no start",
-   "text": "highlandr 2015 wont start just clicks, batt is like 6 yrs old, 112k"
+   "label": "15 Highlander, no start",
+   "text": "15 highlander 112k no start, just clicks, old battery"
   },
   {
-   "label": "Prius: squeal + soft pedal",
-   "text": "2014 prius 160k squeal frm front wen stoppin, pedal feels soft"
+   "label": "14 Prius, brakes squeal",
+   "text": "14 prius 160k brakes squeal, pedal soft"
   },
   {
-   "label": "Tundra: A/C warm, blower weak",
-   "text": "tundra 2018 85k ac blows warm and the air is weak frm the vents"
+   "label": "18 Tundra, A/C warm",
+   "text": "18 tundra 85k ac warm, weak air"
   }
  ]
 }
