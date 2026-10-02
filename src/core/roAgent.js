@@ -6,9 +6,27 @@ import { agentStep } from './agentApi';
 import { TOOL_SCHEMAS, TOOLS, toolLabel } from './roTools';
 import { ITEM, hrs, rate, miles, combinationsFor } from './logic';
 import { talkFor } from './talkTrack';
+import { combosOf } from './laborRules';
 import { sleep, REDUCED } from './chat';
 
 const MAX_STEPS = 6;
+const CLAIMS_ADD = /\b(i(?:'ve| have)?|we(?:'ve| have)?)\s+(?:also\s+)?(?:added|put|thrown|included|swapped|replaced)\b|\b(?:added|is now on|are now on)\s+(?:it\s+)?(?:to\s+)?the\s+(?:repair\s+)?order\b/i;
+
+const TOOL_NAMES = new Set(TOOL_SCHEMAS.map(t => t.function.name));
+/** Pull "[tool_name {args}]" calls out of reply text; args may have unquoted keys. */
+export function textToolCalls(content) {
+  const calls = [];
+  const rest = String(content || '').replace(/\[\s*([a-z_]+)\s*(\{[^\]]*\})?\s*\]/g, (all, name, args) => {
+    if (!TOOL_NAMES.has(name)) return all;
+    let a = {};
+    if (args) {
+      try { a = JSON.parse(args.replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":').replace(/'/g, '"')); } catch (_) { return all; }
+    }
+    calls.push({ id: 'text-' + calls.length + '-' + Date.now(), type: 'function', function: { name, arguments: JSON.stringify(a) } });
+    return '';
+  }).trim();
+  return { calls, rest };
+}
 
 /** What the model sees of the repair order at the start of each turn. */
 export function roContext() {
@@ -21,10 +39,11 @@ export function roContext() {
     parts: R.parts.added.map(x => ({ label: x.label, partNumber: x.lineCode + ' ' + x.partNumber, qty: x.qty })),
     laborRate: rate(),
     // add-on labor the advisor can still offer, with the customer talk track from the labor guide
-    addOns: [...R.accepted].flatMap(id => combinationsFor(id).map(c => {
+    // ones already on the order are listed too, so "what do I tell the customer" still has the line
+    addOns: [...R.accepted].flatMap(id => [...combosOf(id).filter(c => R.accepted.has(c)), ...combinationsFor(id)].map(c => {
       const tk = talkFor(c, id, rate());
-      return tk && { for: ITEM(id).name, name: ITEM(c).name, hours: ITEM(c).hours.toFixed(1), kind: tk.label, say: tk.text };
-    })).filter(Boolean).slice(0, 8),
+      return tk && { id: c, for: ITEM(id).name, name: ITEM(c).name, hours: ITEM(c).hours.toFixed(1), kind: tk.label, say: tk.text, onOrder: R.accepted.has(c) };
+    })).filter(Boolean).slice(0, 10),
   };
 }
 
@@ -50,10 +69,13 @@ export async function runRoAgent(C, userText) {
   const hist = S.ro.agent.history, sessionId = S.ro.agent.sessionId, turnId = newId();
   hist.push({ role: 'user', content: userText });
   const turn = [];
-  let stop = C.typing();
+  let stop = C.typing(), added = false, nudged = false;
   try {
     for (let step = 1; step <= MAX_STEPS; step++) {
-      const out = await agentStep({ messages: [...hist.slice(-10), ...turn], context: roContext(), tools: TOOL_SCHEMAS, trace: { sessionId, turnId, step } });
+      const req = () => agentStep({ messages: [...hist.slice(-10), ...turn], context: roContext(), tools: TOOL_SCHEMAS, trace: { sessionId, turnId, step } });
+      let out = await req();
+      // one retry on a dropped connection before falling back to the scripted rules
+      if (!out.ok && step === 1) { await sleep(REDUCED ? 0 : 800); out = await req(); }
       if (!out.ok) {
         stop();
         if (step === 1) { hist.pop(); return { ok: false, message: out.message }; }
@@ -61,8 +83,27 @@ export async function runRoAgent(C, userText) {
         return { ok: true };
       }
       S.ro.agent.model = out.model || S.ro.agent.model;
-      const msg = out.message, calls = msg.tool_calls || [];
+      const msg = out.message;
+      // Gemma sometimes writes a call as text in the prompt's example style, e.g.
+      // [add_repair_line {id: "syn-vc-plugs"}]. Run those as real calls instead of showing them.
+      if (!(msg.tool_calls || []).length) {
+        const tc = textToolCalls(msg.content);
+        if (tc.calls.length) { msg.tool_calls = tc.calls; msg.content = tc.rest || null; }
+      }
+      const calls = msg.tool_calls || [];
 
+      // The model must not claim a change it did not make: if it says it added something but no
+      // add_repair_line call succeeded this turn, send it back once to make the call or correct itself.
+      if (!calls.length && !added && CLAIMS_ADD.test(msg.content || '')) {
+        if (!nudged) {
+          nudged = true;
+          turn.push({ role: 'assistant', content: msg.content });
+          turn.push({ role: 'user', content: '(system check) Your reply says something was added, but add_repair_line was not called successfully in this turn, so the repair order did not change. Respond with only an add_repair_line tool call, using the id from the Add-on labor list or rank_repairs, or the corrected job name.' });
+          continue;
+        }
+        // still claiming a change that did not happen: never show that as fact
+        msg.content = 'Nothing was added yet. Press Add on the card, or tell me the job again.';
+      }
       if (!calls.length) {
         stop();
         const { text, options, why } = parseReply(msg.content);
@@ -87,6 +128,7 @@ export async function runRoAgent(C, userText) {
         } catch (err) {
           result = { error: 'tool failed: ' + err.message };
         }
+        if (name === 'add_repair_line' && result && result.result && result.result !== 'not_added') added = true;
         turn.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) });
         await sleep(REDUCED ? 0 : 200);
       }

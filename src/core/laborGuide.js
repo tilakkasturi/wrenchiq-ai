@@ -7,11 +7,12 @@
 // - labor_guide_rules.json: guardrail relations between rows, read by laborRules.js.
 // The scheduled-maintenance labor file is not a repair and is left out of the ranking table.
 import ENRICH from '../../resources/labor_guide/labor_guide_enrichment.json';
+import { liveStore, refillArray, refillObject, resourceLoaded } from './liveResource';
 
-const FILES = import.meta.glob(
-  ['/resources/labor_guide/*.xml', '/resources/labor_guide/synthetic/*.xml', '!/resources/labor_guide/**/*scheduled_maintenance*'],
-  { query: '?raw', import: 'default', eager: true },
-);
+// No "!" exclusion in the glob: Vite 6 then fails to notice newly added files (its hot-update matcher
+// keeps the "!" on negated patterns), so the maintenance labor file is filtered out below instead.
+const GLOBBED = import.meta.glob(['/resources/labor_guide/*.xml', '/resources/labor_guide/synthetic/*.xml'], { query: '?raw', import: 'default', eager: true });
+const FILES = Object.fromEntries(Object.entries(GLOBBED).filter(([path]) => !/scheduled_maintenance/.test(path)));
 
 const unescape = s => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
 const tag = (block, name) => {
@@ -57,14 +58,19 @@ export function buildLaborGuide(files = FILES, enrich = ENRICH.rows) {
   return rows;
 }
 
-export const REP = buildLaborGuide();
+const live = liveStore('laborGuide', () => ({ REP: [], REPMAP: {} }));
+export const REP = refillArray(live.REP, buildLaborGuide());
 
 const sourceLine = r => (r.synthetic
   ? 'Synthetic labor guide row ' + r.row + ' (made-up estimate, not a published guide; used for every vehicle in this demo).'
   : 'Labor guide row ' + r.row + ' from ' + r.file + ' (' + r.laborType + (r.skill ? ', skill ' + r.skill : '') + (r.warranty ? ', warranty ' + r.warranty + ' h' : '') + '; used for every vehicle in this demo).');
 
-export const REPMAP = Object.fromEntries(REP.map(r => [r.id, {
+export const REPMAP = refillObject(live.REPMAP, Object.fromEntries(REP.map(r => [r.id, {
   id: r.id, name: r.name, hours: r.hours, src: 'lg', ref: r.row, parts: r.parts,
   skill: r.skill, warranty: r.warranty, laborType: r.laborType, component: r.component, note: r.note, talk: r.talk, synthetic: r.synthetic,
   detail: sourceLine(r) + ' Operation: ' + r.note + '. Labor time: ' + r.hours.toFixed(1) + ' h.',
-}]));
+}])));
+
+resourceLoaded('labor guide');
+// an edited XML or enrichment file re-runs only this module; REP and REPMAP are refilled in place
+if (import.meta.hot) import.meta.hot.accept();

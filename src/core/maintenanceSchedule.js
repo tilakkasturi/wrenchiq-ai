@@ -13,6 +13,11 @@
 // LaborGuide-sourced labor hours for these items (hours below are still demo estimates).
 import toyotaCsv from '../../resources/scheduled_maintenance/toyota_maintenance_5TDYZ.csv?raw';
 import genericCsv from '../../resources/scheduled_maintenance/scheduled_maintenance_all_makes.csv?raw';
+import { liveStore, refillArray, resourceLoaded } from './liveResource';
+
+// Refilled in place when a CSV changes (see liveResource.js); built items are kept so lines already
+// on a repair order still resolve.
+const live = liveStore('maintenanceSchedule', () => ({ toyota: [], generic: [], masks: [], items: new Map() }));
 
 function parseCsv(text) {
   const rows = [];
@@ -44,9 +49,9 @@ function toRecords(csvText) {
   });
 }
 
-const TOYOTA_ROWS = toRecords(toyotaCsv);
-const GENERIC_ROWS = toRecords(genericCsv);
-const TOYOTA_MASKS = Array.from(new Set(TOYOTA_ROWS.map(r => r.VINCode)));
+const TOYOTA_ROWS = refillArray(live.toyota, toRecords(toyotaCsv));
+const GENERIC_ROWS = refillArray(live.generic, toRecords(genericCsv));
+const TOYOTA_MASKS = refillArray(live.masks, Array.from(new Set(TOYOTA_ROWS.map(r => r.VINCode))));
 // 2018 Sienna family (5TDYZ3DC2JS901691) — the VIN the LaborGuide/NAPA demo data is keyed to.
 const TOYOTA_DEFAULT_MASK = '5TDYZ3DC_JS______';
 
@@ -159,5 +164,8 @@ export function computeMaintenanceDue(mileage, schedule) {
 function titleCase(s) { return s.toLowerCase().replace(/\s+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase()); }
 function opSuffix(op) { return op === 'REPLACE' ? ', replace' : op === 'ROTATE' ? ', rotate' : op === 'CLEAN' ? ', clean' : op === 'RETORQUE' ? ', retorque' : ''; }
 
-const MAINT_ITEM_CACHE = new Map();
+const MAINT_ITEM_CACHE = live.items;
 export const getMaintItem = id => MAINT_ITEM_CACHE.get(id);
+
+resourceLoaded('maintenance schedule');
+if (import.meta.hot) import.meta.hot.accept();

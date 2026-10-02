@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { S, newRO } from '../src/core/state.js';
-import { parseFor, extractVehicle, maintState, computeRepairs, findItem, normalizeSymptom, applicableQs, orderTotals, roSummary } from '../src/core/logic.js';
+import { parseFor, extractVehicle, maintState, computeRepairs, findItem, normalizeSymptom, applicableQs, orderTotals, roSummary, ITEM } from '../src/core/logic.js';
 import { PQMAP, SAMPLE_MSG, REP, QB, REPMAP } from '../src/core/data.js';
 import { matchOne } from '../src/core/match.js';
 
@@ -47,7 +47,7 @@ describe('core: maintenance and ranking', () => {
     const ms = maintState();
     expect(ms.due).toBe(true);
     expect(ms.at).toBe(60000);
-    expect(ms.ids).toContain('sm-plug');
+    expect(ms.ids.some(id => ITEM(id).name.toLowerCase().includes('spark plug'))).toBe(true);
   });
   it('is not due far from an interval', () => {
     S.ro.mileage = '67500';

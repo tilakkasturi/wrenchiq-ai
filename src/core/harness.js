@@ -4,16 +4,19 @@
 // This file is the seam: replace turn handling with a streaming call and the UI stays as is.
 import { S, notify, newRO, persistProfile } from './state';
 import { createChat } from './chat';
-import { PQ, PQMAP, QBY, QWHY, SAMPLE_MSG, ALLKW } from './data';
+import { PQ, PQMAP, FIXED, FIXEDMAP, SHOP, QBY, QWHY, SAMPLE_MSG, ALLKW } from './data';
 import { matchOne } from './match';
 import {
-  money, ITEM, hrs, rate, miles, vehicleLine, vehicleOk, saveFact, nextProfileQ, parseFor,
+  money, ITEM, hrs, rate, miles, vehicleLine, vehicleOk, saveFact, parseFor,
   applicableQs, shownRepairs, maintState, extractVehicle, hasContent, findItem, explain,
   partOn, qtyFromName, combinationsFor,
 } from './logic';
 import { checkAdd, orphanedCombos, followOnsFor } from './laborRules';
 import { searchNapa } from './partsApi';
 import { runRoAgent } from './roAgent';
+import { useLineOps } from './roTools';
+import { DEMOS } from './demoScenarios';
+import { onResourceChange } from './liveResource';
 
 const handlers = {};
 export const Cp = createChat('profile', () => handlers.profile);
@@ -27,63 +30,62 @@ const harness = {
 };
 
 /* ================= shop profile mode ================= */
-function chipsFor(q) {
-  if (q.type === 'number') return [{ t: 'Skip', text: 'skip' }];
-  if (q.type === 'multi') return q.options.map(o => ({ t: o, text: o, toggle: true })).concat([{ t: 'Send selection', done: true, text: '__done__' }, { t: 'Skip', text: 'skip' }]);
-  return q.options.map(o => ({ t: o, text: o })).concat([{ t: 'Skip', text: 'skip' }]);
+// Free flowing: the assistant states the shop (resources/shop) and keeps whatever the advisor says
+// about how the shop works. Preferences it recognizes (PQ) become named facts; anything else is a note.
+const isQuestion = t => /\?\s*$/.test(t) || /^(what|what's|whats|how|which|who|do|does|is|are|can|show|list)\b/i.test(t);
+const userFacts = () => Object.keys(S.profile).filter(k => !FIXEDMAP[k] && (PQMAP[k] || k.startsWith('note.')));
+
+function saveFixed() {
+  FIXED.forEach(f => { if (!S.profile[f.key] || S.profile[f.key].value !== f.value) saveFact(f, { value: f.value, display: f.value }); });
 }
-async function askProfile(q) {
-  S.pro.awaiting = q.key;
-  await Cp.agent(q.ask, 'Why I ask: ' + q.why);
-  Cp.chips(chipsFor(q));
+
+function profileSummary() {
+  const lines = FIXED.map(f => f.label + ': ' + f.value)
+    .concat(userFacts().map(k => (S.profile[k].label || 'Note') + ': ' + S.profile[k].display));
+  return 'Here is your shop profile.\n' + lines.map(l => '- ' + l).join('\n');
 }
-async function askNextProfile() {
-  const q = nextProfileQ();
-  if (!q) {
-    S.pro.awaiting = null;
-    await Cp.agent('That covers it. I will use these on the repair order. You can tell me a change any time, for example "labor rate is 160", or switch to Repair order mode to try it.');
-    Cp.chips([{ t: 'Go to Repair order', text: '__goro__', silent: true }]);
-    return;
-  }
-  return askProfile(q);
-}
+
 handlers.profile = async function (text) {
   const t = text.trim();
   if (t === '__goro__') { setMode('ro'); return; }
-  const q = S.pro.awaiting ? PQMAP[S.pro.awaiting] : null;
-  if (q && /^(skip|pass|later|next|no thanks)\b/i.test(t)) {
-    S.skipped.add(q.key); notify();
-    await Cp.agent('Skipped. You can come back to it from the list.');
-    return askNextProfile();
-  }
+  if (!t) return;
   const saved = [];
-  if (q) {
-    const r = parseFor(q, t, true);
-    if (r && r.amb) { await Cp.agent('Do you mean ' + r.amb.join(' or ') + '?'); Cp.chips(r.amb.map(o => ({ t: o, text: o }))); return; }
-    if (r) { saveFact(q, r); saved.push(q); }
-  }
-  PQ.forEach(o => {
-    if (saved.includes(o) || (q && o.key === q.key)) return;
+  // the answer to "do you mean A or B?" counts for that preference
+  const q = S.pro.awaiting ? PQMAP[S.pro.awaiting] : null;
+  S.pro.awaiting = null;
+  if (q) { const r = parseFor(q, t, true); if (r && !r.amb) { saveFact(q, r); saved.push(q); } }
+  for (const o of PQ) {
+    if (saved.includes(o)) continue;
     const r = parseFor(o, t, false);
-    if (r && !r.amb) { saveFact(o, r); saved.push(o); }
-  });
+    if (r && r.amb) { S.pro.awaiting = o.key; await Cp.agent('Do you mean ' + r.amb.join(' or ') + '?'); Cp.chips(r.amb.map(x => ({ t: x, text: x }))); return; }
+    if (r) { saveFact(o, r); saved.push(o); }
+  }
   if (!saved.length) {
-    if (q) { await Cp.agent("I didn't catch that. " + q.hint); Cp.chips(chipsFor(q)); }
-    else await Cp.agent('Tell me something about your shop, like "labor rate is 150", or tap a Change button on the right.');
-    return;
+    if (isQuestion(t)) return Cp.agent(profileSummary());
+    if (t.split(/\s+/).length < 3) return Cp.agent('Tell me a bit more about how your shop works, like "labor rate is 165" or "we never do body work", and I will keep it in shop memory.');
+    // not a preference I know by name: keep it as the advisor said it
+    const key = 'note.' + Date.now();
+    saveFact({ key, label: 'Note' }, { value: t, display: t });
+    notify();
+    Cp.event('Saved to shop memory · note');
+    return Cp.agent('Saved to your shop profile as a note: "' + t + '".');
   }
   notify();
   saved.forEach(o => Cp.event('Saved to shop memory · ' + o.key + ' = ' + S.profile[o.key].display));
-  await Cp.agent(saved.length > 1 ? 'Got both, saved.' : 'Got it, saved.');
-  return askNextProfile();
+  return Cp.agent('Saved to your shop profile: ' + saved.map(o => o.label.toLowerCase() + ' ' + S.profile[o.key].display).join(', ') + '.');
 };
+
 async function startProfile() {
   if (S.pro.started) return;
   S.pro.started = true;
-  const n = PQ.filter(q => S.profile[q.key]).length;
-  await Cp.agent("Hi, I'm the shop assistant. I'll ask a few quick questions about how your shop works and remember the answers, so my suggestions and pricing match you. Answer in your own words. You can skip anything.");
-  if (n) await Cp.agent('Welcome back. ' + n + ' fact' + (n > 1 ? 's are' : ' is') + ' already saved for this shop.');
-  return askNextProfile();
+  saveFixed();
+  notify();
+  for (const f of FIXED) await Cp.agent(f.say, f.why);
+  const n = userFacts().length;
+  await Cp.agent(n
+    ? 'Welcome back. ' + n + ' thing' + (n > 1 ? 's are' : ' is') + ' saved in your shop profile. Tell me anything else about how you run the shop and I will keep it.'
+    : 'Tell me anything about how you run the shop, in your own words: your labor rate, parts markup, how you talk to customers, work you never take. I will keep it in shop memory and use it on repair orders.');
+  Cp.chips(SHOP.examples.map(x => ({ t: x, text: x })).concat([{ t: 'Go to Repair order', text: '__goro__', silent: true }]));
 }
 
 /* ================= repair order mode ================= */
@@ -124,6 +126,7 @@ handlers.ro = async function (text) {
     }
     return work({ refresh: true, symptomAdded: t === '__refresh__concern' });
   }
+  if (t === '__demo_next__') { demoStep(); return; }
   if (t.indexOf('__add__') === 0) { const res = placeLine(t.slice(7)); notify(); return afterPlace(res, C); }
   if (t.indexOf('__swap__') === 0) {
     const [from, to] = t.slice(8).split('|');
@@ -289,7 +292,7 @@ async function work(o) {
 }
 
 /* ----- adding a repair also prices the parts it needs ----- */
-async function autoPriceParts(it) {
+async function autoPriceParts(it, quiet = false) {
   const R = S.ro, C = Cr;
   const names = (it.parts || []).slice(0, 3);
   if (!names.length || R.autoPriced.has(it.id)) return;
@@ -313,7 +316,7 @@ async function autoPriceParts(it) {
     await C.agent('NAPA has no match on a ' + fit + ' for the parts this repair lists (' + missing.join(', ') + '). You can search by another name from the Parts box.');
     return;
   }
-  await C.agent('Here are NAPA options for the parts ' + it.name.toLowerCase() + ' needs on the ' + fit + ', lowest list price first. Press Add to RO on the ones you want.');
+  if (!quiet) await C.agent('Here are NAPA options for the parts ' + it.name.toLowerCase() + ' needs on the ' + fit + ', lowest list price first. Press Add to RO on the ones you want.');
   found.forEach(r => C.card({ type: 'parts', res: r.res, part: r.n, qty: qtyFromName(r.n), fit }));
   if (missing.length) await C.agent('No NAPA match for: ' + missing.join(', ') + '.');
 }
@@ -354,6 +357,43 @@ async function startRO() {
   Cr.chips([{ t: 'Try a sample', text: '__sample__', silent: true }, { t: '2016 Civic, 88k, check engine light', text: '2016 Honda Civic 88,000 miles, check engine light is on and it idles rough' }]);
 }
 
+/* ================= click-through demos (resources/demo/core_demo_scenarios.json) ================= */
+export const demoList = () => DEMOS.scenarios.map(d => ({ id: d.id, title: d.title }));
+const demoNow = () => S.demo && DEMOS.scenarios.find(d => d.id === S.demo.id);
+
+/** Send the demo's next message as if the advisor typed it, then offer the step after it. */
+function demoStep() {
+  const d = demoNow();
+  const st = d && d.steps[S.demo.step];
+  if (!st) return;
+  S.demo.step++;
+  Cr.send(st.text).then(() => {
+    if (demoNow() !== d) return; // another demo or a new job started meanwhile
+    const nx = d.steps[S.demo.step];
+    if (nx) Cr.chips([{ t: 'Next: ' + nx.label, text: '__demo_next__', silent: true }, ...S.chats.ro.chips]);
+    else { Cr.event('Demo finished · ' + d.title); S.demo = null; }
+  });
+}
+
+/** Start a demo on a fresh repair order, with the agent on and a labor rate for pricing. */
+export function runDemo(id) {
+  const d = DEMOS.scenarios.find(x => x.id === id);
+  if (!d) return;
+  if (S.mode !== 'ro') { S.mode = 'ro'; }
+  resetRO();
+  S.useAgent = true;
+  if (!rate()) {
+    // session only: not written to shop memory
+    S.profile['shop.labor_rate'] = { value: DEMOS.laborRate, display: '$' + DEMOS.laborRate + '/hr', at: Date.now() };
+  }
+  S.demo = { id, step: 0 };
+  notify();
+  Cr.run(async () => {
+    await Cr.agent(d.intro);
+    Cr.chips([{ t: 'Start: ' + d.steps[0].label, text: '__demo_next__', silent: true }]);
+  });
+}
+
 /* ================= actions called from the UI ================= */
 export function boot() {
   if (S.booted) return;
@@ -366,12 +406,14 @@ export function setMode(m) {
   if (m === 'ro' && !S.ro.started) { S.ro.started = true; Cr.run(startRO); }
   if (m === 'profile' && !S.pro.started) Cp.run(startProfile);
 }
-export function editFact(key) {
-  const q = PQMAP[key];
-  S.skipped.delete(key);
-  setMode('profile');
-  Cp.user('Change ' + q.label.toLowerCase());
-  Cp.run(() => askProfile(q));
+/** Forget something the advisor told the shop profile. The shop itself and the supplier stay. */
+export function forgetFact(key) {
+  if (FIXEDMAP[key] || !S.profile[key]) return;
+  const f = S.profile[key];
+  delete S.profile[key];
+  persistProfile();
+  Cp.event('Removed from shop memory · ' + (f.label || key));
+  notify();
 }
 export function resetProfile() {
   S.profile = {}; S.skipped = new Set(); persistProfile();
@@ -383,7 +425,7 @@ export function setUseAgent(on) {
   Cr.event('Assistant · ' + (on ? 'agent (Gemma with tools)' : 'scripted rules'));
   notify();
 }
-export function newJob() { resetRO(); Cr.run(startRO); }
+export function newJob() { S.demo = null; resetRO(); Cr.run(startRO); }
 
 /* ----- labor guardrails: every line goes onto the order through checkAdd (laborRules.js) ----- */
 function logAdd(id, extra = '') {
@@ -415,32 +457,36 @@ function placeLine(id) {
 
 const hoursMoney = h => h.toFixed(1) + ' h' + (rate() ? ' (' + money(h * rate()) + ')' : '');
 
-/** Tell the advisor what placeLine did, then offer what goes with the new line. */
-async function afterPlace(res, C) {
+/**
+ * Tell the advisor what placeLine did, then offer what goes with the new line. quiet: the agent
+ * will say it in its own reply, so only the cards and chips are posted here.
+ */
+async function afterPlace(res, C, { quiet = false } = {}) {
   if (res.action === 'block') {
+    if (quiet) return;
     await C.agent(res.reason);
     // the advisor may prefer the other row for the same job, e.g. a more specific one
     if (res.kind === 'duplicate' && res.by !== res.want) C.chips([{ t: 'Use ' + ITEM(res.want).name + ' instead', text: '__swap__' + res.by + '|' + res.want, silent: true }]);
     if (res.kind === 'orphan' && res.offer) C.chips([{ t: 'Quote ' + ITEM(res.offer).name + ' (' + ITEM(res.offer).hours.toFixed(1) + ' h)', text: '__add__' + res.offer, silent: true }]);
     return;
   }
-  if (res.action === 'substitute' || res.action === 'replace') {
+  if (!quiet && (res.action === 'substitute' || res.action === 'replace')) {
     await C.agent(res.reason + (res.saves > 0 ? ' That keeps ' + hoursMoney(res.saves) + ' off the bill.' : ''));
   }
   const it = ITEM(res.added);
-  if (it.src === 'lg') await autoPriceParts(it);
-  await offerAddOns(res.added, C);
+  if (it.src === 'lg') await autoPriceParts(it, quiet);
+  await offerAddOns(res.added, C, quiet);
 }
 
 /** Add-on labor for a job just added, each with a line the advisor can read to the customer. */
-async function offerAddOns(id, C) {
+async function offerAddOns(id, C, quiet = false) {
   const ids = combinationsFor(id);
   if (ids.length) {
-    await C.agent('This labor goes with ' + ITEM(id).name.toLowerCase() + ' and is cheaper to do now than on a separate visit. Each one has a line you can read to the customer.');
+    if (!quiet) await C.agent('This labor goes with ' + ITEM(id).name.toLowerCase() + ' and is cheaper to do now than on a separate visit. Each one has a line you can read to the customer.');
     C.card({ type: 'combos', parent: id, ids });
   }
   for (const f of followOnsFor(id, [...S.ro.accepted])) {
-    await C.agent(ITEM(id).name + ' does not include ' + ITEM(f.id).name.toLowerCase() + '. ' + f.why);
+    if (!quiet) await C.agent(ITEM(id).name + ' does not include ' + ITEM(f.id).name.toLowerCase() + '. ' + f.why);
     C.chips([{ t: 'Add ' + ITEM(f.id).name, text: '__add__' + f.id, silent: true }]);
   }
 }
@@ -464,6 +510,10 @@ function placeMaint(ms) {
 }
 const maintSaid = (r, ms) => 'Added ' + r.added.length + ' item' + (r.added.length === 1 ? '' : 's') + ' due at the ' + ms.at.toLocaleString() + ' mi service.'
   + (r.skipped.length ? ' Skipped ' + r.skipped.map(x => ITEM(x.id).name.toLowerCase() + ' (' + x.r.reason.replace(/\.$/, '') + ')').join('; ') + '.' : '');
+
+useLineOps({ place: placeLine, after: afterPlace });
+// say so in both chats when a file under resources/ changed and was reloaded
+onResourceChange('harness.log', name => { Cr.event('Reloaded ' + name + ' from resources/'); Cp.event('Reloaded ' + name + ' from resources/'); });
 
 export function acceptItem(id) {
   const res = placeLine(id);

@@ -1,14 +1,22 @@
 // Tools the repair order agent can call. They run in the browser against the repair order held in
 // state.js, so the facts (hours, guide rows, the maintenance schedule, NAPA prices) come from the
 // same deterministic code the scripted flow uses. The model decides which to call; these decide
-// what is true. None of them adds a line to the repair order: the advisor does that from a card.
+// what is true. Only add_repair_line changes the order's lines, and it goes through the same
+// labor-guide guardrails (laborRules.js) as the Add buttons.
 import { S, notify } from './state';
 import { QB, QBY, MAKES, MODELS, MAKE_RX, MODEL_RX, REPMAP } from './data';
 import {
   miles, vehicleLine, vehicleOk, computeRepairs, shownRepairs, applicableQs, maintState, conf, qtyFromName,
+  ITEM, hrs, rankItems, combinationsFor,
 } from './logic';
 import { getMaintItem } from './maintenanceSchedule';
 import { searchNapa } from './partsApi';
+import { standalonesOf, parentsOnOrder, sameJob } from './laborRules';
+
+// The harness owns how a line is placed and announced; it hands those in here so this module does
+// not import harness.js (which imports the agent, which imports this).
+let LINES = null;
+export const useLineOps = ops => { LINES = ops; };
 
 const questionCatalog = QB.map(q => `${q.id}: ${q.opts.map(o => o.l).join(' | ')}`).join('; ');
 
@@ -71,6 +79,22 @@ export const TOOL_SCHEMAS = [
   {
     type: 'function',
     function: {
+      name: 'add_repair_line',
+      description: 'Put a repair, maintenance item or add-on labor on the repair order. Only when the advisor asks to add something. '
+        + 'Pass the id from rank_repairs, get_maintenance_due or the Add-on labor list; if you only know what they called it, pass name. '
+        + 'The labor-guide rules decide what actually goes on: they may use a cheaper add-on version, replace lines it covers, or refuse a duplicate. Tell the advisor what the result says.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Line id, e.g. "axle-asm-fwd-left"' },
+          name: { type: 'string', description: 'The job name with spelling corrected, e.g. "right axle shaft assembly" for "rite axel", when no id is known' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'search_napa_parts',
       description: 'Look up NAPA catalog parts with list prices for the vehicle on the repair order. Needs year, make and model recorded. Call once per part.',
       parameters: {
@@ -90,7 +114,8 @@ function canonVehicle(a) {
   if (a.make) { const m = String(a.make).match(MAKE_RX); out.make = m ? MAKES[m[1].toLowerCase()] : clean(a.make); }
   if (a.model) {
     const m = String(a.model).match(MODEL_RX);
-    if (m) { const md = MODELS[m[1].toLowerCase()]; out.model = md[0]; if (!out.make) out.make = md[1]; } else out.model = clean(a.model);
+    // a known model fixes a missing or wrong make ("make: Highlander" -> Toyota)
+    if (m) { const md = MODELS[m[1].toLowerCase()]; out.model = md[0]; if (!out.make || !MAKE_RX.test(String(a.make || ''))) out.make = md[1]; } else out.model = clean(a.model);
   }
   return out;
 }
@@ -174,6 +199,44 @@ export const TOOLS = {
     return maintSummary(ms);
   },
 
+  async add_repair_line(args, C) {
+    if (!LINES) return { error: 'adding lines is not available' };
+    const want = String(args.id || '').trim(), named = String(args.name || '').trim();
+    let id = want && ITEM(want) ? want : null;
+    if (!id) {
+      // a name has to match clearly: two words of the job's name, or one word of a job already in play
+      const cands = rankItems(named || want, 'suggest');
+      const tied = cands.filter(c => c.s === (cands[0] && cands[0].s));
+      // clear: two words of the job's name, a job already in play, or every equal match is the same job
+      if (cands.length && (cands[0].s >= 1.5 || tied.every(c => c.id === cands[0].id || sameJob(c.id, cands[0].id)))) id = cands[0].id;
+      else {
+        return {
+          result: 'not_added',
+          error: 'No line clearly matches "' + (named || want) + '". Nothing was added. Pass an id from rank_repairs or the Add-on labor list, or the corrected job name (e.g. "A/C condenser").',
+          candidates: cands.slice(0, 4).map(c => ({ id: c.id, name: ITEM(c.id).name })),
+        };
+      }
+    }
+    const res = LINES.place(id);
+    notify();
+    await LINES.after(res, C, { quiet: true });
+    const line = res.added && ITEM(res.added);
+    // an add-on picked directly is still cheaper than the same job on its own: say so
+    if (res.action === 'add' && line && line.laborType === 'COMBINATION') {
+      const alone = standalonesOf(line.id).map(x => ITEM(x)).find(x => x && x.hours > line.hours), parent = parentsOnOrder(line.id, [...S.ro.accepted])[0];
+      if (alone && parent) Object.assign(res, { action: 'substitute', saves: Math.round((alone.hours - line.hours) * 10) / 10, reason: 'Added as add-on labor to ' + ITEM(parent).name + ': ' + line.hours.toFixed(1) + ' h instead of ' + alone.hours.toFixed(1) + ' h on its own.' });
+    }
+    return {
+      result: res.action === 'block' ? 'not_added' : res.action === 'add' ? 'added' : res.action === 'substitute' ? 'added_as_add_on' : 'replaced_lines',
+      line: line ? { id: line.id, name: line.name, hours: hrs(line) } : undefined,
+      reason: res.reason,
+      hours_saved: res.saves > 0 ? res.saves : undefined,
+      removed: res.remove ? res.remove.map(x => (ITEM(x) ? ITEM(x).name : x)) : undefined,
+      order_now: [...S.ro.accepted].map(x => ITEM(x)).filter(Boolean).map(it => it.name + ' (' + hrs(it).toFixed(1) + ' h)'),
+      add_ons_offered: line ? combinationsFor(line.id).map(c => ({ id: c, name: ITEM(c).name, hours: ITEM(c).hours })) : undefined,
+    };
+  },
+
   async search_napa_parts(args, C) {
     const part = String(args.part || '').trim();
     if (!part) return { error: 'part is empty' };
@@ -196,5 +259,6 @@ export const toolLabel = (name, a = {}) => {
   if (name === 'set_concern') return '"' + String(a.symptom || '').slice(0, 50) + '"';
   if (name === 'rank_repairs') return Object.keys(a.answers || {}).length ? JSON.stringify(a.answers) : 'labor guide';
   if (name === 'search_napa_parts') return '"' + (a.part || '') + '"';
+  if (name === 'add_repair_line') return a.id || a.name || '';
   return '';
 };

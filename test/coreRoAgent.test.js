@@ -58,7 +58,7 @@ describe('repair order agent tools', () => {
     await TOOLS.update_vehicle({ mileage: 61000 }, C);
     const r = await TOOLS.get_maintenance_due({}, C);
     expect(r).toMatchObject({ due_now: true, interval_mi: 60000 });
-    expect(r.items.some(i => i.id === 'sm-plug')).toBe(true);
+    expect(r.items.some(i => i.name.toLowerCase().includes('spark plug'))).toBe(true);
     await TOOLS.get_maintenance_due({}, C);
     expect(C.cards.filter(c => c.type === 'maint')).toHaveLength(1);
   });

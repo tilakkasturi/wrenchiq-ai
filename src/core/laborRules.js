@@ -6,6 +6,7 @@
 import RULES from '../../resources/labor_guide/labor_guide_rules.json';
 import { REP, REPMAP } from './laborGuide';
 import { getMaintItem } from './maintenanceSchedule';
+import { liveStore, refillObject, resourceLoaded } from './liveResource';
 
 /**
  * Maintenance lines have ids like "sm:<vinMask>:<miles>:<terms>:<op>". The rules name them by the
@@ -16,22 +17,26 @@ export const relKey = id => {
   return p[0] === 'sm' && p.length === 5 ? 'sm:' + p[3] + ':' + p[4] : id;
 };
 
-const GROUP = new Map();
-(RULES.sameGroups || []).forEach((g, i) => g.forEach(id => GROUP.set(id, (GROUP.get(id) || []).concat(i))));
-const PAIRS = new Set((RULES.samePairs || []).flatMap(([a, b]) => [a + '\u0000' + b, b + '\u0000' + a]));
-const INCLUDES = RULES.includes || {};
-const BOTH = RULES.bothSides || {};
+// Rebuilt in place when the rules file changes (see liveResource.js), so every caller sees the new rules.
+const store = liveStore('laborRules', () => ({ rules: {}, group: new Map(), pairs: new Set() }));
+refillObject(store.rules, RULES);
+store.group.clear();
+(RULES.sameGroups || []).forEach((g, i) => g.forEach(id => store.group.set(id, (store.group.get(id) || []).concat(i))));
+store.pairs.clear();
+(RULES.samePairs || []).forEach(([a, b]) => { store.pairs.add(a + '\u0000' + b); store.pairs.add(b + '\u0000' + a); });
+const includes = () => store.rules.includes || {};
+const bothSides = () => store.rules.bothSides || {};
 
 /** Two different ids that are the same job, so only one belongs on the order. */
 export function sameJob(a, b) {
   const x = relKey(a), y = relKey(b);
   if (x === y) return false;
-  if (PAIRS.has(x + '\u0000' + y)) return true;
-  const gx = GROUP.get(x), gy = GROUP.get(y);
+  if (store.pairs.has(x + '\u0000' + y)) return true;
+  const gx = store.group.get(x), gy = store.group.get(y);
   return !!(gx && gy && gx.some(i => gy.includes(i)));
 }
 /** a's labor hours already cover b. */
-export const covers = (a, b) => (INCLUDES[relKey(a)] || []).includes(relKey(b));
+export const covers = (a, b) => (includes()[relKey(a)] || []).includes(relKey(b));
 
 const row = id => REPMAP[id];
 const isCombo = id => row(id) && row(id).laborType === 'COMBINATION';
@@ -82,7 +87,7 @@ export function checkAdd(id, accepted) {
     return { action: 'block', kind: 'orphan', reason: name(id) + ' is add-on labor: its ' + hoursOf(id).toFixed(1) + ' h assume ' + (row(id).component || 'the related part').toLowerCase() + ' work is already apart. Add that job first' + (alone ? ', or quote ' + name(alone) + ' (' + hoursOf(alone).toFixed(1) + ' h) on its own.' : '.'), offer: alone };
   }
 
-  for (const [both, sides] of Object.entries(BOTH)) {
+  for (const [both, sides] of Object.entries(bothSides())) {
     if (sides.includes(id)) {
       const other = sides.find(s => s !== id);
       if (accepted.includes(other) && row(both)) {
@@ -115,7 +120,7 @@ export function addOnsFor(opId, accepted, dismissed = []) {
 export function followOnsFor(id, accepted) {
   const r = row(id);
   if (!r || !r.note) return [];
-  return (RULES.followOn || [])
+  return (store.rules.followOn || [])
     .filter(f => r.note.toLowerCase().includes(f.noteContains.toLowerCase()) && row(f.suggest))
     .filter(f => checkAdd(f.suggest, accepted).action === 'add')
     .map(f => ({ id: f.suggest, why: f.why }));
@@ -129,8 +134,11 @@ export function auditLabor(accepted) {
     else if (covers(a, b) || covers(b, a)) issues.push({ kind: 'covered', ids: covers(a, b) ? [a, b] : [b, a] });
   }));
   orphanedCombos(accepted).forEach(id => issues.push({ kind: 'orphan', ids: [id] }));
-  Object.entries(BOTH).forEach(([both, sides]) => { if (sides.every(s => accepted.includes(s))) issues.push({ kind: 'bothSides', ids: [...sides, both] }); });
+  Object.entries(bothSides()).forEach(([both, sides]) => { if (sides.every(s => accepted.includes(s))) issues.push({ kind: 'bothSides', ids: [...sides, both] }); });
   return issues;
 }
 
-export const componentSay = component => (RULES.componentSay || {})[component];
+export const componentSay = component => (store.rules.componentSay || {})[component];
+
+resourceLoaded('labor guide rules');
+if (import.meta.hot) import.meta.hot.accept();

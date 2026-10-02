@@ -1,9 +1,66 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useCore, S } from '../state';
 import { PQMAP } from '../data';
 import { ITEM, hrs, rate, miles, vehicleLine, vehicleOk, concern, money, roSummary, partsTotals, orderTotals } from '../logic';
 import { saveVehicle, saveConcern, removeItem, lineWhy, addManual, changeHours, searchPart, removePart, setPartQty } from '../harness';
 import { useFlash } from './useFlash';
+import { customerWhy } from '../talkTrack';
+import { parentsOnOrder } from '../laborRules';
+
+/**
+ * The Why? button: a popover with what to tell the customer about this line. Opens on hover or
+ * focus, stays open when clicked, closes on Escape or a click elsewhere.
+ */
+function WhyPop({ it }) {
+  const R = S.ro, [hover, setHover] = useState(false), [pinned, setPinned] = useState(false), [copied, setCopied] = useState(false);
+  const box = useRef(null), btn = useRef(null), timer = useRef(null), [pos, setPos] = useState(null);
+  const open = hover || pinned;
+  // The lines table scrolls sideways, which would clip an absolutely placed card; place it against the window.
+  useEffect(() => {
+    if (!open) return undefined;
+    const place = () => {
+      const r = btn.current && btn.current.getBoundingClientRect();
+      if (!r) return;
+      const w = Math.min(340, window.innerWidth - 24);
+      setPos({ top: r.bottom + 8, left: Math.max(12, Math.min(r.left, window.innerWidth - w - 12)), width: w, arrow: Math.max(10, r.left - Math.max(12, Math.min(r.left, window.innerWidth - w - 12)) + 12) });
+    };
+    place();
+    window.addEventListener('scroll', place, true); window.addEventListener('resize', place);
+    return () => { window.removeEventListener('scroll', place, true); window.removeEventListener('resize', place); };
+  }, [open]);
+  useEffect(() => {
+    if (!pinned) return undefined;
+    const away = e => { if (box.current && !box.current.contains(e.target)) setPinned(false); };
+    const esc = e => { if (e.key === 'Escape') { setPinned(false); setHover(false); } };
+    document.addEventListener('mousedown', away); document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', esc); };
+  }, [pinned]);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const enter = () => { clearTimeout(timer.current); setHover(true); };
+  const leave = () => { timer.current = setTimeout(() => setHover(false), 150); };
+  const w = open ? customerWhy(it, { hours: hrs(it), rate: rate(), concern: R.symptom, parent: parentsOnOrder(it.id, [...R.accepted])[0] }) : null;
+  const copy = () => {
+    try { navigator.clipboard.writeText(w.text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }, () => {}); } catch (_) { /* clipboard blocked */ }
+  };
+  return (
+    <span className="why-pop" ref={box} onMouseEnter={enter} onMouseLeave={leave}>
+      <button ref={btn} className="btn ghost sm" aria-expanded={open} aria-haspopup="dialog" onFocus={enter} onBlur={leave} onClick={() => setPinned(p => !p)}>Why?</button>
+      {open && pos && (
+        <div className="why-card" role="dialog" style={{ top: pos.top, left: pos.left, width: pos.width, '--arrow': pos.arrow + 'px' }} aria-label={'Customer talk track for ' + it.name}>
+          <div className="why-head"><span className="label">Customer-friendly talk track</span><span className="tag adv">{w.title}</span></div>
+          <p className="why-text">{w.text}</p>
+          <div className="why-foot">
+            <span className="small muted mono">{w.basis}</span>
+            <span>
+              <button className="btn ghost sm" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
+              <button className="btn ghost sm" onClick={() => { setPinned(false); setHover(false); lineWhy(it.id); }}>Explain in chat</button>
+            </span>
+          </div>
+        </div>
+      )}
+    </span>
+  );
+}
 
 function Section({ sig, children }) {
   const flash = useFlash(sig);
@@ -117,7 +174,7 @@ function LinesSection() {
                         <span className="srcbadge">{badge}</span> <span className="mono small muted">{it.ref}</span>
                         {edited && <> <span className="tag med">edited, guide {it.hours.toFixed(1)} h</span></>}
                         <br />
-                        <button className="btn ghost sm" onClick={() => lineWhy(it.id)}>Why?</button>
+                        <WhyPop it={it} />
                         <button className="btn ghost sm" onClick={() => removeItem(it.id)}>Remove</button>
                       </td>
                       <td className="n"><HoursInput it={it} /></td>
@@ -244,7 +301,7 @@ export default function RepairOrderPanel() {
   useCore();
   const mem = [];
   if (rate()) mem.push('Labor rate ' + S.profile['shop.labor_rate'].display);
-  ['parts.tier', 'comms.tone'].forEach(k => { if (S.profile[k]) mem.push(PQMAP[k].label + ': ' + S.profile[k].display); });
+  ['parts.supplier', 'comms.tone'].forEach(k => { if (S.profile[k]) mem.push(PQMAP[k].label + ': ' + S.profile[k].display); });
   return (
     <aside className="panel side" aria-label="Repair order">
       <div className="head"><h2 className="label">Repair order</h2><span className="live">Live</span><span className="tag adv">Draft</span></div>

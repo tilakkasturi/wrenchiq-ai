@@ -164,6 +164,7 @@
 .wiq-core .calls{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:6px}
 .wiq-core .calls li{border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;background:var(--surface-2);overflow-wrap:anywhere}
 
+.wiq-core .demo-pick{font:inherit;font-size:12px;padding:3px 6px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--fg);max-width:180px;margin-right:6px}
 .wiq-core .seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
 .wiq-core .seg button{border:0;background:transparent;padding:3px 10px;font-size:12px;font-weight:500;color:var(--muted)}
 .wiq-core .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
@@ -176,3 +177,14 @@
 .wiq-core .flash-solid{animation:wiq-flash-solid 1.4s ease-out}
 @keyframes wiq-flash-solid{from{background:var(--accent-soft)}to{background:var(--surface)}}
 @media (prefers-reduced-motion:reduce){.wiq-core .flash-solid{animation:none}}
+
+/* Why? popover: customer talk track for a line */
+.wiq-core .why-pop{position:relative;display:inline-block}
+.wiq-core .why-card{position:fixed;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 28px rgba(15,21,27,.16),0 1px 3px rgba(15,21,27,.08);padding:12px 14px;text-align:left;white-space:normal;font-weight:400;animation:why-in .12s ease-out}
+.wiq-core .why-card::before{content:"";position:absolute;top:-6px;left:var(--arrow,18px);width:10px;height:10px;background:var(--surface);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.wiq-core .why-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.wiq-core .why-text{margin:0;font-size:14px;line-height:1.55;color:var(--fg)}
+.wiq-core .why-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.wiq-core .why-foot .btn{padding-inline:6px}
+@keyframes why-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.wiq-core .why-card{animation:none}}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCore, S, loadProfile } from './state';
-import { PQ } from './data';
-import { boot, setMode, newJob, setUseAgent } from './harness';
+import { FIXEDMAP } from './data';
+import { boot, setMode, newJob, setUseAgent, runDemo, demoList } from './harness';
 import ChatPanel from './components/ChatPanel';
 import MemoryPanel from './components/MemoryPanel';
 import RepairOrderPanel from './components/RepairOrderPanel';
@@ -56,8 +56,8 @@ export default function CoreAssistantApp() {
         <div className="stage" data-view={view}>
           {mode === 'profile' ? (
             <>
-              <ChatPanel key="profile" mode="profile" title="Shop interview" placeholder="Type your answer, or say it your way"
-                note={<span className="small muted mono">{PQ.filter(q => S.profile[q.key]).length} of {PQ.length} saved</span>} />
+              <ChatPanel key="profile" mode="profile" title="Shop profile" placeholder="Tell me how your shop works, in your own words"
+                note={<span className="small muted mono">{Object.keys(S.profile).filter(k => !FIXEDMAP[k]).length} saved</span>} />
               <MemoryPanel />
             </>
 ) : (
@@ -67,7 +67,13 @@ export default function CoreAssistantApp() {
                   <button aria-pressed={S.useAgent} onClick={() => setUseAgent(true)} title="Gemma reads your message and calls tools">Agent</button>
                   <button aria-pressed={!S.useAgent} onClick={() => setUseAgent(false)} title="Fixed keyword rules, no language model">Scripted</button>
                 </div>}
-                action={<button className="btn sm" onClick={newJob}>New job</button>} />
+                action={<>
+                  <select className="demo-pick" value="" aria-label="Run a demo" onChange={e => { if (e.target.value) runDemo(e.target.value); }}>
+                    <option value="">Demo…</option>
+                    {demoList().map(d => <option key={d.id} value={d.id}>{d.title}</option>)}
+                  </select>
+                  <button className="btn sm" onClick={newJob}>New job</button>
+                </>} />
               <RepairOrderPanel />
             </>
           )}

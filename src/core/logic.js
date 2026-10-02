@@ -34,11 +34,10 @@ export function normalizeSymptom(raw) {
 const symptomText = () => normalizeSymptom(S.ro.symptom);
 
 export function saveFact(q, r) {
-  S.profile[q.key] = { value: r.value, display: r.display, at: Date.now() };
+  S.profile[q.key] = { value: r.value, display: r.display, label: q.label, at: Date.now() };
   S.skipped.delete(q.key);
   persistProfile();
 }
-export const nextProfileQ = () => Object.values(PQMAP).find(q => !S.profile[q.key] && !S.skipped.has(q.key));
 
 /* ---------- shop profile parsing ---------- */
 const NUM_CUE = {
@@ -63,7 +62,7 @@ export function parseFor(q, text, active) {
     return { value: v, display: q.fmt(v) };
   }
   if (q.type === 'choice') {
-    const cue = q.key === 'parts.tier' ? /oem|aftermarket|parts|original/ : /tone|sound|friendly|formal|short and|direct/;
+    const cue = /tone|sound|friendly|formal|short and|direct/;
     if (!active && !cue.test(t)) return null;
     const m = matchOne(q.options, text);
     if (!m) return null;
@@ -176,7 +175,11 @@ export function extractVehicle(text) {
 }
 export const hasContent = r => { const t = r.toLowerCase(); return words(r).length >= 2 || ALLKW.some(k => t.includes(k)); };
 
-export function findItem(t, scope) {
+/**
+ * Lines whose names match the words in t, best first. Shown suggestions, due maintenance and add-ons
+ * for jobs on the order get a small bonus; outside those, any labor-guide job can match.
+ */
+export function rankItems(t, scope) {
   const tl = t.toLowerCase();
   let pool = [];
   if (scope === 'accepted') pool = [...S.ro.accepted];
@@ -185,16 +188,25 @@ export function findItem(t, scope) {
     // add-on labor for jobs already on the order, so "add the axle boot" finds it
     [...S.ro.accepted].forEach(a => { pool = pool.concat(combinationsFor(a)); });
   }
-  if (/\b(top|first|best|main|that one|it)\b/.test(tl) && pool.length && scope !== 'accepted') return pool[0];
-  let best = null, bs = 0;
-  pool.forEach(id => {
+  const out = [];
+  const score = (id, bonus) => {
     const it = ITEM(id);
+    if (!it || out.some(o => o.id === id)) return;
     let s = 0;
-    stems(it.name).forEach(x => { if (tl.includes(x)) s++; });
+    new Set(stems(it.name)).forEach(x => { if (tl.includes(x)) s++; });
     if (/\bbrakes?\b/.test(tl) && /brake/i.test(it.name)) s++;
-    if (s > bs) { bs = s; best = id; }
-  });
-  return bs > 0 ? best : null;
+    if (s > 0) out.push({ id, s: s + bonus });
+  };
+  pool.forEach(id => score(id, 0.5));
+  // An advisor who names a job wants it even if it is not in today's suggestions; the shown ones win ties.
+  if (scope !== 'accepted') REP.forEach(r => { if (r.laborType !== 'COMBINATION') score(r.id, 0); });
+  return out.sort((a, b) => b.s - a.s);
+}
+
+export function findItem(t, scope) {
+  if (/\b(top|first|best|main|that one|it)\b/i.test(t) && scope !== 'accepted') { const top = shownRepairs()[0]; if (top) return top.id; }
+  const r = rankItems(t, scope);
+  return r.length ? r[0].id : null;
 }
 
 export function explain(id) {

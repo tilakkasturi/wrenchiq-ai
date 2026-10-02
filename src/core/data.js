@@ -2,10 +2,24 @@
 // bank, made up for the demo. The labor guide (laborGuide.js) and scheduled maintenance
 // (maintenanceSchedule.js) are loaded from resources/.
 
+import SHOP_PROFILE from '../../resources/shop/core_shop_profile.json';
+import { liveStore, refillArray, refillObject, resourceLoaded, onResourceChange } from './liveResource';
+
+const live = liveStore('data', () => ({ SHOP: {}, FIXED: [], FIXEDMAP: {}, ALLKW: [] }));
+
+/** The shop the assistant runs as, from resources/shop. Stated, not asked; the advisor cannot change it in chat. */
+export const SHOP = refillObject(live.SHOP, SHOP_PROFILE);
+export const FIXED = refillArray(live.FIXED, [
+  { key: 'shop.identity', label: 'Shop', value: SHOP.name + ', ' + SHOP.address, say: 'Your shop: ' + SHOP.name + ', ' + SHOP.address + '.' },
+  { key: 'parts.supplier', label: 'Parts supplier', value: SHOP.partsSupplier, say: 'Your parts supplier is set to ' + SHOP.partsSupplier + '.', why: 'I look up parts and list prices in the ' + SHOP.partsSupplier + ' catalog for the vehicle on the repair order.' },
+]);
+export const FIXEDMAP = refillObject(live.FIXEDMAP, Object.fromEntries(FIXED.map(f => [f.key, f])));
+
+// Shop preferences the assistant recognizes when the advisor mentions them. It does not ask for them;
+// anything else the advisor says about the shop is kept as a note.
 export const PQ = [
   { key: 'shop.labor_rate', label: 'Labor rate', ask: "What's your standard labor rate per hour?", why: 'I multiply labor-guide hours by it to price labor on the repair order.', hint: 'Give me a number, like 145, or say "145 an hour".', type: 'number', min: 10, max: 1000, fmt: v => '$' + v + '/hr' },
   { key: 'shop.diag_rate', label: 'Diagnostic rate', ask: 'Do you charge a different rate for diagnostic time? Say "same" if not.', why: 'Diagnostic hours are often billed apart from repair labor.', hint: 'Give me a number, or say "same".', type: 'number', min: 10, max: 1000, fmt: v => '$' + v + '/hr' },
-  { key: 'parts.tier', label: 'Parts preference', ask: 'Which parts do you prefer to quote?', why: 'I list this tier first when I show parts for a repair.', hint: 'OEM, aftermarket (premium or economy), or "depends".', type: 'choice', options: ['OEM', 'Aftermarket, premium', 'Aftermarket, economy', 'Depends on the job'] },
   { key: 'parts.markup', label: 'Parts markup', ask: "What's your typical parts markup?", why: 'Used to shape parts pricing once part costs are connected.', hint: 'Give me a percentage, like 40.', type: 'number', min: 0, max: 500, fmt: v => v + '%' },
   { key: 'comms.tone', label: 'Message tone', ask: 'How should messages to your customers sound?', why: 'I write customer messages in this voice.', hint: 'Friendly, formal, or short and direct.', type: 'choice', options: ['Friendly and plain', 'Formal', 'Short and direct'] },
   { key: 'comms.languages', label: 'Customer languages', ask: 'Which languages do your customers use?', why: 'I offer translations for these.', hint: 'Name them, like "English and Spanish".', type: 'multi', options: ['English', 'Spanish', 'Vietnamese', 'Chinese', 'Other'] },
@@ -40,17 +54,23 @@ export const QB = [
 export const QWHY = { 'brk-when': 'The timing separates worn pads from dry hardware or a bearing.', 'eng-what': 'No crank, crank without start, stalling and rough running each point to different systems.', 'cel-drive': 'A light with no change in driving is often a cap or emissions item; rough running points to ignition or air.', 'ac-air': 'Weak airflow points to the blower or a clogged filter; warm but strong air points to the refrigerant side.', 'ac-noise': 'Compressor noise or a clutch that clicks without engaging separates a bad compressor or clutch from a low charge.', 'brk-where': 'Front and rear brakes are different repairs with different labor times.', 'brk-sound': 'The sound separates worn pads from rotors, calipers and other causes.', 'noise-when': 'When the noise happens points to suspension, bearings or brakes.', 'cel-flash': 'A flashing light means active misfires, which changes what to check first.', rough: 'Rough running separates ignition problems from emissions sensors.', coolant: 'A coolant leak points to hoses or the water pump, no leak points to the thermostat.', crank: 'What the engine does when you turn the key separates a battery from a starter.', acq: 'This separates a low charge from a failing compressor.', vib: 'Speed and braking narrow a shake down to tires, alignment or brakes.', leak: 'Where the leak is decides which gasket to check.', dur: 'How long it has been going on helps the advisor judge urgency.' };
 export const QDUR = { id: 'dur', short: 'Duration', when: [], ask: 'How long has this been going on?', opts: [{ l: 'Just started', b: {} }, { l: 'A few days', b: {} }, { l: 'Weeks or more', b: {} }] };
 export const QBY = Object.fromEntries(QB.concat([QDUR]).map(q => [q.id, q]));
-export const ALLKW = (() => {
+const allKeywords = () => {
   const s = new Set();
   REP.forEach(r => r.strong.concat(r.kw).forEach(k => s.add(k)));
   QB.forEach(q => q.when.forEach(k => s.add(k)));
   return Array.from(s);
-})();
+};
+export const ALLKW = refillArray(live.ALLKW, allKeywords());
+// labor-guide keywords change when its files do
+onResourceChange('data.allkw', name => { if (name === 'labor guide') refillArray(ALLKW, allKeywords()); });
 export const BLOCK = { 'A/C service': ['acrecharge', 'accomp'], Alignment: ['align'], Tires: ['balance'] };
 
 export const MAKES = { toyota: 'Toyota', honda: 'Honda', ford: 'Ford', chevrolet: 'Chevrolet', chevy: 'Chevrolet', nissan: 'Nissan', hyundai: 'Hyundai', kia: 'Kia', subaru: 'Subaru', mazda: 'Mazda', volkswagen: 'Volkswagen', vw: 'Volkswagen', bmw: 'BMW', mercedes: 'Mercedes-Benz', audi: 'Audi', jeep: 'Jeep', ram: 'Ram', gmc: 'GMC', dodge: 'Dodge', lexus: 'Lexus', acura: 'Acura' };
-export const MODELS = { corolla: ['Corolla', 'Toyota'], camry: ['Camry', 'Toyota'], rav4: ['RAV4', 'Toyota'], tacoma: ['Tacoma', 'Toyota'], civic: ['Civic', 'Honda'], accord: ['Accord', 'Honda'], 'cr-v': ['CR-V', 'Honda'], crv: ['CR-V', 'Honda'], 'f-150': ['F-150', 'Ford'], f150: ['F-150', 'Ford'], escape: ['Escape', 'Ford'], explorer: ['Explorer', 'Ford'], silverado: ['Silverado', 'Chevrolet'], malibu: ['Malibu', 'Chevrolet'], equinox: ['Equinox', 'Chevrolet'], altima: ['Altima', 'Nissan'], sentra: ['Sentra', 'Nissan'], elantra: ['Elantra', 'Hyundai'], sonata: ['Sonata', 'Hyundai'], outback: ['Outback', 'Subaru'], forester: ['Forester', 'Subaru'], mazda3: ['Mazda3', 'Mazda'], 'cx-5': ['CX-5', 'Mazda'], golf: ['Golf', 'Volkswagen'], jetta: ['Jetta', 'Volkswagen'], wrangler: ['Wrangler', 'Jeep'] };
+export const MODELS = { corolla: ['Corolla', 'Toyota'], camry: ['Camry', 'Toyota'], rav4: ['RAV4', 'Toyota'], tacoma: ['Tacoma', 'Toyota'], sienna: ['Sienna', 'Toyota'], highlander: ['Highlander', 'Toyota'], prius: ['Prius', 'Toyota'], tundra: ['Tundra', 'Toyota'], '4runner': ['4Runner', 'Toyota'], odyssey: ['Odyssey', 'Honda'], pilot: ['Pilot', 'Honda'], civic: ['Civic', 'Honda'], accord: ['Accord', 'Honda'], 'cr-v': ['CR-V', 'Honda'], crv: ['CR-V', 'Honda'], 'f-150': ['F-150', 'Ford'], f150: ['F-150', 'Ford'], escape: ['Escape', 'Ford'], explorer: ['Explorer', 'Ford'], silverado: ['Silverado', 'Chevrolet'], malibu: ['Malibu', 'Chevrolet'], equinox: ['Equinox', 'Chevrolet'], altima: ['Altima', 'Nissan'], sentra: ['Sentra', 'Nissan'], elantra: ['Elantra', 'Hyundai'], sonata: ['Sonata', 'Hyundai'], outback: ['Outback', 'Subaru'], forester: ['Forester', 'Subaru'], mazda3: ['Mazda3', 'Mazda'], 'cx-5': ['CX-5', 'Mazda'], golf: ['Golf', 'Volkswagen'], jetta: ['Jetta', 'Volkswagen'], wrangler: ['Wrangler', 'Jeep'] };
 const rxEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 export const MAKE_RX = new RegExp('\\b(' + Object.keys(MAKES).map(rxEsc).join('|') + ')\\b', 'i');
 export const MODEL_RX = new RegExp('\\b(' + Object.keys(MODELS).map(rxEsc).join('|') + ')\\b', 'i');
 export const SAMPLE_MSG = '2018 Toyota Corolla 1.8L, 61k miles. Grinding noise when I brake and the steering wheel shakes on the highway.';
+
+resourceLoaded('shop profile');
+if (import.meta.hot) import.meta.hot.accept();

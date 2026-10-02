@@ -147,3 +147,118 @@ describe('repair order flow uses the guardrails', () => {
     expect(orphanedCombos(on())).toEqual([]);
   });
 });
+
+import { plainJob, customerWhy } from '../src/core/talkTrack.js';
+import { TOOLS } from '../src/core/roTools.js';
+import { ITEM } from '../src/core/logic.js';
+import { runDemo, demoList } from '../src/core/harness.js';
+import DEMOS from '../resources/demo/core_demo_scenarios.json';
+
+describe('Why? popover: a customer talk track for every line', () => {
+  it('turns guide names into plain jobs', () => {
+    expect(plainJob('Axle shaft assembly, remove & install/replace (FWD, left side)')).toBe('replace the axle shaft assembly (left side)');
+    expect(plainJob('Brake caliper, remove, install & overhaul (front, both)')).toBe('rebuild the brake caliper (front, both)');
+  });
+  it('a repair ties back to the customer\'s own words and the guide hours', () => {
+    const w = customerWhy(ITEM('brk-front'), { hours: 1.8, rate: 100, concern: 'Grinding noise when I brake.' });
+    expect(w.text).toMatch(/^You told us: "Grinding noise when I brake"\. Based on that, the most likely fix is to replace the front brake pads and rotors\./);
+    expect(w.text).toMatch(/1\.8 hours of labor, about \$180/);
+    expect(w.basis).toMatch(/LG-BRK-F-0142/);
+  });
+  it('an add-on uses its labor-guide talk track; a manual line just says what it is', () => {
+    expect(customerWhy(ITEM('syn-wpump-thermo'), { rate: 150, parent: 'syn-wpump' }).title).toBe('Recommended');
+    expect(customerWhy({ id: 'x1', name: 'Diagnostic time', hours: 1, src: 'manual' }, {}).text).toBe('Diagnostic time. 1.0 hours of labor.');
+  });
+});
+
+describe('agent add_repair_line goes through the guardrails', () => {
+  it('adds by id, and swaps a standalone job for the cheaper add-on when its job is on', async () => {
+    let r = await TOOLS.add_repair_line({ id: 'syn-wpump' }, Cr);
+    expect(r.result).toBe('added');
+    r = await TOOLS.add_repair_line({ name: 'thermostat' }, Cr);
+    expect(r).toMatchObject({ result: 'added_as_add_on', line: { id: 'syn-wpump-thermo' }, hours_saved: expect.any(Number) });
+    expect(on()).toEqual(['syn-wpump', 'syn-wpump-thermo']);
+  });
+  it('reports a refused duplicate without changing the order', async () => {
+    await TOOLS.add_repair_line({ id: 'accomp' }, Cr);
+    const r = await TOOLS.add_repair_line({ id: 'syn-ac-comp' }, Cr);
+    expect(r.result).toBe('not_added');
+    expect(r.reason).toMatch(/same job/);
+    expect(on()).toEqual(['accomp']);
+  });
+});
+
+describe('click-through demos', () => {
+  it('every scenario loads from resources/demo and its steps are short, misspelled shorthand', () => {
+    expect(demoList().map(d => d.id)).toEqual(['cv-axle', 'ac', 'water-pump', 'valve-cover']);
+    DEMOS.scenarios.forEach(d => d.steps.forEach(st => {
+      expect(st.text.length, st.text).toBeLessThan(100);
+      expect(/^\s*(please\s+)?(add|include)\b/i.test(st.text), st.text).toBe(false); // so the model, not the keyword rule, reads it
+    }));
+  });
+  it('starting a demo resets the order, turns the agent on and prices at a session-only rate', async () => {
+    S.ro.accepted.add('brk-front'); S.useAgent = false;
+    runDemo('cv-axle'); await settle();
+    expect(on()).toEqual([]);
+    expect(S.useAgent).toBe(true);
+    expect(S.profile['shop.labor_rate'].value).toBe(150);
+    expect(S.chats.ro.chips[0]).toMatchObject({ text: '__demo_next__', silent: true });
+    S.demo = null;
+  });
+});
+
+import { textToolCalls } from '../src/core/roAgent.js';
+describe('agent loop: tool calls written as text', () => {
+  it('turns "[add_repair_line {id: ...}]" into a real call and drops it from the reply', () => {
+    const r = textToolCalls('I will add those now.\n[add_repair_line {id: "syn-vc-plugs"}]');
+    expect(r.calls).toHaveLength(1);
+    expect(r.calls[0].function).toEqual({ name: 'add_repair_line', arguments: '{"id":"syn-vc-plugs"}' });
+    expect(r.rest).toBe('I will add those now.');
+    expect(textToolCalls('[not_a_tool {x: 1}] and [Front] brakes').calls).toHaveLength(0);
+  });
+});
+
+import { setMode, Cp } from '../src/core/harness.js';
+describe('shop profile: free flowing, starts with the shop', () => {
+  const fresh = () => { S.pro = { awaiting: null, started: false }; S.chats.profile = { items: [], chips: [], nextId: 1 }; };
+  const saidP = () => S.chats.profile.items.filter(i => i.kind === 'agent').map(i => i.text);
+  it('states the shop and supplier from resources/shop, asks no questions', async () => {
+    S.profile = {}; fresh();
+    setMode('profile'); await Cp.run(async () => {});
+    expect(saidP()[0]).toBe('Your shop: Cornerstone Automotive, 2341 El Camino Real, Sunnyvale, California.');
+    expect(saidP()[1]).toBe('Your parts supplier is set to NAPA.');
+    expect(saidP().join(' ')).not.toMatch(/\?/);
+    expect(S.profile['shop.identity'].value).toMatch(/^Cornerstone Automotive/);
+    expect(S.pro.awaiting).toBeNull();
+    S.mode = 'ro';
+  });
+  it('keeps a recognized preference as a named fact and anything else as a note', async () => {
+    S.profile = {}; fresh(); S.pro.started = true;
+    await Cp.send('our labor rate is 165 an hour'); await Cp.run(async () => {});
+    expect(S.profile['shop.labor_rate']).toMatchObject({ value: 165, label: 'Labor rate' });
+    await Cp.send('we close early on fridays and always road test brake jobs'); await Cp.run(async () => {});
+    const note = Object.keys(S.profile).find(k => k.startsWith('note.'));
+    expect(S.profile[note].display).toBe('we close early on fridays and always road test brake jobs');
+    await Cp.send("what's in my profile?"); await Cp.run(async () => {});
+    expect(saidP().at(-1)).toMatch(/Labor rate: \$165\/hr/);
+    S.mode = 'ro';
+  });
+});
+
+import { liveStore, refillArray, refillObject, onResourceChange, resourceLoaded } from '../src/core/liveResource.js';
+describe('resources reload in place (dev server / Tauri hot update)', () => {
+  it('a re-run refills the same objects and tells listeners, only after the first load', () => {
+    const a = liveStore('t', () => ({ rows: [], map: {} }));
+    const keep = a.rows, keepMap = a.map;
+    refillArray(a.rows, [1, 2]); refillObject(a.map, { x: 1 });
+    const heard = [];
+    onResourceChange('t.listener', n => heard.push(n));
+    resourceLoaded('test resource');            // first load: quiet
+    const b = liveStore('t', () => ({ rows: [], map: {} }));
+    refillArray(b.rows, [3]); refillObject(b.map, { y: 2 });
+    resourceLoaded('test resource');            // a reload
+    expect(b.rows).toBe(keep); expect(b.map).toBe(keepMap);
+    expect(keep).toEqual([3]); expect(keepMap).toEqual({ y: 2 });
+    expect(heard).toEqual(['test resource']);
+  });
+});

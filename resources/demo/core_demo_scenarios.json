@@ -1,0 +1,52 @@
+{
+ "_about": "Click-through demos for the Core repair order agent (Repair order mode, Demo menu). Each step is typed the way an advisor types: short, shorthand, misspelled, so the model has to decode it. Steps that do not start with a correctly spelled 'add' go to the model; 'total?' is answered by the deterministic rules. laborRate is used for the session only when the shop has not set one.",
+ "laborRate": 150,
+ "scenarios": [
+  {
+   "id": "cv-axle",
+   "title": "CV axle: typos to a priced job, both sides cheaper",
+   "intro": "Demo: an advisor's shorthand with typos and a VIN. Watch the agent decode it, match the OEM schedule from the VIN, offer add-on labor with a customer line, and price both sides as one job.",
+   "steps": [
+    { "label": "Customer drops off the van", "text": "18 sienna 5TDYZ3DC2JS901691 90k. clickin wen turnin, greese all ovr inside frnt lft tire" },
+    { "label": "Add the axle", "text": "ad the lft axel" },
+    { "label": "What to tell the customer", "text": "wat do i tell custmr abt the boot" },
+    { "label": "Right side too", "text": "do the rite side 2" },
+    { "label": "Total", "text": "total?" }
+   ]
+  },
+  {
+   "id": "ac",
+   "title": "A/C: two parts replaced, one recharge billed",
+   "intro": "Demo: a compressor and a condenser on the same car. Each needs the A/C evacuated and recharged, but the system is only recharged once, so only one is billed.",
+   "steps": [
+    { "label": "Customer complaint", "text": "2019 camry 74k ac blowin hot, compresser grindin loud wen it kicks on" },
+    { "label": "Add the compressor", "text": "ad compresser" },
+    { "label": "Add the recharge", "text": "ad the recharg 2" },
+    { "label": "Condenser is leaking too", "text": "condensr leakin 2, ad it" },
+    { "label": "Total", "text": "total?" }
+   ]
+  },
+  {
+   "id": "water-pump",
+   "title": "Water pump: the thermostat for a fraction of the labor",
+   "intro": "Demo: the advisor throws in a thermostat with a water pump. The labor guide prices it as add-on labor, not a second job, and the agent explains it to the customer.",
+   "steps": [
+    { "label": "Customer complaint", "text": "17 highlandr v6 98k coolnt drippin frnt of motor, temp gage creepin up in trafic" },
+    { "label": "Add the water pump", "text": "ad water pmp" },
+    { "label": "Throw in a thermostat", "text": "throw a thermastat in 2" },
+    { "label": "How to sell it", "text": "how do i xplain the thermostat to cust" }
+   ]
+  },
+  {
+   "id": "valve-cover",
+   "title": "Valve cover: spark plugs for 0.3 h because the intake is already off",
+   "intro": "Demo: a rear valve cover leak on a V6 means the intake comes off. Spark plugs added now are add-on labor instead of a separate job.",
+   "steps": [
+    { "label": "Customer complaint", "text": "18 sienna 112k oil leakin dwn back of engin on exhst, burnin smell, CEL misfire" },
+    { "label": "Add the rear valve cover", "text": "ad rear valv covr gskt" },
+    { "label": "Plugs while it's apart", "text": "plugs 2 while its apart" },
+    { "label": "What to tell the customer", "text": "wat do i say to cust abt plugs" }
+   ]
+  }
+ ]
+}

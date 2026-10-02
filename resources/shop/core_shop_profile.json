@@ -1,0 +1,8 @@
+{
+ "_about": "The demo shop the Core assistant runs as. Shown at the top of Shop profile and kept in shop memory as fixed facts (the advisor cannot change them in the chat).",
+ "shopId": "cornerstone",
+ "name": "Cornerstone Automotive",
+ "address": "2341 El Camino Real, Sunnyvale, California",
+ "partsSupplier": "NAPA",
+ "examples": ["Labor rate is $165 an hour", "We mark up parts 45%", "We never do transmission rebuilds", "Keep customer texts short and friendly"]
+}

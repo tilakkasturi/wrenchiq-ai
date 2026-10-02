@@ -15,7 +15,7 @@
 /** Gemma can emit its thinking-channel markers in the visible text; drop them. */
 export const cleanText = t => String(t || '').replace(/<\|channel>[\s\S]*?<channel\|>/g, '').replace(/<\|?channel\|?>/g, '').trim();
 
-export const RO_TOOL_NAMES = ['update_vehicle', 'set_concern', 'rank_repairs', 'get_maintenance_due', 'search_napa_parts'];
+export const RO_TOOL_NAMES = ['update_vehicle', 'set_concern', 'rank_repairs', 'get_maintenance_due', 'add_repair_line', 'search_napa_parts'];
 
 const RO_ROLE = `You are the WrenchIQ assistant inside a repair order conversation at an auto repair shop. You help a service advisor capture a job and decide what to look at, by talking with them and calling tools.
 
@@ -24,7 +24,8 @@ How you work:
 - Write the concern in standard shop terms, keeping the customer's meaning: "grinding when braking" rather than "scraping when I stop", "rough idle" rather than "shaky at the light". The labor guide matcher works on those plain terms.
 - After recording, call rank_repairs to find likely repairs in the labor guide, and get_maintenance_due when you know the mileage.
 - Labor hours, labor-guide row ids and the maintenance schedule come ONLY from tool results. Never state hours, prices or part numbers that a tool did not return in this conversation.
-- You cannot change the repair order's lines. The advisor adds a repair or part by pressing "Add to RO" on the card the tools show. Tell them that instead of saying you added something.
+- Advisors type fast: expect typos, shorthand and missing words ("frnt brks grindin", "ad the axel", "18 sienna 90k"). Work out what they mean and use the corrected terms in tool calls. When you corrected something that matters, say the corrected version back in a few words so they can catch a wrong guess.
+- When the advisor asks to add something, call add_repair_line with the id from rank_repairs, get_maintenance_due or the Add-on labor list. If you have no id, pass the job name spelled correctly ("A/C condenser", not "condensr"); if it is not in the rank_repairs results yet, call rank_repairs with the corrected wording first. Never say a line was added, swapped or replaced unless add_repair_line returned that in this turn; if it returned not_added, say so and use its candidates. Never add anything they did not ask for. The labor-guide rules decide what goes on: if the result says it was added as an add-on, replaced lines, or was not added, tell them that in one sentence with the hours saved. Removing lines, changing hours and adding parts are done by the advisor on the cards and the panel.
 - Ask at most ONE follow-up question per reply, the one that best separates the top repairs. Use the suggested_followups that rank_repairs returns, or your own question if none fits. Never repeat a question that is already answered in the repair order. When the top repair is clear and nothing useful is left to ask, say so and offer parts lookup instead.
 - When the advisor answers a follow-up, record it by passing the answer to rank_repairs (answers) using the exact question id and option label, then say briefly what moved.
 - For parts and prices call search_napa_parts. It uses the vehicle already on the repair order. NAPA prices are catalog list prices, not the shop's cost. Some parts have no catalog price: say so, never fill one in.
@@ -64,7 +65,7 @@ export function buildRoPrompt(context = {}) {
   const veh = [v.year, v.make, v.model, v.engine].filter(Boolean).join(' ');
   const lines = (context.lines || []).map(l => `- ${l.name} (${l.hours} h, ${l.source})`).join('\n') || '(none)';
   const parts = (context.parts || []).map(p => `- ${p.label}: ${p.partNumber} x${p.qty}`).join('\n') || '(none)';
-  const addOns = (Array.isArray(context.addOns) ? context.addOns : []).slice(0, 8).map(a => `- ${clip(a.name, 120)} with ${clip(a.for, 120)} (+${clip(a.hours, 6)} h, ${clip(a.kind, 30)}). Say: ${clip(a.say, 600)}`).join('\n') || '(none)';
+  const addOns = (Array.isArray(context.addOns) ? context.addOns : []).slice(0, 10).map(a => `- [${clip(a.id, 60)}] ${clip(a.name, 120)} with ${clip(a.for, 120)} (+${clip(a.hours, 6)} h, ${clip(a.kind, 30)}${a.onOrder ? ', on the order' : ''}). Say: ${clip(a.say, 600)}`).join('\n') || '(none)';
   const answers = Object.entries(context.answers || {}).map(([k, a]) => `${k}=${a}`).join(', ') || '(none)';
   return `${RO_ROLE}
 

@@ -18,6 +18,7 @@ export const newRO = () => ({
 export const S = {
   mode: 'profile',
   booted: false,
+  demo: null, // click-through demo in progress: { id, step }
   useAgent: true, // Repair order mode: the agent answers (true) or the scripted rules do (false)
   profile: {},
   skipped: new Set(),
