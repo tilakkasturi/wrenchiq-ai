@@ -1,0 +1,1063 @@
+{
+ "_about": "Engine cylinder counts for the vehicles the Core assistant recognizes, by make, model and model-year range. Used to set the quantity of spark plugs and ignition coils (one per cylinder) on replace-all jobs. When the engine is not on the repair order and a vehicle came with engines of different cylinder counts, the assistant asks which engine, using this list as the options. Diesel engines have no spark plugs or ignition coils. Demo reference data compiled for the prototype: verify against OEM specifications before production use.",
+ "vehicles": [
+  {
+   "make": "Toyota",
+   "model": "Corolla",
+   "from": 2009,
+   "to": 2019,
+   "engines": [
+    {
+     "engine": "1.8L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.4L I4",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Corolla",
+   "from": 2020,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.8L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Camry",
+   "from": 2007,
+   "to": 2011,
+   "engines": [
+    {
+     "engine": "2.4L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Camry",
+   "from": 2012,
+   "to": 2024,
+   "engines": [
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Camry",
+   "from": 2025,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.5L I4 Hybrid",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "RAV4",
+   "from": 2006,
+   "to": 2012,
+   "engines": [
+    {
+     "engine": "2.4L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "RAV4",
+   "from": 2013,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Tacoma",
+   "from": 2005,
+   "to": 2015,
+   "engines": [
+    {
+     "engine": "2.7L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "4.0L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Tacoma",
+   "from": 2016,
+   "to": 2023,
+   "engines": [
+    {
+     "engine": "2.7L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Tacoma",
+   "from": 2024,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.4L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Sienna",
+   "from": 2011,
+   "to": 2020,
+   "engines": [
+    {
+     "engine": "2.7L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Sienna",
+   "from": 2021,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.5L I4 Hybrid",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Highlander",
+   "from": 2008,
+   "to": 2019,
+   "engines": [
+    {
+     "engine": "2.7L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Highlander",
+   "from": 2020,
+   "to": 2022,
+   "engines": [
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "2.5L I4 Hybrid",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Highlander",
+   "from": 2023,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.4L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I4 Hybrid",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Prius",
+   "from": 2010,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.8L I4 Hybrid",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Hybrid",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Tundra",
+   "from": 2007,
+   "to": 2021,
+   "engines": [
+    {
+     "engine": "4.0L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "4.6L V8",
+     "cylinders": 8
+    },
+    {
+     "engine": "5.7L V8",
+     "cylinders": 8
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "Tundra",
+   "from": 2022,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "3.4L V6 Twin Turbo",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "4Runner",
+   "from": 2010,
+   "to": 2024,
+   "engines": [
+    {
+     "engine": "4.0L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "2.7L I4",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Toyota",
+   "model": "4Runner",
+   "from": 2025,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.4L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Honda",
+   "model": "Odyssey",
+   "from": 2011,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Honda",
+   "model": "Pilot",
+   "from": 2009,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Honda",
+   "model": "Civic",
+   "from": 2006,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.8L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.5L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Honda",
+   "model": "Accord",
+   "from": 2008,
+   "to": 2017,
+   "engines": [
+    {
+     "engine": "2.4L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Honda",
+   "model": "Accord",
+   "from": 2018,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.5L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Hybrid",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Honda",
+   "model": "CR-V",
+   "from": 2007,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.4L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.5L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Hybrid",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Ford",
+   "model": "F-150",
+   "from": 2011,
+   "to": 2014,
+   "engines": [
+    {
+     "engine": "3.7L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "3.5L V6 EcoBoost",
+     "cylinders": 6
+    },
+    {
+     "engine": "5.0L V8",
+     "cylinders": 8
+    },
+    {
+     "engine": "6.2L V8",
+     "cylinders": 8
+    }
+   ]
+  },
+  {
+   "make": "Ford",
+   "model": "F-150",
+   "from": 2015,
+   "to": 2020,
+   "engines": [
+    {
+     "engine": "2.7L V6 EcoBoost",
+     "cylinders": 6
+    },
+    {
+     "engine": "3.3L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "5.0L V8",
+     "cylinders": 8
+    },
+    {
+     "engine": "3.0L V6 Power Stroke Diesel",
+     "cylinders": 6,
+     "fuel": "diesel"
+    }
+   ]
+  },
+  {
+   "make": "Ford",
+   "model": "F-150",
+   "from": 2021,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.7L V6 EcoBoost",
+     "cylinders": 6
+    },
+    {
+     "engine": "3.3L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "5.0L V8",
+     "cylinders": 8
+    },
+    {
+     "engine": "3.5L V6 PowerBoost Hybrid",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Ford",
+   "model": "Escape",
+   "from": 2008,
+   "to": 2012,
+   "engines": [
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.0L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Ford",
+   "model": "Escape",
+   "from": 2013,
+   "to": 2019,
+   "engines": [
+    {
+     "engine": "1.5L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.6L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Ford",
+   "model": "Escape",
+   "from": 2020,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.5L I3 Turbo",
+     "cylinders": 3
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I4 Hybrid",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Ford",
+   "model": "Explorer",
+   "from": 2011,
+   "to": 2019,
+   "engines": [
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.3L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.5L V6 EcoBoost",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Ford",
+   "model": "Explorer",
+   "from": 2020,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.3L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.0L V6 Turbo",
+     "cylinders": 6
+    },
+    {
+     "engine": "3.3L V6 Hybrid",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Chevrolet",
+   "model": "Silverado",
+   "from": 2014,
+   "to": 2018,
+   "engines": [
+    {
+     "engine": "4.3L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "5.3L V8",
+     "cylinders": 8
+    },
+    {
+     "engine": "6.2L V8",
+     "cylinders": 8
+    }
+   ]
+  },
+  {
+   "make": "Chevrolet",
+   "model": "Silverado",
+   "from": 2019,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.7L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "4.3L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "5.3L V8",
+     "cylinders": 8
+    },
+    {
+     "engine": "6.2L V8",
+     "cylinders": 8
+    },
+    {
+     "engine": "3.0L I6 Duramax Diesel",
+     "cylinders": 6,
+     "fuel": "diesel"
+    }
+   ]
+  },
+  {
+   "make": "Chevrolet",
+   "model": "Malibu",
+   "from": 2008,
+   "to": 2012,
+   "engines": [
+    {
+     "engine": "2.4L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.6L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Chevrolet",
+   "model": "Malibu",
+   "from": 2013,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.5L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Chevrolet",
+   "model": "Equinox",
+   "from": 2010,
+   "to": 2017,
+   "engines": [
+    {
+     "engine": "2.4L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.0L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "3.6L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Chevrolet",
+   "model": "Equinox",
+   "from": 2018,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.5L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.6L I4 Diesel",
+     "cylinders": 4,
+     "fuel": "diesel"
+    }
+   ]
+  },
+  {
+   "make": "Nissan",
+   "model": "Altima",
+   "from": 2007,
+   "to": 2018,
+   "engines": [
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.5L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Nissan",
+   "model": "Altima",
+   "from": 2019,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 VC-Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Nissan",
+   "model": "Sentra",
+   "from": 2007,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.8L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.6L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Hyundai",
+   "model": "Elantra",
+   "from": 2007,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.8L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.6L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Hyundai",
+   "model": "Sonata",
+   "from": 2006,
+   "to": 2010,
+   "engines": [
+    {
+     "engine": "2.4L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.3L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Hyundai",
+   "model": "Sonata",
+   "from": 2011,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.4L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.6L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Subaru",
+   "model": "Outback",
+   "from": 2010,
+   "to": 2019,
+   "engines": [
+    {
+     "engine": "2.5L H4",
+     "cylinders": 4
+    },
+    {
+     "engine": "3.6L H6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Subaru",
+   "model": "Outback",
+   "from": 2020,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.5L H4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.4L H4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Subaru",
+   "model": "Forester",
+   "from": 2009,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.5L H4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L H4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Mazda",
+   "model": "Mazda3",
+   "from": 2010,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.0L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Mazda",
+   "model": "CX-5",
+   "from": 2013,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "2.0L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Volkswagen",
+   "model": "Golf",
+   "from": 2010,
+   "to": 2014,
+   "engines": [
+    {
+     "engine": "2.5L I5",
+     "cylinders": 5
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 TDI Diesel",
+     "cylinders": 4,
+     "fuel": "diesel"
+    }
+   ]
+  },
+  {
+   "make": "Volkswagen",
+   "model": "Golf",
+   "from": 2015,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.8L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.4L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Volkswagen",
+   "model": "Jetta",
+   "from": 2011,
+   "to": 2014,
+   "engines": [
+    {
+     "engine": "2.0L I4",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.5L I5",
+     "cylinders": 5
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 TDI Diesel",
+     "cylinders": 4,
+     "fuel": "diesel"
+    }
+   ]
+  },
+  {
+   "make": "Volkswagen",
+   "model": "Jetta",
+   "from": 2015,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "1.4L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.5L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "1.8L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    }
+   ]
+  },
+  {
+   "make": "Jeep",
+   "model": "Wrangler",
+   "from": 2007,
+   "to": 2011,
+   "engines": [
+    {
+     "engine": "3.8L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Jeep",
+   "model": "Wrangler",
+   "from": 2012,
+   "to": 2017,
+   "engines": [
+    {
+     "engine": "3.6L V6",
+     "cylinders": 6
+    }
+   ]
+  },
+  {
+   "make": "Jeep",
+   "model": "Wrangler",
+   "from": 2018,
+   "to": 2026,
+   "engines": [
+    {
+     "engine": "3.6L V6",
+     "cylinders": 6
+    },
+    {
+     "engine": "2.0L I4 Turbo",
+     "cylinders": 4
+    },
+    {
+     "engine": "6.4L V8",
+     "cylinders": 8
+    },
+    {
+     "engine": "3.0L V6 EcoDiesel",
+     "cylinders": 6,
+     "fuel": "diesel"
+    }
+   ]
+  }
+ ]
+}

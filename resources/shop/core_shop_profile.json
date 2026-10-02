@@ -4,5 +4,16 @@
  "name": "Cornerstone Automotive",
  "address": "2341 El Camino Real, Sunnyvale, California",
  "partsSupplier": "NAPA",
- "examples": ["Labor rate is $165 an hour", "We mark up parts 45%", "We never do transmission rebuilds", "Keep customer texts short and friendly"]
+ "partsPolicy": {
+  "rule": "availability_then_price",
+  "label": "Availability first, then lowest price",
+  "say": "When I pick parts, availability comes first: the part that can be here soonest, then the lowest list price among those.",
+  "why": "A part that is not here holds up the bay and the customer's car, so a few dollars of price never beats a part that is in stock."
+ },
+ "examples": [
+  "Labor rate is $165 an hour",
+  "We mark up parts 45%",
+  "We never do transmission rebuilds",
+  "Keep customer texts short and friendly"
+ ]
 }

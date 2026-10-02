@@ -4,7 +4,7 @@ const searchNapa = vi.fn();
 vi.mock('../src/core/partsApi.js', () => ({ searchNapa: (...a) => searchNapa(...a) }));
 
 import { S, newRO } from '../src/core/state.js';
-import { acceptItem, Cr } from '../src/core/harness.js';
+import { acceptItem, removeItem, swapPart, Cr } from '../src/core/harness.js';
 
 const row = (n, price) => ({ supplier: 'NAPA', lineCode: 'AAA', partNumber: n, description: n + ' desc', brand: 'NAPA', quality: '', listPrice: price, core: 0, perCarQty: 1, warranty: '' });
 const ok = parts => ({ ok: true, supplier: 'NAPA', priceBasis: 'NAPA catalog list price', retrievedAt: new Date().toISOString(), parts });
@@ -24,7 +24,7 @@ beforeEach(() => {
 describe('adding a repair prices its parts from NAPA', () => {
   it('looks up each part the repair lists and shows a card per match, none for no-match', async () => {
     Object.assign(S.ro, { year: '2018', make: 'Toyota', model: 'Corolla' });
-    searchNapa.mockImplementation(async ({ part }) => (/hardware/i.test(part) ? ok([]) : ok([row(part.slice(0, 5), 82.49)])));
+    searchNapa.mockImplementation(async ({ part }) => (/hardware/i.test(part) ? ok([]) : ok([row(part, 82.49)])));
     acceptItem('brk-front');
     await settle();
     expect(searchNapa).toHaveBeenCalledTimes(3);
@@ -33,9 +33,30 @@ describe('adding a repair prices its parts from NAPA', () => {
     expect(cards()).toHaveLength(2);
     expect(cards().every(c => c.type === 'parts' && !c.readOnly)).toBe(true);
     expect(cards()[1].qty).toBe(2); // "Front brake rotors (2)"
-    expect(said().join(' ')).toMatch(/No NAPA match for: Brake hardware kit/);
+    expect(said().join(' ')).toMatch(/Not on the RO, no NAPA price to use: Brake hardware kit/);
     expect(S.ro.accepted.has('brk-front')).toBe(true);
-    expect(S.ro.parts.added).toHaveLength(0); // nothing is added until the advisor presses Add to RO
+    // the shop decides: the pick for each priced part goes on the RO, tied to the line
+    expect(S.ro.parts.added.map(p => [p.label, p.qty, p.forLine])).toEqual([['Front brake pads (set)', 1, 'brk-front'], ['Front brake rotors (2)', 2, 'brk-front']]);
+  });
+  it('adds the shop pick (availability first), not the cheapest part', async () => {
+    Object.assign(S.ro, { year: '2018', make: 'Toyota', model: 'Corolla' });
+    searchNapa.mockImplementation(async ({ part }) => (/pads/i.test(part)
+      ? ok([{ ...row('CHEAP', 82.49), availability: { etaHours: 24, short: 'tomorrow' } }, { ...row('NOW', 94.6), availability: { etaHours: 0, short: 'in stock' } }])
+      : ok([])));
+    acceptItem('brk-front'); await settle();
+    expect(S.ro.parts.added.map(p => p.partNumber)).toEqual(['NOW']);
+    expect(said().join(' ')).toMatch(/shop picks .* AAA NOW, \$94\.60, in stock/);
+  });
+  it('removing the repair takes its parts off, and a swap keeps the part tied to the line', async () => {
+    Object.assign(S.ro, { year: '2018', make: 'Toyota', model: 'Corolla' });
+    searchNapa.mockImplementation(async ({ part }) => ok([row(part.slice(0, 5), 50), row(part.slice(0, 4) + 'Z', 60)]));
+    acceptItem('brk-front'); await settle();
+    const pads = S.ro.parts.added[0];
+    swapPart(pads.key, row('Front' + 'Z', 60), pads.label, 1, pads.fit);
+    expect(S.ro.parts.added.find(p => p.label === pads.label)).toMatchObject({ partNumber: 'FrontZ', forLine: 'brk-front' });
+    S.ro.parts.added.push({ key: 'MANUAL|1', label: 'Wiper blade', each: 20, qty: 1 }); // added by hand, no line
+    removeItem('brk-front');
+    expect(S.ro.parts.added.map(p => p.key)).toEqual(['MANUAL|1']);
   });
   it('does not look up again when the same repair is re-added', async () => {
     Object.assign(S.ro, { year: '2018', make: 'Toyota', model: 'Corolla' });

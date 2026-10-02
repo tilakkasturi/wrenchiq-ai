@@ -262,3 +262,11 @@ describe('resources reload in place (dev server / Tauri hot update)', () => {
     expect(heard).toEqual(['test resource']);
   });
 });
+
+describe('update_vehicle: year from the VIN', () => {
+  it('fills the model year from the 10th character when the model passes only the VIN', async () => {
+    const r = await TOOLS.update_vehicle({ make: 'Toyota', model: 'Sienna', vin: '5TDYZ3DC2JS901691', mileage: 60000 }, Cr);
+    expect(S.ro.year).toBe('2018');
+    expect(r.changed).toContain('year (from VIN)');
+  });
+});

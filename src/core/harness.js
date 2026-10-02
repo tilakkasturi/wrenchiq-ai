@@ -9,10 +9,12 @@ import { matchOne } from './match';
 import {
   money, ITEM, hrs, rate, miles, vehicleLine, vehicleOk, saveFact, parseFor,
   applicableQs, shownRepairs, maintState, extractVehicle, hasContent, findItem, explain,
-  partOn, qtyFromName, combinationsFor,
+  partOn, qtyFromName, combinationsFor, partQty,
 } from './logic';
 import { checkAdd, orphanedCombos, followOnsFor } from './laborRules';
 import { searchNapa } from './partsApi';
+import { shopPick } from './partPolicy';
+import { engineSpec } from './engineCylinders';
 import { runRoAgent } from './roAgent';
 import { useLineOps } from './roTools';
 import { DEMOS } from './demoScenarios';
@@ -127,6 +129,14 @@ handlers.ro = async function (text) {
     return work({ refresh: true, symptomAdded: t === '__refresh__concern' });
   }
   if (t === '__demo_next__') { demoStep(); return; }
+  if (t.indexOf('__engine__') === 0) {
+    R.engine = t.slice(10);
+    C.user(R.engine); // the chip is silent so its token is not shown; show the answer instead
+    C.event('Vehicle updated · engine ' + R.engine);
+    const said = cylSaid(resolveCylinderParts(C));
+    notify();
+    return C.agent('Got it, ' + R.engine + '.' + (said ? ' ' + said : ''));
+  }
   if (t.indexOf('__add__') === 0) { const res = placeLine(t.slice(7)); notify(); return afterPlace(res, C); }
   if (t.indexOf('__swap__') === 0) {
     const [from, to] = t.slice(8).split('|');
@@ -243,6 +253,7 @@ handlers.ro = async function (text) {
   if (memNote) C.event(memNote);
   notify();
   if (upd.length) C.event('Repair order updated · ' + upd.join(', '));
+  if (ex.changed.length) { const said = cylSaid(resolveCylinderParts(C)); if (said) await C.agent(said); }
   return work({ symptomAdded, answeredQ, beforeTop });
 };
 
@@ -295,7 +306,7 @@ async function work(o) {
 async function autoPriceParts(it, quiet = false) {
   const R = S.ro, C = Cr;
   const names = (it.parts || []).slice(0, 3);
-  if (!names.length || R.autoPriced.has(it.id)) return;
+  if (!names.length || R.autoPriced.has(it.id)) return { added: [], notPriced: [] };
   if (!vehicleOk()) {
     await C.agent('Once I have the year, make and model I can price the parts for ' + it.name.toLowerCase() + ' from NAPA.');
     return;
@@ -316,9 +327,86 @@ async function autoPriceParts(it, quiet = false) {
     await C.agent('NAPA has no match on a ' + fit + ' for the parts this repair lists (' + missing.join(', ') + '). You can search by another name from the Parts box.');
     return;
   }
-  if (!quiet) await C.agent('Here are NAPA options for the parts ' + it.name.toLowerCase() + ' needs on the ' + fit + ', lowest list price first. Press Add to RO on the ones you want.');
-  found.forEach(r => C.card({ type: 'parts', res: r.res, part: r.n, qty: qtyFromName(r.n), fit }));
-  if (missing.length) await C.agent('No NAPA match for: ' + missing.join(', ') + '.');
+  // The shop decides: put the shop pick for each part on the RO (availability first, then lowest
+  // price). A part already on the RO for the same need (e.g. a hardware kit shared with another
+  // brake job) is not added twice.
+  const added = [], unpriced = [], waiting = [], diesel = [];
+  let ask = null;
+  found.forEach(r => {
+    const pick = shopPick(r.res.parts), q = partQty(r.n, it);
+    if (!pick) { unpriced.push(r.n.replace(/\s*\(.*?\)\s*/g, ' ').trim()); return; }
+    if (R.parts.added.some(x => x.label === r.n || x.key === pick.lineCode + '|' + pick.partNumber)) return;
+    if (q.need === 'diesel') { diesel.push(r.n); return; }
+    // one per cylinder, and the engine is not known yet: hold the part until it is
+    if (q.qty === null) { R.needCyl.push({ forLine: it.id, part: r.n, res: r.res, fit }); waiting.push(r.n); ask = q; return; }
+    addPart(pick, r.n, q.qty, fit, it.id, q.perCyl);
+    added.push({ part: r.n, part_number: pick.lineCode + ' ' + pick.partNumber, qty: q.qty, each: pick.listPrice, availability: pick.availability ? pick.availability.short : undefined, per_cylinder: q.perCyl || undefined });
+  });
+  if (!quiet) {
+    if (added.length) {
+      await C.agent('I put the shop picks for ' + it.name.toLowerCase() + ' on the RO, by your rule (availability first, then lowest price): '
+        + added.map(a => a.part.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase() + ' ' + a.part_number + (a.qty > 1 ? ', ' + a.qty + ' x ' : ', ') + money(a.each) + (a.availability ? ', ' + a.availability : '')).join('; ')
+        + '. The other NAPA options are below if you want to swap one.');
+    } else {
+      await C.agent('Here are NAPA options for the parts ' + it.name.toLowerCase() + ' needs on the ' + fit + ', ordered by your rule: availability first, then lowest price.');
+    }
+  }
+  found.forEach(r => { const q = partQty(r.n, it); C.card({ type: 'parts', res: r.res, part: r.n, qty: q.qty, perCyl: q.perCyl, fit }); });
+  const none = missing.concat(unpriced);
+  if (none.length && !quiet) await C.agent('Not on the RO, no NAPA price to use: ' + none.join(', ') + '. Add it by hand if the job needs it.');
+  if (diesel.length && !quiet) await C.agent('No ' + diesel.map(n => n.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()).join(' or ') + ' on the RO: the ' + (S.ro.engine || 'engine') + ' is a diesel.');
+  if (waiting.length && !quiet) await askEngine(C, waiting, ask);
+  return { added, notPriced: none, waitingForEngine: waiting.length ? { parts: waiting, options: (ask.options || []).map(e => e.engine + ' (' + e.cylinders + ' cyl)') } : null, diesel };
+}
+
+/** Ask which engine, because spark plugs and coils are one per cylinder. Options come from the resource. */
+async function askEngine(C, parts, q) {
+  const names = parts.map(n => n.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()).join(' and ');
+  await C.agent('Which engine does the ' + vehicleLine() + ' have? I need the cylinder count for the ' + names + ', one per cylinder.',
+    q && q.options && q.options.length ? 'Why I ask: this vehicle came with engines of different cylinder counts.' : 'Why I ask: I do not have this vehicle in the engine list.');
+  const opts = q && q.options && q.options.length
+    ? q.options.map(e => ({ t: e.engine + ' (' + e.cylinders + ' cyl)', text: '__engine__' + e.engine, silent: true }))
+    : [4, 6, 8].map(n => ({ t: n + ' cylinders', text: '__engine__' + n + '-cyl', silent: true }));
+  C.chips(opts);
+}
+
+/**
+ * The engine changed or became known: set every per-cylinder part on the RO to one per cylinder
+ * (none on a diesel) and add the parts that were waiting for it.
+ */
+export function resolveCylinderParts(C = Cr) {
+  const R = S.ro, sp = engineSpec(), out = { cylinders: sp.cylinders, diesel: sp.diesel, updated: [], added: [], removed: [] };
+  if (!sp.cylinders && !sp.diesel) return out;
+  if (sp.diesel) {
+    R.parts.added.filter(x => x.perCyl).forEach(x => { out.removed.push(x.label); C.event('Removed from RO · ' + x.label + ' · diesel engine'); });
+    R.parts.added = R.parts.added.filter(x => !x.perCyl);
+    R.needCyl = [];
+    return out;
+  }
+  R.parts.added.forEach(x => {
+    if (x.perCyl && x.qty !== sp.cylinders) {
+      C.event('Quantity changed · ' + x.label + ' · ' + x.qty + ' to ' + sp.cylinders + ' (one per cylinder)');
+      x.qty = sp.cylinders; out.updated.push(x.label);
+    }
+  });
+  const pend = R.needCyl;
+  R.needCyl = [];
+  pend.forEach(p => {
+    if (!R.accepted.has(p.forLine)) return;
+    const pick = shopPick(p.res.parts);
+    if (!pick || partOn(pick.lineCode + '|' + pick.partNumber)) return;
+    addPart(pick, p.part, sp.cylinders, p.fit, p.forLine, true);
+    out.added.push({ part: p.part, part_number: pick.lineCode + ' ' + pick.partNumber, qty: sp.cylinders, each: pick.listPrice, availability: pick.availability ? pick.availability.short : undefined });
+  });
+  return out;
+}
+
+/** One sentence on what resolveCylinderParts did, or '' when nothing changed. */
+function cylSaid(o) {
+  if (o.diesel) return o.removed.length ? 'That is a diesel, so I took the ' + o.removed.join(', ').toLowerCase() + ' off the RO.' : '';
+  const bits = o.added.map(a => a.part.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase() + ' ' + a.part_number + ', ' + a.qty + ' x ' + money(a.each) + (a.availability ? ', ' + a.availability : ''))
+    .concat(o.updated.map(l => l.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase() + ' now ' + o.cylinders));
+  return bits.length ? o.cylinders + ' cylinders, one per cylinder: ' + bits.join('; ') + '.' : '';
 }
 
 /* ----- parts: look up the parts a repair suggests, priced from the NAPA catalog ----- */
@@ -341,9 +429,10 @@ async function runParts(part) {
     await C.agent('NAPA has no match for "' + part + '" on a ' + vehicleLine() + '. Try the part name in other words, like "brake pads" or "oxygen sensor".');
     return;
   }
-  const qty = qtyFromName(part);
-  await C.agent('Here is ' + part.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase() + ' for the ' + vehicleLine() + ' from NAPA, lowest list price first.' + (res.cached ? ' (Saved result, under 5 minutes old.)' : ''));
-  C.card({ type: 'parts', res, part, qty, fit: vehicleLine() });
+  const q = partQty(part), qty = q.qty;
+  await C.agent('Here is ' + part.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase() + ' for the ' + vehicleLine() + ' from NAPA, availability first, then lowest price. The shop pick is marked.' + (res.cached ? ' (Saved result, under 5 minutes old.)' : ''));
+  C.card({ type: 'parts', res, part, qty, perCyl: q.perCyl, fit: vehicleLine() });
+  if (q.need === 'ask' || q.need === 'unknown') await askEngine(C, [part], q);
 }
 export function searchPart(part) { Cr.send('find ' + part); }
 
@@ -354,7 +443,8 @@ function resetRO() {
 async function startRO() {
   S.ro.started = true;
   await Cr.agent('Tell me about the vehicle and what\'s wrong, in your own words. For example: "2018 Corolla, 61k miles, grinding when I brake". You can also paste a VIN.');
-  Cr.chips([{ t: 'Try a sample', text: '__sample__', silent: true }, { t: '2016 Civic, 88k, check engine light', text: '2016 Honda Civic 88,000 miles, check engine light is on and it idles rough' }]);
+  // one-click openers from resources/demo: each sends an advisor-style message, typos and all
+  Cr.chips((DEMOS.starters || []).map(x => ({ t: x.label, text: x.text })));
 }
 
 /* ================= click-through demos (resources/demo/core_demo_scenarios.json) ================= */
@@ -474,8 +564,9 @@ async function afterPlace(res, C, { quiet = false } = {}) {
     await C.agent(res.reason + (res.saves > 0 ? ' That keeps ' + hoursMoney(res.saves) + ' off the bill.' : ''));
   }
   const it = ITEM(res.added);
-  if (it.src === 'lg') await autoPriceParts(it, quiet);
+  const parts = it.src === 'lg' ? await autoPriceParts(it, quiet) : null;
   await offerAddOns(res.added, C, quiet);
+  return { parts };
 }
 
 /** Add-on labor for a job just added, each with a line the advisor can read to the customer. */
@@ -496,6 +587,11 @@ function takeOff(id, C) {
   const R = S.ro;
   if (!R.accepted.delete(id)) return;
   C.event('Removed from RO · ' + ITEM(id).name);
+  // the parts picked for this line go with it; a re-add picks them again
+  R.parts.added.filter(x => x.forLine === id).forEach(x => C.event('Removed from RO · ' + x.label + ' · NAPA ' + x.partNumber + ' · part for ' + ITEM(id).name));
+  R.parts.added = R.parts.added.filter(x => x.forLine !== id);
+  R.needCyl = R.needCyl.filter(x => x.forLine !== id);
+  R.autoPriced.delete(id);
   const left = orphanedCombos([...R.accepted]);
   if (!left.length) return;
   left.forEach(x => { R.accepted.delete(x); C.event('Removed from RO · ' + ITEM(x).name + ' · add-on to ' + ITEM(id).name); });
@@ -511,7 +607,7 @@ function placeMaint(ms) {
 const maintSaid = (r, ms) => 'Added ' + r.added.length + ' item' + (r.added.length === 1 ? '' : 's') + ' due at the ' + ms.at.toLocaleString() + ' mi service.'
   + (r.skipped.length ? ' Skipped ' + r.skipped.map(x => ITEM(x.id).name.toLowerCase() + ' (' + x.r.reason.replace(/\.$/, '') + ')').join('; ') + '.' : '');
 
-useLineOps({ place: placeLine, after: afterPlace });
+useLineOps({ place: placeLine, after: afterPlace, cylinders: resolveCylinderParts });
 // say so in both chats when a file under resources/ changed and was reloaded
 onResourceChange('harness.log', name => { Cr.event('Reloaded ' + name + ' from resources/'); Cp.event('Reloaded ' + name + ' from resources/'); });
 
@@ -535,7 +631,9 @@ export function saveVehicle(v) {
   R.year = v.year.replace(/\D/g, '').slice(0, 4); R.make = v.make.trim(); R.model = v.model.trim(); R.engine = v.engine.trim();
   R.mileage = v.mileage.replace(/\D/g, ''); R.vin = v.vin.toUpperCase().replace(/[^A-Z0-9]/g, '');
   Cr.event('Vehicle edited by you · ' + (vehicleLine() || 'cleared'));
+  const said = cylSaid(resolveCylinderParts(Cr));
   notify();
+  if (said) Cr.run(() => Cr.agent(said));
   Cr.run(() => handlers.ro('__refresh__'));
 }
 export function saveConcern(symptom) {
@@ -553,12 +651,20 @@ export function addManual(name, hours) {
   Cr.event('Added to RO · ' + name + ' · ' + hv.toFixed(1) + ' h · entered by you');
   notify();
 }
-export function addPart(row, label, qty, fit) {
+/** forLine: the repair line this part was picked for, so taking the line off takes its parts off too. */
+export function addPart(row, label, qty, fit, forLine, perCyl = false) {
   const key = row.lineCode + '|' + row.partNumber;
   if (partOn(key)) return;
-  S.ro.parts.added.push({ key, label, description: row.description, lineCode: row.lineCode, partNumber: row.partNumber, brand: row.brand, quality: row.quality, each: row.listPrice, qty, fit });
-  Cr.event('Added to RO · ' + label + ' · NAPA ' + row.lineCode + ' ' + row.partNumber + ' · ' + money(row.listPrice * qty));
+  S.ro.parts.added.push({ key, label, description: row.description, lineCode: row.lineCode, partNumber: row.partNumber, brand: row.brand, quality: row.quality, each: row.listPrice, qty, fit, forLine, perCyl, availability: row.availability });
+  Cr.event('Added to RO · ' + label + ' · NAPA ' + row.lineCode + ' ' + row.partNumber + ' · ' + money(row.listPrice * qty) + (row.availability ? ' · ' + row.availability.short : ''));
   notify();
+}
+/** Put another NAPA option on the RO in place of the part already there for the same need. */
+export function swapPart(oldKey, row, label, qty, fit) {
+  const R = S.ro, old = R.parts.added.find(x => x.key === oldKey);
+  R.parts.added = R.parts.added.filter(x => x.key !== oldKey);
+  if (old) Cr.event('Removed from RO · ' + old.label + ' · NAPA ' + old.partNumber + ' · swapped');
+  addPart(row, label, qty, fit, old && old.forLine, !!(old && old.perCyl));
 }
 export function removePart(key) {
   const x = S.ro.parts.added.find(y => y.key === key);

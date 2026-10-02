@@ -2,22 +2,24 @@
  * WrenchIQ — Core assistant parts lookup.
  *
  * POST /api/core/parts/search   { year, make, model, part, refresh? }
- *   -> { supplier, priceBasis, retrievedAt, fit, part, term, keywords, parts: [...] }
+ *   -> { supplier, priceBasis, availabilityBasis, retrievedAt, fit, part, term, keywords, parts: [...] }
  *
  * Read-only NAPA catalog lookup with fitment for the given vehicle. No cart, no ordering.
  * Errors carry a `code` (no_vehicle, fitment_not_found, napa_unavailable) so the UI can say
- * what happened. A price is never estimated.
+ * what happened. A price is never estimated. Each row carries SAMPLE availability (see
+ * services/partsAvailabilityService.js) for the shop's availability-first parts policy.
  */
 
 import { Router } from 'express';
 import { lookupNapaParts, NapaLookupError } from '../services/napaPartsService.js';
+import { withSampleAvailability } from '../services/partsAvailabilityService.js';
 
 const router = Router();
 
 router.post('/search', async (req, res) => {
   try {
     const { year, make, model, part, refresh } = req.body || {};
-    res.json(await lookupNapaParts({ year, make, model, part, refresh: !!refresh }));
+    res.json(withSampleAvailability(await lookupNapaParts({ year, make, model, part, refresh: !!refresh })));
   } catch (err) {
     if (err instanceof NapaLookupError) {
       const status = err.code === 'napa_unavailable' ? 502 : err.code === 'fitment_not_found' ? 404 : 400;

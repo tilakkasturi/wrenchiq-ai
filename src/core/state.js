@@ -12,6 +12,7 @@ export const newRO = () => ({
   shownMaint: '', started: false, custom: {}, hoursOv: {}, nextCustom: 1, rateNudged: false,
   parts: { added: [], lastQ: '' },
   autoPriced: new Set(), // repairs whose parts were already looked up when added
+  needCyl: [], // per-cylinder parts (spark plugs, coils) waiting for the engine: { forLine, part, res, fit }
   agent: { history: [], model: '', sessionId: newId() }, // sessionId groups this RO's agent steps in Langfuse
 });
 

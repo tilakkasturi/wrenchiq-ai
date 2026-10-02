@@ -1,0 +1,11 @@
+{
+ "_about": "SAMPLE parts availability for the Core demo. NAPA's catalog search has no stock data, so each NAPA part number is given one of these tiers (overrides first, otherwise a stable pick from the part number). Shown as sample availability, never as live stock. Replace with a real availability source (e.g. PartsTech) when one is connected.",
+ "basis": "Sample availability (demo data, not live stock)",
+ "tiers": [
+  { "tier": 0, "label": "In stock at NAPA Sunnyvale", "short": "in stock", "etaHours": 0, "weight": 5 },
+  { "tier": 1, "label": "NAPA hub, same-day delivery", "short": "today", "etaHours": 3, "weight": 3 },
+  { "tier": 2, "label": "NAPA distribution center, next day", "short": "tomorrow", "etaHours": 24, "weight": 2 },
+  { "tier": 3, "label": "Special order, 2 to 3 days", "short": "2-3 days", "etaHours": 60, "weight": 1 }
+ ],
+ "overrides": {}
+}

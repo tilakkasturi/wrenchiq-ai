@@ -7,6 +7,7 @@ import {
 import { stems, matchOne, scoreOpts, words, numIn } from './match';
 import { resolveSchedule, computeMaintenanceDue, getMaintItem } from './maintenanceSchedule';
 import { sameJob, addOnsFor } from './laborRules';
+import { engineSpec, perCylinder } from './engineCylinders';
 
 export const money = n => '$' + n.toFixed(2);
 export const ITEM = id => REPMAP[id] || getMaintItem(id) || S.ro.custom[id];
@@ -150,6 +151,9 @@ export function concern() {
   return 'Customer states: ' + t + (ans.length ? ' Reported: ' + ans.join('; ') + '.' : '');
 }
 
+/** Model year from a VIN's 10th character (2010-2026 cycle). */
+export const yearFromVin = vin => ({ A: 2010, B: 2011, C: 2012, D: 2013, E: 2014, F: 2015, G: 2016, H: 2017, J: 2018, K: 2019, L: 2020, M: 2021, N: 2022, P: 2023, R: 2024, S: 2025, T: 2026 })[String(vin).toUpperCase().charAt(9)] || null;
+
 export function extractVehicle(text) {
   const R = S.ro, ch = [];
   let w = ' ' + text + ' ', m, mi = null;
@@ -165,7 +169,7 @@ export function extractVehicle(text) {
   if ((m = w.match(/\b(\d\.\d)\s?l\b(?:\s?(i4|v6|v8|i3|i6|turbo|hybrid|diesel))?/i))) { R.engine = m[1] + 'L' + (m[2] ? ' ' + m[2].toUpperCase().replace('TURBO', 'Turbo').replace('HYBRID', 'Hybrid').replace('DIESEL', 'Diesel') : ''); ch.push('engine'); w = w.replace(m[0], ' '); }
   else if ((m = w.match(/\b(v6|v8|i4)\b/i))) { R.engine = m[1].toUpperCase(); ch.push('engine'); w = w.replace(m[0], ' '); }
   if (R.vin && !R.year && ch.indexOf('VIN') >= 0) {
-    const y = { A: 2010, B: 2011, C: 2012, D: 2013, E: 2014, F: 2015, G: 2016, H: 2017, J: 2018, K: 2019, L: 2020, M: 2021, N: 2022, P: 2023, R: 2024, S: 2025, T: 2026 }[R.vin.charAt(9)];
+    const y = yearFromVin(R.vin);
     if (y) { R.year = String(y); ch.push('year (from VIN)'); }
   }
   let rest = w.replace(/\s+/g, ' ').replace(/^[\s,.;:\-–]+|[\s,.;:\-–]+$/g, '');
@@ -244,6 +248,19 @@ export const partOn = key => S.ro.parts.added.some(x => x.key === key);
 
 /** Quantity for a suggested part name: "(2)" in the name, else 1. */
 export const qtyFromName = name => { const m = String(name).match(/\((\d+)\)/); return m ? parseInt(m[1], 10) : 1; };
+
+/**
+ * Quantity for a part on a line. Spark plugs and ignition coils on replace-all jobs are one per
+ * cylinder (engineCylinders.js); qty is null while the engine is unknown (need: 'ask' with the
+ * vehicle's engines as options, or 'unknown') and 0 on a diesel (need: 'diesel').
+ */
+export function partQty(name, line) {
+  if (!perCylinder(name, line)) return { qty: qtyFromName(name), perCyl: false };
+  const sp = engineSpec();
+  if (sp.diesel) return { qty: 0, perCyl: true, need: 'diesel' };
+  if (!sp.cylinders) return { qty: null, perCyl: true, need: sp.source, options: sp.options };
+  return { qty: sp.cylinders, perCyl: true };
+}
 
 export function roSummary() {
   const r = S.ro, rt = rate(), lines = [...r.accepted].map(ITEM).filter(Boolean);

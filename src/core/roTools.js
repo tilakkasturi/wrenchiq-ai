@@ -3,11 +3,13 @@
 // same deterministic code the scripted flow uses. The model decides which to call; these decide
 // what is true. Only add_repair_line changes the order's lines, and it goes through the same
 // labor-guide guardrails (laborRules.js) as the Add buttons.
+import { policy, rankParts, shopPick, pickReason } from './partPolicy';
+import { engineSpec } from './engineCylinders';
 import { S, notify } from './state';
 import { QB, QBY, MAKES, MODELS, MAKE_RX, MODEL_RX, REPMAP } from './data';
 import {
-  miles, vehicleLine, vehicleOk, computeRepairs, shownRepairs, applicableQs, maintState, conf, qtyFromName,
-  ITEM, hrs, rankItems, combinationsFor,
+  miles, vehicleLine, vehicleOk, computeRepairs, shownRepairs, applicableQs, maintState, conf, qtyFromName, partQty,
+  ITEM, hrs, rankItems, combinationsFor, yearFromVin,
 } from './logic';
 import { getMaintItem } from './maintenanceSchedule';
 import { searchNapa } from './partsApi';
@@ -32,7 +34,7 @@ export const TOOL_SCHEMAS = [
           year: { type: 'integer', description: 'Model year, e.g. 2018' },
           make: { type: 'string', description: 'e.g. Toyota' },
           model: { type: 'string', description: 'e.g. Corolla' },
-          engine: { type: 'string', description: 'e.g. 1.8L' },
+          engine: { type: 'string', description: 'e.g. "2.5L I4" or "3.5L V6". Include the layout (I4, V6, V8) when known: spark plugs and ignition coils are one per cylinder.' },
           mileage: { type: 'integer', description: 'Odometer in miles, e.g. 61000 for "61k"' },
           vin: { type: 'string', description: '17-character VIN' },
         },
@@ -143,10 +145,22 @@ export const TOOLS = {
     }
     if (args.vin) {
       const v = String(args.vin).toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (v.length === 17) { R.vin = v; changed.push('vin'); } else return { error: 'a VIN has 17 characters' };
+      if (v.length === 17) {
+        R.vin = v; changed.push('vin');
+        // the model often passes the VIN without the year; the VIN carries it
+        if (!R.year && yearFromVin(v)) { R.year = String(yearFromVin(v)); changed.push('year (from VIN)'); }
+      } else return { error: 'a VIN has 17 characters' };
     }
-    if (changed.length) { notify(); C.event('Repair order updated · vehicle'); }
-    return { vehicle: vehicleLine() || null, mileage: miles() || null, vehicle_complete: vehicleOk(), changed };
+    let cyl;
+    if (changed.length) { C.event('Repair order updated · vehicle'); cyl = LINES && LINES.cylinders ? LINES.cylinders(C) : null; notify(); }
+    const sp = engineSpec();
+    return {
+      vehicle: vehicleLine() || null, mileage: miles() || null, vehicle_complete: vehicleOk(), changed,
+      cylinders: sp.cylinders || undefined, diesel: sp.diesel || undefined,
+      parts_added: cyl && cyl.added.length ? cyl.added : undefined,
+      parts_qty_changed: cyl && cyl.updated.length ? cyl.updated.map(l => l + ' now ' + cyl.cylinders) : undefined,
+      parts_removed: cyl && cyl.removed.length ? cyl.removed : undefined,
+    };
   },
 
   async set_concern(args, C) {
@@ -219,7 +233,7 @@ export const TOOLS = {
     }
     const res = LINES.place(id);
     notify();
-    await LINES.after(res, C, { quiet: true });
+    const after = await LINES.after(res, C, { quiet: true });
     const line = res.added && ITEM(res.added);
     // an add-on picked directly is still cheaper than the same job on its own: say so
     if (res.action === 'add' && line && line.laborType === 'COMBINATION') {
@@ -234,6 +248,10 @@ export const TOOLS = {
       removed: res.remove ? res.remove.map(x => (ITEM(x) ? ITEM(x).name : x)) : undefined,
       order_now: [...S.ro.accepted].map(x => ITEM(x)).filter(Boolean).map(it => it.name + ' (' + hrs(it).toFixed(1) + ' h)'),
       add_ons_offered: line ? combinationsFor(line.id).map(c => ({ id: c, name: ITEM(c).name, hours: ITEM(c).hours })) : undefined,
+      parts_added: after?.parts?.added.length ? after.parts.added : undefined,
+      parts_not_priced: after?.parts?.notPriced.length ? after.parts.notPriced : undefined,
+      parts_waiting_for_engine: after?.parts?.waitingForEngine || undefined,
+      parts_not_needed_diesel: after?.parts?.diesel?.length ? after.parts.diesel : undefined,
     };
   },
 
@@ -245,10 +263,15 @@ export const TOOLS = {
     const res = await searchNapa({ year: R.year, make: R.make, model: R.model, part });
     if (!res.ok) return { error: res.code, message: res.message };
     R.parts.lastQ = part;
-    if (res.parts.length) C.card({ type: 'parts', res, part, qty: qtyFromName(part), fit: vehicleLine() });
+    const q = partQty(part);
+    if (res.parts.length) C.card({ type: 'parts', res, part, qty: q.qty, perCyl: q.perCyl, fit: vehicleLine() });
+    const pick = shopPick(res.parts);
     return {
-      part, fits: vehicleLine(), price_basis: res.priceBasis,
-      matches: res.parts.map(p => ({ brand: p.brand || p.lineCode, part_number: p.lineCode + ' ' + p.partNumber, description: p.description, list_price_usd: p.listPrice ?? 'not in the NAPA catalog data', quality: p.quality || undefined })),
+      part, fits: vehicleLine(), price_basis: res.priceBasis, availability_basis: res.availabilityBasis,
+      shop_rule: policy().label,
+      quantity: q.perCyl ? (q.qty === null ? 'one per cylinder; engine not known yet, ask which engine: ' + (q.options || []).map(e => e.engine + ' (' + e.cylinders + ' cyl)').join(' | ') : q.qty === 0 ? 'none: diesel engine' : q.qty + ' (one per cylinder)') : q.qty,
+      shop_pick: pick ? { part_number: pick.lineCode + ' ' + pick.partNumber, why: pickReason(res.parts, pick) } : undefined,
+      matches: rankParts(res.parts).map(p => ({ brand: p.brand || p.lineCode, part_number: p.lineCode + ' ' + p.partNumber, description: p.description, list_price_usd: p.listPrice ?? 'not in the NAPA catalog data', availability: p.availability?.label, quality: p.quality || undefined })),
       note: res.parts.length ? undefined : 'NAPA has no matching part for this vehicle.',
     };
   },

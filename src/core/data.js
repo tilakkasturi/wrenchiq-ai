@@ -12,6 +12,7 @@ export const SHOP = refillObject(live.SHOP, SHOP_PROFILE);
 export const FIXED = refillArray(live.FIXED, [
   { key: 'shop.identity', label: 'Shop', value: SHOP.name + ', ' + SHOP.address, say: 'Your shop: ' + SHOP.name + ', ' + SHOP.address + '.' },
   { key: 'parts.supplier', label: 'Parts supplier', value: SHOP.partsSupplier, say: 'Your parts supplier is set to ' + SHOP.partsSupplier + '.', why: 'I look up parts and list prices in the ' + SHOP.partsSupplier + ' catalog for the vehicle on the repair order.' },
+  ...(SHOP.partsPolicy ? [{ key: 'parts.policy', label: 'Parts choice', value: SHOP.partsPolicy.label, say: SHOP.partsPolicy.say, why: SHOP.partsPolicy.why }] : []),
 ]);
 export const FIXEDMAP = refillObject(live.FIXEDMAP, Object.fromEntries(FIXED.map(f => [f.key, f])));
 
