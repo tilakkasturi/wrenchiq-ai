@@ -50,11 +50,22 @@ describe('langfuseTracing', () => {
     warnSpy.mockRestore();
   });
 
+  it('withLangfuseTrace runs fn untraced when LANGFUSE_ENABLED is unset', async () => {
+    vi.resetModules();
+    setEnv({});
+    const { withLangfuseTrace } = await import('../server/services/langfuseTracing.js');
+
+    const fn = vi.fn(async () => 'done');
+    await expect(withLangfuseTrace({ tags: ['core-ro-agent'], sessionId: 's' }, fn)).resolves.toBe('done');
+    expect(fn).toHaveBeenCalledWith(null);
+  });
+
   describe('when enabled with both keys set', () => {
     let LangfuseSpanProcessor;
     let NodeTracerProvider;
     let registerSpy;
     let CallbackHandler;
+    let propagateAttributes;
 
     beforeEach(() => {
       vi.resetModules();
@@ -77,6 +88,9 @@ describe('langfuseTracing', () => {
 
       CallbackHandler = vi.fn(function CallbackHandler(params) { this.params = params; });
       vi.doMock('@langfuse/langchain', () => ({ CallbackHandler }));
+
+      propagateAttributes = vi.fn((_params, fn) => fn());
+      vi.doMock('@langfuse/tracing', () => ({ propagateAttributes }));
     });
 
     it('registers a TracerProvider with a LangfuseSpanProcessor built from config, and returns a CallbackHandler', async () => {
@@ -93,6 +107,37 @@ describe('langfuseTracing', () => {
       expect(registerSpy).toHaveBeenCalledTimes(1);
       expect(CallbackHandler).toHaveBeenCalledWith({ tags: ['ro-advisor'] });
       expect(handler).toBeInstanceOf(CallbackHandler);
+    });
+
+    it('withLangfuseTrace propagates string trace attributes and hands fn the handler', async () => {
+      const { withLangfuseTrace } = await import('../server/services/langfuseTracing.js');
+
+      const fn = vi.fn(async (callbacks) => callbacks);
+      const callbacks = await withLangfuseTrace({
+        tags: ['core-ro-agent'], sessionId: 'ro-1', traceName: 'step',
+        metadata: { turnId: 't-1', step: 2, vehicle: '', missing: undefined },
+      }, fn);
+
+      expect(propagateAttributes).toHaveBeenCalledWith(
+        { tags: ['core-ro-agent'], sessionId: 'ro-1', traceName: 'step', metadata: { turnId: 't-1', step: '2' } },
+        expect.any(Function),
+      );
+      expect(callbacks).toHaveLength(1);
+      expect(callbacks[0]).toBeInstanceOf(CallbackHandler);
+    });
+
+    it('withLangfuseTrace runs fn untraced, once, when tracing setup throws', async () => {
+      CallbackHandler.mockImplementation(() => { throw new Error('boom'); });
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { withLangfuseTrace } = await import('../server/services/langfuseTracing.js');
+
+      const fn = vi.fn(async () => 'done');
+      await expect(withLangfuseTrace({ tags: ['x'] }, fn)).resolves.toBe('done');
+
+      expect(fn).toHaveBeenCalledTimes(1);
+      expect(fn).toHaveBeenCalledWith(null);
+      expect(propagateAttributes).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
     });
 
     it('registers the TracerProvider only once across repeated calls', async () => {

@@ -3,10 +3,11 @@
 // same deterministic code the scripted flow uses. The model decides which to call; these decide
 // what is true. None of them adds a line to the repair order: the advisor does that from a card.
 import { S, notify } from './state';
-import { QB, QBY, MAKES, MODELS, MAKE_RX, MODEL_RX, REPMAP, MAINTMAP } from './data';
+import { QB, QBY, MAKES, MODELS, MAKE_RX, MODEL_RX, REPMAP } from './data';
 import {
   miles, vehicleLine, vehicleOk, computeRepairs, shownRepairs, applicableQs, maintState, conf, qtyFromName,
 } from './logic';
+import { getMaintItem } from './maintenanceSchedule';
 import { searchNapa } from './partsApi';
 
 const questionCatalog = QB.map(q => `${q.id}: ${q.opts.map(o => o.l).join(' | ')}`).join('; ');
@@ -95,8 +96,9 @@ function canonVehicle(a) {
 }
 
 const maintSummary = ms => (ms ? {
-  due_now: ms.due, interval_mi: ms.at, note: ms.note,
-  items: ms.ids.map(id => ({ id, name: MAINTMAP[id].name, hours: MAINTMAP[id].hours, schedule_row: MAINTMAP[id].ref })),
+  due_now: ms.due, status: ms.status, interval_mi: ms.at, note: ms.note,
+  schedule: { source: ms.source, match: ms.match, vin_mask: ms.vinMask },
+  items: ms.ids.map(id => { const it = getMaintItem(id); return { id, name: it.name, hours: it.hours, schedule_row: it.ref }; }),
 } : null);
 
 export const TOOLS = {

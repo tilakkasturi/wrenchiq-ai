@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC DATA - not from a labor-guide provider. Hours are estimates for a 2018 Toyota Sienna 3.5L V6 (5TDYZ3DC2JS901691) and are used for every vehicle in the demo. Same schema as the real exports. Do not quote to customers. System: charging_starting -->
+<labor_list>
+  <labor>
+    <Note>TEST BATTERY &amp; CHARGING SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BATTERY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE BATTERY</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BATTERY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - CLEAN BATTERY TERMINALS &amp; CABLES</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BATTERY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE ALTERNATOR</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.6</LaborHours>
+    <Warranty>1.3</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>ALTERNATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE DRIVE BELT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>ALTERNATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE DRIVE BELT TENSIONER</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>ALTERNATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE STARTER MOTOR - Includes R&amp;I intake plenum.</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.6</LaborHours>
+    <Warranty>2.2</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>STARTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE INTAKE PLENUM GASKET</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>STARTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE DRIVE BELT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DRIVE BELT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE DRIVE BELT TENSIONER - Includes R&amp;I drive belt.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DRIVE BELT TENSIONER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE IDLER PULLEY - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>DRIVE BELT TENSIONER</LaborComponent>
+  </labor>
+</labor_list>

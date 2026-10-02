@@ -1,5 +1,9 @@
 /**
- * WrenchIQ — Langfuse tracing bootstrap (RO Advisor, LangChain runtime only)
+ * WrenchIQ — Langfuse tracing bootstrap (LangChain runtime only)
+ *
+ * Two callers: the RO Advisor's createAgent tool loop (roAdvisorLangChainAgent.js,
+ * via buildLangfuseHandler) and the Core repair order agent's single model call
+ * per step (coreAgentService.js, via withLangfuseTrace).
  *
  * Langfuse's current JS SDK is OpenTelemetry-based: a `LangfuseSpanProcessor`
  * has to be registered on a global OTEL TracerProvider exactly once per
@@ -9,7 +13,7 @@
  * credentials directly on a per-call handler. This module is the one place
  * that owns that one-time registration, so callers just ask for a handler.
  *
- * The three Langfuse/OTEL packages are dynamically imported so a process that
+ * The Langfuse/OTEL packages are dynamically imported so a process that
  * never sets LANGFUSE_ENABLED never loads them.
  */
 import { LANGFUSE_ENABLED, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_BASE_URL } from '../config.js';
@@ -55,4 +59,52 @@ export async function buildLangfuseHandler({ tags } = {}) {
   await ensureTracerProviderRegistered();
   const { CallbackHandler } = await import('@langfuse/langchain');
   return new CallbackHandler({ tags });
+}
+
+/**
+ * Run `fn` traced, with trace-level attributes that stick.
+ *
+ * CallbackHandler only applies its tags/sessionId/traceMetadata when the root
+ * run is a chain (handleChainStart with no parent) — true for a createAgent
+ * graph, but not for a bare chat-model invoke, whose root is a generation, so
+ * those attributes would be silently dropped. propagateAttributes (what the
+ * handler itself uses for chain roots) sets them on the active OTEL context
+ * instead, so every span started inside `fn` carries them.
+ *
+ * @param {object} attrs
+ * @param {string[]} [attrs.tags]
+ * @param {string}   [attrs.sessionId]  Groups traces into one Langfuse session.
+ * @param {string}   [attrs.traceName]
+ * @param {object}   [attrs.metadata]   Values are stringified (Langfuse wants strings).
+ * @param {(callbacks: object[]|null) => Promise<T>} fn
+ *   Receives the callbacks to hand to LangChain, or null to run untraced.
+ * @returns {Promise<T>}
+ * @template T
+ */
+export async function withLangfuseTrace({ tags, sessionId, traceName, metadata } = {}, fn) {
+  let handler = null;
+  let propagateAttributes = null;
+  try {
+    handler = await buildLangfuseHandler({ tags });
+    if (handler) ({ propagateAttributes } = await import('@langfuse/tracing'));
+  } catch (err) {
+    console.warn('[langfuseTracing] tracing unavailable, running untraced:', err.message);
+    handler = null;
+  }
+  if (!handler || !propagateAttributes) return fn(null);
+
+  const stringMetadata = metadata && Object.fromEntries(
+    Object.entries(metadata)
+      .filter(([, v]) => v !== undefined && v !== null && v !== '')
+      .map(([k, v]) => [k, typeof v === 'string' ? v : JSON.stringify(v)]),
+  );
+  return propagateAttributes(
+    {
+      tags,
+      ...(sessionId ? { sessionId } : {}),
+      ...(traceName ? { traceName } : {}),
+      ...(stringMetadata ? { metadata: stringMetadata } : {}),
+    },
+    () => fn([handler]),
+  );
 }

@@ -115,11 +115,12 @@ export const API_PORT =
 export const RO_NER_BASE_URL =
   process.env.RO_NER_BASE_URL || 'http://localhost:8090';
 
-// ── Langfuse (RO Advisor tracing — LangChain runtime only) ─────────────────────
-// Traces the RO Advisor's createAgent tool loop (roAdvisorLangChainAgent.js /
-// langfuseTracing.js), which only runs under LLM_ENGINE=langchain (the
-// default) — the hand-rolled LLM_ENGINE=loop runtime and the single-pass
-// fallback are unaffected. Opt-in and off by default: LANGFUSE_ENABLED must be
+// ── Langfuse (RO Advisor + Core agent tracing — LangChain runtime only) ────────
+// Traces the RO Advisor's createAgent tool loop (roAdvisorLangChainAgent.js)
+// and each Core repair order agent step (coreAgentService.js, tag
+// core-ro-agent, one Langfuse session per repair order), both through
+// langfuseTracing.js and only under LLM_ENGINE=langchain (the default) — the
+// LLM_ENGINE=loop runtime and the single-pass fallback are unaffected. Opt-in and off by default: LANGFUSE_ENABLED must be
 // explicitly truthy AND both keys must be set, otherwise the run proceeds
 // untraced rather than failing (AE-1319).
 const langfuseFlagRaw = process.env.LANGFUSE_ENABLED;

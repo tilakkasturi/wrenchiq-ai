@@ -5,6 +5,11 @@
  * concern, labor guide ranking, maintenance, NAPA lookup) against it; this file holds what must
  * stay on the server: the system prompt, the worked examples and the tool allowlist, and the call
  * to the shared LLM gateway.
+ *
+ * Tracing: with LANGFUSE_ENABLED each step is one Langfuse trace (tag core-ro-agent). The browser
+ * sends a per-repair-order sessionId and a per-advisor-message turnId, so a whole conversation
+ * reads as one Langfuse session and the steps of one turn share a turnId. LangChain engine only,
+ * like the RO Advisor; a tracing failure never fails the step.
  */
 
 /** Gemma can emit its thinking-channel markers in the visible text; drop them. */
@@ -25,6 +30,7 @@ How you work:
 - For parts and prices call search_napa_parts. It uses the vehicle already on the repair order. NAPA prices are catalog list prices, not the shop's cost. Some parts have no catalog price: say so, never fill one in.
 - If search_napa_parts returns an error saying the catalog does not list the vehicle, say that about the vehicle. Do not say the part could not be found, and suggest checking the year, make and model on the repair order.
 - If the advisor asks a general question (is it safe to drive, what does this mean), answer plainly in a sentence or two, without tools if none are needed. Do not promise a diagnosis; the technician confirms.
+- Add-on labor (listed under "Add-on labor" in the repair order) is work that is cheaper because a job on the order already opens up that area. When the advisor asks what to tell the customer about one, give the "Say" line for it nearly word for word. Never call an "Only if needed" item necessary, never quote a saving or price the line does not state, and never pressure: the customer can say no.
 - Keep replies to two to four short sentences. Plain words, no markdown headings, no long lists.
 
 Reply format. Write the reply text. If you asked a question that has short answers, add these two lines at the very end:
@@ -58,6 +64,7 @@ export function buildRoPrompt(context = {}) {
   const veh = [v.year, v.make, v.model, v.engine].filter(Boolean).join(' ');
   const lines = (context.lines || []).map(l => `- ${l.name} (${l.hours} h, ${l.source})`).join('\n') || '(none)';
   const parts = (context.parts || []).map(p => `- ${p.label}: ${p.partNumber} x${p.qty}`).join('\n') || '(none)';
+  const addOns = (Array.isArray(context.addOns) ? context.addOns : []).slice(0, 8).map(a => `- ${clip(a.name, 120)} with ${clip(a.for, 120)} (+${clip(a.hours, 6)} h, ${clip(a.kind, 30)}). Say: ${clip(a.say, 600)}`).join('\n') || '(none)';
   const answers = Object.entries(context.answers || {}).map(([k, a]) => `${k}=${a}`).join(', ') || '(none)';
   return `${RO_ROLE}
 
@@ -69,7 +76,9 @@ Lines on the order:
 ${lines}
 Parts on the order:
 ${parts}
-Shop labor rate: ${context.laborRate ? '$' + context.laborRate + '/h' : 'not set'}`;
+Shop labor rate: ${context.laborRate ? '$' + context.laborRate + '/h' : 'not set'}
+Add-on labor:
+${addOns}`;
 }
 
 const clip = (s, n) => String(s ?? '').slice(0, n);
@@ -89,21 +98,34 @@ function sanitizeMessages(messages) {
 }
 
 /**
- * @param {{messages: object[], context?: object, tools: object[]}} input
- * @param {{llm?: Function}} [deps]
+ * @param {{messages: object[], context?: object, tools: object[], trace?: {sessionId?: string, turnId?: string, step?: number}}} input
+ * @param {{llm?: Function, traced?: Function}} [deps]
  */
-export async function runCoreStep({ messages, context, tools }, deps = {}) {
+export async function runCoreStep({ messages, context, tools, trace }, deps = {}) {
   const llm = deps.llm || (await import('./azureOpenAI.js')).callAzureOpenAI;
   const allowed = (Array.isArray(tools) ? tools : []).filter(t => RO_TOOL_NAMES.includes(t?.function?.name));
+  const safeMessages = sanitizeMessages(messages);
+  const traced = deps.traced || (await import('./langfuseTracing.js')).withLangfuseTrace;
+  const t = trace && typeof trace === 'object' ? trace : {}, v = context?.vehicle || {};
   const t0 = Date.now();
-  const data = await llm({
+  const data = await traced({
+    tags: ['core-ro-agent'],
+    traceName: 'core-ro-agent-step',
+    sessionId: t.sessionId ? clip(t.sessionId, 80) : undefined,
+    metadata: {
+      turnId: t.turnId ? clip(t.turnId, 80) : undefined,
+      step: Number.isInteger(t.step) ? t.step : undefined,
+      vehicle: [v.year, v.make, v.model].filter(Boolean).join(' '),
+    },
+  }, callbacks => llm({
     system: buildRoPrompt(context),
-    messages: sanitizeMessages(messages),
+    messages: safeMessages,
     ...(allowed.length ? { tools: allowed } : {}),
+    ...(callbacks ? { callbacks } : {}),
     max_tokens: 700,
     temperature: 0.2,
     _route: 'core-ro-agent',
-  });
+  }));
   const choice = data.choices?.[0], msg = choice?.message || {};
   return {
     message: { content: cleanText(msg.content), tool_calls: msg.tool_calls || [] },

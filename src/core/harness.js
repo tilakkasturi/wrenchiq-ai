@@ -9,8 +9,9 @@ import { matchOne } from './match';
 import {
   money, ITEM, hrs, rate, miles, vehicleLine, vehicleOk, saveFact, nextProfileQ, parseFor,
   applicableQs, shownRepairs, maintState, extractVehicle, hasContent, findItem, explain,
-  partOn, qtyFromName,
+  partOn, qtyFromName, combinationsFor,
 } from './logic';
+import { checkAdd, orphanedCombos, followOnsFor } from './laborRules';
 import { searchNapa } from './partsApi';
 import { runRoAgent } from './roAgent';
 
@@ -123,6 +124,13 @@ handlers.ro = async function (text) {
     }
     return work({ refresh: true, symptomAdded: t === '__refresh__concern' });
   }
+  if (t.indexOf('__add__') === 0) { const res = placeLine(t.slice(7)); notify(); return afterPlace(res, C); }
+  if (t.indexOf('__swap__') === 0) {
+    const [from, to] = t.slice(8).split('|');
+    takeOff(from, C);
+    const res = placeLine(to); notify();
+    return afterPlace(res, C);
+  }
   if (/^(new (job|ro|repair order|vehicle|customer)|start over|reset)\b/i.test(t)) { resetRO(); return startRO(); }
   if (/^(thanks|thank you|thx)\b/i.test(t)) return C.agent('Anytime.');
   if (/^(help|\?)$/i.test(t)) return C.agent('Tell me the vehicle and the symptom in one sentence, answer my follow-ups, and say things like "add the front brakes", "remove the alignment", "why the top pick" or "what\'s the total".');
@@ -131,23 +139,21 @@ handlers.ro = async function (text) {
   const cmd = S.useAgent;
   if ((cmd ? /^\s*(?:please\s+)?(?:remove|delete|take off|drop)\b/i : REM_RX).test(t) && !/\b(noise|leak)\b/i.test(t)) {
     const id = findItem(t, 'accepted');
-    if (id) { R.accepted.delete(id); C.event('Removed from RO · ' + ITEM(id).name); notify(); return C.agent('Removed ' + ITEM(id).name + '.'); }
+    if (id) { const nm = ITEM(id).name; takeOff(id, C); notify(); return C.agent('Removed ' + nm + '.'); }
     return C.agent(R.accepted.size ? 'Which line? Say part of its name.' : 'There is nothing on the repair order yet.');
   }
   if ((cmd ? /^\s*(?:please\s+)?(?:add|include)\b/i : ADD_RX).test(t) && !/^\s*add\s*$/i.test(t)) {
     if (/\b(all|every|both)\b/i.test(t) && /\b(maint|due|schedule|service)/i.test(t)) {
       const ms = maintState();
-      if (ms && ms.due) { ms.ids.forEach(i => R.accepted.add(i)); C.event('Added ' + ms.ids.length + ' maintenance items to RO'); notify(); return C.agent('Added all ' + ms.ids.length + ' items due at the ' + ms.at.toLocaleString() + ' mi service.'); }
+      if (ms && ms.due) { const r = placeMaint(ms); notify(); return C.agent(maintSaid(r, ms)); }
       return C.agent('Nothing is due on the schedule yet. I need the mileage first.');
     }
     const id = findItem(t, 'suggest');
     if (id) {
-      R.accepted.add(id);
-      const it = ITEM(id), rt = rate();
-      C.event('Added to RO · ' + it.name + ' · ' + it.hours.toFixed(1) + ' h' + (rt ? ' · ' + money(hrs(it) * rt) : ''));
+      const res = placeLine(id);
       notify();
-      await C.agent('Added. ' + (rt ? '' : 'Tell me your labor rate and I will price it.'));
-      return autoPriceParts(it);
+      if (res.action === 'add') await C.agent('Added. ' + (rate() ? '' : 'Tell me your labor rate and I will price it.'));
+      return afterPlace(res, C);
     }
     const top = shownRepairs().slice(0, 3);
     if (!top.length) return C.agent("I don't have any suggestions to add yet. Describe the symptom first.");
@@ -379,22 +385,100 @@ export function setUseAgent(on) {
 }
 export function newJob() { resetRO(); Cr.run(startRO); }
 
-export function acceptItem(id) {
+/* ----- labor guardrails: every line goes onto the order through checkAdd (laborRules.js) ----- */
+function logAdd(id, extra = '') {
   const it = ITEM(id), rt = rate();
-  S.ro.accepted.add(id);
-  Cr.event('Added to RO · ' + it.name + ' · ' + it.hours.toFixed(1) + ' h' + (rt ? ' · ' + money(hrs(it) * rt) : ''));
-  notify();
-  if (it.src === 'lg') Cr.run(() => autoPriceParts(it));
+  Cr.event('Added to RO · ' + it.name + ' · ' + hrs(it).toFixed(1) + ' h' + (rt ? ' · ' + money(hrs(it) * rt) : '') + extra);
 }
-export function removeItem(id) { S.ro.accepted.delete(id); Cr.event('Removed from RO · ' + ITEM(id).name); notify(); }
+
+/**
+ * Put a line on the order, or not, by the labor-guide rules: never the same job twice, never labor a
+ * line already includes, add-on labor only next to its job, both sides as one job, and a standalone
+ * job swapped for its cheaper add-on version when the related job is on the order. Changes the
+ * order right away; afterPlace() says what happened.
+ */
+function placeLine(id) {
+  if (!ITEM(id)) return { action: 'block', kind: 'unknown', reason: 'I could not find that line.' };
+  const R = S.ro, d = checkAdd(id, [...R.accepted]);
+  if (d.action === 'block') { Cr.event('Not added · ' + ITEM(id).name + ' · ' + d.reason); return { ...d, want: id }; }
+  if (d.action === 'substitute') { R.accepted.add(d.id); logAdd(d.id, ' · add-on to ' + ITEM(d.parent).name); return { ...d, added: d.id }; }
+  if (d.action === 'replace') {
+    d.remove.forEach(x => R.accepted.delete(x));
+    R.accepted.add(d.id);
+    Cr.event('Replaced ' + d.remove.map(x => ITEM(x).name).join(', ') + ' with ' + ITEM(d.id).name + (d.saves > 0 ? ' · ' + d.saves.toFixed(1) + ' h less' : ''));
+    return { ...d, added: d.id };
+  }
+  R.accepted.add(id);
+  logAdd(id);
+  return { action: 'add', added: id };
+}
+
+const hoursMoney = h => h.toFixed(1) + ' h' + (rate() ? ' (' + money(h * rate()) + ')' : '');
+
+/** Tell the advisor what placeLine did, then offer what goes with the new line. */
+async function afterPlace(res, C) {
+  if (res.action === 'block') {
+    await C.agent(res.reason);
+    // the advisor may prefer the other row for the same job, e.g. a more specific one
+    if (res.kind === 'duplicate' && res.by !== res.want) C.chips([{ t: 'Use ' + ITEM(res.want).name + ' instead', text: '__swap__' + res.by + '|' + res.want, silent: true }]);
+    if (res.kind === 'orphan' && res.offer) C.chips([{ t: 'Quote ' + ITEM(res.offer).name + ' (' + ITEM(res.offer).hours.toFixed(1) + ' h)', text: '__add__' + res.offer, silent: true }]);
+    return;
+  }
+  if (res.action === 'substitute' || res.action === 'replace') {
+    await C.agent(res.reason + (res.saves > 0 ? ' That keeps ' + hoursMoney(res.saves) + ' off the bill.' : ''));
+  }
+  const it = ITEM(res.added);
+  if (it.src === 'lg') await autoPriceParts(it);
+  await offerAddOns(res.added, C);
+}
+
+/** Add-on labor for a job just added, each with a line the advisor can read to the customer. */
+async function offerAddOns(id, C) {
+  const ids = combinationsFor(id);
+  if (ids.length) {
+    await C.agent('This labor goes with ' + ITEM(id).name.toLowerCase() + ' and is cheaper to do now than on a separate visit. Each one has a line you can read to the customer.');
+    C.card({ type: 'combos', parent: id, ids });
+  }
+  for (const f of followOnsFor(id, [...S.ro.accepted])) {
+    await C.agent(ITEM(id).name + ' does not include ' + ITEM(f.id).name.toLowerCase() + '. ' + f.why);
+    C.chips([{ t: 'Add ' + ITEM(f.id).name, text: '__add__' + f.id, silent: true }]);
+  }
+}
+
+/** Take a line off, and any add-on labor that no longer has a job to go with. */
+function takeOff(id, C) {
+  const R = S.ro;
+  if (!R.accepted.delete(id)) return;
+  C.event('Removed from RO · ' + ITEM(id).name);
+  const left = orphanedCombos([...R.accepted]);
+  if (!left.length) return;
+  left.forEach(x => { R.accepted.delete(x); C.event('Removed from RO · ' + ITEM(x).name + ' · add-on to ' + ITEM(id).name); });
+  C.run(() => C.agent('I also took off ' + left.map(x => ITEM(x).name.toLowerCase()).join(', ') + ': add-on labor only applies while ' + ITEM(id).name.toLowerCase() + ' is on the order.'));
+}
+
+/** Add every due maintenance item through the same rules; report what was skipped and why. */
+function placeMaint(ms) {
+  const added = [], skipped = [];
+  ms.ids.forEach(i => { const r = placeLine(i); (r.added ? added : skipped).push({ id: i, r }); });
+  return { added, skipped };
+}
+const maintSaid = (r, ms) => 'Added ' + r.added.length + ' item' + (r.added.length === 1 ? '' : 's') + ' due at the ' + ms.at.toLocaleString() + ' mi service.'
+  + (r.skipped.length ? ' Skipped ' + r.skipped.map(x => ITEM(x.id).name.toLowerCase() + ' (' + x.r.reason.replace(/\.$/, '') + ')').join('; ') + '.' : '');
+
+export function acceptItem(id) {
+  const res = placeLine(id);
+  notify();
+  Cr.run(() => afterPlace(res, Cr));
+}
+export function removeItem(id) { takeOff(id, Cr); notify(); }
 export function dismissItem(id) { S.ro.dismissed.add(id); Cr.event('Set aside · ' + ITEM(id).name); notify(); }
 export function restoreItem(id) { S.ro.dismissed.delete(id); notify(); }
 export function addAllMaint() {
   const ms = maintState();
   if (!ms || !ms.due) return;
-  ms.ids.forEach(i => S.ro.accepted.add(i));
-  Cr.event('Added ' + ms.ids.length + ' maintenance items to RO');
+  const r = placeMaint(ms);
   notify();
+  Cr.run(() => Cr.agent(maintSaid(r, ms)));
 }
 export function saveVehicle(v) {
   const R = S.ro;
@@ -445,6 +529,7 @@ export function changeHours(id, v) {
   if (!it || isNaN(v) || v < 0) { notify(); return; }
   const old = hrs(it);
   if (it.src === 'manual') it.hours = v; else S.ro.hoursOv[id] = v;
-  if (Math.abs(old - v) > 1e-9) Cr.event('Hours changed · ' + it.name + ' · ' + old.toFixed(1) + ' to ' + v.toFixed(1) + ' h' + (it.src === 'manual' ? '' : ' (guide says ' + it.hours.toFixed(1) + ' h)'));
+  const far = it.src !== 'manual' && it.hours > 0 && Math.abs(v - it.hours) / it.hours > 0.5;
+  if (Math.abs(old - v) > 1e-9) Cr.event('Hours changed · ' + it.name + ' · ' + old.toFixed(1) + ' to ' + v.toFixed(1) + ' h' + (it.src === 'manual' ? '' : ' (guide says ' + it.hours.toFixed(1) + ' h)') + (far ? ' · more than 50% off the guide, check it' : ''));
   notify();
 }

@@ -8,17 +8,18 @@ import { runCoreStep } from '../services/coreAgentService.js';
 const router = Router();
 
 /**
- * POST /api/core/agent/step   { messages, context, tools }
+ * POST /api/core/agent/step   { messages, context, tools, trace? }
  *   -> { message: {content, tool_calls}, finish_reason, model, durationMs }
  *
  * One model call for the repair order agent. The browser runs the tools and loops; the prompt,
- * examples and tool allowlist live in services/coreAgentService.js.
+ * examples and tool allowlist live in services/coreAgentService.js. `trace` ({sessionId, turnId,
+ * step}) only labels the Langfuse trace.
  */
 router.post('/step', async (req, res) => {
-  const { messages, context, tools } = req.body || {};
+  const { messages, context, tools, trace } = req.body || {};
   if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ error: 'bad_request', message: 'messages is required.' });
   try {
-    res.json(await runCoreStep({ messages, context, tools }));
+    res.json(await runCoreStep({ messages, context, tools, trace }));
   } catch (err) {
     console.error('[core/agent/step] failed:', err.message);
     res.status(502).json({ error: 'llm_unavailable', message: 'The assistant could not reach its language model.' });

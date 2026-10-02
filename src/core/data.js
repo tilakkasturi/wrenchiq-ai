@@ -1,5 +1,6 @@
-// Sample data for the Core assistant prototype: shop-profile questions, labor guide,
-// maintenance schedule and follow-up question bank. All of it is made up for the demo.
+// Sample data for the Core assistant prototype: shop-profile questions and the follow-up question
+// bank, made up for the demo. The labor guide (laborGuide.js) and scheduled maintenance
+// (maintenanceSchedule.js) are loaded from resources/.
 
 export const PQ = [
   { key: 'shop.labor_rate', label: 'Labor rate', ask: "What's your standard labor rate per hour?", why: 'I multiply labor-guide hours by it to price labor on the repair order.', hint: 'Give me a number, like 145, or say "145 an hour".', type: 'number', min: 10, max: 1000, fmt: v => '$' + v + '/hr' },
@@ -12,88 +13,12 @@ export const PQ = [
 ];
 export const PQMAP = Object.fromEntries(PQ.map(q => [q.key, q]));
 
-export const REP = [
-  { id: 'brk-front', name: 'Front brake pads and rotors, replace', hours: 1.8, row: 'LG-BRK-F-0142', strong: ['grinding', 'braking', 'brake'], kw: ['stopping', 'pedal'], parts: ['Front brake pads (set)', 'Front brake rotors (2)', 'Brake hardware kit'] },
-  { id: 'brk-rear', name: 'Rear brake pads, replace', hours: 1.4, row: 'LG-BRK-R-0157', strong: ['braking', 'brake'], kw: ['grinding', 'stopping'], parts: ['Rear brake pads (set)', 'Brake hardware kit'] },
-  { id: 'caliper', name: 'Brake caliper, replace (one side)', hours: 1.2, row: 'LG-BRK-C-0171', strong: [], kw: ['pulling', 'drag', 'burning smell', 'brake'], parts: ['Brake caliper', 'Brake hose washers'] },
-  { id: 'strut', name: 'Front struts, replace (pair)', hours: 2.6, row: 'LG-SUS-S-0233', strong: [], kw: ['clunk', 'knock', 'bump', 'rattle', 'suspension', 'bouncy', 'noise'], parts: ['Front strut assemblies (2)', 'Strut mounts (2)'] },
-  { id: 'sway', name: 'Sway bar end links, replace (pair)', hours: 0.9, row: 'LG-SUS-L-0241', strong: [], kw: ['clunk', 'rattle', 'knock', 'bump', 'noise'], parts: ['Sway bar end links (2)'] },
-  { id: 'bearing', name: 'Wheel bearing, replace (one side)', hours: 1.7, row: 'LG-SUS-B-0258', strong: [], kw: ['humming', 'hum', 'growl', 'roar', 'whine', 'noise', 'grinding'], parts: ['Wheel bearing hub assembly'] },
-  { id: 'coil', name: 'Ignition coil, replace', hours: 0.6, row: 'LG-ENG-I-0311', strong: ['misfire'], kw: ['check engine', 'engine light', 'rough', 'hesitat', 'stall', 'idle'], parts: ['Ignition coil'] },
-  { id: 'plugs', name: 'Spark plugs, replace', hours: 1.0, row: 'LG-ENG-P-0322', strong: [], kw: ['check engine', 'engine light', 'misfire', 'rough', 'hesitat', 'idle', 'fuel economy'], parts: ['Spark plugs (set)'] },
-  { id: 'o2', name: 'Oxygen sensor, replace (upstream)', hours: 0.8, row: 'LG-EMS-O-0344', strong: [], kw: ['check engine', 'engine light', 'fuel economy', 'emission'], parts: ['Oxygen sensor'] },
-  { id: 'evap', name: 'EVAP purge valve, replace', hours: 0.5, row: 'LG-EMS-E-0352', strong: [], kw: ['check engine', 'engine light', 'gas cap', 'fuel smell'], parts: ['EVAP purge valve'] },
-  { id: 'thermo', name: 'Thermostat, replace', hours: 1.2, row: 'LG-COO-T-0411', strong: ['overheat', 'running hot'], kw: ['temperature', 'heater', 'coolant'], parts: ['Thermostat and housing', 'Coolant'] },
-  { id: 'pump', name: 'Water pump, replace', hours: 2.8, row: 'LG-COO-W-0424', strong: [], kw: ['overheat', 'coolant', 'leak', 'whine', 'temperature'], parts: ['Water pump', 'Gasket', 'Coolant'] },
-  { id: 'hose', name: 'Radiator hose, replace (upper)', hours: 0.9, row: 'LG-COO-H-0433', strong: [], kw: ['coolant', 'leak', 'overheat', 'steam'], parts: ['Upper radiator hose', 'Coolant'] },
-  { id: 'battery', name: 'Battery, replace', hours: 0.4, row: 'LG-ELE-B-0511', strong: ['battery', 'slow crank'], kw: ["won't start", 'no start', 'dead', 'click', 'crank'], parts: ['Battery'] },
-  { id: 'starter', name: 'Starter, replace', hours: 1.6, row: 'LG-ELE-S-0522', strong: [], kw: ["won't start", 'no start', 'click', 'crank', 'starter'], parts: ['Starter motor'] },
-  { id: 'alt', name: 'Alternator, replace', hours: 1.5, row: 'LG-ELE-A-0533', strong: [], kw: ['battery', 'dead', 'warning light', 'dim', 'charging'], parts: ['Alternator', 'Serpentine belt'] },
-  { id: 'acrecharge', name: 'A/C evacuate and recharge', hours: 0.9, row: 'LG-HVA-R-0611', strong: ['not cold', 'warm air'], kw: ['a/c', 'air conditioning'], parts: ['Refrigerant', 'Compressor oil'] },
-  { id: 'accomp', name: 'A/C compressor, replace', hours: 2.4, row: 'LG-HVA-C-0624', strong: [], kw: ['a/c', 'air conditioning', 'not cold', 'compressor', 'noise'], parts: ['A/C compressor', 'Receiver drier', 'Refrigerant'] },
-  { id: 'balance', name: 'Tire balance, four wheels', hours: 0.6, row: 'LG-TIR-B-0711', strong: [], kw: ['vibration', 'shake', 'steering wheel', 'highway', 'shimmy', 'wobble'], parts: ['Wheel weights'] },
-  { id: 'align', name: 'Wheel alignment, four wheel', hours: 1.0, row: 'LG-TIR-A-0722', strong: [], kw: ['pull', 'drift', 'vibration', 'shake', 'steering', 'uneven'], parts: [] },
-  { id: 'valvecover', name: 'Valve cover gasket, replace', hours: 2.0, row: 'LG-ENG-V-0811', strong: [], kw: ['oil leak', 'leak', 'oil smell', 'burning smell', 'drip'], parts: ['Valve cover gasket set'] },
-  { id: 'oilpan', name: 'Oil pan gasket, replace', hours: 2.4, row: 'LG-ENG-O-0824', strong: [], kw: ['oil leak', 'leak', 'drip', 'puddle'], parts: ['Oil pan gasket', 'Engine oil'] },
-  // ---- Brakes: squeaking, soft pedal, noise ----
-  { id: 'brk-pads-f', name: 'Front brake pads, replace (pads only)', hours: 1.1, row: 'LG-BRK-F-0140', strong: ['squeak', 'squeal', 'screech'], kw: ['brake', 'braking', 'stopping'], parts: ['Front brake pads (set)', 'Brake hardware kit'] },
-  { id: 'brk-service', name: 'Brake service: clean, lubricate and adjust', hours: 0.8, row: 'LG-BRK-S-0133', strong: ['squeak', 'squeal'], kw: ['brake', 'braking', 'noise', 'dust'], parts: [] },
-  { id: 'brk-rear-rot', name: 'Rear brake pads and rotors, replace', hours: 1.9, row: 'LG-BRK-R-0159', strong: [], kw: ['grinding', 'brake', 'pulsing', 'vibration'], parts: ['Rear brake pads (set)', 'Rear brake rotors (2)'] },
-  { id: 'brk-hose', name: 'Brake hose, replace (one)', hours: 0.9, row: 'LG-BRK-H-0182', strong: [], kw: ['pulling', 'drag', 'soft pedal', 'brake fluid', 'leak'], parts: ['Brake hose'] },
-  { id: 'brk-master', name: 'Brake master cylinder, replace and bleed', hours: 1.8, row: 'LG-BRK-M-0195', strong: ['soft pedal', 'spongy', 'pedal sinks'], kw: ['brake fluid', 'pedal', 'brake'], parts: ['Brake master cylinder', 'Brake fluid'] },
-  { id: 'diag-brake', name: 'Brake inspection and road test', hours: 0.5, row: 'LG-DGN-B-0101', strong: [], kw: ['brake', 'braking', 'squeak', 'squeal', 'grinding', 'pedal'], parts: [] },
-  // ---- Engine not working, no start, stalling, rough running ----
-  { id: 'diag-engine', name: 'Diagnostic: engine no-start or driveability concern', hours: 1.0, row: 'LG-DGN-E-0110', strong: ["won't start", 'no start', 'engine not working', "engine isn't working", 'engine problem', 'stalls', 'stalling', 'stalled', 'engine dies', 'cuts out', "won't run", 'runs rough', 'loses power'], kw: ['crank', 'hesitat', 'idle'], parts: [] },
-  { id: 'fuelpump', name: 'Fuel pump, replace (in-tank)', hours: 2.8, row: 'LG-FUE-P-0415', strong: ['cranks but'], kw: ["won't start", 'no start', 'stalls', 'stalling', 'loses power', 'hesitat', 'whine'], parts: ['Fuel pump'] },
-  { id: 'fuelfilt', name: 'Fuel filter, replace', hours: 0.7, row: 'LG-FUE-F-0408', strong: [], kw: ['hesitat', 'loses power', 'cranks but', 'rough', 'stalls'], parts: ['Fuel filter'] },
-  { id: 'crk-sensor', name: 'Crankshaft position sensor, replace', hours: 0.9, row: 'LG-ENG-C-0338', strong: [], kw: ['cranks but', 'stalls', 'stalling', "won't start", 'no start', 'check engine', 'intermittent'], parts: ['Crankshaft position sensor'] },
-  { id: 'cam-sensor', name: 'Camshaft position sensor, replace', hours: 0.7, row: 'LG-ENG-M-0341', strong: [], kw: ['check engine', 'rough', 'stalls', 'hard start', 'hesitat'], parts: ['Camshaft position sensor'] },
-  { id: 'maf', name: 'Mass air flow sensor, replace', hours: 0.5, row: 'LG-ENG-A-0347', strong: [], kw: ['check engine', 'engine light', 'hesitat', 'rough', 'stalls', 'fuel economy', 'loses power'], parts: ['Mass air flow sensor'] },
-  { id: 'throttle', name: 'Throttle body, clean and relearn', hours: 0.8, row: 'LG-ENG-T-0359', strong: [], kw: ['rough idle', 'idle', 'stalls', 'hesitat', 'check engine'], parts: [] },
-  { id: 'injector', name: 'Fuel injector, replace (one)', hours: 1.4, row: 'LG-FUE-I-0421', strong: [], kw: ['misfire', 'rough', 'check engine', 'fuel smell', 'hesitat'], parts: ['Fuel injector'] },
-  { id: 'vacleak', name: 'Intake vacuum leak, find and repair', hours: 1.5, row: 'LG-ENG-L-0366', strong: ['hissing'], kw: ['rough idle', 'idle', 'check engine', 'stalls', 'high idle'], parts: [] },
-  { id: 'ignswitch', name: 'Ignition switch, replace', hours: 1.5, row: 'LG-ELE-W-0541', strong: [], kw: ["won't start", 'no crank', 'key', 'dash lights', 'stalls'], parts: ['Ignition switch'] },
-  { id: 'battcable', name: 'Battery cable end, clean or replace', hours: 0.5, row: 'LG-ELE-C-0515', strong: ['corrosion'], kw: ["won't start", 'click', 'dim', 'no crank', 'slow crank'], parts: ['Battery cable'] },
-  // ---- Check engine light ----
-  { id: 'diag-cel', name: 'Diagnostic: scan codes and test (check engine light)', hours: 0.8, row: 'LG-DGN-C-0105', strong: ['check engine', 'engine light'], kw: [], parts: [] },
-  { id: 'cat', name: 'Catalytic converter, replace', hours: 1.8, row: 'LG-EMS-C-0361', strong: ['p0420', 'catalytic'], kw: ['check engine', 'rotten egg', 'sulfur', 'rattle', 'fuel economy'], parts: ['Catalytic converter'] },
-  { id: 'egr', name: 'EGR valve, replace', hours: 1.5, row: 'LG-EMS-R-0372', strong: [], kw: ['check engine', 'rough idle', 'hesitat', 'pinging'], parts: ['EGR valve'] },
-  { id: 'gascap', name: 'Gas cap, replace', hours: 0.1, row: 'LG-EMS-G-0300', strong: ['gas cap'], kw: ['check engine', 'fuel smell'], parts: ['Gas cap'] },
-  // ---- Cooling ----
-  { id: 'radiator', name: 'Radiator, replace', hours: 2.5, row: 'LG-COO-R-0446', strong: [], kw: ['overheat', 'coolant', 'leak', 'steam', 'temperature'], parts: ['Radiator', 'Coolant'] },
-  { id: 'coolfan', name: 'Radiator cooling fan motor, replace', hours: 1.6, row: 'LG-COO-F-0452', strong: [], kw: ['overheat', 'temperature', 'fan', 'a/c', 'idle'], parts: ['Radiator cooling fan'] },
-  // ---- A/C and heater not working ----
-  { id: 'diag-ac', name: 'Diagnostic: A/C performance test and leak check', hours: 0.8, row: 'LG-DGN-A-0120', strong: ['a/c not working', 'a/c stopped', 'no a/c'], kw: ['a/c', 'air conditioning', 'not cold', 'warm air', 'hot air', 'no cold air'], parts: [] },
-  { id: 'ac-leak', name: 'A/C leak test (dye) and repair estimate', hours: 0.6, row: 'LG-HVA-L-0618', strong: [], kw: ['a/c', 'air conditioning', 'not cold', 'warm air', 'no cold air', 'hissing'], parts: ['Refrigerant'] },
-  { id: 'ac-cond', name: 'A/C condenser, replace', hours: 2.2, row: 'LG-HVA-D-0631', strong: [], kw: ['a/c', 'air conditioning', 'not cold', 'warm air', 'leak'], parts: ['A/C condenser', 'Refrigerant'] },
-  { id: 'ac-clutch', name: 'A/C compressor clutch, replace', hours: 1.5, row: 'LG-HVA-K-0640', strong: ['clutch'], kw: ['a/c', 'air conditioning', 'click', 'not cold', 'noise'], parts: ['A/C compressor clutch'] },
-  { id: 'ac-exp', name: 'A/C expansion valve, replace', hours: 2.0, row: 'LG-HVA-X-0652', strong: [], kw: ['a/c', 'air conditioning', 'not cold', 'warm air', 'frost'], parts: ['A/C expansion valve', 'Receiver drier', 'Refrigerant'] },
-  { id: 'ac-switch', name: 'A/C pressure switch, replace', hours: 0.5, row: 'LG-HVA-S-0660', strong: [], kw: ['a/c', 'air conditioning', 'clutch', 'not cold', 'intermittent'], parts: ['A/C pressure switch'] },
-  { id: 'blower', name: 'Blower motor, replace', hours: 1.0, row: 'LG-HVA-B-0671', strong: ['no air', 'weak airflow', 'blower', 'no airflow', 'fan not working'], kw: ['a/c', 'air conditioning', 'vents', 'heater', 'fan speed', 'noise'], parts: ['Blower motor'] },
-  { id: 'blower-res', name: 'Blower motor resistor, replace', hours: 0.5, row: 'LG-HVA-R-0679', strong: ['only high', 'fan speed'], kw: ['blower', 'no air', 'weak airflow', 'vents'], parts: ['Blower motor resistor'] },
-  { id: 'cabin-filt', name: 'Cabin air filter, replace', hours: 0.3, row: 'LG-HVA-F-0685', strong: [], kw: ['weak airflow', 'musty', 'smell', 'vents', 'dust', 'a/c'], parts: ['Cabin air filter'] },
-  { id: 'hvac-act', name: 'HVAC blend door actuator, replace', hours: 1.6, row: 'LG-HVA-T-0693', strong: [], kw: ['clicking', 'temperature', 'hot on one side', 'vents', 'heater', 'a/c', 'stuck'], parts: ['HVAC blend door actuator'] },
-];
-export const REPMAP = Object.fromEntries(REP.map(r => [r.id, {
-  id: r.id, name: r.name, hours: r.hours, src: 'lg', ref: r.row, parts: r.parts,
-  detail: 'Sample labor guide row (demo data, not a published guide). Operation: ' + r.name + '. Labor time: ' + r.hours.toFixed(1) + ' h.',
-}]));
+// The labor guide comes from resources/labor_guide (XML rows + enrichment JSON) — see laborGuide.js.
+import { REP } from './laborGuide';
+export { REP, REPMAP } from './laborGuide';
 
-export const MI = [
-  { id: 'sm-oil', name: 'Engine oil and filter change', hours: 0.5, every: 15, row: 'SM-OIL-15' },
-  { id: 'sm-rot', name: 'Tire rotation', hours: 0.3, every: 15, row: 'SM-ROT-15' },
-  { id: 'sm-cab', name: 'Cabin air filter, replace', hours: 0.3, every: 30, row: 'SM-CAB-30' },
-  { id: 'sm-air', name: 'Engine air filter, replace', hours: 0.2, every: 30, row: 'SM-AIR-30' },
-  { id: 'sm-brk', name: 'Brake system inspection', hours: 0.4, every: 30, row: 'SM-BRK-30' },
-  { id: 'sm-plug', name: 'Spark plugs, replace', hours: 1.0, every: 60, row: 'SM-PLG-60' },
-  { id: 'sm-bfl', name: 'Brake fluid flush', hours: 0.6, every: 60, row: 'SM-BFL-60' },
-  { id: 'sm-clt', name: 'Coolant service', hours: 0.8, every: 60, row: 'SM-CLT-60' },
-  { id: 'sm-atf', name: 'Transmission fluid service', hours: 1.0, every: 90, row: 'SM-ATF-90' },
-];
-export const MAINTMAP = Object.fromEntries(MI.map(m => [m.id, {
-  id: m.id, name: m.name, hours: m.hours, src: 'sm', ref: m.row, parts: [],
-  detail: 'Scheduled maintenance, sample interval table. Service: ' + m.name + '. Repeats every ' + (m.every * 1000).toLocaleString() + ' mi. Labor time: ' + m.hours.toFixed(1) + ' h.',
-}]));
+// Scheduled maintenance now comes from the real OEM data in resources/scheduled_maintenance —
+// see src/core/maintenanceSchedule.js (resolveSchedule / computeMaintenanceDue / getMaintItem).
 
 export const QB = [
   { id: 'brk-where', short: 'Location', when: ['brake', 'braking', 'grinding', 'squeal', 'stopping', 'pedal'], ask: 'Where do you hear or feel it, front or rear?', opts: [{ l: 'Front', b: { 'brk-front': 3 } }, { l: 'Rear', b: { 'brk-rear': 3 } }, { l: 'Not sure', b: { 'brk-front': 1, 'brk-rear': 1 } }] },

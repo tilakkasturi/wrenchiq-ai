@@ -25,7 +25,17 @@ export class NapaLookupError extends Error {
 }
 
 // Part name (as suggested in the repair order) -> NAPA search term. First match wins.
+// "hardware" is checked first: a name like "caliper hardware kit" or "brake pad hardware" means
+// the clips/pins/springs kit, not the component itself, regardless of which other part word
+// appears alongside it — it used to sit last, so /caliper/ etc. matched "caliper hardware kit"
+// before ever reaching this rule and silently searched for calipers instead of hardware.
 const TERMS = [
+  // "kit" has to be in the canonical term itself — pickKeywords penalizes any NAPA keyword
+  // containing "kit" unless `term` also contains it (that penalty exists so a caliper search
+  // doesn't match "Brake Caliper Hardware Kit" instead of the caliper); a hardware kit is
+  // exactly what this term means, so without "kit" here the real match loses to noise like
+  // "Brake Camshaft".
+  [/hardware/, 'brake hardware kit'],
   [/brake hose/, 'brake hose'],
   [/master cylinder/, 'brake master cylinder'],
   [/pads?/, 'brake pad'],
@@ -76,7 +86,6 @@ const TERMS = [
   [/oil pan/, 'oil pan gasket'],
   [/engine oil|motor oil/, 'motor oil'],
   [/wheel weight/, 'wheel weight'],
-  [/hardware/, 'brake hardware'],
 ];
 
 export function searchTermFor(partName) {

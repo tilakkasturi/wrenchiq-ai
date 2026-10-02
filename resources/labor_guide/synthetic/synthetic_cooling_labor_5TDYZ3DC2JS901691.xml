@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC DATA - not from a labor-guide provider. Hours are estimates for a 2018 Toyota Sienna 3.5L V6 (5TDYZ3DC2JS901691) and are used for every vehicle in the demo. Same schema as the real exports. Do not quote to customers. System: cooling -->
+<labor_list>
+  <labor>
+    <Note>REMOVE &amp; REPLACE WATER PUMP - Includes drain &amp; refill coolant.</Note>
+    <Skill>B</Skill>
+    <LaborHours>3.2</LaborHours>
+    <Warranty>2.7</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>WATER PUMP</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE DRIVE BELT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>WATER PUMP</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE THERMOSTAT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>WATER PUMP</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - FLUSH COOLING SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>WATER PUMP</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE THERMOSTAT - Includes drain &amp; refill coolant.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty>0.8</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>THERMOSTAT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - FLUSH COOLING SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>THERMOSTAT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE RADIATOR - Includes drain &amp; refill coolant.</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.0</LaborHours>
+    <Warranty>1.7</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>RADIATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE RADIATOR HOSE - Upper</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>RADIATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE RADIATOR HOSE - Lower</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>RADIATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE THERMOSTAT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>RADIATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - FLUSH COOLING SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>RADIATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE RADIATOR HOSE - Upper - Includes drain &amp; refill coolant.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>RADIATOR HOSE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE RADIATOR HOSE - Lower - Includes drain &amp; refill coolant.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>RADIATOR HOSE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE COOLING FAN ASSEMBLY</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>COOLING FAN</LaborComponent>
+  </labor>
+  <labor>
+    <Note>PRESSURE TEST COOLING SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>COOLING SYSTEM</LaborComponent>
+  </labor>
+</labor_list>

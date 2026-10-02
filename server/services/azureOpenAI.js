@@ -43,6 +43,9 @@ import { getDefaultProfile } from './llmProviderConfig.js';
  *   different endpoint that doesn't have the requested model.
  * @param {number}   [opts.temperature] - Omitted from the request entirely when
  *   undefined, so the backend's own default applies.
+ * @param {Array}    [opts.callbacks] - LangChain callback handlers (e.g. a
+ *   Langfuse CallbackHandler from langfuseTracing.js). LangChain engine only;
+ *   the LLM_ENGINE=loop path ignores them, so the call runs untraced there.
  * @returns {Promise<object>} Raw OpenAI-compatible response
  */
 export async function callAzureOpenAI(opts) {

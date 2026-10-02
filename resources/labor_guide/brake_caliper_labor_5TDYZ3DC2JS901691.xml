@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<labor_list>
+  <labor>
+    <Note>INSPECT BRAKE SYSTEM (COMPLETE) - All Wheels</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE BRAKE SYSTEM (COMPLETE) - All Wheels</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE CALIPER - Front or Rear, Both</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE CALIPER - Front or Rear, One Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE, INSTALL &amp; OVERHAUL CALIPER - Front, Both</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE, INSTALL &amp; OVERHAUL CALIPER - Front, One Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE, INSTALL &amp; OVERHAUL CALIPER - Rear, Both</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE, INSTALL &amp; OVERHAUL CALIPER - Rear, One Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - ADJUSTMENT PARKING BRAKE</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - BLEED BRAKE SYSTEM - ABS Automated Bleed</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - BLEED BRAKE SYSTEM - Hydraulic Bleed</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - BURNISH BRAKE ROTORS WHILE DRIVING VEHICLE DISC ROTOR</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - BURNISH BRAKE ROTORS WHILE DRIVING VEHICLE DISC ROTOR</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - CLEAN AND INSPECT HUB &amp; ROTOR DISC -  Corrosion, Each - Clean any rust or corrosion from mating surface of Hub/Axle Flange and Brake Rotor.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - CLEAN AND INSPECT HUB &amp; ROTOR DISC -  Corrosion, Each - Clean any rust or corrosion from mating surface of Hub/Axle Flange and Brake Rotor.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - CORRECT DISC ROTOR -  Lateral Runout, Each - Correct Rotor lateral runout by indexing.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - CORRECT DISC ROTOR -  Lateral Runout, Each - Correct Rotor lateral runout by indexing.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REPLACE BRAKE HOSE - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REPLACE PARKING BRAKE SHOE &amp; LINING - Each Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REPLACE WHEEL BEARING - FWD - Rear, Hub Assembly, One Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REPLACE WHEEL BEARING - FWD Front, One Side - DOES NOT include wheel alignment.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - TESTING ANTI-LOCK BRAKE SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM (COMPLETE)</LaborComponent>
+  </labor>
+</labor_list>

@@ -294,7 +294,7 @@ function normalizeError(err) {
  */
 export async function callAzureOpenAILangChain({
   system, messages, max_tokens, model, jsonMode = false, tools,
-  _route, useConfiguredProvider = false, profileKey, temperature,
+  _route, useConfiguredProvider = false, profileKey, temperature, callbacks,
 }) {
   // Throws before any client is built, matching the legacy ordering: an
   // unconfigured profile is a configuration error, not a request failure, so
@@ -342,6 +342,8 @@ export async function callAzureOpenAILangChain({
     ...(tools?.length ? { tools } : {}),
     ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
     ...(Object.keys(headerNulls).length ? { options: { headers: headerNulls } } : {}),
+    // Observers only (e.g. a Langfuse handler); they never touch the request body.
+    ...(callbacks?.length ? { callbacks } : {}),
   };
 
   const t0 = Date.now();

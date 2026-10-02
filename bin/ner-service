@@ -19,5 +19,15 @@ if [[ -f .env.local ]]; then
   set +a
 fi
 
+# ner_symptom_cache.py uses PEP 604 union syntax (`X | None`) in a module-level
+# annotation, which only Python 3.10+ evaluates without raising — a plain `python3`
+# can silently resolve to an older interpreter (e.g. macOS's system Python 3.9)
+# depending on shell/PATH setup, so prefer a known-good 3.10+ interpreter when one
+# is available rather than trusting whatever's first on PATH.
+PYTHON=python3
+if [[ -x /opt/predii/anaconda3/bin/python3 ]]; then
+  PYTHON=/opt/predii/anaconda3/bin/python3
+fi
+
 cd ro-ner-demo
-exec python3 ner_server.py
+exec "$PYTHON" ner_server.py

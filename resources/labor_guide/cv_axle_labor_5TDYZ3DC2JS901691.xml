@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<labor_list>
+  <labor>
+    <Note>REMOVE &amp; INSTALL OR REMOVE &amp; REPLACE AXLE SHAFT ASSEMBLY - FWD - Both</Note>
+    <Skill>B</Skill>
+    <LaborHours>3.5</LaborHours>
+    <Warranty>2.3</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; INSTALL OR REMOVE &amp; REPLACE AXLE SHAFT ASSEMBLY - FWD - Left Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; INSTALL OR REMOVE &amp; REPLACE AXLE SHAFT ASSEMBLY - FWD - Right Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.1</LaborHours>
+    <Warranty>1.7</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE AXLE ASSEMBLY - FWD</Note>
+    <Skill>B</Skill>
+    <LaborHours>4.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>AXLE ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE AXLE SHAFT - FWD - Both</Note>
+    <Skill>B</Skill>
+    <LaborHours>5.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE AXLE SHAFT - FWD - Left Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>3.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE AXLE SHAFT - FWD - Right Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>3.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE AXLE SHAFT BOOT - Each Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE AXLE SHAFT BOOT - Inner &amp;/or Outer, Each Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE AXLE SHAFT CENTER SUPPORT BEARING</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.7</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE CONSTANT VELOCITY JOINT - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE TRANSAXLE OUTPUT SEAL - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REPLACE AXLE SHAFT - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REPLACE AXLE SHAFT - Each Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>AXLE SHAFT ASSEMBLY</LaborComponent>
+  </labor>
+</labor_list>

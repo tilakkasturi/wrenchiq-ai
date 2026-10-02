@@ -1,10 +1,11 @@
 // The repair order agent loop. The model (Gemma, via the server) reads what the advisor said and the
 // repair order snapshot, calls tools, and answers. The tools in roTools.js run here against the same
 // state the rest of the UI shows, so the cards and the panel stay in step with what the agent did.
-import { S, notify } from './state';
+import { S, notify, newId } from './state';
 import { agentStep } from './agentApi';
 import { TOOL_SCHEMAS, TOOLS, toolLabel } from './roTools';
-import { ITEM, hrs, rate, miles } from './logic';
+import { ITEM, hrs, rate, miles, combinationsFor } from './logic';
+import { talkFor } from './talkTrack';
 import { sleep, REDUCED } from './chat';
 
 const MAX_STEPS = 6;
@@ -19,6 +20,11 @@ export function roContext() {
     lines: [...R.accepted].map(ITEM).filter(Boolean).map(it => ({ name: it.name, hours: hrs(it).toFixed(1), source: it.src === 'lg' ? 'labor guide ' + it.ref : it.src === 'sm' ? 'schedule ' + it.ref : 'entered by advisor' })),
     parts: R.parts.added.map(x => ({ label: x.label, partNumber: x.lineCode + ' ' + x.partNumber, qty: x.qty })),
     laborRate: rate(),
+    // add-on labor the advisor can still offer, with the customer talk track from the labor guide
+    addOns: [...R.accepted].flatMap(id => combinationsFor(id).map(c => {
+      const tk = talkFor(c, id, rate());
+      return tk && { for: ITEM(id).name, name: ITEM(c).name, hours: ITEM(c).hours.toFixed(1), kind: tk.label, say: tk.text };
+    })).filter(Boolean).slice(0, 8),
   };
 }
 
@@ -41,13 +47,13 @@ export function parseReply(raw) {
  *   on the first step, so the caller can fall back to the scripted flow.
  */
 export async function runRoAgent(C, userText) {
-  const hist = S.ro.agent.history;
+  const hist = S.ro.agent.history, sessionId = S.ro.agent.sessionId, turnId = newId();
   hist.push({ role: 'user', content: userText });
   const turn = [];
   let stop = C.typing();
   try {
     for (let step = 1; step <= MAX_STEPS; step++) {
-      const out = await agentStep({ messages: [...hist.slice(-10), ...turn], context: roContext(), tools: TOOL_SCHEMAS });
+      const out = await agentStep({ messages: [...hist.slice(-10), ...turn], context: roContext(), tools: TOOL_SCHEMAS, trace: { sessionId, turnId, step } });
       if (!out.ok) {
         stop();
         if (step === 1) { hist.pop(); return { ok: false, message: out.message }; }

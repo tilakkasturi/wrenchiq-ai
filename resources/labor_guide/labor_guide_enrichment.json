@@ -1,0 +1,3765 @@
+{
+ "_about": "Predii-authored metadata for labor-guide rows. Each entry is matched to an XML row by component + note (exact text). id/row/name are WrenchIQ display fields; strong/kw are symptom keywords for ranking; parts feed the NAPA lookup; talk is the customer talk track for COMBINATION rows (kind: required | recommended | if-needed | optional; standalone: id of the same job done on its own).",
+ "rows": [
+  {
+   "component": "DISC BRAKE ROTOR",
+   "note": "FRONT BRAKE PADS AND ROTORS, REPLACE",
+   "id": "brk-front",
+   "row": "LG-BRK-F-0142",
+   "name": "Front brake pads and rotors, replace",
+   "strong": [
+    "grinding",
+    "braking",
+    "brake"
+   ],
+   "kw": [
+    "stopping",
+    "pedal"
+   ],
+   "parts": [
+    "Front brake pads (set)",
+    "Front brake rotors (2)",
+    "Brake hardware kit"
+   ]
+  },
+  {
+   "component": "DISC BRAKE PADS",
+   "note": "REAR BRAKE PADS, REPLACE",
+   "id": "brk-rear",
+   "row": "LG-BRK-R-0157",
+   "name": "Rear brake pads, replace",
+   "strong": [
+    "braking",
+    "brake"
+   ],
+   "kw": [
+    "grinding",
+    "stopping"
+   ],
+   "parts": [
+    "Rear brake pads (set)",
+    "Brake hardware kit"
+   ]
+  },
+  {
+   "component": "CALIPER",
+   "note": "BRAKE CALIPER, REPLACE (ONE SIDE)",
+   "id": "caliper",
+   "row": "LG-BRK-C-0171",
+   "name": "Brake caliper, replace (one side)",
+   "strong": [],
+   "kw": [
+    "pulling",
+    "drag",
+    "burning smell",
+    "brake"
+   ],
+   "parts": [
+    "Brake caliper",
+    "Brake hose washers"
+   ]
+  },
+  {
+   "component": "STRUT ASSEMBLY",
+   "note": "FRONT STRUTS, REPLACE (PAIR)",
+   "id": "strut",
+   "row": "LG-SUS-S-0233",
+   "name": "Front struts, replace (pair)",
+   "strong": [],
+   "kw": [
+    "clunk",
+    "knock",
+    "bump",
+    "rattle",
+    "suspension",
+    "bouncy",
+    "noise"
+   ],
+   "parts": [
+    "Front strut assemblies (2)",
+    "Strut mounts (2)"
+   ]
+  },
+  {
+   "component": "STABILIZER BAR LINK",
+   "note": "SWAY BAR END LINKS, REPLACE (PAIR)",
+   "id": "sway",
+   "row": "LG-SUS-L-0241",
+   "name": "Sway bar end links, replace (pair)",
+   "strong": [],
+   "kw": [
+    "clunk",
+    "rattle",
+    "knock",
+    "bump",
+    "noise"
+   ],
+   "parts": [
+    "Sway bar end links (2)"
+   ]
+  },
+  {
+   "component": "WHEEL BEARING",
+   "note": "WHEEL BEARING, REPLACE (ONE SIDE)",
+   "id": "bearing",
+   "row": "LG-SUS-B-0258",
+   "name": "Wheel bearing, replace (one side)",
+   "strong": [],
+   "kw": [
+    "humming",
+    "hum",
+    "growl",
+    "roar",
+    "whine",
+    "noise",
+    "grinding"
+   ],
+   "parts": [
+    "Wheel bearing hub assembly"
+   ]
+  },
+  {
+   "component": "IGNITION COIL",
+   "note": "IGNITION COIL, REPLACE",
+   "id": "coil",
+   "row": "LG-ENG-I-0311",
+   "name": "Ignition coil, replace",
+   "strong": [
+    "misfire"
+   ],
+   "kw": [
+    "check engine",
+    "engine light",
+    "rough",
+    "hesitat",
+    "stall",
+    "idle"
+   ],
+   "parts": [
+    "Ignition coil"
+   ]
+  },
+  {
+   "component": "SPARK PLUG",
+   "note": "SPARK PLUGS, REPLACE",
+   "id": "plugs",
+   "row": "LG-ENG-P-0322",
+   "name": "Spark plugs, replace",
+   "strong": [],
+   "kw": [
+    "check engine",
+    "engine light",
+    "misfire",
+    "rough",
+    "hesitat",
+    "idle",
+    "fuel economy"
+   ],
+   "parts": [
+    "Spark plugs (set)"
+   ]
+  },
+  {
+   "component": "OXYGEN SENSOR",
+   "note": "OXYGEN SENSOR, REPLACE (UPSTREAM)",
+   "id": "o2",
+   "row": "LG-EMS-O-0344",
+   "name": "Oxygen sensor, replace (upstream)",
+   "strong": [],
+   "kw": [
+    "check engine",
+    "engine light",
+    "fuel economy",
+    "emission"
+   ],
+   "parts": [
+    "Oxygen sensor"
+   ]
+  },
+  {
+   "component": "EVAP PURGE VALVE",
+   "note": "EVAP PURGE VALVE, REPLACE",
+   "id": "evap",
+   "row": "LG-EMS-E-0352",
+   "name": "EVAP purge valve, replace",
+   "strong": [],
+   "kw": [
+    "check engine",
+    "engine light",
+    "gas cap",
+    "fuel smell"
+   ],
+   "parts": [
+    "EVAP purge valve"
+   ]
+  },
+  {
+   "component": "THERMOSTAT",
+   "note": "THERMOSTAT, REPLACE",
+   "id": "thermo",
+   "row": "LG-COO-T-0411",
+   "name": "Thermostat, replace",
+   "strong": [
+    "overheat",
+    "running hot"
+   ],
+   "kw": [
+    "temperature",
+    "heater",
+    "coolant"
+   ],
+   "parts": [
+    "Thermostat and housing",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "WATER PUMP",
+   "note": "WATER PUMP, REPLACE",
+   "id": "pump",
+   "row": "LG-COO-W-0424",
+   "name": "Water pump, replace",
+   "strong": [],
+   "kw": [
+    "overheat",
+    "coolant",
+    "leak",
+    "whine",
+    "temperature"
+   ],
+   "parts": [
+    "Water pump",
+    "Gasket",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "RADIATOR HOSE",
+   "note": "RADIATOR HOSE, REPLACE (UPPER)",
+   "id": "hose",
+   "row": "LG-COO-H-0433",
+   "name": "Radiator hose, replace (upper)",
+   "strong": [],
+   "kw": [
+    "coolant",
+    "leak",
+    "overheat",
+    "steam"
+   ],
+   "parts": [
+    "Upper radiator hose",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "BATTERY",
+   "note": "BATTERY, REPLACE",
+   "id": "battery",
+   "row": "LG-ELE-B-0511",
+   "name": "Battery, replace",
+   "strong": [
+    "battery",
+    "slow crank"
+   ],
+   "kw": [
+    "won't start",
+    "no start",
+    "dead",
+    "click",
+    "crank"
+   ],
+   "parts": [
+    "Battery"
+   ]
+  },
+  {
+   "component": "STARTER",
+   "note": "STARTER, REPLACE",
+   "id": "starter",
+   "row": "LG-ELE-S-0522",
+   "name": "Starter, replace",
+   "strong": [],
+   "kw": [
+    "won't start",
+    "no start",
+    "click",
+    "crank",
+    "starter"
+   ],
+   "parts": [
+    "Starter motor"
+   ]
+  },
+  {
+   "component": "ALTERNATOR",
+   "note": "ALTERNATOR, REPLACE",
+   "id": "alt",
+   "row": "LG-ELE-A-0533",
+   "name": "Alternator, replace",
+   "strong": [],
+   "kw": [
+    "battery",
+    "dead",
+    "warning light",
+    "dim",
+    "charging"
+   ],
+   "parts": [
+    "Alternator",
+    "Serpentine belt"
+   ]
+  },
+  {
+   "component": "A/C SYSTEM",
+   "note": "A/C EVACUATE AND RECHARGE",
+   "id": "acrecharge",
+   "row": "LG-HVA-R-0611",
+   "name": "A/C evacuate and recharge",
+   "strong": [
+    "not cold",
+    "warm air"
+   ],
+   "kw": [
+    "a/c",
+    "air conditioning"
+   ],
+   "parts": [
+    "Refrigerant",
+    "Compressor oil"
+   ]
+  },
+  {
+   "component": "A/C COMPRESSOR",
+   "note": "A/C COMPRESSOR, REPLACE",
+   "id": "accomp",
+   "row": "LG-HVA-C-0624",
+   "name": "A/C compressor, replace",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "not cold",
+    "compressor",
+    "noise"
+   ],
+   "parts": [
+    "A/C compressor",
+    "Receiver drier",
+    "Refrigerant"
+   ]
+  },
+  {
+   "component": "TIRES",
+   "note": "TIRE BALANCE, FOUR WHEELS",
+   "id": "balance",
+   "row": "LG-TIR-B-0711",
+   "name": "Tire balance, four wheels",
+   "strong": [],
+   "kw": [
+    "vibration",
+    "shake",
+    "steering wheel",
+    "highway",
+    "shimmy",
+    "wobble"
+   ],
+   "parts": [
+    "Wheel weights"
+   ]
+  },
+  {
+   "component": "WHEEL ALIGNMENT",
+   "note": "WHEEL ALIGNMENT, FOUR WHEEL",
+   "id": "align",
+   "row": "LG-TIR-A-0722",
+   "name": "Wheel alignment, four wheel",
+   "strong": [],
+   "kw": [
+    "pull",
+    "drift",
+    "vibration",
+    "shake",
+    "steering",
+    "uneven"
+   ],
+   "parts": []
+  },
+  {
+   "component": "VALVE COVER GASKET",
+   "note": "VALVE COVER GASKET, REPLACE",
+   "id": "valvecover",
+   "row": "LG-ENG-V-0811",
+   "name": "Valve cover gasket, replace",
+   "strong": [],
+   "kw": [
+    "oil leak",
+    "leak",
+    "oil smell",
+    "burning smell",
+    "drip"
+   ],
+   "parts": [
+    "Valve cover gasket set"
+   ]
+  },
+  {
+   "component": "OIL PAN GASKET",
+   "note": "OIL PAN GASKET, REPLACE",
+   "id": "oilpan",
+   "row": "LG-ENG-O-0824",
+   "name": "Oil pan gasket, replace",
+   "strong": [],
+   "kw": [
+    "oil leak",
+    "leak",
+    "drip",
+    "puddle"
+   ],
+   "parts": [
+    "Oil pan gasket",
+    "Engine oil"
+   ]
+  },
+  {
+   "component": "DISC BRAKE PADS",
+   "note": "FRONT BRAKE PADS, REPLACE (PADS ONLY)",
+   "id": "brk-pads-f",
+   "row": "LG-BRK-F-0140",
+   "name": "Front brake pads, replace (pads only)",
+   "strong": [
+    "squeak",
+    "squeal",
+    "screech"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "stopping"
+   ],
+   "parts": [
+    "Front brake pads (set)",
+    "Brake hardware kit"
+   ]
+  },
+  {
+   "component": "BRAKE SERVICE",
+   "note": "BRAKE SERVICE: CLEAN, LUBRICATE AND ADJUST",
+   "id": "brk-service",
+   "row": "LG-BRK-S-0133",
+   "name": "Brake service: clean, lubricate and adjust",
+   "strong": [
+    "squeak",
+    "squeal"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "noise",
+    "dust"
+   ],
+   "parts": []
+  },
+  {
+   "component": "DISC BRAKE ROTOR",
+   "note": "REAR BRAKE PADS AND ROTORS, REPLACE",
+   "id": "brk-rear-rot",
+   "row": "LG-BRK-R-0159",
+   "name": "Rear brake pads and rotors, replace",
+   "strong": [],
+   "kw": [
+    "grinding",
+    "brake",
+    "pulsing",
+    "vibration"
+   ],
+   "parts": [
+    "Rear brake pads (set)",
+    "Rear brake rotors (2)"
+   ]
+  },
+  {
+   "component": "BRAKE HOSE",
+   "note": "BRAKE HOSE, REPLACE (ONE)",
+   "id": "brk-hose",
+   "row": "LG-BRK-H-0182",
+   "name": "Brake hose, replace (one)",
+   "strong": [],
+   "kw": [
+    "pulling",
+    "drag",
+    "soft pedal",
+    "brake fluid",
+    "leak"
+   ],
+   "parts": [
+    "Brake hose"
+   ]
+  },
+  {
+   "component": "MASTER CYLINDER",
+   "note": "BRAKE MASTER CYLINDER, REPLACE AND BLEED",
+   "id": "brk-master",
+   "row": "LG-BRK-M-0195",
+   "name": "Brake master cylinder, replace and bleed",
+   "strong": [
+    "soft pedal",
+    "spongy",
+    "pedal sinks"
+   ],
+   "kw": [
+    "brake fluid",
+    "pedal",
+    "brake"
+   ],
+   "parts": [
+    "Brake master cylinder",
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "DIAGNOSTIC",
+   "note": "BRAKE INSPECTION AND ROAD TEST",
+   "id": "diag-brake",
+   "row": "LG-DGN-B-0101",
+   "name": "Brake inspection and road test",
+   "strong": [],
+   "kw": [
+    "brake",
+    "braking",
+    "squeak",
+    "squeal",
+    "grinding",
+    "pedal"
+   ],
+   "parts": []
+  },
+  {
+   "component": "DIAGNOSTIC",
+   "note": "DIAGNOSTIC: ENGINE NO-START OR DRIVEABILITY CONCERN",
+   "id": "diag-engine",
+   "row": "LG-DGN-E-0110",
+   "name": "Diagnostic: engine no-start or driveability concern",
+   "strong": [
+    "won't start",
+    "no start",
+    "engine not working",
+    "engine isn't working",
+    "engine problem",
+    "stalls",
+    "stalling",
+    "stalled",
+    "engine dies",
+    "cuts out",
+    "won't run",
+    "runs rough",
+    "loses power"
+   ],
+   "kw": [
+    "crank",
+    "hesitat",
+    "idle"
+   ],
+   "parts": []
+  },
+  {
+   "component": "FUEL PUMP",
+   "note": "FUEL PUMP, REPLACE (IN-TANK)",
+   "id": "fuelpump",
+   "row": "LG-FUE-P-0415",
+   "name": "Fuel pump, replace (in-tank)",
+   "strong": [
+    "cranks but"
+   ],
+   "kw": [
+    "won't start",
+    "no start",
+    "stalls",
+    "stalling",
+    "loses power",
+    "hesitat",
+    "whine"
+   ],
+   "parts": [
+    "Fuel pump"
+   ]
+  },
+  {
+   "component": "FUEL FILTER",
+   "note": "FUEL FILTER, REPLACE",
+   "id": "fuelfilt",
+   "row": "LG-FUE-F-0408",
+   "name": "Fuel filter, replace",
+   "strong": [],
+   "kw": [
+    "hesitat",
+    "loses power",
+    "cranks but",
+    "rough",
+    "stalls"
+   ],
+   "parts": [
+    "Fuel filter"
+   ]
+  },
+  {
+   "component": "CRANKSHAFT POSITION SENSOR",
+   "note": "CRANKSHAFT POSITION SENSOR, REPLACE",
+   "id": "crk-sensor",
+   "row": "LG-ENG-C-0338",
+   "name": "Crankshaft position sensor, replace",
+   "strong": [],
+   "kw": [
+    "cranks but",
+    "stalls",
+    "stalling",
+    "won't start",
+    "no start",
+    "check engine",
+    "intermittent"
+   ],
+   "parts": [
+    "Crankshaft position sensor"
+   ]
+  },
+  {
+   "component": "CAMSHAFT POSITION SENSOR",
+   "note": "CAMSHAFT POSITION SENSOR, REPLACE",
+   "id": "cam-sensor",
+   "row": "LG-ENG-M-0341",
+   "name": "Camshaft position sensor, replace",
+   "strong": [],
+   "kw": [
+    "check engine",
+    "rough",
+    "stalls",
+    "hard start",
+    "hesitat"
+   ],
+   "parts": [
+    "Camshaft position sensor"
+   ]
+  },
+  {
+   "component": "MASS AIR FLOW SENSOR",
+   "note": "MASS AIR FLOW SENSOR, REPLACE",
+   "id": "maf",
+   "row": "LG-ENG-A-0347",
+   "name": "Mass air flow sensor, replace",
+   "strong": [],
+   "kw": [
+    "check engine",
+    "engine light",
+    "hesitat",
+    "rough",
+    "stalls",
+    "fuel economy",
+    "loses power"
+   ],
+   "parts": [
+    "Mass air flow sensor"
+   ]
+  },
+  {
+   "component": "THROTTLE BODY",
+   "note": "THROTTLE BODY, CLEAN AND RELEARN",
+   "id": "throttle",
+   "row": "LG-ENG-T-0359",
+   "name": "Throttle body, clean and relearn",
+   "strong": [],
+   "kw": [
+    "rough idle",
+    "idle",
+    "stalls",
+    "hesitat",
+    "check engine"
+   ],
+   "parts": []
+  },
+  {
+   "component": "FUEL INJECTOR",
+   "note": "FUEL INJECTOR, REPLACE (ONE)",
+   "id": "injector",
+   "row": "LG-FUE-I-0421",
+   "name": "Fuel injector, replace (one)",
+   "strong": [],
+   "kw": [
+    "misfire",
+    "rough",
+    "check engine",
+    "fuel smell",
+    "hesitat"
+   ],
+   "parts": [
+    "Fuel injector"
+   ]
+  },
+  {
+   "component": "INTAKE MANIFOLD",
+   "note": "INTAKE VACUUM LEAK, FIND AND REPAIR",
+   "id": "vacleak",
+   "row": "LG-ENG-L-0366",
+   "name": "Intake vacuum leak, find and repair",
+   "strong": [
+    "hissing"
+   ],
+   "kw": [
+    "rough idle",
+    "idle",
+    "check engine",
+    "stalls",
+    "high idle"
+   ],
+   "parts": []
+  },
+  {
+   "component": "IGNITION SWITCH",
+   "note": "IGNITION SWITCH, REPLACE",
+   "id": "ignswitch",
+   "row": "LG-ELE-W-0541",
+   "name": "Ignition switch, replace",
+   "strong": [],
+   "kw": [
+    "won't start",
+    "no crank",
+    "key",
+    "dash lights",
+    "stalls"
+   ],
+   "parts": [
+    "Ignition switch"
+   ]
+  },
+  {
+   "component": "BATTERY CABLE",
+   "note": "BATTERY CABLE END, CLEAN OR REPLACE",
+   "id": "battcable",
+   "row": "LG-ELE-C-0515",
+   "name": "Battery cable end, clean or replace",
+   "strong": [
+    "corrosion"
+   ],
+   "kw": [
+    "won't start",
+    "click",
+    "dim",
+    "no crank",
+    "slow crank"
+   ],
+   "parts": [
+    "Battery cable"
+   ]
+  },
+  {
+   "component": "DIAGNOSTIC",
+   "note": "DIAGNOSTIC: SCAN CODES AND TEST (CHECK ENGINE LIGHT)",
+   "id": "diag-cel",
+   "row": "LG-DGN-C-0105",
+   "name": "Diagnostic: scan codes and test (check engine light)",
+   "strong": [
+    "check engine",
+    "engine light"
+   ],
+   "kw": [],
+   "parts": []
+  },
+  {
+   "component": "CATALYTIC CONVERTER",
+   "note": "CATALYTIC CONVERTER, REPLACE",
+   "id": "cat",
+   "row": "LG-EMS-C-0361",
+   "name": "Catalytic converter, replace",
+   "strong": [
+    "p0420",
+    "catalytic"
+   ],
+   "kw": [
+    "check engine",
+    "rotten egg",
+    "sulfur",
+    "rattle",
+    "fuel economy"
+   ],
+   "parts": [
+    "Catalytic converter"
+   ]
+  },
+  {
+   "component": "EGR VALVE",
+   "note": "EGR VALVE, REPLACE",
+   "id": "egr",
+   "row": "LG-EMS-R-0372",
+   "name": "EGR valve, replace",
+   "strong": [],
+   "kw": [
+    "check engine",
+    "rough idle",
+    "hesitat",
+    "pinging"
+   ],
+   "parts": [
+    "EGR valve"
+   ]
+  },
+  {
+   "component": "FUEL CAP",
+   "note": "GAS CAP, REPLACE",
+   "id": "gascap",
+   "row": "LG-EMS-G-0300",
+   "name": "Gas cap, replace",
+   "strong": [
+    "gas cap"
+   ],
+   "kw": [
+    "check engine",
+    "fuel smell"
+   ],
+   "parts": [
+    "Gas cap"
+   ]
+  },
+  {
+   "component": "RADIATOR",
+   "note": "RADIATOR, REPLACE",
+   "id": "radiator",
+   "row": "LG-COO-R-0446",
+   "name": "Radiator, replace",
+   "strong": [],
+   "kw": [
+    "overheat",
+    "coolant",
+    "leak",
+    "steam",
+    "temperature"
+   ],
+   "parts": [
+    "Radiator",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "COOLING FAN",
+   "note": "RADIATOR COOLING FAN MOTOR, REPLACE",
+   "id": "coolfan",
+   "row": "LG-COO-F-0452",
+   "name": "Radiator cooling fan motor, replace",
+   "strong": [],
+   "kw": [
+    "overheat",
+    "temperature",
+    "fan",
+    "a/c",
+    "idle"
+   ],
+   "parts": [
+    "Radiator cooling fan"
+   ]
+  },
+  {
+   "component": "DIAGNOSTIC",
+   "note": "DIAGNOSTIC: A/C PERFORMANCE TEST AND LEAK CHECK",
+   "id": "diag-ac",
+   "row": "LG-DGN-A-0120",
+   "name": "Diagnostic: A/C performance test and leak check",
+   "strong": [
+    "a/c not working",
+    "a/c stopped",
+    "no a/c"
+   ],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "not cold",
+    "warm air",
+    "hot air",
+    "no cold air"
+   ],
+   "parts": []
+  },
+  {
+   "component": "A/C SYSTEM",
+   "note": "A/C LEAK TEST (DYE) AND REPAIR ESTIMATE",
+   "id": "ac-leak",
+   "row": "LG-HVA-L-0618",
+   "name": "A/C leak test (dye) and repair estimate",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "not cold",
+    "warm air",
+    "no cold air",
+    "hissing"
+   ],
+   "parts": [
+    "Refrigerant"
+   ]
+  },
+  {
+   "component": "A/C CONDENSER",
+   "note": "A/C CONDENSER, REPLACE",
+   "id": "ac-cond",
+   "row": "LG-HVA-D-0631",
+   "name": "A/C condenser, replace",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "not cold",
+    "warm air",
+    "leak"
+   ],
+   "parts": [
+    "A/C condenser",
+    "Refrigerant"
+   ]
+  },
+  {
+   "component": "A/C COMPRESSOR CLUTCH",
+   "note": "A/C COMPRESSOR CLUTCH, REPLACE",
+   "id": "ac-clutch",
+   "row": "LG-HVA-K-0640",
+   "name": "A/C compressor clutch, replace",
+   "strong": [
+    "clutch"
+   ],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "click",
+    "not cold",
+    "noise"
+   ],
+   "parts": [
+    "A/C compressor clutch"
+   ]
+  },
+  {
+   "component": "EXPANSION VALVE",
+   "note": "A/C EXPANSION VALVE, REPLACE",
+   "id": "ac-exp",
+   "row": "LG-HVA-X-0652",
+   "name": "A/C expansion valve, replace",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "not cold",
+    "warm air",
+    "frost"
+   ],
+   "parts": [
+    "A/C expansion valve",
+    "Receiver drier",
+    "Refrigerant"
+   ]
+  },
+  {
+   "component": "A/C PRESSURE SENSOR",
+   "note": "A/C PRESSURE SWITCH, REPLACE",
+   "id": "ac-switch",
+   "row": "LG-HVA-S-0660",
+   "name": "A/C pressure switch, replace",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "clutch",
+    "not cold",
+    "intermittent"
+   ],
+   "parts": [
+    "A/C pressure switch"
+   ]
+  },
+  {
+   "component": "BLOWER MOTOR",
+   "note": "BLOWER MOTOR, REPLACE",
+   "id": "blower",
+   "row": "LG-HVA-B-0671",
+   "name": "Blower motor, replace",
+   "strong": [
+    "no air",
+    "weak airflow",
+    "blower",
+    "no airflow",
+    "fan not working"
+   ],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "vents",
+    "heater",
+    "fan speed",
+    "noise"
+   ],
+   "parts": [
+    "Blower motor"
+   ]
+  },
+  {
+   "component": "BLOWER MOTOR RESISTOR",
+   "note": "BLOWER MOTOR RESISTOR, REPLACE",
+   "id": "blower-res",
+   "row": "LG-HVA-R-0679",
+   "name": "Blower motor resistor, replace",
+   "strong": [
+    "only high",
+    "fan speed"
+   ],
+   "kw": [
+    "blower",
+    "no air",
+    "weak airflow",
+    "vents"
+   ],
+   "parts": [
+    "Blower motor resistor"
+   ]
+  },
+  {
+   "component": "CABIN AIR FILTER",
+   "note": "CABIN AIR FILTER, REPLACE",
+   "id": "cabin-filt",
+   "row": "LG-HVA-F-0685",
+   "name": "Cabin air filter, replace",
+   "strong": [],
+   "kw": [
+    "weak airflow",
+    "musty",
+    "smell",
+    "vents",
+    "dust",
+    "a/c"
+   ],
+   "parts": [
+    "Cabin air filter"
+   ]
+  },
+  {
+   "component": "HVAC ACTUATOR",
+   "note": "HVAC BLEND DOOR ACTUATOR, REPLACE",
+   "id": "hvac-act",
+   "row": "LG-HVA-T-0693",
+   "name": "HVAC blend door actuator, replace",
+   "strong": [],
+   "kw": [
+    "clicking",
+    "temperature",
+    "hot on one side",
+    "vents",
+    "heater",
+    "a/c",
+    "stuck"
+   ],
+   "parts": [
+    "HVAC blend door actuator"
+   ]
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "REMOVE & INSTALL OR REMOVE & REPLACE AXLE SHAFT ASSEMBLY - FWD - Both",
+   "id": "axle-asm-fwd-both",
+   "row": "LG-AXL-0001",
+   "name": "Axle shaft assembly, remove & install/replace (FWD, both sides)",
+   "strong": [],
+   "kw": [
+    "axle",
+    "cv joint",
+    "clicking when turning",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "Axle shaft assembly (2)"
+   ]
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "REMOVE & INSTALL OR REMOVE & REPLACE AXLE SHAFT ASSEMBLY - FWD - Left Side",
+   "id": "axle-asm-fwd-left",
+   "row": "LG-AXL-0002",
+   "name": "Axle shaft assembly, remove & install/replace (FWD, left side)",
+   "strong": [],
+   "kw": [
+    "axle",
+    "cv joint",
+    "clicking when turning",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "Axle shaft assembly"
+   ]
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "REMOVE & INSTALL OR REMOVE & REPLACE AXLE SHAFT ASSEMBLY - FWD - Right Side",
+   "id": "axle-asm-fwd-right",
+   "row": "LG-AXL-0003",
+   "name": "Axle shaft assembly, remove & install/replace (FWD, right side)",
+   "strong": [],
+   "kw": [
+    "axle",
+    "cv joint",
+    "clicking when turning",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "Axle shaft assembly"
+   ]
+  },
+  {
+   "component": "AXLE ASSEMBLY",
+   "note": "REMOVE & REPLACE AXLE ASSEMBLY - FWD",
+   "id": "axle-asm-fwd",
+   "row": "LG-AXL-0004",
+   "name": "Axle assembly, replace (FWD)",
+   "strong": [],
+   "kw": [
+    "axle",
+    "cv joint",
+    "clicking when turning",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "Axle assembly"
+   ]
+  },
+  {
+   "component": "AXLE SHAFT",
+   "note": "REMOVE & REPLACE AXLE SHAFT - FWD - Both",
+   "id": "axle-shaft-fwd-both",
+   "row": "LG-AXL-0005",
+   "name": "Axle shaft, replace (FWD, both sides)",
+   "strong": [],
+   "kw": [
+    "axle",
+    "cv joint",
+    "clicking when turning",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "Axle shaft (2)"
+   ]
+  },
+  {
+   "component": "AXLE SHAFT",
+   "note": "REMOVE & REPLACE AXLE SHAFT - FWD - Left Side",
+   "id": "axle-shaft-fwd-left",
+   "row": "LG-AXL-0006",
+   "name": "Axle shaft, replace (FWD, left side)",
+   "strong": [],
+   "kw": [
+    "axle",
+    "cv joint",
+    "clicking when turning",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "Axle shaft"
+   ]
+  },
+  {
+   "component": "AXLE SHAFT",
+   "note": "REMOVE & REPLACE AXLE SHAFT - FWD - Right Side",
+   "id": "axle-shaft-fwd-right",
+   "row": "LG-AXL-0007",
+   "name": "Axle shaft, replace (FWD, right side)",
+   "strong": [],
+   "kw": [
+    "axle",
+    "cv joint",
+    "clicking when turning",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "Axle shaft"
+   ]
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "COMBINATION - REMOVE & REPLACE AXLE SHAFT BOOT - Each Side",
+   "id": "axle-boot-each",
+   "row": "LG-AXL-0008",
+   "name": "Axle shaft boot, replace (each side)",
+   "strong": [
+    "torn boot",
+    "grease leak",
+    "grease flung"
+   ],
+   "kw": [
+    "axle",
+    "cv joint",
+    "boot",
+    "clicking when turning"
+   ],
+   "parts": [
+    "Axle shaft boot kit"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the CV axle boot",
+    "why": "A torn boot lets dirt in and grease out, and that wears out the joint."
+   }
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "COMBINATION - REMOVE & REPLACE AXLE SHAFT BOOT - Inner &/or Outer, Each Side",
+   "id": "axle-boot-io-each",
+   "row": "LG-AXL-0009",
+   "name": "Axle shaft boot, replace (inner and/or outer, each side)",
+   "strong": [
+    "torn boot",
+    "grease leak",
+    "grease flung"
+   ],
+   "kw": [
+    "axle",
+    "cv joint",
+    "boot",
+    "clicking when turning"
+   ],
+   "parts": [
+    "Axle shaft boot kit"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the inner or outer CV axle boot",
+    "why": "A torn boot lets dirt in and grease out, and that wears out the joint."
+   }
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "COMBINATION - REMOVE & REPLACE AXLE SHAFT CENTER SUPPORT BEARING",
+   "id": "axle-csb",
+   "row": "LG-AXL-0010",
+   "name": "Axle shaft center support bearing, replace",
+   "strong": [],
+   "kw": [
+    "axle",
+    "vibration",
+    "driveline",
+    "noise"
+   ],
+   "parts": [
+    "Center support bearing"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the axle's center support bearing",
+    "why": "It holds the long axle steady; a worn one causes a vibration at highway speed."
+   }
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "COMBINATION - REMOVE & REPLACE CONSTANT VELOCITY JOINT - Each",
+   "id": "cv-joint-each",
+   "row": "LG-AXL-0011",
+   "name": "CV (constant velocity) joint, replace (each)",
+   "strong": [
+    "clicking when turning",
+    "cv joint",
+    "popping sound turning"
+   ],
+   "kw": [
+    "axle",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "CV joint"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the CV joint",
+    "why": "A worn joint clicks when turning and can eventually let go."
+   }
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "COMBINATION - REMOVE & REPLACE TRANSAXLE OUTPUT SEAL - Each",
+   "id": "transaxle-seal-each",
+   "row": "LG-AXL-0012",
+   "name": "Transaxle output seal, replace (each)",
+   "strong": [
+    "transmission fluid leak",
+    "axle seal leak"
+   ],
+   "kw": [
+    "axle",
+    "leak",
+    "driveline"
+   ],
+   "parts": [
+    "Transaxle output seal"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "put in a new transmission output seal",
+    "why": "The seal gets disturbed when the axle comes out, and a new one prevents a fluid leak later."
+   }
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "COMBINATION - REPLACE AXLE SHAFT - Each",
+   "id": "axle-shaft-each",
+   "row": "LG-AXL-0013",
+   "name": "Axle shaft, replace (each)",
+   "strong": [],
+   "kw": [
+    "axle",
+    "cv joint",
+    "clicking when turning",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "Axle shaft"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the axle shaft itself",
+    "why": "If the shaft is bent or its splines are worn, it is replaced while the assembly is already out."
+   }
+  },
+  {
+   "component": "AXLE SHAFT ASSEMBLY",
+   "note": "COMBINATION - REPLACE AXLE SHAFT - Each Side",
+   "id": "axle-shaft-each-side",
+   "row": "LG-AXL-0014",
+   "name": "Axle shaft, replace (each side)",
+   "strong": [],
+   "kw": [
+    "axle",
+    "cv joint",
+    "clicking when turning",
+    "clunk",
+    "vibration",
+    "driveline"
+   ],
+   "parts": [
+    "Axle shaft"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the axle shaft itself",
+    "why": "If the shaft is bent or its splines are worn, it is replaced while the assembly is already out."
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "INSPECT BRAKE SYSTEM (COMPLETE) - All Wheels",
+   "id": "brake-sys-inspect-all",
+   "row": "LG-BRKSYS-0001",
+   "name": "Brake system (complete), inspect — all wheels",
+   "strong": [
+    "brake inspection",
+    "brake check"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "noise",
+    "pedal"
+   ],
+   "parts": []
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "REMOVE & REPLACE BRAKE SYSTEM (COMPLETE) - All Wheels",
+   "id": "brake-sys-rr-all",
+   "row": "LG-BRKSYS-0002",
+   "name": "Brake system (complete), remove & replace — all wheels",
+   "strong": [],
+   "kw": [
+    "brake",
+    "braking",
+    "grinding",
+    "pulling",
+    "noise"
+   ],
+   "parts": [
+    "Brake pads (set)",
+    "Brake rotors",
+    "Brake calipers",
+    "Brake hardware kit",
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "CALIPER",
+   "note": "REMOVE & REPLACE CALIPER - Front or Rear, Both",
+   "id": "caliper-rr-both",
+   "row": "LG-CAL-0001",
+   "name": "Brake caliper, remove & replace (front or rear, both)",
+   "strong": [
+    "sticking caliper",
+    "dragging brake",
+    "pulling to one side"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "burning smell",
+    "grinding",
+    "pulling",
+    "uneven pad wear"
+   ],
+   "parts": [
+    "Brake caliper (2)",
+    "Caliper hardware kit",
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "CALIPER",
+   "note": "REMOVE & REPLACE CALIPER - Front or Rear, One Side",
+   "id": "caliper-rr-one",
+   "row": "LG-CAL-0002",
+   "name": "Brake caliper, remove & replace (front or rear, one side)",
+   "strong": [
+    "sticking caliper",
+    "dragging brake",
+    "pulling to one side"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "burning smell",
+    "grinding",
+    "pulling",
+    "uneven pad wear"
+   ],
+   "parts": [
+    "Brake caliper",
+    "Caliper hardware kit",
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "CALIPER",
+   "note": "REMOVE, INSTALL & OVERHAUL CALIPER - Front, Both",
+   "id": "caliper-overhaul-front-both",
+   "row": "LG-CAL-0003",
+   "name": "Brake caliper, remove, install & overhaul (front, both)",
+   "strong": [
+    "sticking caliper",
+    "seized caliper",
+    "caliper stuck"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "dragging",
+    "burning smell",
+    "pulling"
+   ],
+   "parts": [
+    "Caliper rebuild kit",
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "CALIPER",
+   "note": "REMOVE, INSTALL & OVERHAUL CALIPER - Front, One Side",
+   "id": "caliper-overhaul-front-one",
+   "row": "LG-CAL-0004",
+   "name": "Brake caliper, remove, install & overhaul (front, one side)",
+   "strong": [
+    "sticking caliper",
+    "seized caliper",
+    "caliper stuck"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "dragging",
+    "burning smell",
+    "pulling"
+   ],
+   "parts": [
+    "Caliper rebuild kit",
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "CALIPER",
+   "note": "REMOVE, INSTALL & OVERHAUL CALIPER - Rear, Both",
+   "id": "caliper-overhaul-rear-both",
+   "row": "LG-CAL-0005",
+   "name": "Brake caliper, remove, install & overhaul (rear, both)",
+   "strong": [
+    "sticking caliper",
+    "seized caliper",
+    "caliper stuck"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "dragging",
+    "burning smell",
+    "pulling"
+   ],
+   "parts": [
+    "Caliper rebuild kit",
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "CALIPER",
+   "note": "REMOVE, INSTALL & OVERHAUL CALIPER - Rear, One Side",
+   "id": "caliper-overhaul-rear-one",
+   "row": "LG-CAL-0006",
+   "name": "Brake caliper, remove, install & overhaul (rear, one side)",
+   "strong": [
+    "sticking caliper",
+    "seized caliper",
+    "caliper stuck"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "dragging",
+    "burning smell",
+    "pulling"
+   ],
+   "parts": [
+    "Caliper rebuild kit",
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - ADJUSTMENT PARKING BRAKE",
+   "id": "adj-parking-brake",
+   "row": "LG-BRKSYS-0003",
+   "name": "Parking brake, adjustment",
+   "strong": [],
+   "kw": [
+    "parking brake",
+    "emergency brake",
+    "brake"
+   ],
+   "parts": [],
+   "talk": {
+    "kind": "recommended",
+    "plain": "adjust the parking brake",
+    "why": "New brake parts change how the parking brake sits, so we set it to hold properly."
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - BLEED BRAKE SYSTEM - ABS Automated Bleed",
+   "id": "bleed-brakes-abs",
+   "row": "LG-BRKSYS-0004",
+   "name": "Brake system, bleed (ABS automated bleed)",
+   "strong": [
+    "spongy pedal",
+    "soft pedal"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "pedal",
+    "air in lines"
+   ],
+   "parts": [
+    "Brake fluid"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "bleed the brakes with the ABS scan tool",
+    "why": "If air gets into the ABS unit, this is the only way to get a firm pedal back."
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - BLEED BRAKE SYSTEM - Hydraulic Bleed",
+   "id": "bleed-brakes-hydraulic",
+   "row": "LG-BRKSYS-0005",
+   "name": "Brake system, bleed (hydraulic bleed)",
+   "strong": [
+    "spongy pedal",
+    "soft pedal"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "pedal",
+    "air in lines"
+   ],
+   "parts": [
+    "Brake fluid"
+   ],
+   "talk": {
+    "kind": "required",
+    "plain": "bleed the brake lines",
+    "why": "Opening the brake system lets air in, and bleeding it keeps the pedal firm and safe."
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - BURNISH BRAKE ROTORS WHILE DRIVING VEHICLE DISC ROTOR",
+   "id": "burnish-rotors-brakesys",
+   "row": "LG-BRKSYS-0006",
+   "name": "Brake rotors, burnish while driving (disc rotor)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "braking",
+    "new rotors",
+    "new pads"
+   ],
+   "parts": [],
+   "talk": {
+    "kind": "recommended",
+    "plain": "bed in the new brakes on a road test",
+    "why": "It seats the new pads to the rotors so they stop smoothly and quietly from day one."
+   }
+  },
+  {
+   "component": "CALIPER",
+   "note": "COMBINATION - BURNISH BRAKE ROTORS WHILE DRIVING VEHICLE DISC ROTOR",
+   "id": "burnish-rotors-caliper",
+   "row": "LG-CAL-0007",
+   "name": "Brake rotors, burnish while driving (disc rotor)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "braking",
+    "new rotors",
+    "new pads"
+   ],
+   "parts": [],
+   "talk": {
+    "kind": "recommended",
+    "plain": "bed in the new brakes on a road test",
+    "why": "It seats the new pads to the rotors so they stop smoothly and quietly from day one."
+   }
+  },
+  {
+   "component": "CALIPER",
+   "note": "COMBINATION - CLEAN AND INSPECT HUB & ROTOR DISC -  Corrosion, Each - Clean any rust or corrosion from mating surface of Hub/Axle Flange and Brake Rotor.",
+   "id": "clean-hub-rotor-caliper",
+   "row": "LG-CAL-0008",
+   "name": "Hub & rotor disc, clean and inspect (corrosion, each)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "braking",
+    "rust",
+    "corrosion",
+    "vibration"
+   ],
+   "parts": [],
+   "talk": {
+    "kind": "recommended",
+    "plain": "clean the rust off the hub where the rotor sits",
+    "why": "Rust there makes the rotor wobble, which you feel as a pulsing pedal."
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - CLEAN AND INSPECT HUB & ROTOR DISC -  Corrosion, Each - Clean any rust or corrosion from mating surface of Hub/Axle Flange and Brake Rotor.",
+   "id": "clean-hub-rotor-brakesys",
+   "row": "LG-BRKSYS-0007",
+   "name": "Hub & rotor disc, clean and inspect (corrosion, each)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "braking",
+    "rust",
+    "corrosion",
+    "vibration"
+   ],
+   "parts": [],
+   "talk": {
+    "kind": "recommended",
+    "plain": "clean the rust off the hub where the rotor sits",
+    "why": "Rust there makes the rotor wobble, which you feel as a pulsing pedal."
+   }
+  },
+  {
+   "component": "CALIPER",
+   "note": "COMBINATION - CORRECT DISC ROTOR -  Lateral Runout, Each - Correct Rotor lateral runout by indexing.",
+   "id": "correct-disc-runout-caliper",
+   "row": "LG-CAL-0009",
+   "name": "Disc rotor, correct lateral runout (each, by indexing)",
+   "strong": [
+    "pedal pulsation",
+    "steering wheel shake when braking"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "vibration",
+    "pulsing"
+   ],
+   "parts": [],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "correct rotor wobble by re-indexing it on the hub",
+    "why": "If the technician measures wobble, this fixes it without buying new parts."
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - CORRECT DISC ROTOR -  Lateral Runout, Each - Correct Rotor lateral runout by indexing.",
+   "id": "correct-disc-runout-brakesys",
+   "row": "LG-BRKSYS-0008",
+   "name": "Disc rotor, correct lateral runout (each, by indexing)",
+   "strong": [
+    "pedal pulsation",
+    "steering wheel shake when braking"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "vibration",
+    "pulsing"
+   ],
+   "parts": [],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "correct rotor wobble by re-indexing it on the hub",
+    "why": "If the technician measures wobble, this fixes it without buying new parts."
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - REPLACE BRAKE HOSE - Each",
+   "id": "replace-brake-hose",
+   "row": "LG-BRKSYS-0009",
+   "name": "Brake hose, replace (each)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "brake fluid",
+    "leak",
+    "soft pedal"
+   ],
+   "parts": [
+    "Brake hose"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace a cracked brake hose",
+    "why": "Hoses crack with age, and the system is already open, so this is the cheapest time to do it.",
+    "standalone": "syn-hose-f-one"
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - REPLACE PARKING BRAKE SHOE & LINING - Each Side",
+   "id": "replace-parking-brake-shoe",
+   "row": "LG-BRKSYS-0010",
+   "name": "Parking brake shoe & lining, replace (each side)",
+   "strong": [],
+   "kw": [
+    "parking brake",
+    "emergency brake",
+    "brake"
+   ],
+   "parts": [
+    "Parking brake shoe and lining kit"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the parking brake shoes",
+    "why": "Worn shoes mean the parking brake may not hold on a hill."
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - REPLACE WHEEL BEARING - FWD - Rear, Hub Assembly, One Side",
+   "id": "replace-wheel-bearing-rear-fwd",
+   "row": "LG-BRKSYS-0011",
+   "name": "Wheel bearing, replace (FWD rear, hub assembly, one side)",
+   "strong": [],
+   "kw": [
+    "humming",
+    "hum",
+    "growl",
+    "roar",
+    "whine",
+    "noise",
+    "wheel bearing"
+   ],
+   "parts": [
+    "Wheel bearing hub assembly"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the rear wheel bearing",
+    "why": "A worn bearing hums or growls and gets louder over time.",
+    "standalone": "syn-bearing-r-one"
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - REPLACE WHEEL BEARING - FWD Front, One Side - DOES NOT include wheel alignment.",
+   "id": "replace-wheel-bearing-front-fwd",
+   "row": "LG-BRKSYS-0012",
+   "name": "Wheel bearing, replace (FWD front, one side) — does not include wheel alignment",
+   "strong": [],
+   "kw": [
+    "humming",
+    "hum",
+    "growl",
+    "roar",
+    "whine",
+    "noise",
+    "wheel bearing"
+   ],
+   "parts": [
+    "Wheel bearing hub assembly"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the front wheel bearing",
+    "why": "A worn bearing hums or growls and gets louder over time.",
+    "standalone": "syn-bearing-f-one"
+   }
+  },
+  {
+   "component": "BRAKE SYSTEM (COMPLETE)",
+   "note": "COMBINATION - TESTING ANTI-LOCK BRAKE SYSTEM",
+   "id": "test-abs",
+   "row": "LG-BRKSYS-0013",
+   "name": "Anti-lock brake system, testing",
+   "strong": [
+    "abs light",
+    "traction control light"
+   ],
+   "kw": [
+    "brake",
+    "braking",
+    "warning light"
+   ],
+   "parts": [],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "run an ABS system test",
+    "why": "If the ABS light is on or a sensor was disturbed, this confirms the system works."
+   }
+  },
+  {
+   "component": "DISC BRAKE PADS",
+   "note": "REMOVE & REPLACE DISC BRAKE PADS - Front, Both",
+   "id": "syn-pads-f",
+   "row": "SYN-BRK-0001",
+   "name": "Front disc brake pads, replace (both sides)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "braking",
+    "squeal"
+   ],
+   "parts": [
+    "Front brake pads (set)"
+   ]
+  },
+  {
+   "component": "DISC BRAKE PADS",
+   "note": "REMOVE & REPLACE DISC BRAKE PADS - Rear, Both",
+   "id": "syn-pads-r",
+   "row": "SYN-BRK-0002",
+   "name": "Rear disc brake pads, replace (both sides)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "braking",
+    "squeal"
+   ],
+   "parts": [
+    "Rear brake pads (set)"
+   ]
+  },
+  {
+   "component": "DISC BRAKE PADS",
+   "note": "REMOVE & REPLACE DISC BRAKE PADS - Front & Rear",
+   "id": "syn-pads-fr",
+   "row": "SYN-BRK-0003",
+   "name": "Disc brake pads, replace (front and rear)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "braking"
+   ],
+   "parts": [
+    "Front brake pads (set)",
+    "Rear brake pads (set)"
+   ]
+  },
+  {
+   "component": "DISC BRAKE PADS",
+   "note": "COMBINATION - REMOVE & REPLACE DISC BRAKE ROTOR - Each",
+   "id": "syn-pads-rotor-each",
+   "row": "SYN-BRK-0004",
+   "name": "Disc brake rotor, replace with pads (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Brake rotor"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the rotor",
+    "why": "If the rotor is worn below its minimum thickness, new pads on it will not stop well or last.",
+    "standalone": "syn-rotor-f-one"
+   }
+  },
+  {
+   "component": "DISC BRAKE PADS",
+   "note": "COMBINATION - RESURFACE DISC BRAKE ROTOR - Each - Rotor removed from vehicle.",
+   "id": "syn-pads-resurface-each",
+   "row": "SYN-BRK-0005",
+   "name": "Disc brake rotor, resurface (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "resurface the rotor",
+    "why": "A smooth, flat rotor lets the new pads stop evenly without noise or pulsing."
+   }
+  },
+  {
+   "component": "DISC BRAKE PADS",
+   "note": "COMBINATION - REPLACE BRAKE PAD HARDWARE KIT - Each Axle",
+   "id": "syn-pads-hardware",
+   "row": "SYN-BRK-0006",
+   "name": "Brake pad hardware kit, replace (each axle)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Brake hardware kit"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "put in new pad clips and hardware",
+    "why": "Old clips rust and let the pads rattle or squeal, even when the pads are new."
+   }
+  },
+  {
+   "component": "DISC BRAKE PADS",
+   "note": "COMBINATION - BURNISH BRAKE ROTORS WHILE DRIVING VEHICLE DISC ROTOR",
+   "id": "syn-pads-burnish",
+   "row": "SYN-BRK-0007",
+   "name": "Brake rotors, burnish while driving (disc rotor)",
+   "strong": [],
+   "kw": [],
+   "parts": [],
+   "talk": {
+    "kind": "recommended",
+    "plain": "bed in the new brakes on a road test",
+    "why": "It seats the new pads to the rotors so they stop smoothly and quietly from day one."
+   }
+  },
+  {
+   "component": "DISC BRAKE ROTOR",
+   "note": "REMOVE & REPLACE DISC BRAKE ROTOR - Front, Both - Includes R&I brake pads.",
+   "id": "syn-rotor-f-both",
+   "row": "SYN-BRK-0008",
+   "name": "Front disc brake rotors, replace (both sides)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "pulsing",
+    "vibration"
+   ],
+   "parts": [
+    "Front brake rotors (2)"
+   ]
+  },
+  {
+   "component": "DISC BRAKE ROTOR",
+   "note": "REMOVE & REPLACE DISC BRAKE ROTOR - Front, One Side - Includes R&I brake pads.",
+   "id": "syn-rotor-f-one",
+   "row": "SYN-BRK-0009",
+   "name": "Front disc brake rotor, replace (one side)",
+   "strong": [],
+   "kw": [
+    "brake"
+   ],
+   "parts": [
+    "Front brake rotor"
+   ]
+  },
+  {
+   "component": "DISC BRAKE ROTOR",
+   "note": "REMOVE & REPLACE DISC BRAKE ROTOR - Rear, Both - Includes R&I brake pads.",
+   "id": "syn-rotor-r-both",
+   "row": "SYN-BRK-0010",
+   "name": "Rear disc brake rotors, replace (both sides)",
+   "strong": [],
+   "kw": [
+    "brake",
+    "pulsing"
+   ],
+   "parts": [
+    "Rear brake rotors (2)"
+   ]
+  },
+  {
+   "component": "DISC BRAKE ROTOR",
+   "note": "REMOVE & REPLACE DISC BRAKE ROTOR - Rear, One Side - Includes R&I brake pads.",
+   "id": "syn-rotor-r-one",
+   "row": "SYN-BRK-0011",
+   "name": "Rear disc brake rotor, replace (one side)",
+   "strong": [],
+   "kw": [
+    "brake"
+   ],
+   "parts": [
+    "Rear brake rotor"
+   ]
+  },
+  {
+   "component": "DISC BRAKE ROTOR",
+   "note": "COMBINATION - CORRECT DISC ROTOR -  Lateral Runout, Each - Correct Rotor lateral runout by indexing.",
+   "id": "syn-rotor-runout-each",
+   "row": "SYN-BRK-0012",
+   "name": "Disc rotor, correct lateral runout (each, by indexing)",
+   "strong": [],
+   "kw": [],
+   "parts": [],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "correct rotor wobble by re-indexing it on the hub",
+    "why": "If the technician measures wobble, this fixes it without buying new parts."
+   }
+  },
+  {
+   "component": "DISC BRAKE ROTOR",
+   "note": "COMBINATION - CLEAN AND INSPECT HUB & ROTOR DISC -  Corrosion, Each",
+   "id": "syn-rotor-cleanhub-each",
+   "row": "SYN-BRK-0013",
+   "name": "Hub & rotor disc, clean and inspect (corrosion, each)",
+   "strong": [],
+   "kw": [],
+   "parts": [],
+   "talk": {
+    "kind": "recommended",
+    "plain": "clean the rust off the hub where the rotor sits",
+    "why": "Rust there makes a new rotor wobble, which you feel as a pulsing pedal."
+   }
+  },
+  {
+   "component": "MASTER CYLINDER",
+   "note": "REMOVE & REPLACE BRAKE MASTER CYLINDER - Includes bench bleed and bleed system.",
+   "id": "syn-master",
+   "row": "SYN-BRK-0014",
+   "name": "Brake master cylinder, replace (includes bleed)",
+   "strong": [],
+   "kw": [
+    "pedal",
+    "brake fluid"
+   ],
+   "parts": [
+    "Brake master cylinder",
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "MASTER CYLINDER",
+   "note": "COMBINATION - BLEED BRAKE SYSTEM - ABS Automated Bleed",
+   "id": "syn-master-absbleed",
+   "row": "SYN-BRK-0015",
+   "name": "Brake system, bleed (ABS automated bleed)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Brake fluid"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "bleed the brakes with the ABS scan tool",
+    "why": "If air gets into the ABS unit, this is the only way to get a firm pedal back."
+   }
+  },
+  {
+   "component": "BRAKE FLUID",
+   "note": "FLUSH BRAKE FLUID - All Wheels",
+   "id": "syn-brake-flush",
+   "row": "SYN-BRK-0016",
+   "name": "Brake fluid, flush (all wheels)",
+   "strong": [],
+   "kw": [
+    "brake fluid"
+   ],
+   "parts": [
+    "Brake fluid"
+   ]
+  },
+  {
+   "component": "BRAKE HOSE",
+   "note": "REMOVE & REPLACE BRAKE HOSE - Front, One Side - Includes bleed system.",
+   "id": "syn-hose-f-one",
+   "row": "SYN-BRK-0017",
+   "name": "Brake hose, replace (front, one side, includes bleed)",
+   "strong": [],
+   "kw": [
+    "brake fluid",
+    "leak"
+   ],
+   "parts": [
+    "Brake hose"
+   ]
+  },
+  {
+   "component": "BRAKE HOSE",
+   "note": "REMOVE & REPLACE BRAKE HOSE - Rear, One Side - Includes bleed system.",
+   "id": "syn-hose-r-one",
+   "row": "SYN-BRK-0018",
+   "name": "Brake hose, replace (rear, one side, includes bleed)",
+   "strong": [],
+   "kw": [
+    "brake fluid",
+    "leak"
+   ],
+   "parts": [
+    "Brake hose"
+   ]
+  },
+  {
+   "component": "WHEEL SPEED SENSOR",
+   "note": "REMOVE & REPLACE WHEEL SPEED SENSOR - Front, One Side",
+   "id": "syn-wss-f-one",
+   "row": "SYN-BRK-0019",
+   "name": "Wheel speed sensor, replace (front, one side)",
+   "strong": [
+    "abs light"
+   ],
+   "kw": [
+    "traction control light",
+    "warning light"
+   ],
+   "parts": [
+    "Wheel speed sensor"
+   ]
+  },
+  {
+   "component": "WHEEL SPEED SENSOR",
+   "note": "REMOVE & REPLACE WHEEL SPEED SENSOR - Rear, One Side",
+   "id": "syn-wss-r-one",
+   "row": "SYN-BRK-0020",
+   "name": "Wheel speed sensor, replace (rear, one side)",
+   "strong": [
+    "abs light"
+   ],
+   "kw": [
+    "traction control light",
+    "warning light"
+   ],
+   "parts": [
+    "Wheel speed sensor"
+   ]
+  },
+  {
+   "component": "WHEEL SPEED SENSOR",
+   "note": "COMBINATION - TESTING ANTI-LOCK BRAKE SYSTEM",
+   "id": "syn-wss-abstest",
+   "row": "SYN-BRK-0021",
+   "name": "Anti-lock brake system, testing",
+   "strong": [],
+   "kw": [],
+   "parts": [],
+   "talk": {
+    "kind": "recommended",
+    "plain": "run an ABS system test",
+    "why": "It confirms the new sensor reads correctly and the ABS light stays off."
+   }
+  },
+  {
+   "component": "PARKING BRAKE CABLE",
+   "note": "REMOVE & REPLACE PARKING BRAKE CABLE - Rear, One Side",
+   "id": "syn-pbcable-r-one",
+   "row": "SYN-BRK-0022",
+   "name": "Parking brake cable, replace (rear, one side)",
+   "strong": [],
+   "kw": [
+    "parking brake",
+    "emergency brake"
+   ],
+   "parts": [
+    "Parking brake cable"
+   ]
+  },
+  {
+   "component": "PARKING BRAKE CABLE",
+   "note": "COMBINATION - ADJUSTMENT PARKING BRAKE",
+   "id": "syn-pbcable-adjust",
+   "row": "SYN-BRK-0023",
+   "name": "Parking brake, adjustment",
+   "strong": [],
+   "kw": [],
+   "parts": [],
+   "talk": {
+    "kind": "required",
+    "plain": "adjust the parking brake",
+    "why": "A new cable has to be set to the right tension or the parking brake will not hold."
+   }
+  },
+  {
+   "component": "A/C SYSTEM",
+   "note": "PERFORMANCE TEST A/C SYSTEM - Includes pressure test.",
+   "id": "syn-ac-perf",
+   "row": "SYN-HVA-0001",
+   "name": "A/C system, performance and pressure test",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "not cold"
+   ],
+   "parts": []
+  },
+  {
+   "component": "A/C SYSTEM",
+   "note": "EVACUATE & RECHARGE A/C SYSTEM - Front & Rear",
+   "id": "syn-ac-evac",
+   "row": "SYN-HVA-0002",
+   "name": "A/C system, evacuate and recharge (front and rear)",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "air conditioning",
+    "not cold",
+    "warm air"
+   ],
+   "parts": [
+    "Refrigerant"
+   ]
+  },
+  {
+   "component": "A/C SYSTEM",
+   "note": "LEAK TEST A/C SYSTEM - With UV dye",
+   "id": "syn-ac-leak",
+   "row": "SYN-HVA-0003",
+   "name": "A/C system, leak test (UV dye)",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "leak"
+   ],
+   "parts": [
+    "A/C UV dye"
+   ]
+  },
+  {
+   "component": "A/C COMPRESSOR",
+   "note": "REMOVE & REPLACE A/C COMPRESSOR - DOES NOT include evacuate & recharge.",
+   "id": "syn-ac-comp",
+   "row": "SYN-HVA-0004",
+   "name": "A/C compressor, replace (recharge extra)",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "compressor",
+    "not cold",
+    "noise"
+   ],
+   "parts": [
+    "A/C compressor",
+    "Compressor oil"
+   ]
+  },
+  {
+   "component": "A/C COMPRESSOR",
+   "note": "COMBINATION - EVACUATE & RECHARGE A/C SYSTEM",
+   "id": "syn-ac-comp-evac",
+   "row": "SYN-HVA-0005",
+   "name": "A/C system, evacuate and recharge (with compressor)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Refrigerant"
+   ],
+   "talk": {
+    "kind": "required",
+    "plain": "evacuate and recharge the A/C",
+    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "standalone": "syn-ac-evac"
+   }
+  },
+  {
+   "component": "A/C COMPRESSOR",
+   "note": "COMBINATION - REMOVE & REPLACE RECEIVER DRIER / DESICCANT",
+   "id": "syn-ac-comp-drier",
+   "row": "SYN-HVA-0006",
+   "name": "A/C receiver drier / desiccant, replace",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Receiver drier"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "replace the A/C drier",
+    "why": "It traps moisture, and most compressor warranties require a new one with a new compressor."
+   }
+  },
+  {
+   "component": "A/C COMPRESSOR",
+   "note": "COMBINATION - FLUSH A/C SYSTEM",
+   "id": "syn-ac-comp-flush",
+   "row": "SYN-HVA-0007",
+   "name": "A/C system, flush",
+   "strong": [],
+   "kw": [],
+   "parts": [],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "flush the A/C lines",
+    "why": "If the old compressor shed metal, flushing keeps that debris from killing the new one."
+   }
+  },
+  {
+   "component": "A/C COMPRESSOR CLUTCH",
+   "note": "REMOVE & REPLACE A/C COMPRESSOR CLUTCH - Compressor on vehicle",
+   "id": "syn-ac-clutch",
+   "row": "SYN-HVA-0008",
+   "name": "A/C compressor clutch, replace (compressor on vehicle)",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "clutch",
+    "click"
+   ],
+   "parts": [
+    "A/C compressor clutch"
+   ]
+  },
+  {
+   "component": "A/C CONDENSER",
+   "note": "REMOVE & REPLACE A/C CONDENSER - DOES NOT include evacuate & recharge.",
+   "id": "syn-ac-cond",
+   "row": "SYN-HVA-0009",
+   "name": "A/C condenser, replace (recharge extra)",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "not cold",
+    "leak"
+   ],
+   "parts": [
+    "A/C condenser"
+   ]
+  },
+  {
+   "component": "A/C CONDENSER",
+   "note": "COMBINATION - EVACUATE & RECHARGE A/C SYSTEM",
+   "id": "syn-ac-cond-evac",
+   "row": "SYN-HVA-0010",
+   "name": "A/C system, evacuate and recharge (with condenser)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Refrigerant"
+   ],
+   "talk": {
+    "kind": "required",
+    "plain": "evacuate and recharge the A/C",
+    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "standalone": "syn-ac-evac"
+   }
+  },
+  {
+   "component": "A/C CONDENSER",
+   "note": "COMBINATION - REMOVE & REPLACE RECEIVER DRIER / DESICCANT",
+   "id": "syn-ac-cond-drier",
+   "row": "SYN-HVA-0011",
+   "name": "A/C receiver drier / desiccant, replace (with condenser)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Receiver drier"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "replace the A/C drier",
+    "why": "It traps moisture, and once the system is open the old one is used up."
+   }
+  },
+  {
+   "component": "EVAPORATOR CORE",
+   "note": "REMOVE & REPLACE EVAPORATOR CORE - Front - Includes R&I instrument panel. DOES NOT include evacuate & recharge.",
+   "id": "syn-evap-f",
+   "row": "SYN-HVA-0012",
+   "name": "A/C evaporator core, replace (front, dash removal; recharge extra)",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "not cold",
+    "musty"
+   ],
+   "parts": [
+    "A/C evaporator core"
+   ]
+  },
+  {
+   "component": "EVAPORATOR CORE",
+   "note": "REMOVE & REPLACE EVAPORATOR CORE - Rear - DOES NOT include evacuate & recharge.",
+   "id": "syn-evap-r",
+   "row": "SYN-HVA-0013",
+   "name": "A/C evaporator core, replace (rear; recharge extra)",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "rear a/c"
+   ],
+   "parts": [
+    "A/C evaporator core"
+   ]
+  },
+  {
+   "component": "EVAPORATOR CORE",
+   "note": "COMBINATION - EVACUATE & RECHARGE A/C SYSTEM",
+   "id": "syn-evap-evac",
+   "row": "SYN-HVA-0014",
+   "name": "A/C system, evacuate and recharge (with evaporator)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Refrigerant"
+   ],
+   "talk": {
+    "kind": "required",
+    "plain": "evacuate and recharge the A/C",
+    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "standalone": "syn-ac-evac"
+   }
+  },
+  {
+   "component": "EVAPORATOR CORE",
+   "note": "COMBINATION - REMOVE & REPLACE EXPANSION VALVE - Each",
+   "id": "syn-evap-txv-each",
+   "row": "SYN-HVA-0015",
+   "name": "A/C expansion valve, replace with evaporator (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "A/C expansion valve"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "replace the expansion valve",
+    "why": "It bolts to the evaporator, so it is right there, and an old valve is a common cause of poor cooling.",
+    "standalone": "syn-txv-f"
+   }
+  },
+  {
+   "component": "EVAPORATOR CORE",
+   "note": "COMBINATION - REMOVE & REPLACE HEATER CORE - Front",
+   "id": "syn-evap-heatercore",
+   "row": "SYN-HVA-0016",
+   "name": "Heater core, replace with front evaporator",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Heater core"
+   ],
+   "talk": {
+    "kind": "optional",
+    "plain": "replace the heater core",
+    "why": "It sits next to the evaporator behind the dash; doing it now avoids taking the dash apart a second time.",
+    "standalone": "syn-heatercore"
+   }
+  },
+  {
+   "component": "EXPANSION VALVE",
+   "note": "REMOVE & REPLACE EXPANSION VALVE - Front - DOES NOT include evacuate & recharge.",
+   "id": "syn-txv-f",
+   "row": "SYN-HVA-0017",
+   "name": "A/C expansion valve, replace (front; recharge extra)",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "frost",
+    "not cold"
+   ],
+   "parts": [
+    "A/C expansion valve"
+   ]
+  },
+  {
+   "component": "EXPANSION VALVE",
+   "note": "COMBINATION - EVACUATE & RECHARGE A/C SYSTEM",
+   "id": "syn-txv-evac",
+   "row": "SYN-HVA-0018",
+   "name": "A/C system, evacuate and recharge (with expansion valve)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Refrigerant"
+   ],
+   "talk": {
+    "kind": "required",
+    "plain": "evacuate and recharge the A/C",
+    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "standalone": "syn-ac-evac"
+   }
+  },
+  {
+   "component": "A/C PRESSURE SENSOR",
+   "note": "REMOVE & REPLACE A/C PRESSURE SENSOR - DOES NOT include evacuate & recharge.",
+   "id": "syn-ac-psensor",
+   "row": "SYN-HVA-0019",
+   "name": "A/C pressure sensor, replace (recharge extra)",
+   "strong": [],
+   "kw": [
+    "a/c",
+    "intermittent"
+   ],
+   "parts": [
+    "A/C pressure sensor"
+   ]
+  },
+  {
+   "component": "A/C PRESSURE SENSOR",
+   "note": "COMBINATION - EVACUATE & RECHARGE A/C SYSTEM",
+   "id": "syn-ac-psensor-evac",
+   "row": "SYN-HVA-0020",
+   "name": "A/C system, evacuate and recharge (with pressure sensor)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Refrigerant"
+   ],
+   "talk": {
+    "kind": "required",
+    "plain": "evacuate and recharge the A/C",
+    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "standalone": "syn-ac-evac"
+   }
+  },
+  {
+   "component": "BLOWER MOTOR",
+   "note": "REMOVE & REPLACE BLOWER MOTOR - Front",
+   "id": "syn-blower-f",
+   "row": "SYN-HVA-0021",
+   "name": "Blower motor, replace (front)",
+   "strong": [],
+   "kw": [
+    "blower",
+    "no air",
+    "vents"
+   ],
+   "parts": [
+    "Blower motor"
+   ]
+  },
+  {
+   "component": "BLOWER MOTOR",
+   "note": "REMOVE & REPLACE BLOWER MOTOR - Rear",
+   "id": "syn-blower-r",
+   "row": "SYN-HVA-0022",
+   "name": "Blower motor, replace (rear)",
+   "strong": [],
+   "kw": [
+    "blower",
+    "rear a/c"
+   ],
+   "parts": [
+    "Blower motor"
+   ]
+  },
+  {
+   "component": "BLOWER MOTOR",
+   "note": "COMBINATION - REMOVE & REPLACE BLOWER MOTOR RESISTOR - Front",
+   "id": "syn-blower-res-combo",
+   "row": "SYN-HVA-0023",
+   "name": "Blower motor resistor, replace with blower motor",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Blower motor resistor"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the blower resistor",
+    "why": "A failing motor often burns out the resistor, and it is right next to it.",
+    "standalone": "syn-blower-res"
+   }
+  },
+  {
+   "component": "BLOWER MOTOR RESISTOR",
+   "note": "REMOVE & REPLACE BLOWER MOTOR RESISTOR - Front",
+   "id": "syn-blower-res",
+   "row": "SYN-HVA-0024",
+   "name": "Blower motor resistor, replace (front)",
+   "strong": [],
+   "kw": [
+    "fan speed",
+    "only high"
+   ],
+   "parts": [
+    "Blower motor resistor"
+   ]
+  },
+  {
+   "component": "HEATER CORE",
+   "note": "REMOVE & REPLACE HEATER CORE - Front - Includes R&I instrument panel and drain & refill coolant.",
+   "id": "syn-heatercore",
+   "row": "SYN-HVA-0025",
+   "name": "Heater core, replace (front, dash removal)",
+   "strong": [],
+   "kw": [
+    "heater",
+    "no heat",
+    "coolant smell"
+   ],
+   "parts": [
+    "Heater core",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "CABIN AIR FILTER",
+   "note": "REMOVE & REPLACE CABIN AIR FILTER",
+   "id": "syn-cabin",
+   "row": "SYN-HVA-0026",
+   "name": "Cabin air filter, replace",
+   "strong": [],
+   "kw": [
+    "musty",
+    "weak airflow"
+   ],
+   "parts": [
+    "Cabin air filter"
+   ]
+  },
+  {
+   "component": "WATER PUMP",
+   "note": "REMOVE & REPLACE WATER PUMP - Includes drain & refill coolant.",
+   "id": "syn-wpump",
+   "row": "SYN-COO-0001",
+   "name": "Water pump, replace (includes coolant drain and refill)",
+   "strong": [],
+   "kw": [
+    "coolant",
+    "leak",
+    "overheat"
+   ],
+   "parts": [
+    "Water pump",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "WATER PUMP",
+   "note": "COMBINATION - REMOVE & REPLACE DRIVE BELT",
+   "id": "syn-wpump-belt",
+   "row": "SYN-COO-0002",
+   "name": "Drive belt, replace with water pump",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Serpentine belt"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "put on a new drive belt",
+    "why": "The belt comes off for this job anyway, and an old one is the next thing to squeal or break.",
+    "standalone": "syn-belt"
+   }
+  },
+  {
+   "component": "WATER PUMP",
+   "note": "COMBINATION - REMOVE & REPLACE THERMOSTAT",
+   "id": "syn-wpump-thermo",
+   "row": "SYN-COO-0003",
+   "name": "Thermostat, replace with water pump",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Thermostat"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "replace the thermostat",
+    "why": "The coolant is already drained, and an old thermostat is a common cause of overheating later.",
+    "standalone": "syn-thermo"
+   }
+  },
+  {
+   "component": "WATER PUMP",
+   "note": "COMBINATION - FLUSH COOLING SYSTEM",
+   "id": "syn-wpump-flush",
+   "row": "SYN-COO-0004",
+   "name": "Cooling system, flush with water pump",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Coolant"
+   ],
+   "talk": {
+    "kind": "optional",
+    "plain": "flush the cooling system",
+    "why": "It clears old deposits so the new pump is not circulating dirty coolant."
+   }
+  },
+  {
+   "component": "THERMOSTAT",
+   "note": "REMOVE & REPLACE THERMOSTAT - Includes drain & refill coolant.",
+   "id": "syn-thermo",
+   "row": "SYN-COO-0005",
+   "name": "Thermostat, replace (includes coolant drain and refill)",
+   "strong": [],
+   "kw": [
+    "overheat",
+    "temperature"
+   ],
+   "parts": [
+    "Thermostat",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "THERMOSTAT",
+   "note": "COMBINATION - FLUSH COOLING SYSTEM",
+   "id": "syn-thermo-flush",
+   "row": "SYN-COO-0006",
+   "name": "Cooling system, flush with thermostat",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Coolant"
+   ],
+   "talk": {
+    "kind": "optional",
+    "plain": "flush the cooling system",
+    "why": "It clears old deposits so the new thermostat is not sitting in dirty coolant."
+   }
+  },
+  {
+   "component": "RADIATOR",
+   "note": "REMOVE & REPLACE RADIATOR - Includes drain & refill coolant.",
+   "id": "syn-radiator",
+   "row": "SYN-COO-0007",
+   "name": "Radiator, replace (includes coolant drain and refill)",
+   "strong": [],
+   "kw": [
+    "coolant",
+    "leak",
+    "overheat"
+   ],
+   "parts": [
+    "Radiator",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "RADIATOR",
+   "note": "COMBINATION - REMOVE & REPLACE RADIATOR HOSE - Upper",
+   "id": "syn-rad-hose-up",
+   "row": "SYN-COO-0008",
+   "name": "Upper radiator hose, replace with radiator",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Upper radiator hose"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the upper radiator hose",
+    "why": "It comes off with the radiator, and a soft or cracked hose is the next leak.",
+    "standalone": "syn-hose-up"
+   }
+  },
+  {
+   "component": "RADIATOR",
+   "note": "COMBINATION - REMOVE & REPLACE RADIATOR HOSE - Lower",
+   "id": "syn-rad-hose-low",
+   "row": "SYN-COO-0009",
+   "name": "Lower radiator hose, replace with radiator",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Lower radiator hose"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the lower radiator hose",
+    "why": "It comes off with the radiator, and a soft or cracked hose is the next leak.",
+    "standalone": "syn-hose-low"
+   }
+  },
+  {
+   "component": "RADIATOR",
+   "note": "COMBINATION - REMOVE & REPLACE THERMOSTAT",
+   "id": "syn-rad-thermo",
+   "row": "SYN-COO-0010",
+   "name": "Thermostat, replace with radiator",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Thermostat"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "replace the thermostat",
+    "why": "The coolant is already drained, and an old thermostat is a common cause of overheating later.",
+    "standalone": "syn-thermo"
+   }
+  },
+  {
+   "component": "RADIATOR",
+   "note": "COMBINATION - FLUSH COOLING SYSTEM",
+   "id": "syn-rad-flush",
+   "row": "SYN-COO-0011",
+   "name": "Cooling system, flush with radiator",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Coolant"
+   ],
+   "talk": {
+    "kind": "optional",
+    "plain": "flush the cooling system",
+    "why": "It clears old deposits so they do not clog the new radiator."
+   }
+  },
+  {
+   "component": "RADIATOR HOSE",
+   "note": "REMOVE & REPLACE RADIATOR HOSE - Upper - Includes drain & refill coolant.",
+   "id": "syn-hose-up",
+   "row": "SYN-COO-0012",
+   "name": "Upper radiator hose, replace (includes coolant drain and refill)",
+   "strong": [],
+   "kw": [
+    "coolant",
+    "leak",
+    "steam"
+   ],
+   "parts": [
+    "Upper radiator hose",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "RADIATOR HOSE",
+   "note": "REMOVE & REPLACE RADIATOR HOSE - Lower - Includes drain & refill coolant.",
+   "id": "syn-hose-low",
+   "row": "SYN-COO-0013",
+   "name": "Lower radiator hose, replace (includes coolant drain and refill)",
+   "strong": [],
+   "kw": [
+    "coolant",
+    "leak"
+   ],
+   "parts": [
+    "Lower radiator hose",
+    "Coolant"
+   ]
+  },
+  {
+   "component": "COOLING FAN",
+   "note": "REMOVE & REPLACE COOLING FAN ASSEMBLY",
+   "id": "syn-coolfan",
+   "row": "SYN-COO-0014",
+   "name": "Cooling fan assembly, replace",
+   "strong": [],
+   "kw": [
+    "overheat",
+    "fan"
+   ],
+   "parts": [
+    "Radiator cooling fan"
+   ]
+  },
+  {
+   "component": "COOLING SYSTEM",
+   "note": "PRESSURE TEST COOLING SYSTEM",
+   "id": "syn-cool-ptest",
+   "row": "SYN-COO-0015",
+   "name": "Cooling system, pressure test",
+   "strong": [],
+   "kw": [
+    "coolant",
+    "leak",
+    "overheat"
+   ],
+   "parts": []
+  },
+  {
+   "component": "BATTERY",
+   "note": "TEST BATTERY & CHARGING SYSTEM",
+   "id": "syn-batt-test",
+   "row": "SYN-ELE-0001",
+   "name": "Battery and charging system, test",
+   "strong": [],
+   "kw": [
+    "battery",
+    "dead",
+    "slow crank"
+   ],
+   "parts": []
+  },
+  {
+   "component": "BATTERY",
+   "note": "REMOVE & REPLACE BATTERY",
+   "id": "syn-batt",
+   "row": "SYN-ELE-0002",
+   "name": "Battery, replace",
+   "strong": [],
+   "kw": [
+    "battery",
+    "dead"
+   ],
+   "parts": [
+    "Battery"
+   ]
+  },
+  {
+   "component": "BATTERY",
+   "note": "COMBINATION - CLEAN BATTERY TERMINALS & CABLES",
+   "id": "syn-batt-clean",
+   "row": "SYN-ELE-0003",
+   "name": "Battery terminals and cables, clean",
+   "strong": [],
+   "kw": [],
+   "parts": [],
+   "talk": {
+    "kind": "recommended",
+    "plain": "clean the battery terminals and cables",
+    "why": "Corrosion on the cables can make a brand-new battery act like a weak one.",
+    "standalone": "battcable"
+   }
+  },
+  {
+   "component": "ALTERNATOR",
+   "note": "REMOVE & REPLACE ALTERNATOR",
+   "id": "syn-alt",
+   "row": "SYN-ELE-0004",
+   "name": "Alternator, replace",
+   "strong": [],
+   "kw": [
+    "charging",
+    "battery light",
+    "dim"
+   ],
+   "parts": [
+    "Alternator"
+   ]
+  },
+  {
+   "component": "ALTERNATOR",
+   "note": "COMBINATION - REMOVE & REPLACE DRIVE BELT",
+   "id": "syn-alt-belt",
+   "row": "SYN-ELE-0005",
+   "name": "Drive belt, replace with alternator",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Serpentine belt"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "put on a new drive belt",
+    "why": "The belt comes off for this job anyway, and a worn belt can slip and undercharge the new alternator.",
+    "standalone": "syn-belt"
+   }
+  },
+  {
+   "component": "ALTERNATOR",
+   "note": "COMBINATION - REMOVE & REPLACE DRIVE BELT TENSIONER",
+   "id": "syn-alt-tensioner",
+   "row": "SYN-ELE-0006",
+   "name": "Drive belt tensioner, replace with alternator",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Belt tensioner"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the belt tensioner",
+    "why": "A weak tensioner lets the belt slip, and it is right there with the belt off.",
+    "standalone": "syn-tensioner"
+   }
+  },
+  {
+   "component": "STARTER",
+   "note": "REMOVE & REPLACE STARTER MOTOR - Includes R&I intake plenum.",
+   "id": "syn-starter",
+   "row": "SYN-ELE-0007",
+   "name": "Starter motor, replace (includes intake plenum R&I)",
+   "strong": [],
+   "kw": [
+    "click",
+    "no crank",
+    "starter"
+   ],
+   "parts": [
+    "Starter motor"
+   ]
+  },
+  {
+   "component": "STARTER",
+   "note": "COMBINATION - REMOVE & REPLACE INTAKE PLENUM GASKET",
+   "id": "syn-starter-plenum-gasket",
+   "row": "SYN-ELE-0008",
+   "name": "Intake plenum gasket, replace with starter",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Intake plenum gasket"
+   ],
+   "talk": {
+    "kind": "required",
+    "plain": "put in a new intake plenum gasket",
+    "why": "The intake comes off to reach the starter, and the old gasket cannot be reused without risking a vacuum leak."
+   }
+  },
+  {
+   "component": "DRIVE BELT",
+   "note": "REMOVE & REPLACE DRIVE BELT",
+   "id": "syn-belt",
+   "row": "SYN-ELE-0009",
+   "name": "Drive belt, replace",
+   "strong": [],
+   "kw": [
+    "squeal",
+    "belt"
+   ],
+   "parts": [
+    "Serpentine belt"
+   ]
+  },
+  {
+   "component": "DRIVE BELT TENSIONER",
+   "note": "REMOVE & REPLACE DRIVE BELT TENSIONER - Includes R&I drive belt.",
+   "id": "syn-tensioner",
+   "row": "SYN-ELE-0010",
+   "name": "Drive belt tensioner, replace",
+   "strong": [],
+   "kw": [
+    "squeal",
+    "belt",
+    "chirp"
+   ],
+   "parts": [
+    "Belt tensioner"
+   ]
+  },
+  {
+   "component": "DRIVE BELT TENSIONER",
+   "note": "COMBINATION - REMOVE & REPLACE IDLER PULLEY - Each",
+   "id": "syn-tensioner-idler",
+   "row": "SYN-ELE-0011",
+   "name": "Idler pulley, replace with tensioner (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Idler pulley"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the idler pulley",
+    "why": "A worn pulley bearing makes the same squeal or chirp as a bad tensioner."
+   }
+  },
+  {
+   "component": "SPARK PLUG",
+   "note": "REMOVE & REPLACE SPARK PLUGS - All - Includes R&I intake plenum.",
+   "id": "syn-plugs",
+   "row": "SYN-ENG-0001",
+   "name": "Spark plugs, replace all (includes intake plenum R&I)",
+   "strong": [],
+   "kw": [
+    "misfire",
+    "rough"
+   ],
+   "parts": [
+    "Spark plugs (set)"
+   ]
+  },
+  {
+   "component": "SPARK PLUG",
+   "note": "COMBINATION - REMOVE & REPLACE IGNITION COIL - Each",
+   "id": "syn-plugs-coil-each",
+   "row": "SYN-ENG-0002",
+   "name": "Ignition coil, replace with spark plugs (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Ignition coil"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace an ignition coil",
+    "why": "If a coil tests weak, swapping it now avoids taking the intake apart again for a misfire.",
+    "standalone": [
+     "syn-coil-rear",
+     "syn-coil-front"
+    ]
+   }
+  },
+  {
+   "component": "IGNITION COIL",
+   "note": "REMOVE & REPLACE IGNITION COIL - Front Bank, One",
+   "id": "syn-coil-front",
+   "row": "SYN-ENG-0003",
+   "name": "Ignition coil, replace (front bank, one)",
+   "strong": [],
+   "kw": [
+    "misfire"
+   ],
+   "parts": [
+    "Ignition coil"
+   ]
+  },
+  {
+   "component": "IGNITION COIL",
+   "note": "REMOVE & REPLACE IGNITION COIL - Rear Bank, One - Includes R&I intake plenum.",
+   "id": "syn-coil-rear",
+   "row": "SYN-ENG-0004",
+   "name": "Ignition coil, replace (rear bank, one; includes intake plenum R&I)",
+   "strong": [],
+   "kw": [
+    "misfire"
+   ],
+   "parts": [
+    "Ignition coil"
+   ]
+  },
+  {
+   "component": "IGNITION COIL",
+   "note": "COMBINATION - REMOVE & REPLACE IGNITION COIL - Each Additional, Same Bank",
+   "id": "syn-coil-addl",
+   "row": "SYN-ENG-0005",
+   "name": "Ignition coil, replace each additional (same bank)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Ignition coil"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace another coil on the same side",
+    "why": "Coils of the same age tend to fail one after another."
+   }
+  },
+  {
+   "component": "IGNITION COIL",
+   "note": "COMBINATION - REMOVE & REPLACE SPARK PLUG - Each",
+   "id": "syn-coil-plug-each",
+   "row": "SYN-ENG-0006",
+   "name": "Spark plug, replace with coil (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Spark plug"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "replace the spark plug under that coil",
+    "why": "A worn plug is often what overworked the coil, and it is right under it."
+   }
+  },
+  {
+   "component": "VALVE COVER GASKET",
+   "note": "REMOVE & REPLACE VALVE COVER GASKET - Front Bank",
+   "id": "syn-vc-front",
+   "row": "SYN-ENG-0007",
+   "name": "Valve cover gasket, replace (front bank)",
+   "strong": [],
+   "kw": [
+    "oil leak"
+   ],
+   "parts": [
+    "Valve cover gasket"
+   ]
+  },
+  {
+   "component": "VALVE COVER GASKET",
+   "note": "REMOVE & REPLACE VALVE COVER GASKET - Rear Bank - Includes R&I intake plenum.",
+   "id": "syn-vc-rear",
+   "row": "SYN-ENG-0008",
+   "name": "Valve cover gasket, replace (rear bank; includes intake plenum R&I)",
+   "strong": [],
+   "kw": [
+    "oil leak"
+   ],
+   "parts": [
+    "Valve cover gasket"
+   ]
+  },
+  {
+   "component": "VALVE COVER GASKET",
+   "note": "REMOVE & REPLACE VALVE COVER GASKET - Both",
+   "id": "syn-vc-both",
+   "row": "SYN-ENG-0009",
+   "name": "Valve cover gaskets, replace (both banks)",
+   "strong": [],
+   "kw": [
+    "oil leak",
+    "burning smell"
+   ],
+   "parts": [
+    "Valve cover gasket set"
+   ]
+  },
+  {
+   "component": "VALVE COVER GASKET",
+   "note": "COMBINATION - REMOVE & REPLACE SPARK PLUGS - All",
+   "id": "syn-vc-plugs",
+   "row": "SYN-ENG-0010",
+   "name": "Spark plugs, replace all with valve cover gaskets",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Spark plugs (set)"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "replace the spark plugs",
+    "why": "The plugs sit under the valve covers, so the access labor is already done.",
+    "standalone": "syn-plugs"
+   }
+  },
+  {
+   "component": "OXYGEN SENSOR",
+   "note": "REMOVE & REPLACE AIR/FUEL RATIO SENSOR - Upstream, Bank 1",
+   "id": "syn-af-up-b1",
+   "row": "SYN-ENG-0011",
+   "name": "Air/fuel ratio sensor, replace (upstream, bank 1)",
+   "strong": [],
+   "kw": [
+    "check engine",
+    "fuel economy"
+   ],
+   "parts": [
+    "Air/fuel ratio sensor"
+   ]
+  },
+  {
+   "component": "OXYGEN SENSOR",
+   "note": "REMOVE & REPLACE AIR/FUEL RATIO SENSOR - Upstream, Bank 2",
+   "id": "syn-af-up-b2",
+   "row": "SYN-ENG-0012",
+   "name": "Air/fuel ratio sensor, replace (upstream, bank 2)",
+   "strong": [],
+   "kw": [
+    "check engine",
+    "fuel economy"
+   ],
+   "parts": [
+    "Air/fuel ratio sensor"
+   ]
+  },
+  {
+   "component": "OXYGEN SENSOR",
+   "note": "REMOVE & REPLACE OXYGEN SENSOR - Downstream, Each",
+   "id": "syn-o2-down",
+   "row": "SYN-ENG-0013",
+   "name": "Oxygen sensor, replace (downstream, each)",
+   "strong": [],
+   "kw": [
+    "check engine"
+   ],
+   "parts": [
+    "Oxygen sensor"
+   ]
+  },
+  {
+   "component": "THROTTLE BODY",
+   "note": "CLEAN THROTTLE BODY - Includes idle relearn.",
+   "id": "syn-tb-clean",
+   "row": "SYN-ENG-0014",
+   "name": "Throttle body, clean (includes idle relearn)",
+   "strong": [],
+   "kw": [
+    "rough idle",
+    "idle"
+   ],
+   "parts": []
+  },
+  {
+   "component": "THROTTLE BODY",
+   "note": "REMOVE & REPLACE THROTTLE BODY - Includes idle relearn.",
+   "id": "syn-tb",
+   "row": "SYN-ENG-0015",
+   "name": "Throttle body, replace (includes idle relearn)",
+   "strong": [],
+   "kw": [
+    "idle",
+    "stalls"
+   ],
+   "parts": [
+    "Throttle body"
+   ]
+  },
+  {
+   "component": "MASS AIR FLOW SENSOR",
+   "note": "REMOVE & REPLACE MASS AIR FLOW SENSOR",
+   "id": "syn-maf",
+   "row": "SYN-ENG-0016",
+   "name": "Mass air flow sensor, replace",
+   "strong": [],
+   "kw": [
+    "hesitat",
+    "check engine"
+   ],
+   "parts": [
+    "Mass air flow sensor"
+   ]
+  },
+  {
+   "component": "DIAGNOSTIC",
+   "note": "DIAGNOSE CHECK ENGINE LIGHT - Includes scan & code interpretation.",
+   "id": "syn-diag-cel",
+   "row": "SYN-ENG-0017",
+   "name": "Diagnostic: check engine light (scan and interpret codes)",
+   "strong": [],
+   "kw": [],
+   "parts": []
+  },
+  {
+   "component": "STRUT ASSEMBLY",
+   "note": "REMOVE & REPLACE STRUT ASSEMBLY - Front, One Side - DOES NOT include wheel alignment.",
+   "id": "syn-strut-f-one",
+   "row": "SYN-SUS-0001",
+   "name": "Front strut assembly, replace (one side; alignment extra)",
+   "strong": [],
+   "kw": [
+    "clunk",
+    "bouncy"
+   ],
+   "parts": [
+    "Front strut assembly"
+   ]
+  },
+  {
+   "component": "STRUT ASSEMBLY",
+   "note": "REMOVE & REPLACE STRUT ASSEMBLY - Front, Both - DOES NOT include wheel alignment.",
+   "id": "syn-strut-f-both",
+   "row": "SYN-SUS-0002",
+   "name": "Front strut assemblies, replace (both sides; alignment extra)",
+   "strong": [],
+   "kw": [
+    "clunk",
+    "bouncy",
+    "suspension"
+   ],
+   "parts": [
+    "Front strut assemblies (2)"
+   ]
+  },
+  {
+   "component": "STRUT ASSEMBLY",
+   "note": "COMBINATION - REMOVE & REPLACE STRUT MOUNT & BEARING - Each",
+   "id": "syn-strut-mount-each",
+   "row": "SYN-SUS-0003",
+   "name": "Strut mount and bearing, replace with strut (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Strut mount"
+   ],
+   "talk": {
+    "kind": "recommended",
+    "plain": "replace the strut mount and bearing",
+    "why": "An old mount can clunk or make the steering feel notchy, even with a new strut."
+   }
+  },
+  {
+   "component": "STRUT ASSEMBLY",
+   "note": "COMBINATION - REMOVE & REPLACE COIL SPRING - Each",
+   "id": "syn-strut-spring-each",
+   "row": "SYN-SUS-0004",
+   "name": "Coil spring, replace with strut (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Coil spring"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the coil spring",
+    "why": "A cracked or sagging spring changes ride height and wears the new strut faster."
+   }
+  },
+  {
+   "component": "STRUT ASSEMBLY",
+   "note": "COMBINATION - REMOVE & REPLACE STABILIZER BAR LINK - Each",
+   "id": "syn-strut-link-each",
+   "row": "SYN-SUS-0005",
+   "name": "Stabilizer bar link, replace with strut (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Stabilizer bar link"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the sway bar link",
+    "why": "It bolts to the strut, and a worn link is a common source of clunks over bumps.",
+    "standalone": "syn-link-f-one"
+   }
+  },
+  {
+   "component": "SHOCK ABSORBER",
+   "note": "REMOVE & REPLACE SHOCK ABSORBER - Rear, One Side",
+   "id": "syn-shock-r-one",
+   "row": "SYN-SUS-0006",
+   "name": "Rear shock absorber, replace (one side)",
+   "strong": [],
+   "kw": [
+    "bouncy"
+   ],
+   "parts": [
+    "Rear shock absorber"
+   ]
+  },
+  {
+   "component": "SHOCK ABSORBER",
+   "note": "REMOVE & REPLACE SHOCK ABSORBER - Rear, Both",
+   "id": "syn-shock-r-both",
+   "row": "SYN-SUS-0007",
+   "name": "Rear shock absorbers, replace (both sides)",
+   "strong": [],
+   "kw": [
+    "bouncy",
+    "suspension"
+   ],
+   "parts": [
+    "Rear shock absorbers (2)"
+   ]
+  },
+  {
+   "component": "STABILIZER BAR LINK",
+   "note": "REMOVE & REPLACE STABILIZER BAR LINK - Front, One Side",
+   "id": "syn-link-f-one",
+   "row": "SYN-SUS-0008",
+   "name": "Front stabilizer bar link, replace (one side)",
+   "strong": [],
+   "kw": [
+    "rattle",
+    "clunk"
+   ],
+   "parts": [
+    "Stabilizer bar link"
+   ]
+  },
+  {
+   "component": "STABILIZER BAR LINK",
+   "note": "REMOVE & REPLACE STABILIZER BAR LINK - Front, Both",
+   "id": "syn-link-f-both",
+   "row": "SYN-SUS-0009",
+   "name": "Front stabilizer bar links, replace (both sides)",
+   "strong": [],
+   "kw": [
+    "rattle",
+    "clunk"
+   ],
+   "parts": [
+    "Stabilizer bar links (2)"
+   ]
+  },
+  {
+   "component": "LOWER CONTROL ARM",
+   "note": "REMOVE & REPLACE LOWER CONTROL ARM - Front, One Side - DOES NOT include wheel alignment.",
+   "id": "syn-lca-f-one",
+   "row": "SYN-SUS-0010",
+   "name": "Front lower control arm, replace (one side; alignment extra)",
+   "strong": [],
+   "kw": [
+    "clunk",
+    "wander"
+   ],
+   "parts": [
+    "Lower control arm"
+   ]
+  },
+  {
+   "component": "LOWER CONTROL ARM",
+   "note": "REMOVE & REPLACE LOWER CONTROL ARM - Front, Both - DOES NOT include wheel alignment.",
+   "id": "syn-lca-f-both",
+   "row": "SYN-SUS-0011",
+   "name": "Front lower control arms, replace (both sides; alignment extra)",
+   "strong": [],
+   "kw": [
+    "clunk",
+    "wander"
+   ],
+   "parts": [
+    "Lower control arms (2)"
+   ]
+  },
+  {
+   "component": "LOWER CONTROL ARM",
+   "note": "COMBINATION - REMOVE & REPLACE LOWER BALL JOINT - Each",
+   "id": "syn-lca-balljoint-each",
+   "row": "SYN-SUS-0012",
+   "name": "Lower ball joint, replace with control arm (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Lower ball joint"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the lower ball joint",
+    "why": "A loose ball joint is a safety item, and the arm is already off."
+   }
+  },
+  {
+   "component": "LOWER CONTROL ARM",
+   "note": "COMBINATION - REMOVE & REPLACE CONTROL ARM BUSHING - Each",
+   "id": "syn-lca-bushing-each",
+   "row": "SYN-SUS-0013",
+   "name": "Control arm bushing, replace (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Control arm bushing"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the control arm bushing",
+    "why": "Cracked bushings cause clunks and uneven tire wear."
+   }
+  },
+  {
+   "component": "TIE ROD END",
+   "note": "REMOVE & REPLACE OUTER TIE ROD END - One Side - DOES NOT include wheel alignment.",
+   "id": "syn-tre-one",
+   "row": "SYN-SUS-0014",
+   "name": "Outer tie rod end, replace (one side; alignment extra)",
+   "strong": [],
+   "kw": [
+    "loose steering",
+    "wander"
+   ],
+   "parts": [
+    "Outer tie rod end"
+   ]
+  },
+  {
+   "component": "TIE ROD END",
+   "note": "REMOVE & REPLACE OUTER TIE ROD END - Both - DOES NOT include wheel alignment.",
+   "id": "syn-tre-both",
+   "row": "SYN-SUS-0015",
+   "name": "Outer tie rod ends, replace (both sides; alignment extra)",
+   "strong": [],
+   "kw": [
+    "loose steering",
+    "wander"
+   ],
+   "parts": [
+    "Outer tie rod ends (2)"
+   ]
+  },
+  {
+   "component": "TIE ROD END",
+   "note": "COMBINATION - REMOVE & REPLACE INNER TIE ROD - Each",
+   "id": "syn-tre-inner-each",
+   "row": "SYN-SUS-0016",
+   "name": "Inner tie rod, replace with outer (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Inner tie rod"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the inner tie rod",
+    "why": "If the inner joint is loose too, the steering stays sloppy with only the outer replaced."
+   }
+  },
+  {
+   "component": "TIE ROD END",
+   "note": "COMBINATION - REMOVE & REPLACE STEERING RACK BOOT - Each",
+   "id": "syn-tre-boot-each",
+   "row": "SYN-SUS-0017",
+   "name": "Steering rack boot, replace (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Steering rack boot"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace the steering rack boot",
+    "why": "A torn boot lets water into the steering rack, which is a much bigger repair."
+   }
+  },
+  {
+   "component": "WHEEL BEARING",
+   "note": "REMOVE & REPLACE WHEEL BEARING & HUB - Front, One Side - DOES NOT include wheel alignment.",
+   "id": "syn-bearing-f-one",
+   "row": "SYN-SUS-0018",
+   "name": "Front wheel bearing and hub, replace (one side)",
+   "strong": [],
+   "kw": [
+    "hum",
+    "growl"
+   ],
+   "parts": [
+    "Wheel bearing hub assembly"
+   ]
+  },
+  {
+   "component": "WHEEL BEARING",
+   "note": "REMOVE & REPLACE WHEEL BEARING & HUB - Rear, One Side",
+   "id": "syn-bearing-r-one",
+   "row": "SYN-SUS-0019",
+   "name": "Rear wheel bearing and hub, replace (one side)",
+   "strong": [],
+   "kw": [
+    "hum",
+    "growl"
+   ],
+   "parts": [
+    "Wheel bearing hub assembly"
+   ]
+  },
+  {
+   "component": "WHEEL ALIGNMENT",
+   "note": "CHECK WHEEL ALIGNMENT",
+   "id": "syn-align-check",
+   "row": "SYN-SUS-0020",
+   "name": "Wheel alignment, check",
+   "strong": [],
+   "kw": [
+    "pull",
+    "uneven"
+   ],
+   "parts": []
+  },
+  {
+   "component": "WHEEL ALIGNMENT",
+   "note": "WHEEL ALIGNMENT - Four Wheel - Includes check & adjust.",
+   "id": "syn-align",
+   "row": "SYN-SUS-0021",
+   "name": "Wheel alignment, four wheel (check and adjust)",
+   "strong": [],
+   "kw": [
+    "pull",
+    "drift"
+   ],
+   "parts": []
+  },
+  {
+   "component": "TIRES",
+   "note": "ROTATE TIRES - Four Wheel",
+   "id": "syn-rotate",
+   "row": "SYN-TIR-0001",
+   "name": "Tires, rotate (four wheel)",
+   "strong": [],
+   "kw": [
+    "tire wear"
+   ],
+   "parts": []
+  },
+  {
+   "component": "TIRES",
+   "note": "MOUNT & BALANCE TIRES - Four Wheel",
+   "id": "syn-mount-balance",
+   "row": "SYN-TIR-0002",
+   "name": "Tires, mount and balance (four wheel)",
+   "strong": [],
+   "kw": [
+    "new tires"
+   ],
+   "parts": []
+  },
+  {
+   "component": "TIRES",
+   "note": "BALANCE TIRES - Four Wheel",
+   "id": "syn-balance",
+   "row": "SYN-TIR-0003",
+   "name": "Tires, balance (four wheel)",
+   "strong": [],
+   "kw": [
+    "vibration",
+    "highway"
+   ],
+   "parts": []
+  },
+  {
+   "component": "TIRES",
+   "note": "REPAIR TIRE - Flat, Each - Plug & patch.",
+   "id": "syn-flat",
+   "row": "SYN-TIR-0004",
+   "name": "Tire, repair flat (plug and patch, each)",
+   "strong": [],
+   "kw": [
+    "flat",
+    "nail",
+    "losing air"
+   ],
+   "parts": [
+    "Tire patch plug"
+   ]
+  },
+  {
+   "component": "TIRES",
+   "note": "COMBINATION - BALANCE TIRES - Four Wheel",
+   "id": "syn-tire-balance-combo",
+   "row": "SYN-TIR-0005",
+   "name": "Tires, balance with rotation (four wheel)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "Wheel weights"
+   ],
+   "talk": {
+    "kind": "optional",
+    "plain": "balance the tires",
+    "why": "The wheels are already off for the rotation, and balancing smooths out highway vibration.",
+    "standalone": "syn-balance"
+   }
+  },
+  {
+   "component": "TIRES",
+   "note": "COMBINATION - REMOVE & REPLACE TIRE PRESSURE SENSOR - Each - Tire dismounted.",
+   "id": "syn-tire-tpms-each",
+   "row": "SYN-TIR-0006",
+   "name": "Tire pressure sensor, replace with tire off (each)",
+   "strong": [],
+   "kw": [],
+   "parts": [
+    "TPMS sensor"
+   ],
+   "talk": {
+    "kind": "if-needed",
+    "plain": "replace a tire pressure sensor",
+    "why": "Sensor batteries die with age; with the tire already off it is a fraction of the labor.",
+    "standalone": "syn-tpms-each"
+   }
+  },
+  {
+   "component": "TIRE PRESSURE SENSOR",
+   "note": "REMOVE & REPLACE TIRE PRESSURE SENSOR - Each - Includes dismount, mount, balance and relearn.",
+   "id": "syn-tpms-each",
+   "row": "SYN-TIR-0007",
+   "name": "Tire pressure sensor, replace (each, includes relearn)",
+   "strong": [],
+   "kw": [
+    "tire pressure light",
+    "tpms"
+   ],
+   "parts": [
+    "TPMS sensor"
+   ]
+  }
+ ]
+}

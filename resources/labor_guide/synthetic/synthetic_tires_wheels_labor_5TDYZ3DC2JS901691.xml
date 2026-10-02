@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC DATA - not from a labor-guide provider. Hours are estimates for a 2018 Toyota Sienna 3.5L V6 (5TDYZ3DC2JS901691) and are used for every vehicle in the demo. Same schema as the real exports. Do not quote to customers. System: tires_wheels -->
+<labor_list>
+  <labor>
+    <Note>ROTATE TIRES - Four Wheel</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TIRES</LaborComponent>
+  </labor>
+  <labor>
+    <Note>MOUNT &amp; BALANCE TIRES - Four Wheel</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TIRES</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BALANCE TIRES - Four Wheel</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TIRES</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REPAIR TIRE - Flat, Each - Plug &amp; patch.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TIRES</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - BALANCE TIRES - Four Wheel</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>TIRES</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE TIRE PRESSURE SENSOR - Each - Tire dismounted.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>TIRES</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE TIRE PRESSURE SENSOR - Each - Includes dismount, mount, balance and relearn.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TIRE PRESSURE SENSOR</LaborComponent>
+  </labor>
+</labor_list>

@@ -11,7 +11,7 @@ const ok = parts => ({ ok: true, supplier: 'NAPA', priceBasis: 'NAPA catalog lis
 
 const settle = () => Cr.run(async () => {});
 const items = () => S.chats.ro.items;
-const cards = () => items().filter(i => i.kind === 'cards').map(i => i.card);
+const cards = () => items().filter(i => i.kind === 'cards' && i.card.type === 'parts').map(i => i.card);
 const said = () => items().filter(i => i.kind === 'agent').map(i => i.text);
 
 beforeEach(() => {

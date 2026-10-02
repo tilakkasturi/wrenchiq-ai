@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC DATA - not from a labor-guide provider. Generated 2026-10-02 for WrenchIQ Core testing.
+     Hours are estimates for a 2018 Toyota Sienna 3.5L V6 (5TDYZ3DC2JS901691). Same schema as the real exports in
+     resources/labor_guide/. Do not quote these hours to customers. System: scheduled_maintenance -->
+<labor_list>
+  <labor>
+    <Note>REPLACE ENGINE OIL &amp; FILTER - Includes reset oil maintenance reminder.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>ENGINE OIL</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE ENGINE OIL FILTER - Without oil change</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>ENGINE OIL FILTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE ENGINE AIR FILTER ELEMENT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>ENGINE AIR FILTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE CABIN AIR FILTER</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CABIN AIR FILTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>ROTATE TIRES - Four Wheel</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TIRES</LaborComponent>
+  </labor>
+  <labor>
+    <Note>DRAIN &amp; REFILL ENGINE COOLANT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>ENGINE COOLANT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>FLUSH COOLING SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>ENGINE COOLANT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE SPARK PLUGS - All - Includes R&amp;I intake plenum.</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>SPARK PLUG</LaborComponent>
+  </labor>
+  <labor>
+    <Note>DRAIN &amp; REFILL AUTOMATIC TRANSAXLE FLUID - Includes level check.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TRANSMISSION FLUID</LaborComponent>
+  </labor>
+  <labor>
+    <Note>DRAIN &amp; REFILL TRANSFER CASE FLUID - AWD</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TRANSFER CASE FLUID</LaborComponent>
+  </labor>
+  <labor>
+    <Note>DRAIN &amp; REFILL REAR DIFFERENTIAL FLUID - AWD</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DIFFERENTIAL FLUID</LaborComponent>
+  </labor>
+  <labor>
+    <Note>INSPECT DRIVE BELT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DRIVE BELT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE WIPER BLADES - Front, Both</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>WINDOW WIPER BLADE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>INSPECT BRAKE SYSTEM (COMPLETE) - All Wheels</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BRAKE SYSTEM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>INSPECT DISC BRAKE PADS - Measure lining, All Wheels</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DISC BRAKE PAD</LaborComponent>
+  </labor>
+  <labor>
+    <Note>TEST BATTERY &amp; CHARGING SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BATTERY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>INSPECT FUEL TANK CAP GASKET</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>FUEL CAP SEAL</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE BRAKE VACUUM PUMP</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>VACUUM PUMP</LaborComponent>
+  </labor>
+  <labor>
+    <Note>CLEAN OR REPLACE HYBRID BATTERY INTAKE FILTER - Hybrid only</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>HIGH VOLTAGE BATTERY AIR FILTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>PERFORM MULTI-POINT INSPECTION - Scheduled maintenance inspection items.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>MULTI-POINT INSPECTION</LaborComponent>
+  </labor>
+</labor_list>

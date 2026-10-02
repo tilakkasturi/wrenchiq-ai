@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC DATA - not from a labor-guide provider. Hours are estimates for a 2018 Toyota Sienna 3.5L V6 (5TDYZ3DC2JS901691) and are used for every vehicle in the demo. Same schema as the real exports. Do not quote to customers. System: engine_ignition -->
+<labor_list>
+  <labor>
+    <Note>REMOVE &amp; REPLACE SPARK PLUGS - All - Includes R&amp;I intake plenum.</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>SPARK PLUG</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE IGNITION COIL - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>SPARK PLUG</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE IGNITION COIL - Front Bank, One</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>IGNITION COIL</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE IGNITION COIL - Rear Bank, One - Includes R&amp;I intake plenum.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>IGNITION COIL</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE IGNITION COIL - Each Additional, Same Bank</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>IGNITION COIL</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE SPARK PLUG - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>IGNITION COIL</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE VALVE COVER GASKET - Front Bank</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.6</LaborHours>
+    <Warranty>1.3</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>VALVE COVER GASKET</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE VALVE COVER GASKET - Rear Bank - Includes R&amp;I intake plenum.</Note>
+    <Skill>B</Skill>
+    <LaborHours>3.2</LaborHours>
+    <Warranty>2.7</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>VALVE COVER GASKET</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE VALVE COVER GASKET - Both</Note>
+    <Skill>B</Skill>
+    <LaborHours>4.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>VALVE COVER GASKET</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE SPARK PLUGS - All</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>VALVE COVER GASKET</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE AIR/FUEL RATIO SENSOR - Upstream, Bank 1</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>OXYGEN SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE AIR/FUEL RATIO SENSOR - Upstream, Bank 2</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>OXYGEN SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE OXYGEN SENSOR - Downstream, Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>OXYGEN SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>CLEAN THROTTLE BODY - Includes idle relearn.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>THROTTLE BODY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE THROTTLE BODY - Includes idle relearn.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>THROTTLE BODY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE MASS AIR FLOW SENSOR</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>MASS AIR FLOW SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>DIAGNOSE CHECK ENGINE LIGHT - Includes scan &amp; code interpretation.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DIAGNOSTIC</LaborComponent>
+  </labor>
+</labor_list>

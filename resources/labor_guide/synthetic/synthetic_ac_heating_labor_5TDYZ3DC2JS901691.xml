@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC DATA - not from a labor-guide provider. Hours are estimates for a 2018 Toyota Sienna 3.5L V6 (5TDYZ3DC2JS901691) and are used for every vehicle in the demo. Same schema as the real exports. Do not quote to customers. System: ac_heating -->
+<labor_list>
+  <labor>
+    <Note>PERFORMANCE TEST A/C SYSTEM - Includes pressure test.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C SYSTEM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>EVACUATE &amp; RECHARGE A/C SYSTEM - Front &amp; Rear</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C SYSTEM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>LEAK TEST A/C SYSTEM - With UV dye</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C SYSTEM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE A/C COMPRESSOR - DOES NOT include evacuate &amp; recharge.</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.4</LaborHours>
+    <Warranty>2.0</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C COMPRESSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - EVACUATE &amp; RECHARGE A/C SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>A/C COMPRESSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE RECEIVER DRIER / DESICCANT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>A/C COMPRESSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - FLUSH A/C SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>A/C COMPRESSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE A/C COMPRESSOR CLUTCH - Compressor on vehicle</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C COMPRESSOR CLUTCH</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE A/C CONDENSER - DOES NOT include evacuate &amp; recharge.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.7</LaborHours>
+    <Warranty>1.4</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C CONDENSER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - EVACUATE &amp; RECHARGE A/C SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>A/C CONDENSER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE RECEIVER DRIER / DESICCANT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>A/C CONDENSER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE EVAPORATOR CORE - Front - Includes R&amp;I instrument panel. DOES NOT include evacuate &amp; recharge.</Note>
+    <Skill>B</Skill>
+    <LaborHours>7.8</LaborHours>
+    <Warranty>6.5</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>EVAPORATOR CORE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE EVAPORATOR CORE - Rear - DOES NOT include evacuate &amp; recharge.</Note>
+    <Skill>B</Skill>
+    <LaborHours>3.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>EVAPORATOR CORE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - EVACUATE &amp; RECHARGE A/C SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>EVAPORATOR CORE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE EXPANSION VALVE - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>EVAPORATOR CORE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE HEATER CORE - Front</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>EVAPORATOR CORE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE EXPANSION VALVE - Front - DOES NOT include evacuate &amp; recharge.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>EXPANSION VALVE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - EVACUATE &amp; RECHARGE A/C SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>EXPANSION VALVE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE A/C PRESSURE SENSOR - DOES NOT include evacuate &amp; recharge.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C PRESSURE SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - EVACUATE &amp; RECHARGE A/C SYSTEM</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>A/C PRESSURE SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE BLOWER MOTOR - Front</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BLOWER MOTOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE BLOWER MOTOR - Rear</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.9</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BLOWER MOTOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE BLOWER MOTOR RESISTOR - Front</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>BLOWER MOTOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE BLOWER MOTOR RESISTOR - Front</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BLOWER MOTOR RESISTOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE HEATER CORE - Front - Includes R&amp;I instrument panel and drain &amp; refill coolant.</Note>
+    <Skill>B</Skill>
+    <LaborHours>7.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>HEATER CORE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE CABIN AIR FILTER</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CABIN AIR FILTER</LaborComponent>
+  </labor>
+</labor_list>

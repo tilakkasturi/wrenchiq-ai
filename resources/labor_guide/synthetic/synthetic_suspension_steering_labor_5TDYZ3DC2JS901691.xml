@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC DATA - not from a labor-guide provider. Hours are estimates for a 2018 Toyota Sienna 3.5L V6 (5TDYZ3DC2JS901691) and are used for every vehicle in the demo. Same schema as the real exports. Do not quote to customers. System: suspension_steering -->
+<labor_list>
+  <labor>
+    <Note>REMOVE &amp; REPLACE STRUT ASSEMBLY - Front, One Side - DOES NOT include wheel alignment.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.4</LaborHours>
+    <Warranty>1.2</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>STRUT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE STRUT ASSEMBLY - Front, Both - DOES NOT include wheel alignment.</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.5</LaborHours>
+    <Warranty>2.1</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>STRUT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE STRUT MOUNT &amp; BEARING - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>STRUT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE COIL SPRING - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>STRUT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE STABILIZER BAR LINK - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>STRUT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE SHOCK ABSORBER - Rear, One Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>SHOCK ABSORBER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE SHOCK ABSORBER - Rear, Both</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>SHOCK ABSORBER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE STABILIZER BAR LINK - Front, One Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>STABILIZER BAR LINK</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE STABILIZER BAR LINK - Front, Both</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>STABILIZER BAR LINK</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE LOWER CONTROL ARM - Front, One Side - DOES NOT include wheel alignment.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.2</LaborHours>
+    <Warranty>1.0</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>LOWER CONTROL ARM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE LOWER CONTROL ARM - Front, Both - DOES NOT include wheel alignment.</Note>
+    <Skill>B</Skill>
+    <LaborHours>2.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>LOWER CONTROL ARM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE LOWER BALL JOINT - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>LOWER CONTROL ARM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE CONTROL ARM BUSHING - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>LOWER CONTROL ARM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE OUTER TIE ROD END - One Side - DOES NOT include wheel alignment.</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TIE ROD END</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE OUTER TIE ROD END - Both - DOES NOT include wheel alignment.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TIE ROD END</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE INNER TIE ROD - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>TIE ROD END</LaborComponent>
+  </labor>
+  <labor>
+    <Note>COMBINATION - REMOVE &amp; REPLACE STEERING RACK BOOT - Each</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>COMBINATION</LaborTypeName>
+    <LaborComponent>TIE ROD END</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE WHEEL BEARING &amp; HUB - Front, One Side - DOES NOT include wheel alignment.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.6</LaborHours>
+    <Warranty>1.3</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>WHEEL BEARING</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REMOVE &amp; REPLACE WHEEL BEARING &amp; HUB - Rear, One Side</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.1</LaborHours>
+    <Warranty>0.9</Warranty>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>WHEEL BEARING</LaborComponent>
+  </labor>
+  <labor>
+    <Note>CHECK WHEEL ALIGNMENT</Note>
+    <Skill>B</Skill>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>WHEEL ALIGNMENT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>WHEEL ALIGNMENT - Four Wheel - Includes check &amp; adjust.</Note>
+    <Skill>B</Skill>
+    <LaborHours>1.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>WHEEL ALIGNMENT</LaborComponent>
+  </labor>
+</labor_list>

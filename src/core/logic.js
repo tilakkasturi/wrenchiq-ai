@@ -1,13 +1,15 @@
 // Repair order and shop profile logic, ported from the prototype. Reads the session store.
 import { S, persistProfile } from './state';
 import {
-  PQMAP, REP, REPMAP, MAINTMAP, MI, QB, QDUR, BLOCK, ALLKW,
+  PQMAP, REP, REPMAP, QB, QDUR, BLOCK, ALLKW,
   MAKES, MODELS, MAKE_RX, MODEL_RX,
 } from './data';
 import { stems, matchOne, scoreOpts, words, numIn } from './match';
+import { resolveSchedule, computeMaintenanceDue, getMaintItem } from './maintenanceSchedule';
+import { sameJob, addOnsFor } from './laborRules';
 
 export const money = n => '$' + n.toFixed(2);
-export const ITEM = id => REPMAP[id] || MAINTMAP[id] || S.ro.custom[id];
+export const ITEM = id => REPMAP[id] || getMaintItem(id) || S.ro.custom[id];
 export const hrs = it => (S.ro.hoursOv[it.id] !== undefined ? S.ro.hoursOv[it.id] : it.hours);
 export const rate = () => { const f = S.profile['shop.labor_rate']; return f ? Number(f.value) : null; };
 export const miles = () => { const n = parseInt(String(S.ro.mileage).replace(/\D/g, ''), 10); return isNaN(n) ? 0 : n; };
@@ -99,6 +101,10 @@ export function computeRepairs() {
   notOffered().forEach(n => (BLOCK[n] || []).forEach(i => blocked.add(i)));
   const out = [];
   REP.forEach(r => {
+    // COMBINATION rows (LaborTypeName) are incremental add-on labor offered once the related
+    // OPERATION is accepted (see combinationsFor/suggestCombinations in harness.js) — they are
+    // not independently ranked against the customer's stated concern.
+    if (r.laborType === 'COMBINATION') return;
     if (blocked.has(r.id)) return;
     let score = 0;
     const why = [];
@@ -112,26 +118,28 @@ export function computeRepairs() {
     });
     if (score > 0) out.push({ id: r.id, score, why });
   });
+  // The same job can come from more than one labor-guide file (a demo row and a synthetic one, say):
+  // show the better match once. sort() is stable, so ties keep the labor guide's file order.
   out.sort((a, b) => b.score - a.score);
-  return out.slice(0, 8);
+  const kept = [];
+  out.forEach(x => { if (!kept.some(k => sameJob(k.id, x.id))) kept.push(x); });
+  return kept.slice(0, 8);
 }
 export const shownRepairs = () => computeRepairs().filter(x => !S.ro.dismissed.has(x.id));
 export const conf = s => (s >= 7 ? ['high', 'High match'] : s >= 4 ? ['med', 'Medium match'] : ['low', 'Possible']);
 
+/**
+ * COMBINATION (add-on) labor rows to offer once an OPERATION row is on the order. They tie to it by
+ * LaborComponent, the only linkage the labor-guide export gives. laborRules.js drops any that are
+ * already covered, duplicated by another line, or set aside.
+ */
+export const combinationsFor = id => addOnsFor(id, [...S.ro.accepted, id], [...S.ro.dismissed]);
+
 export function maintState() {
   const m = miles();
   if (!m) return null;
-  const nearest = Math.round(m / 15000) * 15000;
-  if (nearest > 0 && Math.abs(m - nearest) <= 2500) {
-    const d = m - nearest;
-    return {
-      due: true, at: nearest,
-      note: d > 0 ? d.toLocaleString() + ' mi past the ' + nearest.toLocaleString() + ' mi interval' : 'due in ' + (-d).toLocaleString() + ' mi',
-      ids: MI.filter(i => nearest % (i.every * 1000) === 0).map(i => i.id),
-    };
-  }
-  const next = Math.ceil(m / 15000) * 15000;
-  return { due: false, at: next, note: (next - m).toLocaleString() + ' mi away', ids: [] };
+  const schedule = resolveSchedule({ vin: S.ro.vin, make: S.ro.make });
+  return computeMaintenanceDue(m, schedule);
 }
 
 export function concern() {
@@ -172,7 +180,11 @@ export function findItem(t, scope) {
   const tl = t.toLowerCase();
   let pool = [];
   if (scope === 'accepted') pool = [...S.ro.accepted];
-  else { pool = shownRepairs().map(x => x.id); const ms = maintState(); if (ms) pool = pool.concat(ms.ids); }
+  else {
+    pool = shownRepairs().map(x => x.id); const ms = maintState(); if (ms) pool = pool.concat(ms.ids);
+    // add-on labor for jobs already on the order, so "add the axle boot" finds it
+    [...S.ro.accepted].forEach(a => { pool = pool.concat(combinationsFor(a)); });
+  }
   if (/\b(top|first|best|main|that one|it)\b/.test(tl) && pool.length && scope !== 'accepted') return pool[0];
   let best = null, bs = 0;
   pool.forEach(id => {

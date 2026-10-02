@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCore, S } from '../state';
 import { Cp, Cr } from '../harness';
-import { RepairsCard, MaintCard, PartsCard } from './Cards';
+import { RepairsCard, MaintCard, PartsCard, CombosCard } from './Cards';
 
 const CHATS = { profile: Cp, ro: Cr };
 
@@ -29,6 +29,7 @@ function Item({ item }) {
       <div className="cardgroup">
         {item.card.type === 'repairs' ? <RepairsCard card={item.card} />
           : item.card.type === 'parts' ? <PartsCard card={item.card} />
+          : item.card.type === 'combos' ? <CombosCard card={item.card} />
           : <MaintCard card={item.card} />}
       </div>
     );

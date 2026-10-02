@@ -96,6 +96,8 @@
 .wiq-core details.cite summary::-webkit-details-marker{display:none}
 .wiq-core details.cite summary b{font-weight:600}
 .wiq-core details.cite .cite-body{margin-top:6px;padding:8px 10px;border-left:3px solid var(--info);background:var(--surface-2);border-radius:0 var(--r) var(--r) 0;color:var(--fg)}
+.wiq-core .maint-item .say{margin:6px 0 0;padding:6px 10px;border-left:3px solid var(--line);background:var(--surface-2);border-radius:0 var(--r) var(--r) 0;font-size:13px;line-height:1.45}
+.wiq-core .maint-item .tag{margin-top:4px;display:inline-block}
 .wiq-core .maint-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:start}
 .wiq-core .side{padding:16px;position:sticky;top:72px;max-height:calc(100vh - 128px);max-height:calc(100dvh - 128px);overflow-y:auto}
 .wiq-core .head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}

@@ -1,10 +1,12 @@
 import { S } from '../state';
-import { REPMAP, MAINTMAP } from '../data';
+import { REPMAP } from '../data';
+import { getMaintItem } from '../maintenanceSchedule';
 import { hrs, rate, conf, money, partOn, vehicleOk } from '../logic';
 import { acceptItem, removeItem, dismissItem, restoreItem, addAllMaint, searchPart, addPart, removePart } from '../harness';
+import { talkFor } from '../talkTrack';
 
 function Cite({ it }) {
-  const label = it.src === 'lg' ? 'Labor guide' : 'Scheduled maintenance';
+  const label = it.src === 'lg' ? (it.synthetic ? 'Labor guide (synthetic)' : 'Labor guide') : 'Scheduled maintenance';
   return (
     <details className="cite">
       <summary><b>{label}</b><span className="mono">{it.ref}</span><span className="mono">{it.hours.toFixed(1)} h</span></summary>
@@ -64,6 +66,40 @@ export function RepairsCard({ card }) {
   );
 }
 
+const SCHEDULE_LABEL = { VIN_MASK: 'Toyota schedule (VIN match)', MAKE_TOYOTA_DEFAULT: 'Toyota schedule (default family)', GENERIC: 'Generic schedule' };
+
+/**
+ * Add-on (COMBINATION) labor for a job on the order. Each row shows what it adds and a line the
+ * advisor can read to the customer; nothing is pre-selected.
+ */
+export function CombosCard({ card }) {
+  const rt = rate(), parent = REPMAP[card.parent];
+  return (
+    <>
+      <div className="label" style={{ marginBottom: 6 }}>Goes with {parent ? parent.name.toLowerCase() : 'this job'}</div>
+      <div className="card">
+        {card.ids.map(id => {
+          const it = REPMAP[id], on = S.ro.accepted.has(id), tk = talkFor(id, card.parent, rt);
+          if (!it) return null;
+          return (
+            <div className="maint-item combo" key={id}>
+              <div>
+                <div style={{ fontWeight: 500 }}>{it.name} <span className="mono small muted">+{it.hours.toFixed(1)} h{rt ? ' · ' + money(it.hours * rt) : ''}</span></div>
+                {tk && <span className={'tag ' + (tk.kind === 'required' ? 'adv' : tk.kind === 'if-needed' || tk.kind === 'optional' ? 'low' : 'med')}>{tk.label}</span>}
+                {tk && <p className="say"><span className="small muted">Say to the customer: </span>{tk.text}</p>}
+                <Cite it={it} />
+              </div>
+              <div>{on
+                ? <button className="btn sm" onClick={() => removeItem(id)}>Remove</button>
+                : <button className="btn sm primary" onClick={() => acceptItem(id)}>Add</button>}</div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 export function MaintCard({ card }) {
   const ms = card.ms;
   return (
@@ -71,9 +107,9 @@ export function MaintCard({ card }) {
       <div className="label" style={{ marginBottom: 6 }}>Scheduled maintenance</div>
       <div className="card">
         <div className="top-row"><h3>{ms.at.toLocaleString()} mi service</h3><button className="btn sm" onClick={addAllMaint}>Add all due</button></div>
-        <p className="why-line">{ms.note}. Sample interval table.</p>
+        <p className="why-line">{ms.note} · {SCHEDULE_LABEL[ms.match] || ms.source}</p>
         {ms.ids.map(id => {
-          const it = MAINTMAP[id], on = S.ro.accepted.has(id);
+          const it = getMaintItem(id), on = S.ro.accepted.has(id);
           return (
             <div className="maint-item" key={id}>
               <div><div style={{ fontWeight: 500 }}>{it.name}</div><Cite it={it} /></div>

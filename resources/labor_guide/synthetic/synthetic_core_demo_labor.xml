@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC DATA - the original Core demo labor rows, moved out of src/core/data.js. Made-up hours, used for every vehicle in the demo. Same schema as the real exports. Do not quote to customers. -->
+<labor_list>
+  <labor>
+    <Note>FRONT BRAKE PADS AND ROTORS, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DISC BRAKE ROTOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REAR BRAKE PADS, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DISC BRAKE PADS</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BRAKE CALIPER, REPLACE (ONE SIDE)</Note>
+    <Skill/>
+    <LaborHours>1.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CALIPER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>FRONT STRUTS, REPLACE (PAIR)</Note>
+    <Skill/>
+    <LaborHours>2.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>STRUT ASSEMBLY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>SWAY BAR END LINKS, REPLACE (PAIR)</Note>
+    <Skill/>
+    <LaborHours>0.9</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>STABILIZER BAR LINK</LaborComponent>
+  </labor>
+  <labor>
+    <Note>WHEEL BEARING, REPLACE (ONE SIDE)</Note>
+    <Skill/>
+    <LaborHours>1.7</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>WHEEL BEARING</LaborComponent>
+  </labor>
+  <labor>
+    <Note>IGNITION COIL, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>IGNITION COIL</LaborComponent>
+  </labor>
+  <labor>
+    <Note>SPARK PLUGS, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>SPARK PLUG</LaborComponent>
+  </labor>
+  <labor>
+    <Note>OXYGEN SENSOR, REPLACE (UPSTREAM)</Note>
+    <Skill/>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>OXYGEN SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>EVAP PURGE VALVE, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>EVAP PURGE VALVE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>THERMOSTAT, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>THERMOSTAT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>WATER PUMP, REPLACE</Note>
+    <Skill/>
+    <LaborHours>2.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>WATER PUMP</LaborComponent>
+  </labor>
+  <labor>
+    <Note>RADIATOR HOSE, REPLACE (UPPER)</Note>
+    <Skill/>
+    <LaborHours>0.9</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>RADIATOR HOSE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BATTERY, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BATTERY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>STARTER, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>STARTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>ALTERNATOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>ALTERNATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>A/C EVACUATE AND RECHARGE</Note>
+    <Skill/>
+    <LaborHours>0.9</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C SYSTEM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>A/C COMPRESSOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>2.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C COMPRESSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>TIRE BALANCE, FOUR WHEELS</Note>
+    <Skill/>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>TIRES</LaborComponent>
+  </labor>
+  <labor>
+    <Note>WHEEL ALIGNMENT, FOUR WHEEL</Note>
+    <Skill/>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>WHEEL ALIGNMENT</LaborComponent>
+  </labor>
+  <labor>
+    <Note>VALVE COVER GASKET, REPLACE</Note>
+    <Skill/>
+    <LaborHours>2.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>VALVE COVER GASKET</LaborComponent>
+  </labor>
+  <labor>
+    <Note>OIL PAN GASKET, REPLACE</Note>
+    <Skill/>
+    <LaborHours>2.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>OIL PAN GASKET</LaborComponent>
+  </labor>
+  <labor>
+    <Note>FRONT BRAKE PADS, REPLACE (PADS ONLY)</Note>
+    <Skill/>
+    <LaborHours>1.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DISC BRAKE PADS</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BRAKE SERVICE: CLEAN, LUBRICATE AND ADJUST</Note>
+    <Skill/>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BRAKE SERVICE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>REAR BRAKE PADS AND ROTORS, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.9</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DISC BRAKE ROTOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BRAKE HOSE, REPLACE (ONE)</Note>
+    <Skill/>
+    <LaborHours>0.9</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BRAKE HOSE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BRAKE MASTER CYLINDER, REPLACE AND BLEED</Note>
+    <Skill/>
+    <LaborHours>1.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>MASTER CYLINDER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BRAKE INSPECTION AND ROAD TEST</Note>
+    <Skill/>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DIAGNOSTIC</LaborComponent>
+  </labor>
+  <labor>
+    <Note>DIAGNOSTIC: ENGINE NO-START OR DRIVEABILITY CONCERN</Note>
+    <Skill/>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DIAGNOSTIC</LaborComponent>
+  </labor>
+  <labor>
+    <Note>FUEL PUMP, REPLACE (IN-TANK)</Note>
+    <Skill/>
+    <LaborHours>2.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>FUEL PUMP</LaborComponent>
+  </labor>
+  <labor>
+    <Note>FUEL FILTER, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.7</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>FUEL FILTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>CRANKSHAFT POSITION SENSOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.9</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CRANKSHAFT POSITION SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>CAMSHAFT POSITION SENSOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.7</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CAMSHAFT POSITION SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>MASS AIR FLOW SENSOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>MASS AIR FLOW SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>THROTTLE BODY, CLEAN AND RELEARN</Note>
+    <Skill/>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>THROTTLE BODY</LaborComponent>
+  </labor>
+  <labor>
+    <Note>FUEL INJECTOR, REPLACE (ONE)</Note>
+    <Skill/>
+    <LaborHours>1.4</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>FUEL INJECTOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>INTAKE VACUUM LEAK, FIND AND REPAIR</Note>
+    <Skill/>
+    <LaborHours>1.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>INTAKE MANIFOLD</LaborComponent>
+  </labor>
+  <labor>
+    <Note>IGNITION SWITCH, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>IGNITION SWITCH</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BATTERY CABLE END, CLEAN OR REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BATTERY CABLE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>DIAGNOSTIC: SCAN CODES AND TEST (CHECK ENGINE LIGHT)</Note>
+    <Skill/>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DIAGNOSTIC</LaborComponent>
+  </labor>
+  <labor>
+    <Note>CATALYTIC CONVERTER, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CATALYTIC CONVERTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>EGR VALVE, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>EGR VALVE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>GAS CAP, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.1</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>FUEL CAP</LaborComponent>
+  </labor>
+  <labor>
+    <Note>RADIATOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>2.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>RADIATOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>RADIATOR COOLING FAN MOTOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>COOLING FAN</LaborComponent>
+  </labor>
+  <labor>
+    <Note>DIAGNOSTIC: A/C PERFORMANCE TEST AND LEAK CHECK</Note>
+    <Skill/>
+    <LaborHours>0.8</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>DIAGNOSTIC</LaborComponent>
+  </labor>
+  <labor>
+    <Note>A/C LEAK TEST (DYE) AND REPAIR ESTIMATE</Note>
+    <Skill/>
+    <LaborHours>0.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C SYSTEM</LaborComponent>
+  </labor>
+  <labor>
+    <Note>A/C CONDENSER, REPLACE</Note>
+    <Skill/>
+    <LaborHours>2.2</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C CONDENSER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>A/C COMPRESSOR CLUTCH, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C COMPRESSOR CLUTCH</LaborComponent>
+  </labor>
+  <labor>
+    <Note>A/C EXPANSION VALVE, REPLACE</Note>
+    <Skill/>
+    <LaborHours>2.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>EXPANSION VALVE</LaborComponent>
+  </labor>
+  <labor>
+    <Note>A/C PRESSURE SWITCH, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>A/C PRESSURE SENSOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BLOWER MOTOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.0</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BLOWER MOTOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>BLOWER MOTOR RESISTOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.5</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>BLOWER MOTOR RESISTOR</LaborComponent>
+  </labor>
+  <labor>
+    <Note>CABIN AIR FILTER, REPLACE</Note>
+    <Skill/>
+    <LaborHours>0.3</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>CABIN AIR FILTER</LaborComponent>
+  </labor>
+  <labor>
+    <Note>HVAC BLEND DOOR ACTUATOR, REPLACE</Note>
+    <Skill/>
+    <LaborHours>1.6</LaborHours>
+    <Warranty/>
+    <LaborTypeName>OPERATION</LaborTypeName>
+    <LaborComponent>HVAC ACTUATOR</LaborComponent>
+  </labor>
+</labor_list>

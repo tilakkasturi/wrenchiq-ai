@@ -4,13 +4,15 @@
 import { useSyncExternalStore } from 'react';
 
 const newChat = () => ({ items: [], chips: [], nextId: 1 });
+/** Random id for labeling Langfuse traces; not security-sensitive. */
+export const newId = () => (globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2));
 export const newRO = () => ({
   vin: '', year: '', make: '', model: '', engine: '', mileage: '', symptom: '',
   answers: {}, accepted: new Set(), dismissed: new Set(), awaiting: null, lastTop: [],
   shownMaint: '', started: false, custom: {}, hoursOv: {}, nextCustom: 1, rateNudged: false,
   parts: { added: [], lastQ: '' },
   autoPriced: new Set(), // repairs whose parts were already looked up when added
-  agent: { history: [], model: '' },
+  agent: { history: [], model: '', sessionId: newId() }, // sessionId groups this RO's agent steps in Langfuse
 });
 
 export const S = {
