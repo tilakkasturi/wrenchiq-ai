@@ -2,16 +2,19 @@ import { useEffect, useState } from 'react';
 import { S } from '../state';
 import { money, rate } from '../logic';
 import { buildRecs } from '../recommend';
-import { LEVELS, buildPackage, packageLevel, prefetchPackageParts } from '../packages';
+import { LEVELS, buildPackage, packageLevel, prefetchPackageParts, packageTalk } from '../packages';
 import { SETTINGMAP } from '../shopSettings';
 import { addPackage } from '../harness';
+import { talkTracks, trackById } from '../talkTracks';
+import { talkText, talkState } from '../talkGen';
+import { TalkTag } from './TalkTag';
 
 const TAG = { high: 'med', medium: 'adv', low: 'low' };
 const NAME = { high: 'High', medium: 'Medium', low: 'Low' };
 const cost = (n, pending) => (n === null ? 'needs labor rate' : money(n) + (pending ? ' + parts' : ''));
 
 /**
- * The prepackaged estimate: WrenchIQ's pick at the shop's severity level (Shop profile), with the
+ * The severity package estimate: WrenchIQ's pick at the shop's severity level (Shop profile), with the
  * totals of the other levels one tap away. Recomputed on every render, so prices that arrive later,
  * an engine answer or a changed setting show up in place.
  */
@@ -22,6 +25,11 @@ export function PackageCard() {
   const recs = buildRecs();
   const all = Object.fromEntries(LEVELS.map(l => [l, buildPackage(l, recs)]));
   const pk = all[level], rt = rate();
+  const talk = packageTalk(pk, recs);
+  // the shop-level package's talk track is model-written when it passed the checks (generated with the Recommendations card)
+  const ptrack = level === shopLevel ? trackById(talkTracks(recs), 'package:' + level) : null;
+  const [copied, setCopied] = useState(false);
+  const copy = () => { try { navigator.clipboard.writeText(talk.say.join(' ')).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }, () => {}); } catch (_) { /* clipboard blocked */ } };
   // prices for every part any level could include (cached per vehicle + part)
   useEffect(() => { prefetchPackageParts(recs); }, [S.ro.year, S.ro.make, S.ro.model, S.ro.engine, level, pk.items.length]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!pk.items.length) return null;
@@ -29,13 +37,12 @@ export function PackageCard() {
   const confirm = [...new Map(pk.confirm.map(c => [c.line + '|' + c.what, c])).values()];
   return (
     <>
-      <div className="label" style={{ marginBottom: 6 }}>Prepackaged estimate</div>
+      <div className="label" style={{ marginBottom: 6 }}>Severity (High, Medium, Low) Package Estimates</div>
       <article className="card pkg">
         <div className="top-row">
           <h3>Severity {NAME[level].toLowerCase()} <span className={'tag ' + TAG[level]}>{pk.items.length} line{pk.items.length === 1 ? '' : 's'}{open.length < pk.items.length ? (open.length ? ' · ' + (pk.items.length - open.length) + ' on the RO' : ' · all on the RO') : ''}</span></h3>
           <button className="btn sm primary" disabled={!open.length && !pk.partsMissing} onClick={() => addPackage(level)}>{open.length ? 'Add package to RO' : pk.partsMissing ? 'Add the package parts' : 'Package is on the RO'}</button>
         </div>
-        <p className="why-line">WrenchIQ picked this by severity: {SETTINGMAP['package.severity'].options.find(o => o.value === level).label.replace(/^Severity \w+: /, '')}{level !== shopLevel ? ' (viewing; your shop setting is ' + NAME[shopLevel].toLowerCase() + ')' : ''}. Change the default in Shop profile.</p>
 
         <div className="seg pkg-levels" role="group" aria-label="Severity level">
           {LEVELS.map(l => (
@@ -44,6 +51,16 @@ export function PackageCard() {
             </button>
           ))}
         </div>
+
+        <p className="pkg-hl">{talk.highlight}</p>
+        <details className="pkg-detail">
+          <summary><span className="small">What to say, why these lines, and what to confirm</span></summary>
+          <div className="recs-say">
+            <div className="label">What to say to the customer {ptrack && <TalkTag track={ptrack} />}</div>
+            {(ptrack && talkState(ptrack) === 'checked' ? [talkText(ptrack)] : talk.say).map((l, k) => <p key={k}>{l}</p>)}
+            <button className="btn ghost sm" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
+          </div>
+          <p className="why-line">WrenchIQ picked this by severity: {SETTINGMAP['package.severity'].options.find(o => o.value === level).label.replace(/^Severity \w+: /, '')}{level !== shopLevel ? ' (viewing; your shop setting is ' + NAME[shopLevel].toLowerCase() + ')' : ''}. Change the default in Shop profile.</p>
 
         {LEVELS.filter(l => pk.items.some(i => i.severity === l)).map(l => (
           <section className="pkg-group" key={l}>
@@ -81,6 +98,7 @@ export function PackageCard() {
         )}
         {pk.skipped.length > 0 && <p className="why-line small muted">Left out by the labor rules: {pk.skipped.map(i => i.name + ' (' + i.reason + ')').join('; ')}</p>}
         {!S.ro.year && <p className="why-line small muted">Add the vehicle to price parts.</p>}
+        </details>
       </article>
     </>
   );

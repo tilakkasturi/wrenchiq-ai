@@ -102,12 +102,12 @@ describe('talk track for add-on labor', () => {
     expect(t).toMatchObject({ kind: 'recommended', label: 'Recommended', hours: 0.4, price: 60, saves: 0.6 });
     expect(t.text).toMatch(/water pump/);
     expect(t.text).toMatch(/0\.4 hours of labor \(an estimated \$60\)/);
-    expect(t.text).toMatch(/the standard repair time for it is 0\.4 hours of labor \(an estimated \$60\), compared with 1\.0 hours if it is done separately later.*\(Repair times are standard estimates\.\)$/);
+    expect(t.text).toMatch(/the standard repair time for it is 0\.4 hours of labor \(an estimated \$60\), instead of 1\.0 hours if it is done separately later.*\(Repair times are standard estimates\.\)$/);
   });
   it('frames only-if-needed work as conditional, and required work as part of the job', () => {
-    expect(talkFor('axle-boot-each', 'axle-asm-fwd-left', null).text).toMatch(/technician will inspect it\. If it is worn or damaged, we would recommend we replace the CV axle boot\..*get your approval first\. \(Source: Mitchell 1 repair times\.\)$/);
+    expect(talkFor('axle-boot-each', 'axle-asm-fwd-left', null).text).toMatch(/we recommend the technician inspect this area\. If the inspection shows wear or damage, we would recommend that we replace the CV axle boot\..*the decision is yours\. \(Source: Mitchell 1 repair times\.\)$/);
     const req = talkFor('syn-ac-comp-evac', 'syn-ac-comp', 140).text;
-    expect(req).toMatch(/^To complete the A\/C compressor job, this step is part of the work: we need to evacuate and recharge the A\/C\./);
+    expect(req).toMatch(/^The recommended procedure for the A\/C compressor job includes a step to evacuate and recharge the A\/C, so we include it in the estimate\./);
     expect(req).not.toMatch(/Mitchell 1/) // synthetic row: never attributed to the provider;
     expect(talkFor('axle-boot-each', 'axle-asm-fwd-left', null).saves).toBeNull();
   });
@@ -161,8 +161,8 @@ describe('Why? popover: a customer talk track for every line', () => {
   });
   it('a repair ties back to the customer\'s own words and the guide hours', () => {
     const w = customerWhy(ITEM('brk-front'), { hours: 1.8, rate: 100, concern: 'Grinding noise when I brake.' });
-    expect(w.text).toMatch(/^You told us: "Grinding noise when I brake"\. Based on that description, the repair most often associated with it is to replace the front brake pads and rotors\. Our technician will inspect the vehicle and confirm before any work is done/);
-    expect(w.text).toMatch(/The standard repair time for this job is 1\.8 hours of labor \(an estimated \$180\), plus parts and applicable fees/);
+    expect(w.text).toMatch(/^You told us: "Grinding noise when I brake"\. Based on that description, the repair most often associated with that symptom is to replace the front brake pads and rotors\. We recommend a technician inspection first to confirm the cause/);
+    expect(w.text).toMatch(/The standard repair time for this job is 1\.8 hours of labor \(an estimated \$180\), plus parts, applicable fees and taxes/);
     expect(w.basis).toMatch(/LG-BRK-F-0142/);
   });
   it('an add-on uses its labor-guide talk track; a manual line just says what it is', () => {
@@ -290,9 +290,9 @@ describe('scheduled maintenance, interpreted for the advisor', () => {
   it('writes a script that leads with what matters and offers comfort items as optional', () => {
     const { script } = interpretMaint(at60(), { rate: 150, make: 'Toyota' });
     expect(script).toMatch(/^According to Toyota's factory \(OEM\) maintenance schedule, the 60,000 mile service is due at this mileage/);
-    expect(script.indexOf('safety-related items')).toBeLessThan(script.indexOf('To help protect the engine'));
-    expect(script).toMatch(/the schedule calls for us to change the oil and filter and replace the spark plugs/);
-    expect(script).toMatch(/items you can choose to do now or later: replace the (cabin|engine) air filter and replace the (cabin|engine) air filter\..*optional today/);
+    expect(script.indexOf('For safety, the schedule recommends')).toBeLessThan(script.indexOf('To help protect the engine'));
+    expect(script).toMatch(/it also recommends that we change the oil and filter and replace the spark plugs/);
+    expect(script).toMatch(/items you may choose to do now or at a later visit: replace the (cabin|engine) air filter and replace the (cabin|engine) air filter\..*These are optional\./);
     expect(script).toMatch(/multi-point inspection, covering the brakes, steering and suspension, cooling system and fluids and more\. If it finds anything else, we will contact you/);
     expect((script.match(/change the oil and filter/g) || []).length).toBe(1); // oil + filter rows said once
   });
@@ -303,7 +303,7 @@ describe('scheduled maintenance, interpreted for the advisor', () => {
     const plug = a.tiers.flatMap(t => t.items).find(i => /spark plug/i.test(i.name));
     expect(plug.coveredBy).toMatch(/spark plugs/i);
     expect(a.recommendedIds).not.toContain(plug.id);
-    expect(a.script).toMatch(/already going to replace the spark plugs as part of today's/);
+    expect(a.script).toMatch(/We already plan to replace the spark plugs as part of today's/);
   });
   it('"Add recommended" adds safety and engine items and the inspection, not comfort items', async () => {
     const ms = at60();
@@ -322,9 +322,9 @@ describe('maintenance script after the recommended work is on the order', () => 
     const first = interpretMaint(ms, { make: 'Toyota' });
     first.recommendedIds.forEach(id => S.ro.accepted.add(id));
     const a = interpretMaint(ms, { accepted: [...S.ro.accepted], make: 'Toyota' });
-    expect(a.scriptLines[0]).toBe('The items Toyota\'s factory (OEM) maintenance schedule lists as most important for the 60,000 mile service are on today\'s order.');
-    expect(a.script).not.toMatch(/safety-related items|To help protect the engine/);
-    expect(a.script).toMatch(/items you can choose to do now or later/);
+    expect(a.scriptLines[0]).toBe('The items Toyota\'s factory (OEM) maintenance schedule recommends most for the 60,000 mile service are on today\'s order.');
+    expect(a.script).not.toMatch(/For safety, the schedule recommends|To help protect the engine/);
+    expect(a.script).toMatch(/items you may choose to do now or at a later visit/);
     expect(ms.note).toBe('right at the 60,000 mi service');
   });
 });
@@ -380,7 +380,7 @@ describe('before recommendations: one combined question, at most two rounds', ()
     expect(r.labor.anchor).toMatch(/^axle-asm/);
     expect(r.labor.items.length).toBeGreaterThan(0);
     expect(r.labor.items.every(i => i.say)).toBe(true);
-    expect(r.labor.say).toMatch(/^Some related work can be done together with the axle shaft assembly.*\(Source: Mitchell 1 repair times\.\)$/);
+    expect(r.labor.say).toMatch(/^We recommend considering some related work together with the axle shaft assembly.*\(Source: Mitchell 1 repair times\.\)$/);
   });
   it('an advisor who adds work skips the questions', async () => {
     await Cr.send('2018 Toyota Corolla 61k, grinding when I brake'); await settle();
@@ -418,8 +418,8 @@ describe('shop setting: how labor-guide recommendations are presented', () => {
     expect(l.lead.map(i => i.id)).toContain('transaxle-seal-each');
     expect(l.more.length).toBeGreaterThan(0);
     expect(l.more.every(i => ['if-needed', 'optional'].includes(i.kindId))).toBe(true);
-    expect(l.say).toMatch(/With this job we would recommend we also put in a new transmission output seal\./);
-    expect(l.say).toMatch(/Others depend on what the technician finds or on your preference.*Nothing is added without your approval/);
+    expect(l.say).toMatch(/Specifically, we recommend that we also put in a new transmission output seal\./);
+    expect(l.say).toMatch(/Other items depend on what the inspection shows or on your preference.*nothing is added without your approval/);
     expect(orderAddOns(['axle-boot-each', 'transaxle-seal-each'])).toEqual(['transaxle-seal-each', 'axle-boot-each']);
   });
   it('all: every add-on in the guide order, one list, nothing marked conditional', () => {
@@ -428,7 +428,7 @@ describe('shop setting: how labor-guide recommendations are presented', () => {
     const l = buildRecs().labor;
     expect(l.more).toEqual([]);
     expect(l.lead.map(i => i.id)).toEqual(l.items.map(i => i.id));
-    expect(l.say).toMatch(/There are \d+ items that can go with this job/);
+    expect(l.say).toMatch(/There are \d+ related items that can be done with this job/);
     expect(orderAddOns(['axle-boot-each', 'transaxle-seal-each'])).toEqual(['axle-boot-each', 'transaxle-seal-each']);
   });
   it('the agent is told the shop setting in the repair order snapshot', () => {
@@ -455,7 +455,7 @@ describe('talk-track sources: claims name where they come from', () => {
       return parent ? talkFor(r.id, parent.id, 150).text : '';
     }).filter(Boolean);
     texts.forEach(t => expect(t, t).not.toMatch(/\bwill (fail|break|not stop|leave you)|saves you|guarantee/i));
-    expect(texts.filter(t => /approval|your choice/.test(t)).length).toBeGreaterThan(texts.length / 2);
+    expect(texts.filter(t => /approval|decision is yours|optional/.test(t)).length).toBeGreaterThan(texts.length / 2);
   });
 });
 
@@ -515,5 +515,28 @@ describe('mock login starts the shop profile fresh', () => {
     expect(said).not.toContain('old');
     expect(said[0]).toMatch(/^Your shop: Cornerstone Automotive/);
     S.mode = 'ro';
+  });
+});
+
+describe('recommendations collapsed to one-line highlights', () => {
+  it('each section has a short highlight with the work and the estimate', () => {
+    Object.assign(S.ro, { year: '2018', make: 'Toyota', model: 'Sienna', vin: '5TDYZ3DC2JS901691', mileage: '60000', symptom: 'Clicking when turning and grease on the inside of the front left tire.' });
+    S.profile['shop.labor_rate'] = { value: 150 };
+    const r = buildRecs();
+    expect(r.repairs.highlight).toMatch(/^We recommend an inspection first; most often associated: replace the axle shaft assembly \(both sides\) · 3\.5 h · ~\$525/);
+    expect(r.maint.highlight).toMatch(/^60,000 mi service due now; the OEM schedule recommends: .*rotate the tires.* · \d\.\d h · ~\$\d+; optional: 2\.$/);
+    expect(r.labor.highlight).toMatch(/^With the axle shaft assembly, we recommend: put in a new transmission output seal; \d more only if the inspection shows a need\.$/);
+    [r.repairs.highlight, r.maint.highlight, r.labor.highlight].forEach(h => expect(h.length, h).toBeLessThan(200));
+  });
+});
+
+import { concern } from '../src/core/logic.js';
+describe('the concern reads descriptively, not as question: answer', () => {
+  it('turns each follow-up answer into a sentence', () => {
+    S.ro.symptom = 'Check engine light is on and the vehicle has a rough idle when stopped.';
+    Object.assign(S.ro.answers, { 'cel-flash': 'Flashing', rough: 'Yes', 'cel-drive': 'Rough or low power' });
+    const c = concern();
+    expect(c).toBe('Customer states: Check engine light is on and the vehicle has a rough idle when stopped. Customer reports: The check engine light is flashing. The engine idles rough or hesitates. Since the light came on, it runs rough or has low power.');
+    expect(c).not.toMatch(/: Yes|: No\b|Warning light:|Reported:/);
   });
 });

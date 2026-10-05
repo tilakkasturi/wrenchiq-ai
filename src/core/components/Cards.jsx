@@ -5,6 +5,8 @@ import { getMaintItem } from '../maintenanceSchedule';
 import { hrs, rate, conf, money, partOn, vehicleOk } from '../logic';
 import { acceptItem, removeItem, dismissItem, restoreItem, addAllMaint, searchPart, addPart, removePart, swapPart } from '../harness';
 import { talkFor } from '../talkTrack';
+import { talkText, talkState } from '../talkGen';
+import { TalkTag } from './TalkTag';
 import { interpretMaint } from '../maintAdvice';
 import { maintMode, fullSchedule, settingOption } from '../shopSettings';
 import { partPrice, prefetchPartPrices } from '../partPrices';
@@ -132,7 +134,7 @@ const TIER_TAG = { safety: 'med', protect: 'adv', comfort: 'low' };
  * matters, what today's repairs already cover, and the script the advisor can read to the customer.
  */
 /** embedded: shown inside the Recommendations card's maintenance section, without its own label and frame. */
-export function MaintCard({ card, embedded = false }) {
+export function MaintCard({ card, embedded = false, talk = null }) {
   const ms = card.ms, rt = rate();
   const [copied, setCopied] = useState(false);
   const all = maintMode() === 'all'; // shop setting: the full schedule as is, not prioritized
@@ -174,8 +176,8 @@ export function MaintCard({ card, embedded = false }) {
         <p className="why-line small muted">Shop setting: {settingOption('maint.presentation').label}. Change it in Shop profile.</p>
 
         <details className="maint-script" open>
-          <summary><span className="label">What to say to the customer</span></summary>
-          {script.map((l, i) => <p key={i}>{l}</p>)}
+          <summary><span className="label">What to say to the customer</span> {talk && <TalkTag track={talk} />}</summary>
+          {(talk && talkState(talk) === 'checked' ? [talkText(talk)] : script).map((l, i) => <p key={i}>{l}</p>)}
           <button className="btn ghost sm" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
         </details>
 

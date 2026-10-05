@@ -37,14 +37,14 @@ export function talkFor(comboId, opId, rate) {
   const saves = alone ? Math.round((alone.hours - h) * 10) / 10 : null;
   // hours are "the standard repair time" to the owner; where they come from is the reference at the end
   const value = alone
-    ? 'Because the area is already open, ' + timeSay() + ' for it is ' + cost + ', compared with ' + alone.hours.toFixed(1) + ' hours if it is done separately later.'
+    ? 'Because the area is already open, ' + timeSay() + ' for it is ' + cost + ', instead of ' + alone.hours.toFixed(1) + ' hours if it is done separately later.'
     : 'Because the area is already open, ' + timeSay() + ' for it is ' + cost + '.';
 
   let text;
-  if (kind === 'required') text = 'To complete the ' + job + ' job, this step is part of the work: we need to ' + plain + '. ' + why + ' ' + cap(timeSay()) + ' for it is ' + cost + '.';
-  else if (kind === 'if-needed') text = 'While we are working on the ' + job + ', the technician will inspect it. If it is worn or damaged, we would recommend we ' + plain + '. ' + why + ' ' + value + ' We will show you what we find and get your approval first.';
-  else if (kind === 'optional') text = 'Since we will already be working on the ' + job + ', we can also ' + plain + ' if you would like. ' + why + ' ' + value + ' It is your choice, and it is fine to skip it today.';
-  else text = 'While we are working on the ' + job + ', we can also ' + plain + '. ' + why + ' ' + value + ' ' + SRC.approval;
+  if (kind === 'required') text = 'The recommended procedure for the ' + job + ' job includes a step to ' + plain + ', so we include it in the estimate. ' + why + ' ' + cap(timeSay()) + ' for it is ' + cost + '.';
+  else if (kind === 'if-needed') text = 'During the ' + job + ' work, we recommend the technician inspect this area. If the inspection shows wear or damage, we would recommend that we ' + plain + '. ' + why + ' ' + value + ' We will show you what we find, and the decision is yours.';
+  else if (kind === 'optional') text = 'Since we will already be working on the ' + job + ', you may want to consider having us ' + plain + '. ' + why + ' ' + value + ' This is optional, and it is fine to decline it today.';
+  else text = 'While we are working on the ' + job + ', we recommend that we also ' + plain + '. ' + why + ' ' + value + ' ' + SRC.approval;
   text += ' ' + ref;
   return { kind, label: KIND_LABEL[kind] || KIND_LABEL.recommended, hours: h, price, saves, text };
 }
@@ -82,7 +82,7 @@ export function customerWhy(it, { hours, rate, concern, parent, make } = {}) {
   }
   if (it.src === 'lg') {
     const said = String(concern || '').trim().replace(/[.!?]+$/, '');
-    const text = (said ? 'You told us: "' + said + '". Based on that description, the repair most often associated with it is to ' : 'The work we would look at is to ') + plainJob(it.name) + '. '
+    const text = (said ? 'You told us: "' + said + '". Based on that description, the repair most often associated with that symptom is to ' : 'The repair we would recommend looking at is to ') + plainJob(it.name) + '. '
       + SRC.confirm + ' '
       + cap(timeSay()) + ' for this job is ' + cost + ', ' + SRC.estimate + '. ' + timeSource(it);
     return { title: 'Repair', text, basis: (it.synthetic ? 'Labor guide (synthetic) ' : 'Labor guide ') + it.ref };
@@ -91,7 +91,7 @@ export function customerWhy(it, { hours, rate, concern, parent, make } = {}) {
     const at = (String(it.ref).match(/@\s*([\d,]+)\s*mi/) || [])[1];
     const who = cap(scheduleCite(/GENERIC/.test(it.detail || '') ? 'GENERIC' : 'OEM', make));
     const est = 'Estimated labor is ' + h.toFixed(1) + ' hours' + (rate ? ' (' + dollars(h * rate) + ')' : '');
-    const text = who + ' lists ' + lowerFirst(it.name) + (at ? ' at ' + at + ' miles' : '') + '. ' + est + ', ' + SRC.estimate + '. ' + SRC.approval;
+    const text = who + ' recommends that we ' + plainJob(it.name).replace(/^(\w+) the (.*)$/, '$1 the $2') + (at ? ' at ' + at + ' miles' : '') + ', and we recommend it at this visit. ' + est + ', ' + SRC.estimate + '. ' + SRC.approval;
     return { title: 'Scheduled maintenance', text, basis: 'Schedule ' + it.ref };
   }
   return { title: 'Added by your advisor', text: it.name + '. ' + cost.charAt(0).toUpperCase() + cost.slice(1) + '.', basis: 'Entered by the advisor' };

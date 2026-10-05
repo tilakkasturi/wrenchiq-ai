@@ -376,10 +376,10 @@ async function advanceFlow(C) {
     f.shown = true;
     trace('rule', 'Recommendations', 'Shown after ' + f.rounds + ' answer round' + (f.rounds === 1 ? '' : 's'),
       { rule: 'Three sections: likely repairs, scheduled maintenance, labor-guide recommendations, each with a customer talk track.', rounds: f.rounds, answers: { ...S.ro.answers } });
-    // the prepackaged estimate first (the shop's severity level), then each recommendation on its own
+    // the severity package estimate first (the shop's severity level), then each recommendation on its own
     const pk = hasPackage();
     await C.agent(pk
-      ? 'Here is the prepackaged estimate at your shop\'s severity level, then each recommendation on its own: likely repairs, scheduled maintenance, and labor-guide recommendations, with what to say to the customer.'
+      ? 'Here are the Severity (High, Medium, Low) Package Estimates, opened at your shop\'s severity level, then each recommendation on its own: likely repairs, scheduled maintenance, and labor-guide recommendations, with what to say to the customer.'
       : 'Here is what I recommend, in three parts: likely repairs, scheduled maintenance, and labor-guide recommendations. Each has what to say to the customer; open any line for the detail.');
     if (pk) postPackage(C);
     C.card({ type: 'recs', individual: pk });
@@ -778,12 +778,12 @@ async function showNapaConfig(C) {
   C.card({ type: 'napaConfig', config: r.config });
 }
 
-/** The prepackaged estimate at the shop's severity level (packages.js), as a card with the totals. */
+/** The severity package estimate at the shop's severity level (packages.js), as a card with the totals. */
 function postPackage(C) {
   const recs = buildRecs(), lv = packageLevel(), pk = buildPackage(lv, recs), all = packageLevels(recs);
   if (!pk.items.length) return;
   prefetchPackageParts(recs);
-  trace('rule', 'Prepackaged estimate', settingOption('package.severity').label + ': ' + pk.items.length + ' lines' + (pk.total !== null ? ', ' + money(pk.total) + (pk.partsPending ? ' + parts pending' : '') : ''),
+  trace('rule', 'Severity package estimate', settingOption('package.severity').label + ': ' + pk.items.length + ' lines' + (pk.total !== null ? ', ' + money(pk.total) + (pk.partsPending ? ' + parts pending' : '') : ''),
     { rule: 'Severity per line: high = the customer\'s concern, safety maintenance, add-ons that are part of the job; medium = engine-protecting maintenance, the inspection, recommended add-ons, jobs the repair does not include; low = comfort maintenance, if-needed and optional add-ons. A level packages its severity and above, through the same labor rules as Add to RO. Total = labor at the shop rate + parts at the shop pick.',
       level: lv, items: pk.items.map(i => ({ name: i.name, severity: i.severity, why: i.why })), skipped: pk.skipped.map(i => ({ name: i.name, reason: i.reason })), confirm: pk.confirm,
       totals: Object.fromEntries(Object.entries(all).map(([k, v]) => [k, { lines: v.items.length, hours: Math.round(v.hours * 10) / 10, total: v.total }])) });

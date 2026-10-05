@@ -42,7 +42,7 @@
    "id": "talk",
    "title": "What I tell your customers",
    "match": "talk track|customer|say|script|liab|wording|tone|explain",
-   "answer": "Customer wording is written to keep the shop's liability low. A repair is the one \"most often associated\" with the symptom, never a certain diagnosis; the technician inspects and confirms first and the shop contacts the customer with findings and an estimate. Prices are estimates plus parts and applicable fees, nothing is done without the customer's approval, and each claim names its source: the OEM maintenance schedule, or Mitchell 1 repair times."
+   "answer": "Customer wording is written to keep the shop's liability low. A repair is the one \"most often associated\" with the symptom, never a certain diagnosis; the technician inspects and confirms first and the shop contacts the customer with findings and an estimate. Prices are estimates plus parts and applicable fees, nothing is done without the customer's approval, and each claim names its source: the OEM maintenance schedule, or Mitchell 1 repair times. In Agent mode the model writes this wording from each recommendation's facts, and the app checks every text before showing it: every number and price must match the facts, no promises or obligations, the approval and inspection points must be there, and the app adds the source line itself. Anything that fails a check, or any time the model is unavailable, uses the standard wording instead; the card shows which is which."
   },
   {
    "id": "memory",

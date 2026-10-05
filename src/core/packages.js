@@ -1,5 +1,5 @@
-// Prepackaged estimate: WrenchIQ picks the best set of recommendations for the shop's severity
-// level (Shop profile → "WrenchIQ chooses the best option by severity and total budget") and
+// Severity (High, Medium, Low) package estimate: WrenchIQ picks the best set of recommendations for the shop's severity
+// level (Shop profile → "Severity (High, Medium, Low) Package Estimates") and
 // totals it. The items come from the same recommendations the Recommendations card shows
 // (recommend.js buildRecs); each gets a severity:
 //   high    the customer's concern (top likely repair), safety maintenance, add-on labor that is
@@ -18,6 +18,8 @@ import { buildRecs } from './recommend';
 import { setting } from './shopSettings';
 import { partPrice, prefetchPartPrices } from './partPrices';
 import { partsFor, pricedPartNames } from './maintParts';
+import { plainJob } from './talkTrack';
+import { SRC, scheduleCite, timeSource } from './talkSources';
 
 export const LEVELS = ['high', 'medium', 'low'];
 const RANK = { high: 0, medium: 1, low: 2 };
@@ -112,4 +114,71 @@ export function prefetchPackageParts(recs = buildRecs()) {
   const names = new Set();
   packageCandidates(recs).forEach(c => pricedPartNames(ITEM(c.id)).forEach(n => names.add(n)));
   if (names.size && S.ro.year && S.ro.make && S.ro.model) prefetchPartPrices([...names]);
+}
+
+/* ---------- talk track: why this package holds what it does ---------- */
+
+const joinAnd = l => (l.length <= 1 ? l.join('') : l.slice(0, -1).join(', ') + ' and ' + l[l.length - 1]);
+const dollars = n => '$' + Math.round(n).toLocaleString();
+const uniq = l => l.filter((x, k) => x && l.indexOf(x) === k);
+
+/** How to say each recommendation to the customer, from the same data as the Recommendations card. */
+function sayMap(recs) {
+  const m = new Map();
+  recs.repairs.items.forEach(i => m.set(i.id, plainJob(i.name)));
+  const adv = recs.maint.adv;
+  if (adv) {
+    adv.tiers.forEach(t => t.items.forEach(i => m.set(i.id, i.say)));
+    if (adv.inspection) m.set(adv.inspection.id, 'do the multi-point inspection');
+  }
+  recs.labor.items.forEach(i => m.set(i.id, i.plain));
+  recs.labor.followOns.forEach(f => m.set(f.id, 'check the ' + f.name.toLowerCase().replace(/,.*$/, '')));
+  return m;
+}
+
+const INTRO = {
+  high: 'For this visit, we recommend starting with what should not wait.',
+  medium: 'We recommend what should not wait, plus what helps protect the vehicle.',
+  low: 'This package includes everything we recommend for this visit.',
+};
+
+/**
+ * The customer talk track for a package, and its one-line highlight: why each group is in it (the
+ * concern, safety per the OEM schedule, what protects the vehicle, optional items), the estimate,
+ * what can wait, and the inspect-and-approve line with the sources. Built from buildPackage's lines.
+ * @returns {{highlight: string, say: string[]}}
+ */
+export function packageTalk(pk, recs = buildRecs()) {
+  const say = sayMap(recs), R = S.ro;
+  const by = (pred) => uniq(pk.items.filter(pred).map(i => say.get(i.id) || i.name.toLowerCase()));
+  const repair = by(i => i.source === 'repair');
+  const safety = by(i => i.source === 'maintenance' && i.severity === 'high');
+  const protect = by(i => i.source === 'maintenance' && i.severity === 'medium');
+  const addOns = by(i => (i.source === 'add-on' || i.source === 'follow-on') && i.severity !== 'low');
+  const optional = by(i => i.severity === 'low');
+  const ms = recs.maint.ms, schedule = ms ? scheduleCite(ms.match, R.make) : 'the maintenance schedule';
+
+  const lines = [INTRO[pk.level]];
+  if (repair.length) lines.push('For your concern, we recommend an inspection first; if it confirms the cause, we recommend that we ' + joinAnd(repair) + '.');
+  if (safety.length) lines.push('For safety, ' + schedule + ' recommends that we ' + joinAnd(safety) + '.');
+  if (protect.length) lines.push('To help protect the vehicle, ' + (safety.length ? 'it' : schedule) + ' also recommends that we ' + joinAnd(protect) + '.');
+  if (addOns.length) lines.push('While we are working on it, we also recommend that we ' + joinAnd(addOns) + ', because the area is already open.');
+  if (optional.length) lines.push('Also included, as optional items: we can ' + joinAnd(optional) + '. You can remove any of these.');
+  lines.push(pk.total !== null
+    ? 'The estimated total is about ' + dollars(pk.total) + (pk.partsPending ? ' plus some parts still being priced' : '') + ': ' + pk.hours.toFixed(1) + ' hours of labor at the standard repair time and parts at list price, plus applicable fees and taxes.'
+    : 'Estimated labor is ' + pk.hours.toFixed(1) + ' hours at the standard repair time, ' + SRC.estimate + '.');
+  const later = packageCandidates(recs).filter(c => RANK[c.severity] > RANK[pk.level] && !R.accepted.has(c.id)).length;
+  if (later) lines.push((later === 1 ? 'One other recommendation is' : later + ' other recommendations are') + ' lower priority and can be scheduled for a later visit; we are happy to go over ' + (later === 1 ? 'it' : 'them') + ' with you.');
+  // name each source honestly: Mitchell 1 only for real export rows; maintenance hours are estimates
+  const lg = pk.items.map(i => ITEM(i.id)).filter(it => it && it.src === 'lg');
+  const mitchell = timeSource(...lg) === SRC.repairTime.source;
+  const hasMaint = pk.items.some(i => i.source === 'maintenance');
+  lines.push(SRC.approval + ' ' + (mitchell && hasMaint ? SRC.repairTime.sourceWithMaintenance : lg.length ? timeSource(...lg) : SRC.repairTime.sourceSynthetic));
+
+  const n = k => pk.items.filter(i => i.source === k).length, maintN = n('maintenance'), addN = n('add-on') + n('follow-on');
+  const highlight = ({ high: 'High', medium: 'Medium', low: 'Low' })[pk.level] + ' severity · ' + pk.items.length + ' line' + (pk.items.length === 1 ? '' : 's')
+    + (pk.total !== null ? ' · about ' + dollars(pk.total) : ' · ' + pk.hours.toFixed(1) + ' h') + ': '
+    + [repair.length ? 'the ' + recs.repairs.items[0].name.split(',')[0].toLowerCase() : '', maintN ? maintN + ' scheduled maintenance' : '', addN ? addN + ' add-on' + (addN === 1 ? '' : 's') : ''].filter(Boolean).join(', ')
+    + (later ? '; ' + later + ' more for a later visit' : '') + '.';
+  return { highlight, say: lines };
 }

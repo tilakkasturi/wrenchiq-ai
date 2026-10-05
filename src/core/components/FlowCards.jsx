@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { S } from '../state';
 import { money, rate } from '../logic';
 import { acceptItem, removeItem, answerQuestions } from '../harness';
 import { buildRecs } from '../recommend';
+import { talkTracks, trackById } from '../talkTracks';
+import { generateTalk, talkText, talkState } from '../talkGen';
+import { TalkTag } from './TalkTag';
 import { MaintCard } from './Cards';
 import { settingOption } from '../shopSettings';
 
@@ -56,14 +59,15 @@ function AddBtn({ id, on }) {
     : <button className="btn sm primary" onClick={e => { e.preventDefault(); acceptItem(id); }}>Add</button>;
 }
 
-function Say({ lines }) {
+/** lines: template lines; track: the talk track (talkTracks.js). Checked model text replaces the lines. */
+function Say({ lines, track }) {
   const [copied, setCopied] = useState(false);
-  const list = [].concat(lines).filter(Boolean);
+  const list = track && talkState(track) === 'checked' ? [talkText(track)] : [].concat(lines).filter(Boolean);
   if (!list.length) return null;
   const copy = () => { try { navigator.clipboard.writeText(list.join(' ')).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }, () => {}); } catch (_) { /* clipboard blocked */ } };
   return (
     <div className="recs-say">
-      <div className="label">What to say to the customer</div>
+      <div className="label">What to say to the customer <TalkTag track={track} /></div>
       {list.map((l, i) => <p key={i}>{l}</p>)}
       <button className="btn ghost sm" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
     </div>
@@ -85,10 +89,13 @@ function Drill({ title, tag, tagClass, h, p, id, on, children }) {
   );
 }
 
-function Section({ n, title, count, hint, open, children }) {
+function Section({ n, title, count, hint, open, highlight, children }) {
   return (
     <details className="recs-sec" open={open}>
-      <summary><span className="recs-n">{n}</span><span className="recs-title">{title}</span><span className="small muted">{hint}</span><span className="tag low">{count}</span></summary>
+      <summary>
+        <span className="recs-n">{n}</span><span className="recs-title">{title}</span><span className="small muted">{hint}</span><span className="tag low">{count}</span>
+        {highlight && <span className="recs-hl">{highlight}</span>}
+      </summary>
       <div className="recs-body">{children}</div>
     </details>
   );
@@ -102,23 +109,29 @@ function Section({ n, title, count, hint, open, children }) {
 export function RecsCard({ card } = {}) {
   const r = buildRecs(), rt = rate();
   const { repairs, maint, labor } = r;
+  // the model rewrites every talk track on screen in one call; each is checked before it replaces the template
+  const tracks = talkTracks(r), tk = id => trackById(tracks, id);
+  const tracksKey = tracks.map(t => t.id + '|' + t.reference).join('\n');
+  useEffect(() => { generateTalk(tracks); }, [tracksKey, S.useAgent]); // eslint-disable-line react-hooks/exhaustive-deps
   const addOnDrill = it => (
     <Drill key={it.id} title={it.name} tag={it.kind} tagClass={it.kind === 'Part of the job' ? 'adv' : it.kind === 'Recommended' ? 'med' : 'low'} h={it.hours} p={it.price} id={it.id} on={it.on}>
-      {it.say && <p className="say">{it.say}</p>}
+      {it.say && <p className="say">{talkText(tk('addon:' + it.id)) || it.say} <TalkTag track={tk('addon:' + it.id)} /></p>}
       {it.saves ? <p className="why-line"><b>Saves</b> {it.saves.toFixed(1)} h{rt ? ' (' + money(it.saves * rt) + ')' : ''} against doing it on its own.</p> : null}
       <p className="why-line mono small">Add-on labor · labor guide {it.ref}</p>
     </Drill>
   );
-  // open the first section that has something in it
-  const first = repairs.items.length ? 1 : maint.adv ? 2 : labor.anchor ? 3 : 1;
+  // Agent mode: every section starts collapsed to its one-line highlight, so all three fit on
+  // screen; scripted mode opens the first section that has something in it
+  const compact = S.useAgent;
+  const first = compact ? 0 : repairs.items.length ? 1 : maint.adv ? 2 : labor.anchor ? 3 : 1;
   return (
     <>
       <div className="label" style={{ marginBottom: 6 }}>{card && card.individual ? 'Individual recommendations' : 'Recommendations'}</div>
       <div className="card recs">
         {r.concern && <p className="why-line" style={{ marginTop: 0 }}>{r.concern}</p>}
 
-        <Section n="1" title="Likely repairs" count={repairs.items.length} hint="from the customer's concern" open={first === 1}>
-          {repairs.empty ? <p className="why-line">{repairs.empty}</p> : <Say lines={repairs.say} />}
+        <Section n="1" title="Likely repairs" count={repairs.items.length} hint="from the customer's concern" open={first === 1} highlight={repairs.highlight}>
+          {repairs.empty ? <p className="why-line">{repairs.empty}</p> : <Say lines={repairs.say} track={tk('repairs')} />}
           {repairs.items.map((it, i) => (
             <Drill key={it.id} title={it.name} tag={i === 0 ? 'Top match' : it.match} tagClass={it.level} h={it.hours} p={it.price} id={it.id} on={it.on}>
               <p className="why-line"><b>Why it matches:</b> {it.why.join('. ') || 'Matches the concern'}.</p>
@@ -128,12 +141,12 @@ export function RecsCard({ card } = {}) {
           ))}
         </Section>
 
-        <Section n="2" title="Scheduled maintenance" count={maint.count} hint={maint.adv ? maint.adv.headline + ' · ' + maint.adv.status.toLowerCase() : 'not due'} open={first === 2}>
-          {maint.adv ? <MaintCard card={{ ms: maint.ms }} embedded /> : <p className="why-line">{maint.empty}</p>}
+        <Section n="2" title="Scheduled maintenance" count={maint.count} hint={maint.adv ? maint.adv.headline + ' · ' + maint.adv.status.toLowerCase() : 'not due'} open={first === 2} highlight={maint.highlight}>
+          {maint.adv ? <MaintCard card={{ ms: maint.ms }} embedded talk={tk('maint')} /> : <p className="why-line">{maint.empty}</p>}
         </Section>
 
-        <Section n="3" title="Labor guide recommendations" count={labor.items.length + labor.followOns.length} hint={labor.anchor ? 'with ' + labor.anchorName.toLowerCase().replace(/,.*$/, '') : 'add-on labor'} open={first === 3}>
-          {labor.anchor ? <Say lines={labor.say} /> : <p className="why-line">{labor.empty}</p>}
+        <Section n="3" title="Labor guide recommendations" count={labor.items.length + labor.followOns.length} hint={labor.anchor ? 'with ' + labor.anchorName.toLowerCase().replace(/,.*$/, '') : 'add-on labor'} open={first === 3} highlight={labor.highlight}>
+          {labor.anchor ? <Say lines={labor.say} track={tk('labor')} /> : <p className="why-line">{labor.empty}</p>}
           {labor.anchor && !labor.anchorOnOrder && <p className="why-line small muted">These apply once {labor.anchorName.toLowerCase()} is on the order.</p>}
           {labor.anchor && <p className="why-line small muted">Shop setting: {settingOption('labor.presentation').label}. Change it in Shop profile.</p>}
           {labor.lead.map(addOnDrill)}

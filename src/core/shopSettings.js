@@ -83,7 +83,7 @@ export function fullSchedule(ms, ctx = {}) {
   const items = ms.ids.map(id => known.get(id) || (getMaintItem(id) && { id, name: getMaintItem(id).name, hours: getMaintItem(id).hours, price: ctx.rate ? getMaintItem(id).hours * ctx.rate : null })).filter(Boolean);
   const open = items.filter(i => !i.onOrder && !i.coveredBy);
   const hours = open.reduce((s, i) => s + i.hours, 0);
-  const script = 'According to ' + scheduleCite(ms.match, ctx.make) + ', the ' + ms.at.toLocaleString() + ' mile service lists: ' + joinAnd(items.map(i => i.name.toLowerCase())) + '. '
+  const script = 'According to ' + scheduleCite(ms.match, ctx.make) + ', the ' + ms.at.toLocaleString() + ' mile service recommends: ' + joinAnd(items.map(i => i.name.toLowerCase())) + '. '
     + 'That is ' + items.length + ' item' + (items.length > 1 ? 's' : '') + (hours ? ', estimated at about ' + hours.toFixed(1) + ' hours of labor' + (ctx.rate ? ' ($' + Math.round(hours * ctx.rate).toLocaleString() + ')' : '') + ', ' + SRC.estimate : '') + '. ' + SRC.approval;
   return { headline: adv.headline, status: adv.status, items, openIds: open.map(i => i.id), hours, price: ctx.rate ? hours * ctx.rate : null, script };
 }

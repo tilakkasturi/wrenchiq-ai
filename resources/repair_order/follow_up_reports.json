@@ -1,0 +1,22 @@
+{
+ "_about": "How each follow-up answer reads on the repair order. The concern prints 'Customer states: <concern>' and then 'Customer reports:' followed by one descriptive sentence per answer below (never 'Idle: Yes'). Keyed by question id, then by the option label exactly as the question offers it. Sentences describe what the customer reported, in the customer's terms; no causes or diagnosis. An answer with no sentence here falls back to 'Question: answer'.",
+ "label": "Customer reports:",
+ "reports": {
+  "brk-where": { "Front": "The noise or feel comes from the front.", "Rear": "The noise or feel comes from the rear.", "Not sure": "The customer is not sure whether it comes from the front or the rear." },
+  "brk-sound": { "Grinding": "It makes a grinding sound.", "Squeal": "It makes a squealing sound.", "Pedal pulses": "The brake pedal pulses.", "Clunk": "There is a clunk." },
+  "noise-when": { "Over bumps": "The noise happens over bumps.", "When turning": "The noise happens when turning.", "Constant while driving": "The noise is constant while driving.", "Only when braking": "The noise happens only when braking." },
+  "cel-flash": { "Flashing": "The check engine light is flashing.", "Steady": "The check engine light is on steady." },
+  "rough": { "Yes": "The engine idles rough or hesitates.", "No": "The customer has not noticed a rough idle or hesitation." },
+  "coolant": { "Yes": "There is a coolant leak or the coolant level is low.", "No": "The customer has not noticed a coolant leak or a low coolant level." },
+  "crank": { "Nothing at all": "Nothing happens when the key is turned.", "Clicking": "It clicks when the key is turned.", "Slow crank": "The engine cranks slowly." },
+  "acq": { "Blows but never gets cold": "The A/C blows but never gets cold.", "Cold at first, then warm": "The A/C is cold at first, then turns warm." },
+  "vib": { "Highway speeds": "It shakes at highway speeds.", "Only when braking": "It shakes only when braking.", "All the time": "It shakes all the time." },
+  "leak": { "Top of engine": "The leak appears to be at the top of the engine.", "Under the engine": "The leak appears to be under the engine." },
+  "brk-when": { "Only when braking": "The squeak happens only when braking.", "All the time while driving": "The squeak happens all the time while driving.", "Light braking at low speed": "The squeak happens under light braking at low speed." },
+  "eng-what": { "Does not crank": "The engine does not crank.", "Cranks but will not start": "The engine cranks but does not start.", "Stalls or dies while driving": "The engine stalls or dies while driving.", "Runs rough or loses power": "The engine runs rough or loses power." },
+  "cel-drive": { "Drives normally": "It drives normally since the light came on.", "Rough or low power": "Since the light came on, it runs rough or has low power.", "Worse fuel economy": "Fuel economy has dropped since the light came on." },
+  "ac-air": { "Weak airflow": "Airflow from the vents is weak.", "Strong but warm": "Airflow from the vents is strong, but the air is warm.", "No air at all": "No air comes from the vents." },
+  "ac-noise": { "Loud noise": "There is a loud noise from the A/C compressor.", "Clicks but does not engage": "The A/C clicks but does not engage.", "No noise": "The customer has not noticed any unusual noise from the A/C." },
+  "dur": { "Just started": "It just started.", "A few days": "It has been happening for a few days.", "Weeks or more": "It has been happening for weeks or more." }
+ }
+}

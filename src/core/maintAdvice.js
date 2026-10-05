@@ -75,25 +75,25 @@ function buildScript(ms, who, tiers, insp, recHours, rate) {
   const out = [];
   const pending = tiers.some(t => t.recommend && t.items.some(i => !i.onOrder && !i.coveredBy));
   const svc = 'the ' + ms.at.toLocaleString() + ' mile service';
-  if (!pending && tiers.some(t => t.recommend)) out.push('The items ' + who + ' lists as most important for ' + svc + ' are on today\'s order.');
+  if (!pending && tiers.some(t => t.recommend)) out.push('The items ' + who + ' recommends most for ' + svc + ' are on today\'s order.');
   else out.push(ms.status === 'COMING_UP'
-    ? 'According to ' + who + ', ' + svc + ' is coming up soon; it can be done while the vehicle is here if you would like.'
-    : 'According to ' + who + ', ' + svc + ' is due at this mileage. Here are the items it lists, most important first.');
+    ? 'According to ' + who + ', ' + svc + ' is coming up soon; we can recommend doing it while the vehicle is here, if you would like.'
+    : 'According to ' + who + ', ' + svc + ' is due at this mileage. Here is what it recommends, most important first.');
   const pick = id => (tiers.find(t => t.id === id) || { items: [] }).items.filter(i => !i.onOrder && !i.coveredBy);
   // one line per item to say, even when two schedule rows share it (oil + filter)
   const uniq = items => items.filter((i, k) => items.findIndex(j => j.say === i.say) === k);
   const safety = uniq(pick('safety')), protect = uniq(pick('protect')), comfort = uniq(pick('comfort'));
-  if (safety.length) out.push('For safety-related items, the schedule calls for us to ' + joinAnd(safety.map(i => i.say)) + '. ' + safety.map(i => i.why).join(' '));
-  if (protect.length) out.push('To help protect the engine, the schedule calls for us to ' + joinAnd(protect.map(i => i.say)) + '. ' + protect.map(i => i.why).join(' '));
+  if (safety.length) out.push('For safety, the schedule recommends that we ' + joinAnd(safety.map(i => i.say)) + '. ' + safety.map(i => i.why).join(' '));
+  if (protect.length) out.push('To help protect the engine, it also recommends that we ' + joinAnd(protect.map(i => i.say)) + '. ' + protect.map(i => i.why).join(' '));
   const covered = tiers.flatMap(t => t.items.filter(i => i.coveredBy));
-  if (covered.length) out.push('We are already going to ' + joinAnd(uniq(covered).map(i => i.say)) + ' as part of today\'s ' + covered[0].coveredBy.toLowerCase() + ', so it is not charged twice.');
+  if (covered.length) out.push('We already plan to ' + joinAnd(uniq(covered).map(i => i.say)) + ' as part of today\'s ' + covered[0].coveredBy.toLowerCase() + ', so it is not charged twice.');
   if (insp && !insp.onOrder) {
     const g = insp.groups.length > 3 ? insp.groups.slice(0, 3).concat('more') : insp.groups;
-    out.push('The schedule also includes a multi-point inspection' + (g.length ? ', covering the ' + g.join('; ').replace(/; ([^;]*)$/, ' and $1').replace(/; /g, ', ') : '') + '. If it finds anything else, we will contact you before doing any additional work.'
+    out.push('The schedule also recommends a multi-point inspection' + (g.length ? ', covering the ' + g.join('; ').replace(/; ([^;]*)$/, ' and $1').replace(/; /g, ', ') : '') + '. If it finds anything else, we will contact you with a recommendation before any additional work.'
       + (insp.brakeJob ? ' The brakes are already being worked on today.' : ''));
   }
-  if (recHours > 0) out.push('Estimated labor for these items is about ' + recHours.toFixed(1) + ' hours' + (rate ? ' (' + dollars(recHours * rate) + ')' : '') + ', ' + SRC.estimate + '. ' + SRC.approval);
-  if (comfort.length) out.push('The schedule also lists items you can choose to do now or later: ' + joinAnd(comfort.map(i => i.say)) + '. ' + comfort.map(i => i.why).join(' ') + ' These are optional today if you would prefer to wait.');
+  if (recHours > 0) out.push('Estimated labor for these recommended items is about ' + recHours.toFixed(1) + ' hours' + (rate ? ' (' + dollars(recHours * rate) + ')' : '') + ', ' + SRC.estimate + '. ' + SRC.approval);
+  if (comfort.length) out.push('The schedule also lists items you may choose to do now or at a later visit: ' + joinAnd(comfort.map(i => i.say)) + '. ' + comfort.map(i => i.why).join(' ') + ' These are optional.');
   return out;
 }
 

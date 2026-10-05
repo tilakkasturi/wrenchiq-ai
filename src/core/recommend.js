@@ -115,9 +115,9 @@ function likelyRepairs(rt) {
   if (items.length) {
     const t = items[0], base = i => i.name.split(',')[0].toLowerCase();
     const next = items.slice(1).find(i => base(i) !== base(t)); // not the other side of the same job
-    say = 'You told us: "' + said + '". Based on that description, the repair most often associated with it is to ' + plainJob(t.name) + '. '
+    say = 'You told us: "' + said + '". Based on that description, the repair most often associated with that symptom is to ' + plainJob(t.name) + '. '
       + SRC.confirm
-      + (next ? ' If the inspection points elsewhere, the next item we would check is the ' + next.name.split(',')[0].toLowerCase() + '.' : '')
+      + (next ? ' If the inspection points elsewhere, the next item we would recommend checking is the ' + next.name.split(',')[0].toLowerCase() + '.' : '')
       + ' ' + cap(timeSay()) + ' for that repair is ' + t.hours.toFixed(1) + ' hours of labor' + (t.price !== null ? ' (an estimated ' + dollars(t.price) + ')' : '') + ', ' + SRC.estimate + '. ' + timeSource(REPMAP[t.id]);
   }
   return { items, say, empty: items.length ? null : (said ? 'Nothing in the labor guide matches "' + said + '" as a repair. Maintenance below still applies.' : 'No repair concern on this order.') };
@@ -141,15 +141,15 @@ function laborGuideRecs(repairs, rt) {
   const followOns = followOnsFor(anchor, [...R.accepted]).map(f => ({ id: f.id, name: ITEM(f.id).name, hours: ITEM(f.id).hours, price: rt ? ITEM(f.id).hours * rt : null, why: f.why, on: R.accepted.has(f.id) }));
   const job = REPMAP[anchor].name.toLowerCase().replace(/,.*$/, '');
   const open = l => l.filter(i => !i.on);
-  let say = 'Some related work can be done ' + (taken ? 'while we are working on the ' + job : 'together with the ' + job) + ', usually in less time than doing it separately later, because the area is already open.';
+  let say = 'We recommend considering some related work ' + (taken ? 'while we are working on the ' + job : 'together with the ' + job) + '; it usually takes less time than doing it separately later, because the area is already open.';
   if (mode === 'all') {
-    say += ' There ' + (items.length === 1 ? 'is ' : 'are ') + items.length + ' item' + (items.length === 1 ? '' : 's') + ' that can go with this job: ' + joinAnd(items.map(i => i.name.toLowerCase().replace(/,.*$/, ''))) + '. ' + SRC.approval;
+    say += ' There ' + (items.length === 1 ? 'is ' : 'are ') + items.length + ' related item' + (items.length === 1 ? '' : 's') + ' that can be done with this job: ' + joinAnd(items.map(i => i.name.toLowerCase().replace(/,.*$/, ''))) + '. ' + SRC.approval;
   } else {
-    if (open(lead).length) say += ' With this job we would recommend we also ' + joinAnd(open(lead).map(i => i.plain)) + '.';
-    if (more.length) say += ' ' + (more.length === 1 ? 'Another depends' : 'Others depend') + ' on what the technician finds or on your preference, and we will show you first.';
+    if (open(lead).length) say += ' Specifically, we recommend that we also ' + joinAnd(open(lead).map(i => i.plain)) + '.';
+    if (more.length) say += ' ' + (more.length === 1 ? 'One other item depends' : 'Other items depend') + ' on what the inspection shows or on your preference, and we will show you first.';
     say += ' ' + SRC.approval;
   }
-  if (followOns.length) say += ' This repair does not include the ' + followOns.map(f => f.name.toLowerCase().replace(/,.*$/, '')).join(' and ') + ', which is usually checked afterward.';
+  if (followOns.length) say += ' This repair does not include the ' + followOns.map(f => f.name.toLowerCase().replace(/,.*$/, '')).join(' and ') + '; we recommend having it checked afterward.';
   say += ' ' + timeSource(REPMAP[anchor], ...items.map(i => REPMAP[i.id]));
   return { anchor, anchorName: REPMAP[anchor].name, anchorOnOrder: !!taken, mode, items, lead, more, followOns, say };
 }
@@ -163,5 +163,41 @@ export function buildRecs() {
     ? { ms, adv, say: adv.scriptLines, count: adv.tiers.reduce((n, t) => n + t.items.length, 0) + (adv.inspection ? 1 : 0) }
     : { ms, adv: null, say: [], count: 0, empty: ms ? 'Nothing on the maintenance schedule is due at ' + miles().toLocaleString() + ' mi; the next service is ' + ms.note + '.' : 'Add the mileage to check the maintenance schedule.' };
   const labor = laborGuideRecs(repairs, rt);
+  highlights(repairs, maint, labor, rt);
   return { concern: concern(), repairs, maint, labor };
+}
+
+/** "a, b, c and 2 more": keep a highlight to one line. */
+const short = (l, n = 3) => (l.length <= n ? joinAnd(l) : l.slice(0, n).join(', ') + ' and ' + (l.length - n) + ' more');
+const money1 = (h, rt) => h.toFixed(1) + ' h' + (rt ? ' · ~' + dollars(h * rt) : '');
+
+/**
+ * One line per section with the talk track's point, for the collapsed view: what the work is and
+ * what it costs, so all three fit on screen without opening anything.
+ */
+function highlights(repairs, maint, labor, rt) {
+  if (repairs.items.length) {
+    const t = repairs.items[0], base = i => i.name.split(',')[0].toLowerCase();
+    const next = repairs.items.slice(1).find(i => base(i) !== base(t));
+    repairs.highlight = 'We recommend an inspection first; most often associated: ' + plainJob(t.name) + ' · ' + money1(t.hours, rt) + (next ? '; next to check: the ' + base(next) : '') + '.';
+  } else repairs.highlight = repairs.empty;
+
+  if (maint.adv) {
+    const a = maint.adv, open = i => !i.onOrder && !i.coveredBy;
+    const uniq = l => l.filter((x, k) => l.indexOf(x) === k);
+    const rec = uniq(a.tiers.filter(t => t.recommend).flatMap(t => t.items.filter(open).map(i => i.say)));
+    const opt = uniq(a.tiers.filter(t => !t.recommend).flatMap(t => t.items.filter(open).map(i => i.say)));
+    const covered = a.tiers.flatMap(t => t.items.filter(i => i.coveredBy)).length;
+    maint.highlight = a.headline + ' ' + a.status.toLowerCase() + '; the OEM schedule recommends: '
+      + (rec.length ? short(rec) + ' · ' + money1(a.recommended.hours, rt) : 'its recommended items are on the order')
+      + (opt.length ? '; optional: ' + opt.length : '') + (covered ? '; ' + covered + ' already in today\'s work' : '') + '.';
+  } else maint.highlight = maint.empty;
+
+  if (labor.anchor) {
+    const lead = labor.lead.filter(i => !i.on).map(i => i.plain), more = labor.more.filter(i => !i.on).length;
+    const job = labor.anchorName.toLowerCase().replace(/,.*$/, '');
+    labor.highlight = 'With the ' + job + ', we recommend: ' + (lead.length ? short(lead, 2) : 'nothing more')
+      + (more ? '; ' + more + ' more only if the inspection shows a need' : '')
+      + (labor.followOns.length ? '; not included: ' + labor.followOns.map(f => f.name.toLowerCase().replace(/,.*$/, '')).join(', ') : '') + '.';
+  } else labor.highlight = labor.empty;
 }

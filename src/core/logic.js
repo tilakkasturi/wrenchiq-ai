@@ -7,6 +7,7 @@ import {
 import { stems, matchOne, scoreOpts, words, numIn } from './match';
 import { resolveSchedule, computeMaintenanceDue, getMaintItem } from './maintenanceSchedule';
 import { sameJob, addOnsFor } from './laborRules';
+import { reportSentence, REPORTS } from './followUpReports';
 import { engineSpec, perCylinder } from './engineCylinders';
 
 export const money = n => '$' + n.toFixed(2);
@@ -157,8 +158,9 @@ export function concern() {
   if (!s) return '';
   let t = s.charAt(0).toUpperCase() + s.slice(1);
   if (!/[.!?]$/.test(t)) t += '.';
-  const ans = applicableQs().filter(q => S.ro.answers[q.id]).map(q => q.short + ': ' + S.ro.answers[q.id]);
-  return 'Customer states: ' + t + (ans.length ? ' Reported: ' + ans.join('; ') + '.' : '');
+  // each answer as a descriptive sentence (resources/repair_order/follow_up_reports.json), not "Idle: Yes"
+  const ans = applicableQs().filter(q => S.ro.answers[q.id]).map(q => reportSentence(q, S.ro.answers[q.id]));
+  return 'Customer states: ' + t + (ans.length ? ' ' + (REPORTS.label || 'Customer reports:') + ' ' + ans.join(' ') : '');
 }
 
 /** Model year from a VIN's 10th character (2010-2026 cycle). */

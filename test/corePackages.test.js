@@ -128,3 +128,22 @@ describe('package after lines are already on the RO', () => {
     expect(buildPackage('medium').partsMissing).toBe(0);
   }, 20000);
 });
+
+import { packageTalk, buildPackage as bp2 } from '../src/core/packages.js';
+describe('package talk track: why the package holds what it does', () => {
+  it('explains each group with its reason, the estimate, what can wait, and asks for approval', () => {
+    Object.assign(S.ro, { year: '2018', make: 'Toyota', model: 'Sienna', vin: '5TDYZ3DC2JS901691', mileage: '60000', symptom: 'Clicking when turning and grease on the inside of the front left tire.' });
+    S.profile['shop.labor_rate'] = { value: 150 };
+    const high = packageTalk(bp2('high')), med = packageTalk(bp2('medium')), low = packageTalk(bp2('low'));
+    expect(high.say[0]).toBe('For this visit, we recommend starting with what should not wait.');
+    expect(high.say.join(' ')).toMatch(/For your concern, we recommend an inspection first; if it confirms the cause, we recommend that we replace the axle shaft assembly/);
+    expect(high.say.join(' ')).toMatch(/For safety, Toyota's factory \(OEM\) maintenance schedule recommends that we rotate the tires/);
+    expect(high.say.join(' ')).toMatch(/other recommendations are lower priority and can be scheduled for a later visit/);
+    expect(med.say.join(' ')).toMatch(/help protect the vehicle/);
+    expect(low.say.join(' ')).toMatch(/Also included, as optional items/);
+    expect(low.say.join(' ')).not.toMatch(/lower priority/);
+    [high, med, low].forEach(t => { expect(t.say.at(-1)).toMatch(/^These are recommendations; nothing is added without your approval\./); expect(t.highlight.length).toBeLessThan(200); });
+    expect(med.highlight).toMatch(/^Medium severity · \d+ lines · about \$\d/);
+    expect(med.say.at(-1)).toMatch(/\(Source: Mitchell 1 repair times; maintenance times are standard estimates\.\)$/);
+  });
+});

@@ -280,7 +280,7 @@
 .wiq-core .recs-more[open]>summary::before{content:"▾"}
 .wiq-core .recs-more .drill{margin-left:12px}
 
-/* Prepackaged estimate */
+/* Severity (High, Medium, Low) package estimates */
 .wiq-core .pkg-levels{margin:8px 0 10px;flex-wrap:wrap}
 .wiq-core .pkg-levels button{padding:5px 10px}
 .wiq-core .pkg-group{margin-top:8px}
@@ -329,3 +329,16 @@
 .wiq-core .signin-fine{margin:2px 0 0;font-size:12px;color:var(--muted)}
 .wiq-core .signin-predii{display:flex;align-items:center;gap:8px;margin-top:22px;font-size:12px;color:var(--muted)}
 .wiq-core .signin-predii .predii-mark{display:inline-block}
+
+/* recommendations, collapsed: each section header carries its one-line talk-track highlight */
+.wiq-core .recs-sec>summary{flex-wrap:wrap}
+.wiq-core .recs-hl{flex-basis:100%;order:10;margin:2px 0 0 28px;font-size:13px;line-height:1.45;color:var(--fg)}
+.wiq-core .recs-sec[open] .recs-hl{color:var(--muted)}
+
+/* severity package estimates: collapsed to the highlight; the talk track and lines open below */
+.wiq-core .pkg-hl{margin:8px 0 2px;font-size:13px;line-height:1.45}
+.wiq-core .pkg-detail{border-top:1px solid var(--line);margin-top:8px}
+.wiq-core .pkg-detail>summary{display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;list-style:none;color:var(--accent)}
+.wiq-core .pkg-detail>summary::-webkit-details-marker{display:none}
+.wiq-core .pkg-detail>summary::before{content:"▸";color:var(--muted)}
+.wiq-core .pkg-detail[open]>summary::before{content:"▾"}

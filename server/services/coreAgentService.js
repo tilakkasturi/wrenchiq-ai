@@ -41,6 +41,13 @@ export function buildRoPrompt(context = {}) {
 
 const clip = (s, n) => String(s ?? '').slice(0, n);
 
+/** System prompt for writing customer talk tracks (prompts/core-talk-track.md); validated in the browser. */
+export function buildTalkPrompt(context = {}) {
+  const tracks = (Array.isArray(context.tracks) ? context.tracks : []).slice(0, 20)
+    .map(t => ({ id: clip(t.id, 80), kind: clip(t.kind, 60), facts: t.facts && typeof t.facts === 'object' ? t.facts : {}, reference: clip(t.reference, 1500) }));
+  return prompt('core-talk-track', { tracks: clip(JSON.stringify(tracks, null, 1), 24000) });
+}
+
 /** System prompt for the Shop profile chat: how the assistant works and what is set up (prompts/core-shop-profile-system.md). */
 export function buildProfilePrompt(context = {}) {
   const list = (a, n) => (Array.isArray(a) ? a : []).slice(0, n);
@@ -75,14 +82,15 @@ export async function runCoreStep({ messages, context, tools, trace }, deps = {}
   const llm = deps.llm || (await import('./azureOpenAI.js')).callAzureOpenAI;
   // the Shop profile chat answers questions about the assistant: its own prompt, no tools
   const profile = context && context.mode === 'profile';
-  const allowed = profile ? [] : (Array.isArray(tools) ? tools : []).filter(t => RO_TOOL_NAMES.includes(t?.function?.name));
+  const talk = context && context.mode === 'talk'; // customer talk tracks, checked by the browser before use
+  const allowed = profile || talk ? [] : (Array.isArray(tools) ? tools : []).filter(t => RO_TOOL_NAMES.includes(t?.function?.name));
   const safeMessages = sanitizeMessages(messages);
   const traced = deps.traced || (await import('./langfuseTracing.js')).withLangfuseTrace;
   const t = trace && typeof trace === 'object' ? trace : {}, v = context?.vehicle || {};
   const t0 = Date.now();
   const data = await traced({
-    tags: [profile ? 'core-shop-profile' : 'core-ro-agent'],
-    traceName: profile ? 'core-shop-profile-step' : 'core-ro-agent-step',
+    tags: [talk ? 'core-talk-track' : profile ? 'core-shop-profile' : 'core-ro-agent'],
+    traceName: talk ? 'core-talk-track-step' : profile ? 'core-shop-profile-step' : 'core-ro-agent-step',
     sessionId: t.sessionId ? clip(t.sessionId, 80) : undefined,
     metadata: {
       turnId: t.turnId ? clip(t.turnId, 80) : undefined,
@@ -90,13 +98,13 @@ export async function runCoreStep({ messages, context, tools, trace }, deps = {}
       vehicle: [v.year, v.make, v.model].filter(Boolean).join(' '),
     },
   }, callbacks => llm({
-    system: profile ? buildProfilePrompt(context) : buildRoPrompt(context),
+    system: talk ? buildTalkPrompt(context) : profile ? buildProfilePrompt(context) : buildRoPrompt(context),
     messages: safeMessages,
     ...(allowed.length ? { tools: allowed } : {}),
     ...(callbacks ? { callbacks } : {}),
-    max_tokens: 700,
-    temperature: 0.2,
-    _route: profile ? 'core-shop-profile' : 'core-ro-agent',
+    max_tokens: talk ? 2500 : 700,
+    temperature: talk ? 0.3 : 0.2,
+    _route: talk ? 'core-talk-track' : profile ? 'core-shop-profile' : 'core-ro-agent',
   }));
   const choice = data.choices?.[0], msg = choice?.message || {};
   return {

@@ -25,10 +25,10 @@ Present the full schedule as is
 List every item the schedule names for this milestone, in schedule order, without ranking or calling anything optional.
 
 ## package.severity.label
-WrenchIQ chooses the best option by severity and total budget
+Severity (High, Medium, Low) Package Estimates
 
 ## package.severity.why
-How much I put in the prepackaged estimate. The advisor still confirms positions (front or rear), quantities and the engine before the final estimate.
+How much I put in the severity package estimate. The advisor still confirms positions (front or rear), quantities and the engine before the final estimate.
 
 ## package.severity.high.label
 Severity high: only what cannot wait
