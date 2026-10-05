@@ -1,12 +1,17 @@
-// Customer talk track for COMBINATION (add-on) labor. The words come from the labor guide's
-// enrichment file (kind, plain, why, standalone in labor_guide_enrichment.json); this file only puts
-// them in a fixed sentence shape so every claim is one the data supports:
-// - the price is the add-on's own guide hours at the shop's rate, never a rounded-up "deal";
-// - a saving is quoted only when the guide has the same job as a standalone row with more hours;
-// - "if-needed" items are framed as "only if the technician finds it worn", never as a must;
-// - "required" items are explained as part of doing the main job right, not as an extra.
+// Customer talk track for COMBINATION (add-on) labor and for any line on the order. The words come
+// from the labor guide's enrichment file (kind, plain, why, standalone in labor_guide_enrichment.json)
+// and the sources file (talkSources.js); this file only puts them in a fixed sentence shape, written
+// to keep the shop's liability low:
+// - hours are "the standard repair time" (owners do not know "labor guide"), with the source as a
+//   reference at the end (Mitchell 1 for real export rows, "standard estimates" for synthetic ones);
+//   every price is an estimate;
+// - a lower add-on time is quoted only when the guide has the same job as a standalone row, and is
+//   stated as what the guide lists, never as a promise of savings;
+// - "if-needed" items depend on the technician's inspection, never presented as a must;
+// - nothing is said to be needed or caused without the inspection, and nothing is done without approval.
 import { REPMAP } from './laborGuide';
 import { componentSay } from './laborRules';
+import { SRC, timeSay, timeSource, scheduleCite, cap } from './talkSources';
 
 export const KIND_LABEL = { required: 'Part of the job', recommended: 'Recommended', 'if-needed': 'Only if needed', optional: 'Optional' };
 
@@ -26,19 +31,21 @@ export function talkFor(comboId, opId, rate) {
   const c = REPMAP[comboId];
   if (!c || !c.talk) return null;
   const { kind = 'recommended', plain, why } = c.talk;
-  const job = jobSay(opId), h = c.hours, price = rate ? h * rate : null;
-  const cost = price !== null ? h.toFixed(1) + ' hours, about ' + dollars(price) : h.toFixed(1) + ' hours';
+  const job = jobSay(opId), h = c.hours, price = rate ? h * rate : null, ref = timeSource(c);
+  const cost = h.toFixed(1) + ' hours of labor' + (price !== null ? ' (an estimated ' + dollars(price) + ')' : '');
   const alone = [].concat(c.talk.standalone || []).map(id => REPMAP[id]).find(s => s && s.hours > h);
   const saves = alone ? Math.round((alone.hours - h) * 10) / 10 : null;
+  // hours are "the standard repair time" to the owner; where they come from is the reference at the end
   const value = alone
-    ? 'Done now it is ' + cost + ' of labor; on its own later it would be ' + alone.hours.toFixed(1) + ' hours' + (rate ? ' (about ' + dollars(alone.hours * rate) + ')' : '') + '.'
-    : 'Done now it adds ' + cost + ' of labor, because getting to it is already part of today\'s job.';
+    ? 'Because the area is already open, ' + timeSay() + ' for it is ' + cost + ', compared with ' + alone.hours.toFixed(1) + ' hours if it is done separately later.'
+    : 'Because the area is already open, ' + timeSay() + ' for it is ' + cost + '.';
 
   let text;
-  if (kind === 'required') text = 'To do the ' + job + ' job right, we also need to ' + plain + '. ' + why + ' That is part of the job, not an extra: ' + cost + '.';
-  else if (kind === 'if-needed') text = 'While the ' + job + ' is apart, the technician will check it, and we would only ' + plain + ' if it is worn. ' + why + ' ' + value + ' We will show you what we find before doing anything.';
-  else if (kind === 'optional') text = 'Since the ' + job + ' will already be apart, we can also ' + plain + '. ' + why + ' ' + value + ' It is your call, and it is fine to skip it today.';
-  else text = 'While we are working on the ' + job + ', we would also ' + plain + '. ' + why + ' ' + value;
+  if (kind === 'required') text = 'To complete the ' + job + ' job, this step is part of the work: we need to ' + plain + '. ' + why + ' ' + cap(timeSay()) + ' for it is ' + cost + '.';
+  else if (kind === 'if-needed') text = 'While we are working on the ' + job + ', the technician will inspect it. If it is worn or damaged, we would recommend we ' + plain + '. ' + why + ' ' + value + ' We will show you what we find and get your approval first.';
+  else if (kind === 'optional') text = 'Since we will already be working on the ' + job + ', we can also ' + plain + ' if you would like. ' + why + ' ' + value + ' It is your choice, and it is fine to skip it today.';
+  else text = 'While we are working on the ' + job + ', we can also ' + plain + '. ' + why + ' ' + value + ' ' + SRC.approval;
+  text += ' ' + ref;
   return { kind, label: KIND_LABEL[kind] || KIND_LABEL.recommended, hours: h, price, saves, text };
 }
 
@@ -64,26 +71,27 @@ const lowerFirst = s => s.charAt(0).toLowerCase() + s.slice(1);
 /**
  * A short, plain explanation of one line for the customer, from the same facts the order shows.
  * @param {object} it        the line (ITEM)
- * @param {object} ctx       { hours, rate, concern (the customer's own words), parent (job id an add-on goes with) }
+ * @param {object} ctx       { hours, rate, concern (the customer's own words), parent (job id an add-on goes with), make }
  * @returns {{title:string, text:string, basis:string}}
  */
-export function customerWhy(it, { hours, rate, concern, parent } = {}) {
-  const h = hours ?? it.hours, cost = h.toFixed(1) + ' hours of labor' + (rate ? ', about ' + dollars(h * rate) : '');
+export function customerWhy(it, { hours, rate, concern, parent, make } = {}) {
+  const h = hours ?? it.hours, cost = h.toFixed(1) + ' hours of labor' + (rate ? ' (an estimated ' + dollars(h * rate) + ')' : '');
   if (it.src === 'lg' && it.laborType === 'COMBINATION' && parent) {
     const t = talkFor(it.id, parent, rate);
     if (t) return { title: t.label, text: t.text, basis: 'Add-on labor with ' + REPMAP[parent].name.toLowerCase() + ' · labor guide ' + it.ref };
   }
   if (it.src === 'lg') {
     const said = String(concern || '').trim().replace(/[.!?]+$/, '');
-    const text = (said ? 'You told us: "' + said + '". Based on that, the most likely fix is to ' : 'We recommend we ') + plainJob(it.name) + '. '
-      + 'The technician confirms it before any work starts, and we will call you if they find something different. '
-      + 'It is ' + cost + ', the standard time the labor guide lists for this job.';
+    const text = (said ? 'You told us: "' + said + '". Based on that description, the repair most often associated with it is to ' : 'The work we would look at is to ') + plainJob(it.name) + '. '
+      + SRC.confirm + ' '
+      + cap(timeSay()) + ' for this job is ' + cost + ', ' + SRC.estimate + '. ' + timeSource(it);
     return { title: 'Repair', text, basis: (it.synthetic ? 'Labor guide (synthetic) ' : 'Labor guide ') + it.ref };
   }
   if (it.src === 'sm') {
     const at = (String(it.ref).match(/@\s*([\d,]+)\s*mi/) || [])[1];
-    const who = /GENERIC/.test(it.detail || '') ? 'The recommended maintenance schedule' : 'Your vehicle maker\'s maintenance schedule';
-    const text = who + ' lists ' + lowerFirst(it.name) + (at ? ' at ' + at + ' miles' : '') + '. Doing it on time keeps small wear items from turning into bigger repairs. It is ' + cost + '.';
+    const who = cap(scheduleCite(/GENERIC/.test(it.detail || '') ? 'GENERIC' : 'OEM', make));
+    const est = 'Estimated labor is ' + h.toFixed(1) + ' hours' + (rate ? ' (' + dollars(h * rate) + ')' : '');
+    const text = who + ' lists ' + lowerFirst(it.name) + (at ? ' at ' + at + ' miles' : '') + '. ' + est + ', ' + SRC.estimate + '. ' + SRC.approval;
     return { title: 'Scheduled maintenance', text, basis: 'Schedule ' + it.ref };
   }
   return { title: 'Added by your advisor', text: it.name + '. ' + cost.charAt(0).toUpperCase() + cost.slice(1) + '.', basis: 'Entered by the advisor' };

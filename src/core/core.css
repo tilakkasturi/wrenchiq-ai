@@ -279,3 +279,53 @@
 .wiq-core .recs-more>summary::before{content:"▸";color:var(--muted)}
 .wiq-core .recs-more[open]>summary::before{content:"▾"}
 .wiq-core .recs-more .drill{margin-left:12px}
+
+/* Prepackaged estimate */
+.wiq-core .pkg-levels{margin:8px 0 10px;flex-wrap:wrap}
+.wiq-core .pkg-levels button{padding:5px 10px}
+.wiq-core .pkg-group{margin-top:8px}
+.wiq-core .pkg-item{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.wiq-core .pkg-item:last-child{border-bottom:0}
+.wiq-core .pkg-parts{margin-top:3px;color:var(--fg)}
+.wiq-core .pkg-total{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);display:grid;gap:3px;font-size:13px}
+.wiq-core .pkg-total > div{display:flex;justify-content:space-between;gap:10px}
+.wiq-core .pkg-total .grand{font-weight:600;font-size:14px}
+.wiq-core .pkg-confirm{margin-top:10px;padding:8px 10px;border-radius:6px;background:var(--warn-soft)}
+.wiq-core .pkg-confirm ul{margin:4px 0 0;padding-left:18px}
+
+/* Predii logo, top right. The JPG is the mark on a wide white field: show only the mark (about
+   x 6-93%, y 41-61% of the image) on a white plate, so it reads the same in light and dark themes. */
+.wiq-core .predii-mark{position:relative;display:inline-block;flex:none;width:140px;height:17px;overflow:hidden;background:#fff;border-radius:6px;box-shadow:0 0 0 6px #fff;margin:0 6px}
+.wiq-core .predii-mark img{position:absolute;width:160px;height:auto;left:-10px;top:-34px;max-width:none}
+@media (max-width:560px){.wiq-core .predii-mark{display:none}}
+
+/* NAPA configuration (Shop profile) */
+.wiq-core .card.napa section + section{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.wiq-core .card.napa h3{margin-bottom:6px}
+.wiq-core .napa-row{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr);gap:10px;padding:3px 0;font-size:13px}
+.wiq-core .napa-row .k{color:var(--muted)}
+.wiq-core .napa-row .v{overflow-wrap:anywhere}
+.wiq-core .napa-steps{margin:0 0 6px;padding-left:18px}
+.wiq-core .napa-tiers{margin-top:2px}
+.wiq-core .napa-terms{margin-top:12px}
+.wiq-core .napa-terms table{margin-top:6px;border-collapse:collapse;width:100%}
+.wiq-core .napa-terms td{padding:2px 6px;border-bottom:1px dashed var(--line);vertical-align:top;overflow-wrap:anywhere}
+@media (max-width:640px){.wiq-core .napa-row{grid-template-columns:minmax(0,1fr)}}
+
+/* mock sign-in for a shop user (SignIn.jsx) */
+.wiq-core .signin{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;text-align:center}
+.wiq-core .signin-brand{display:flex;align-items:center;gap:8px;color:var(--accent);margin-bottom:22px}
+.wiq-core .signin-brand svg{width:26px;height:26px}
+.wiq-core .signin-brand b{color:var(--fg);font-size:16px}
+.wiq-core .signin h1{font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-weight:400;font-size:clamp(28px,5vw,46px);line-height:1.15;letter-spacing:-.01em;margin:0 0 28px;max-width:760px}
+.wiq-core .signin-sub{font-family:Georgia,'Iowan Old Style',serif;font-size:18px;color:var(--muted);margin:0 0 28px}
+.wiq-core .signin-card{width:100%;max-width:400px;display:grid;gap:12px;padding:26px;background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:0 12px 40px rgba(15,21,27,.08)}
+.wiq-core .signin-social{display:flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-size:15px;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);opacity:.75;cursor:not-allowed}
+.wiq-core .signin-social svg{width:18px;height:18px}
+.wiq-core .signin-or{font-size:12px;color:var(--muted);letter-spacing:.06em}
+.wiq-core .signin-card input{font:inherit;font-size:15px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg)}
+.wiq-core .signin-go{font:inherit;font-size:15px;font-weight:600;padding:12px;border:0;border-radius:10px;background:var(--fg);color:var(--bg);cursor:pointer}
+.wiq-core .signin-go:disabled{opacity:.5;cursor:not-allowed}
+.wiq-core .signin-fine{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.wiq-core .signin-predii{display:flex;align-items:center;gap:8px;margin-top:22px;font-size:12px;color:var(--muted)}
+.wiq-core .signin-predii .predii-mark{display:inline-block}

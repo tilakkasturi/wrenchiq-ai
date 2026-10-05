@@ -8,6 +8,7 @@ import { liveStore, refillObject, resourceLoaded } from './liveResource';
 import { getMaintItem } from './maintenanceSchedule';
 import { REPMAP } from './laborGuide';
 import { sameJob, covers } from './laborRules';
+import { SRC, scheduleCite } from './talkSources';
 
 const A = refillObject(liveStore('maintAdvice', () => ({})), ADVICE);
 
@@ -58,7 +59,7 @@ export function interpretMaint(ms, { rate = null, accepted = [], make = '' } = {
   const recHours = recommendedIds.reduce((s, id) => s + getMaintItem(id).hours, 0);
 
   const statusLabel = ms.status === 'COMING_UP' ? 'Coming up' : 'Due now';
-  const who = ms.match === 'GENERIC' ? 'the recommended' : (make ? make + "'s factory" : 'the factory');
+  const who = scheduleCite(ms.match, make); // e.g. "Toyota's factory (OEM) maintenance schedule" 
   const out = {
     headline: ms.at.toLocaleString() + ' mi service', status: statusLabel, tiers: shown, inspection, recommendedIds, allIds,
     recommended: { hours: recHours, price: rate ? recHours * rate : null },
@@ -73,25 +74,26 @@ export function interpretMaint(ms, { rate = null, accepted = [], make = '' } = {
 function buildScript(ms, who, tiers, insp, recHours, rate) {
   const out = [];
   const pending = tiers.some(t => t.recommend && t.items.some(i => !i.onOrder && !i.coveredBy));
-  if (!pending && tiers.some(t => t.recommend)) out.push('The recommended work for the ' + ms.at.toLocaleString() + ' mile service is on today\'s order.');
+  const svc = 'the ' + ms.at.toLocaleString() + ' mile service';
+  if (!pending && tiers.some(t => t.recommend)) out.push('The items ' + who + ' lists as most important for ' + svc + ' are on today\'s order.');
   else out.push(ms.status === 'COMING_UP'
-    ? 'Your ' + ms.at.toLocaleString() + ' mile service is coming up soon, so doing it while the car is here saves you a trip.'
-    : 'At this mileage ' + who + ' maintenance schedule calls for the ' + ms.at.toLocaleString() + ' mile service. Here is what matters most.');
+    ? 'According to ' + who + ', ' + svc + ' is coming up soon; it can be done while the vehicle is here if you would like.'
+    : 'According to ' + who + ', ' + svc + ' is due at this mileage. Here are the items it lists, most important first.');
   const pick = id => (tiers.find(t => t.id === id) || { items: [] }).items.filter(i => !i.onOrder && !i.coveredBy);
   // one line per item to say, even when two schedule rows share it (oil + filter)
   const uniq = items => items.filter((i, k) => items.findIndex(j => j.say === i.say) === k);
   const safety = uniq(pick('safety')), protect = uniq(pick('protect')), comfort = uniq(pick('comfort'));
-  if (safety.length) out.push('For safety, we will ' + joinAnd(safety.map(i => i.say)) + '. ' + safety.map(i => i.why).join(' '));
-  if (protect.length) out.push('To protect the engine, we recommend we ' + joinAnd(protect.map(i => i.say)) + '. ' + protect.map(i => i.why).join(' '));
+  if (safety.length) out.push('For safety-related items, the schedule calls for us to ' + joinAnd(safety.map(i => i.say)) + '. ' + safety.map(i => i.why).join(' '));
+  if (protect.length) out.push('To help protect the engine, the schedule calls for us to ' + joinAnd(protect.map(i => i.say)) + '. ' + protect.map(i => i.why).join(' '));
   const covered = tiers.flatMap(t => t.items.filter(i => i.coveredBy));
-  if (covered.length) out.push('We are already going to ' + joinAnd(uniq(covered).map(i => i.say)) + ' as part of today\'s ' + covered[0].coveredBy.toLowerCase() + ', so that is not an extra charge.');
+  if (covered.length) out.push('We are already going to ' + joinAnd(uniq(covered).map(i => i.say)) + ' as part of today\'s ' + covered[0].coveredBy.toLowerCase() + ', so it is not charged twice.');
   if (insp && !insp.onOrder) {
     const g = insp.groups.length > 3 ? insp.groups.slice(0, 3).concat('more') : insp.groups;
-    out.push('We will also do the multi-point inspection' + (g.length ? ', covering the ' + g.join('; ').replace(/; ([^;]*)$/, ' and $1').replace(/; /g, ', ') : '') + ', and call you before doing anything else.'
+    out.push('The schedule also includes a multi-point inspection' + (g.length ? ', covering the ' + g.join('; ').replace(/; ([^;]*)$/, ' and $1').replace(/; /g, ', ') : '') + '. If it finds anything else, we will contact you before doing any additional work.'
       + (insp.brakeJob ? ' The brakes are already being worked on today.' : ''));
   }
-  if (recHours > 0) out.push('The recommended work comes to about ' + recHours.toFixed(1) + ' hours of labor' + (rate ? ', ' + dollars(recHours * rate) : '') + ' plus parts.');
-  if (comfort.length) out.push('If you would like, we can also ' + joinAnd(comfort.map(i => i.say)) + '. ' + comfort.map(i => i.why).join(' ') + ' Those can wait if you would rather keep today\'s bill down.');
+  if (recHours > 0) out.push('Estimated labor for these items is about ' + recHours.toFixed(1) + ' hours' + (rate ? ' (' + dollars(recHours * rate) + ')' : '') + ', ' + SRC.estimate + '. ' + SRC.approval);
+  if (comfort.length) out.push('The schedule also lists items you can choose to do now or later: ' + joinAnd(comfort.map(i => i.say)) + '. ' + comfort.map(i => i.why).join(' ') + ' These are optional today if you would prefer to wait.');
   return out;
 }
 

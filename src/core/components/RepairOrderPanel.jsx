@@ -39,7 +39,7 @@ function WhyPop({ it }) {
   useEffect(() => () => clearTimeout(timer.current), []);
   const enter = () => { clearTimeout(timer.current); setHover(true); };
   const leave = () => { timer.current = setTimeout(() => setHover(false), 150); };
-  const w = open ? customerWhy(it, { hours: hrs(it), rate: rate(), concern: R.symptom, parent: parentsOnOrder(it.id, [...R.accepted])[0] }) : null;
+  const w = open ? customerWhy(it, { hours: hrs(it), rate: rate(), concern: R.symptom, parent: parentsOnOrder(it.id, [...R.accepted])[0], make: R.make }) : null;
   const copy = () => {
     try { navigator.clipboard.writeText(w.text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }, () => {}); } catch (_) { /* clipboard blocked */ }
   };

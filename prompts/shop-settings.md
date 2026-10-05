@@ -23,3 +23,27 @@ Present the full schedule as is
 
 ## maint.presentation.all.say
 List every item the schedule names for this milestone, in schedule order, without ranking or calling anything optional.
+
+## package.severity.label
+WrenchIQ chooses the best option by severity and total budget
+
+## package.severity.why
+How much I put in the prepackaged estimate. The advisor still confirms positions (front or rear), quantities and the engine before the final estimate.
+
+## package.severity.high.label
+Severity high: only what cannot wait
+
+## package.severity.high.say
+Package the customer's concern, safety maintenance and work that is part of the job. The smallest total; everything else is offered separately.
+
+## package.severity.medium.label
+Severity medium: what cannot wait, plus what protects the vehicle
+
+## package.severity.medium.say
+Package the high items plus engine-protecting maintenance, the inspection, recommended add-on labor and jobs the repair does not include (such as an alignment). Comfort and "only if needed" items are offered separately.
+
+## package.severity.low.label
+Severity low: everything recommended
+
+## package.severity.low.say
+Package every recommendation: the high and medium items plus comfort maintenance and "only if needed" or optional add-on labor. The largest total.

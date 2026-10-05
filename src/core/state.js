@@ -19,6 +19,7 @@ export const newRO = () => ({
 export const S = {
   mode: 'profile',
   booted: false,
+  auth: null, // mock sign-in: { email, at } once the shop user clicked Log in (SignIn.jsx)
   demo: null, // click-through demo in progress: { id, step }
   useAgent: true, // Repair order mode: the agent answers (true) or the scripted rules do (false)
   profile: {},

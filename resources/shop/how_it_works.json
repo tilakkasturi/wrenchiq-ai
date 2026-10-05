@@ -1,0 +1,54 @@
+{
+ "_about": "What the Core assistant tells the shop about how it works, in the Shop profile chat. Each topic is matched to a question by the regex in match (offline answers) and is also handed to the model as its knowledge (agent answers), so this file is the single source of truth. {{placeholders}} are filled with the shop's current settings: shop, supplier, partsRule, partsWhy, maintSetting, laborSetting, laborRate. Keep answers factual: they describe what the app does, nothing it does not.",
+ "questions": [
+  "What settings am I using?",
+  "How do you use the labor guide?",
+  "How do you handle scheduled maintenance?",
+  "How do you pick parts?",
+  "What do you tell my customers?"
+ ],
+ "topics": [
+  {
+   "id": "settings",
+   "title": "Your current settings",
+   "match": "setting|option|selected|configur|my profile|what.*(set|chose|picked)|current",
+   "answer": "{{settings}}"
+  },
+  {
+   "id": "labor",
+   "title": "How I use the labor guide",
+   "match": "labor guide|labor time|repair time|mitchell|hours|add-?on|combination",
+   "answer": "When a concern comes in, I rank repairs from the labor guide by matching the customer's concern and the answers to my follow-up question. The labor guide gives each repair its standard hours: real Mitchell 1 exports for the axle and brake work, and standard estimates for everything else in this demo. I price hours at your labor rate ({{laborRate}}). I keep the order honest: the same job never goes on twice, a job that already includes another replaces it, left plus right becomes the both-sides time, and add-on labor only goes on with its main job. Add-on labor is related work that costs less because the area is already open; I present it by your setting: {{laborSetting}}. To your customers I call hours \"the standard repair time\" and name the source (Mitchell 1 repair times, or standard estimates)."
+  },
+  {
+   "id": "maintenance",
+   "title": "How I handle scheduled maintenance",
+   "match": "maint|schedul|service interval|oem|mileage|\\b\\d+k\\b|due",
+   "answer": "When I know the mileage, and ideally the VIN, I look up the manufacturer's (OEM) maintenance schedule: the exact VIN pattern first, then the make's default family, then a general schedule that is labeled as general. I check whether a service is due now or coming up, and present it by your setting: {{maintSetting}}. Anything today's repair already covers is not sold twice, and the multi-point inspection is one line. The card gives the advisor a script that cites the OEM schedule, gives estimated labor plus parts and fees, and asks for the customer's approval."
+  },
+  {
+   "id": "parts",
+   "title": "How I pick parts",
+   "match": "part|napa|supplier|price|availab|stock|catalog",
+   "answer": "Your parts supplier is {{supplier}}. {{partsRule}} {{partsWhy}} When a repair goes on the order I add the shop pick for each part it needs, and the advisor can swap to another option on the parts card. Prices are {{supplier}} catalog list prices, not your account cost, and availability in this demo is sample data."
+  },
+  {
+   "id": "flow",
+   "title": "How I work through a repair order",
+   "match": "how do you work|repair order|process|steps|question|recommend|flow",
+   "answer": "On a repair order I first record the vehicle and the customer's concern, rewriting shorthand and typos into a proper concern. Then I ask one combined question with anything I still need, such as missing vehicle details and the follow-ups that matter, for at most two rounds. Then I show recommendations in three sections: likely repairs, scheduled maintenance, and labor-guide recommendations, each with what to say to the customer. The advisor decides what goes on the order."
+  },
+  {
+   "id": "talk",
+   "title": "What I tell your customers",
+   "match": "talk track|customer|say|script|liab|wording|tone|explain",
+   "answer": "Customer wording is written to keep the shop's liability low. A repair is the one \"most often associated\" with the symptom, never a certain diagnosis; the technician inspects and confirms first and the shop contacts the customer with findings and an estimate. Prices are estimates plus parts and applicable fees, nothing is done without the customer's approval, and each claim names its source: the OEM maintenance schedule, or Mitchell 1 repair times."
+  },
+  {
+   "id": "memory",
+   "title": "What I remember",
+   "match": "remember|memory|note|preference|forget|remove|change",
+   "answer": "Anything you tell me about the shop is kept in shop memory. Labor rate, diagnostic rate, parts markup, message tone, customer languages and work you never take become named settings; anything else is kept as a note in your words. The shop name, address, supplier and parts rule are set by WrenchIQ. You can remove anything from the panel, and change how I present maintenance and labor-guide recommendations under \"How I present work\"."
+  }
+ ]
+}

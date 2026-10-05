@@ -19,6 +19,7 @@ import { followOnsFor } from './laborRules';
 import { talkFor, plainJob } from './talkTrack';
 import { interpretMaint } from './maintAdvice';
 import { laborMode, KIND_ORDER, isLeadKind } from './shopSettings';
+import { SRC, timeSay, timeSource, cap } from './talkSources';
 
 export const MAX_ROUNDS = 2;   // advisor answers before recommendations show regardless
 const MAX_PARTS = 3;           // parts in the one combined question
@@ -112,10 +113,12 @@ function likelyRepairs(rt) {
   const said = R.symptom.trim().replace(/[.!?]+$/, '');
   let say = '';
   if (items.length) {
-    const t = items[0];
-    say = 'You told us: "' + said + '". The most likely fix is to ' + plainJob(t.name) + '; the technician confirms it before any work starts.'
-      + (items[1] ? ' If it turns out to be something else, the next thing we would look at is the ' + items[1].name.split(',')[0].toLowerCase() + '.' : '')
-      + ' That repair is ' + t.hours.toFixed(1) + ' hours of labor' + (t.price !== null ? ', about ' + dollars(t.price) : '') + ', the standard time the labor guide lists.';
+    const t = items[0], base = i => i.name.split(',')[0].toLowerCase();
+    const next = items.slice(1).find(i => base(i) !== base(t)); // not the other side of the same job
+    say = 'You told us: "' + said + '". Based on that description, the repair most often associated with it is to ' + plainJob(t.name) + '. '
+      + SRC.confirm
+      + (next ? ' If the inspection points elsewhere, the next item we would check is the ' + next.name.split(',')[0].toLowerCase() + '.' : '')
+      + ' ' + cap(timeSay()) + ' for that repair is ' + t.hours.toFixed(1) + ' hours of labor' + (t.price !== null ? ' (an estimated ' + dollars(t.price) + ')' : '') + ', ' + SRC.estimate + '. ' + timeSource(REPMAP[t.id]);
   }
   return { items, say, empty: items.length ? null : (said ? 'Nothing in the labor guide matches "' + said + '" as a repair. Maintenance below still applies.' : 'No repair concern on this order.') };
 }
@@ -138,14 +141,16 @@ function laborGuideRecs(repairs, rt) {
   const followOns = followOnsFor(anchor, [...R.accepted]).map(f => ({ id: f.id, name: ITEM(f.id).name, hours: ITEM(f.id).hours, price: rt ? ITEM(f.id).hours * rt : null, why: f.why, on: R.accepted.has(f.id) }));
   const job = REPMAP[anchor].name.toLowerCase().replace(/,.*$/, '');
   const open = l => l.filter(i => !i.on);
-  let say = (taken ? 'While we have it apart for the ' : 'If we do the ') + job + ', some related work costs much less to do at the same time, because the labor to get to it is already done.';
+  let say = 'Some related work can be done ' + (taken ? 'while we are working on the ' + job : 'together with the ' + job) + ', usually in less time than doing it separately later, because the area is already open.';
   if (mode === 'all') {
-    say += ' The labor guide lists ' + items.length + ' item' + (items.length === 1 ? '' : 's') + ' with this job: ' + joinAnd(items.map(i => i.name.toLowerCase().replace(/,.*$/, ''))) + '. We only do what you approve.';
+    say += ' There ' + (items.length === 1 ? 'is ' : 'are ') + items.length + ' item' + (items.length === 1 ? '' : 's') + ' that can go with this job: ' + joinAnd(items.map(i => i.name.toLowerCase().replace(/,.*$/, ''))) + '. ' + SRC.approval;
   } else {
-    if (open(lead).length) say += ' With this job we would also ' + joinAnd(open(lead).map(i => i.plain)) + '.';
-    if (more.length) say += ' ' + (more.length === 1 ? 'One more is' : 'A few more are') + ' only done if the technician finds ' + (more.length === 1 ? 'it is' : 'they are') + ' needed or you want ' + (more.length === 1 ? 'it' : 'them') + ', and we show you first.';
+    if (open(lead).length) say += ' With this job we would recommend we also ' + joinAnd(open(lead).map(i => i.plain)) + '.';
+    if (more.length) say += ' ' + (more.length === 1 ? 'Another depends' : 'Others depend') + ' on what the technician finds or on your preference, and we will show you first.';
+    say += ' ' + SRC.approval;
   }
-  if (followOns.length) say += ' After this repair the ' + followOns.map(f => f.name.toLowerCase().replace(/,.*$/, '')).join(' and ') + ' should be checked too.';
+  if (followOns.length) say += ' This repair does not include the ' + followOns.map(f => f.name.toLowerCase().replace(/,.*$/, '')).join(' and ') + ', which is usually checked afterward.';
+  say += ' ' + timeSource(REPMAP[anchor], ...items.map(i => REPMAP[i.id]));
   return { anchor, anchorName: REPMAP[anchor].name, anchorOnOrder: !!taken, mode, items, lead, more, followOns, say };
 }
 

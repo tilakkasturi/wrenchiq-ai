@@ -38,7 +38,7 @@ describe('scheduled maintenance setting', () => {
     expect(r.presentation).toMatchObject({ setting: 'all', instruction: expect.stringMatching(/every item/) });
     expect(r.by_severity).toBeUndefined();
     expect(r.items.map(i => i.id)).toEqual(ms.ids);
-    expect(r.advisor_script).toMatch(/schedule lists the 60,000 mile service/);
+    expect(r.advisor_script).toMatch(/According to .*maintenance schedule, the 60,000 mile service lists/);
   });
   it('the full list still marks what today\'s order already has', () => {
     const ms = maintState();

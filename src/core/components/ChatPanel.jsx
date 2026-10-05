@@ -3,6 +3,8 @@ import { useCore, S } from '../state';
 import { Cp, Cr } from '../harness';
 import { RepairsCard, MaintCard, PartsCard, CombosCard } from './Cards';
 import { QuestionsCard, RecsCard } from './FlowCards';
+import { PackageCard } from './PackageCard';
+import { NapaConfigCard } from './NapaConfigCard';
 
 const CHATS = { profile: Cp, ro: Cr };
 
@@ -33,6 +35,8 @@ function Item({ item }) {
           : item.card.type === 'combos' ? <CombosCard card={item.card} />
           : item.card.type === 'questions' ? <QuestionsCard card={item.card} />
           : item.card.type === 'recs' ? <RecsCard card={item.card} />
+          : item.card.type === 'package' ? <PackageCard />
+          : item.card.type === 'napaConfig' ? <NapaConfigCard card={item.card} />
           : <MaintCard card={item.card} />}
       </div>
     );

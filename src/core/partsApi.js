@@ -17,3 +17,15 @@ export async function searchNapa({ year, make, model, part, refresh = false }) {
     return { ok: false, code: 'network', message: 'Could not reach the WrenchIQ server, so I have no prices to show.' };
   }
 }
+
+/** How WrenchIQ connects to the NAPA catalog (server/routes/coreParts.js GET /config; no secrets). */
+export async function getNapaConfig() {
+  try {
+    const res = await fetch(`${API_BASE}/api/core/parts/config`);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, message: body.message || 'Could not read the NAPA configuration.' };
+    return { ok: true, config: body };
+  } catch (_) {
+    return { ok: false, message: 'Could not reach the WrenchIQ server to read the NAPA configuration.' };
+  }
+}

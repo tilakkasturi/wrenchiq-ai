@@ -1,121 +1,505 @@
 {
  "_about": "Guardrails for building a repair order from the labor guide, by row id (see labor_guide_enrichment.json; sm:<PreferredTerm>:<OperationType> is a scheduled-maintenance service line, whatever the VIN mask or milestone). sameGroups: every id in a group is the same job, so only one may be on the order. samePairs: the same job, pairwise only (a generic row matching either of two specific rows). includes: the key row's hours already cover the listed rows. bothSides: the key row replaces its two one-side rows at fewer hours. followOn: a row whose note contains the text should be followed by the suggested job. componentSay: what to call a LaborComponent when talking to a customer.",
  "sameGroups": [
-  ["plugs", "sm:spark plug:REPLACE", "syn-plugs", "syn-vc-plugs"],
-  ["cabin-filt", "sm:cabin air filter:REPLACE", "syn-cabin"],
-  ["replace-brake-hose", "brk-hose"],
-  ["axle-boot-each", "axle-boot-io-each"],
-  ["axle-shaft-each", "axle-shaft-each-side"],
-  ["burnish-rotors-brakesys", "burnish-rotors-caliper", "syn-pads-burnish"],
-  ["clean-hub-rotor-brakesys", "clean-hub-rotor-caliper", "syn-rotor-cleanhub-each"],
-  ["correct-disc-runout-brakesys", "correct-disc-runout-caliper", "syn-rotor-runout-each"],
-  ["adj-parking-brake", "syn-pbcable-adjust"],
-  ["bleed-brakes-abs", "syn-master-absbleed"],
-  ["test-abs", "syn-wss-abstest"],
-  ["brk-master", "syn-master"],
-  ["diag-brake", "brake-sys-inspect-all"],
-  
-  ["accomp", "syn-ac-comp"],
-  ["acrecharge", "syn-ac-evac", "syn-ac-comp-evac", "syn-ac-cond-evac", "syn-evap-evac", "syn-txv-evac", "syn-ac-psensor-evac"],
-  ["ac-leak", "syn-ac-leak"],
-  ["ac-cond", "syn-ac-cond"],
-  ["ac-clutch", "syn-ac-clutch"],
-  ["ac-exp", "syn-txv-f", "syn-evap-txv-each"],
-  ["ac-switch", "syn-ac-psensor"],
-  ["blower-res", "syn-blower-res", "syn-blower-res-combo"],
-  ["syn-ac-comp-drier", "syn-ac-cond-drier"],
-  ["syn-heatercore", "syn-evap-heatercore"],
-  ["pump", "syn-wpump"],
-  ["thermo", "syn-thermo", "syn-wpump-thermo", "syn-rad-thermo"],
-  ["hose", "syn-hose-up", "syn-rad-hose-up"],
-  ["syn-hose-low", "syn-rad-hose-low"],
-  ["radiator", "syn-radiator"],
-  ["coolfan", "syn-coolfan"],
-  ["sm:engine coolant:REPLACE", "syn-wpump-flush", "syn-thermo-flush", "syn-rad-flush"],
-  ["syn-belt", "syn-wpump-belt", "syn-alt-belt"],
-  ["syn-tensioner", "syn-alt-tensioner"],
-  ["battery", "syn-batt"],
-  ["battcable", "syn-batt-clean"],
-  ["starter", "syn-starter"],
-  ["alt", "syn-alt"],
-  ["maf", "syn-maf"],
-  ["throttle", "syn-tb-clean"],
-  ["diag-cel", "syn-diag-cel"],
-  ["strut", "syn-strut-f-both"],
-  ["sway", "syn-link-f-both"],
-  ["syn-link-f-one", "syn-strut-link-each"],
-  ["align", "syn-align"],
-  ["balance", "syn-balance", "syn-tire-balance-combo"],
-  ["sm:tires:ROTATE", "syn-rotate"],
-  ["syn-tpms-each", "syn-tire-tpms-each"]
+  [
+   "plugs",
+   "sm:spark plug:REPLACE",
+   "syn-plugs",
+   "syn-vc-plugs"
+  ],
+  [
+   "cabin-filt",
+   "sm:cabin air filter:REPLACE",
+   "syn-cabin"
+  ],
+  [
+   "replace-brake-hose",
+   "brk-hose"
+  ],
+  [
+   "axle-boot-each",
+   "axle-boot-io-each"
+  ],
+  [
+   "axle-shaft-each",
+   "axle-shaft-each-side"
+  ],
+  [
+   "burnish-rotors-brakesys",
+   "burnish-rotors-caliper",
+   "syn-pads-burnish"
+  ],
+  [
+   "clean-hub-rotor-brakesys",
+   "clean-hub-rotor-caliper",
+   "syn-rotor-cleanhub-each"
+  ],
+  [
+   "correct-disc-runout-brakesys",
+   "correct-disc-runout-caliper",
+   "syn-rotor-runout-each"
+  ],
+  [
+   "adj-parking-brake",
+   "syn-pbcable-adjust"
+  ],
+  [
+   "bleed-brakes-abs",
+   "syn-master-absbleed"
+  ],
+  [
+   "test-abs",
+   "syn-wss-abstest"
+  ],
+  [
+   "brk-master",
+   "syn-master"
+  ],
+  [
+   "diag-brake",
+   "brake-sys-inspect-all"
+  ],
+  [
+   "accomp",
+   "syn-ac-comp"
+  ],
+  [
+   "acrecharge",
+   "syn-ac-evac",
+   "syn-ac-comp-evac",
+   "syn-ac-cond-evac",
+   "syn-evap-evac",
+   "syn-txv-evac",
+   "syn-ac-psensor-evac"
+  ],
+  [
+   "ac-leak",
+   "syn-ac-leak"
+  ],
+  [
+   "ac-cond",
+   "syn-ac-cond"
+  ],
+  [
+   "ac-clutch",
+   "syn-ac-clutch"
+  ],
+  [
+   "ac-exp",
+   "syn-txv-f",
+   "syn-evap-txv-each"
+  ],
+  [
+   "ac-switch",
+   "syn-ac-psensor"
+  ],
+  [
+   "blower-res",
+   "syn-blower-res",
+   "syn-blower-res-combo"
+  ],
+  [
+   "syn-ac-comp-drier",
+   "syn-ac-cond-drier"
+  ],
+  [
+   "syn-heatercore",
+   "syn-evap-heatercore"
+  ],
+  [
+   "pump",
+   "syn-wpump"
+  ],
+  [
+   "thermo",
+   "syn-thermo",
+   "syn-wpump-thermo",
+   "syn-rad-thermo"
+  ],
+  [
+   "hose",
+   "syn-hose-up",
+   "syn-rad-hose-up"
+  ],
+  [
+   "syn-hose-low",
+   "syn-rad-hose-low"
+  ],
+  [
+   "radiator",
+   "syn-radiator"
+  ],
+  [
+   "coolfan",
+   "syn-coolfan"
+  ],
+  [
+   "sm:engine coolant:REPLACE",
+   "syn-wpump-flush",
+   "syn-thermo-flush",
+   "syn-rad-flush"
+  ],
+  [
+   "syn-belt",
+   "syn-wpump-belt",
+   "syn-alt-belt"
+  ],
+  [
+   "syn-tensioner",
+   "syn-alt-tensioner"
+  ],
+  [
+   "battery",
+   "syn-batt"
+  ],
+  [
+   "battcable",
+   "syn-batt-clean"
+  ],
+  [
+   "starter",
+   "syn-starter"
+  ],
+  [
+   "alt",
+   "syn-alt"
+  ],
+  [
+   "maf",
+   "syn-maf"
+  ],
+  [
+   "throttle",
+   "syn-tb-clean"
+  ],
+  [
+   "diag-cel",
+   "syn-diag-cel"
+  ],
+  [
+   "strut",
+   "syn-strut-f-both"
+  ],
+  [
+   "sway",
+   "syn-link-f-both"
+  ],
+  [
+   "syn-link-f-one",
+   "syn-strut-link-each"
+  ],
+  [
+   "align",
+   "syn-align"
+  ],
+  [
+   "balance",
+   "syn-balance",
+   "syn-tire-balance-combo"
+  ],
+  [
+   "sm:tires:ROTATE",
+   "syn-rotate"
+  ],
+  [
+   "syn-tpms-each",
+   "syn-tire-tpms-each"
+  ]
  ],
  "samePairs": [
-  ["coil", "syn-coil-front"], ["coil", "syn-coil-rear"],
-  ["syn-plugs-coil-each", "syn-coil-front"], ["syn-plugs-coil-each", "syn-coil-rear"],
-  ["brk-hose", "syn-hose-f-one"], ["brk-hose", "syn-hose-r-one"],
-  ["replace-brake-hose", "syn-hose-f-one"], ["replace-brake-hose", "syn-hose-r-one"],
-  ["bearing", "syn-bearing-f-one"], ["bearing", "syn-bearing-r-one"],
-  ["bearing", "replace-wheel-bearing-front-fwd"], ["bearing", "replace-wheel-bearing-rear-fwd"],
-  ["replace-wheel-bearing-front-fwd", "syn-bearing-f-one"], ["replace-wheel-bearing-rear-fwd", "syn-bearing-r-one"],
-  ["blower", "syn-blower-f"], ["blower", "syn-blower-r"],
-  ["valvecover", "syn-vc-front"], ["valvecover", "syn-vc-rear"], ["valvecover", "syn-vc-both"],
-  ["o2", "syn-af-up-b1"], ["o2", "syn-af-up-b2"]
+  [
+   "coil",
+   "syn-coil-front"
+  ],
+  [
+   "coil",
+   "syn-coil-rear"
+  ],
+  [
+   "syn-plugs-coil-each",
+   "syn-coil-front"
+  ],
+  [
+   "syn-plugs-coil-each",
+   "syn-coil-rear"
+  ],
+  [
+   "brk-hose",
+   "syn-hose-f-one"
+  ],
+  [
+   "brk-hose",
+   "syn-hose-r-one"
+  ],
+  [
+   "replace-brake-hose",
+   "syn-hose-f-one"
+  ],
+  [
+   "replace-brake-hose",
+   "syn-hose-r-one"
+  ],
+  [
+   "bearing",
+   "syn-bearing-f-one"
+  ],
+  [
+   "bearing",
+   "syn-bearing-r-one"
+  ],
+  [
+   "bearing",
+   "replace-wheel-bearing-front-fwd"
+  ],
+  [
+   "bearing",
+   "replace-wheel-bearing-rear-fwd"
+  ],
+  [
+   "replace-wheel-bearing-front-fwd",
+   "syn-bearing-f-one"
+  ],
+  [
+   "replace-wheel-bearing-rear-fwd",
+   "syn-bearing-r-one"
+  ],
+  [
+   "blower",
+   "syn-blower-f"
+  ],
+  [
+   "blower",
+   "syn-blower-r"
+  ],
+  [
+   "valvecover",
+   "syn-vc-front"
+  ],
+  [
+   "valvecover",
+   "syn-vc-rear"
+  ],
+  [
+   "valvecover",
+   "syn-vc-both"
+  ],
+  [
+   "o2",
+   "syn-af-up-b1"
+  ],
+  [
+   "o2",
+   "syn-af-up-b2"
+  ]
  ],
  "includes": {
-  "brk-front": ["brk-pads-f", "syn-pads-f", "syn-rotor-f-both", "syn-rotor-f-one", "syn-pads-rotor-each", "syn-pads-resurface-each"],
-  "brk-rear-rot": ["brk-rear", "syn-pads-r", "syn-rotor-r-both", "syn-rotor-r-one"],
-  "syn-pads-fr": ["syn-pads-f", "syn-pads-r", "brk-pads-f", "brk-rear"],
-  "syn-rotor-f-both": ["syn-rotor-f-one"],
-  "syn-rotor-r-both": ["syn-rotor-r-one"],
-  "brake-sys-rr-all": ["caliper", "caliper-rr-both", "caliper-rr-one", "brk-front", "brk-rear", "brk-rear-rot", "brk-pads-f", "syn-pads-f", "syn-pads-r", "syn-pads-fr", "syn-rotor-f-both", "syn-rotor-f-one", "syn-rotor-r-both", "syn-rotor-r-one", "brake-sys-inspect-all"],
-  "caliper-rr-both": ["caliper-rr-one", "caliper"],
-  "caliper-overhaul-front-both": ["caliper-overhaul-front-one"],
-  "caliper-overhaul-rear-both": ["caliper-overhaul-rear-one"],
-  "brk-master": ["bleed-brakes-hydraulic"],
-  "syn-master": ["bleed-brakes-hydraulic"],
-  "syn-hose-f-one": ["bleed-brakes-hydraulic"],
-  "syn-hose-r-one": ["bleed-brakes-hydraulic"],
-  "axle-asm-fwd-both": ["axle-asm-fwd-left", "axle-asm-fwd-right"],
-  "axle-shaft-fwd-left": ["axle-asm-fwd-left", "axle-shaft-each", "axle-shaft-each-side"],
-  "axle-shaft-fwd-right": ["axle-asm-fwd-right", "axle-shaft-each", "axle-shaft-each-side"],
-  "axle-shaft-fwd-both": ["axle-asm-fwd-both", "axle-asm-fwd-left", "axle-asm-fwd-right", "axle-shaft-fwd-left", "axle-shaft-fwd-right", "axle-shaft-each", "axle-shaft-each-side"],
-  "diag-ac": ["syn-ac-perf", "syn-ac-leak", "ac-leak"],
-  "syn-wpump": ["sm:engine coolant:REPLACE"],
-  "syn-thermo": ["sm:engine coolant:REPLACE"],
-  "syn-radiator": ["sm:engine coolant:REPLACE"],
-  "syn-hose-up": ["sm:engine coolant:REPLACE"],
-  "syn-hose-low": ["sm:engine coolant:REPLACE"],
-  "syn-heatercore": ["sm:engine coolant:REPLACE"],
-  "strut": ["syn-strut-f-one"],
-  "syn-strut-f-both": ["syn-strut-f-one"],
-  "sway": ["syn-link-f-one", "syn-strut-link-each"],
-  "syn-link-f-both": ["syn-link-f-one", "syn-strut-link-each"],
-  "syn-shock-r-both": ["syn-shock-r-one"],
-  "syn-lca-f-both": ["syn-lca-f-one"],
-  "syn-tre-both": ["syn-tre-one"],
-  "syn-vc-both": ["syn-vc-front", "syn-vc-rear"],
-  "syn-align": ["syn-align-check"],
-  "align": ["syn-align-check"],
-  "syn-mount-balance": ["syn-balance", "balance", "syn-tire-balance-combo"],
-  "syn-tb": ["syn-tb-clean", "throttle"]
+  "brk-front": [
+   "brk-pads-f",
+   "syn-pads-f",
+   "syn-rotor-f-both",
+   "syn-rotor-f-one",
+   "syn-pads-rotor-each",
+   "syn-pads-resurface-each"
+  ],
+  "brk-rear-rot": [
+   "brk-rear",
+   "syn-pads-r",
+   "syn-rotor-r-both",
+   "syn-rotor-r-one"
+  ],
+  "syn-pads-fr": [
+   "syn-pads-f",
+   "syn-pads-r",
+   "brk-pads-f",
+   "brk-rear"
+  ],
+  "syn-rotor-f-both": [
+   "syn-rotor-f-one"
+  ],
+  "syn-rotor-r-both": [
+   "syn-rotor-r-one"
+  ],
+  "brake-sys-rr-all": [
+   "caliper",
+   "caliper-rr-both",
+   "caliper-rr-one",
+   "brk-front",
+   "brk-rear",
+   "brk-rear-rot",
+   "brk-pads-f",
+   "syn-pads-f",
+   "syn-pads-r",
+   "syn-pads-fr",
+   "syn-rotor-f-both",
+   "syn-rotor-f-one",
+   "syn-rotor-r-both",
+   "syn-rotor-r-one",
+   "brake-sys-inspect-all"
+  ],
+  "caliper-rr-both": [
+   "caliper-rr-one",
+   "caliper"
+  ],
+  "caliper-overhaul-front-both": [
+   "caliper-overhaul-front-one"
+  ],
+  "caliper-overhaul-rear-both": [
+   "caliper-overhaul-rear-one"
+  ],
+  "brk-master": [
+   "bleed-brakes-hydraulic"
+  ],
+  "syn-master": [
+   "bleed-brakes-hydraulic"
+  ],
+  "syn-hose-f-one": [
+   "bleed-brakes-hydraulic"
+  ],
+  "syn-hose-r-one": [
+   "bleed-brakes-hydraulic"
+  ],
+  "axle-asm-fwd-both": [
+   "axle-asm-fwd-left",
+   "axle-asm-fwd-right"
+  ],
+  "axle-shaft-fwd-left": [
+   "axle-asm-fwd-left",
+   "axle-shaft-each",
+   "axle-shaft-each-side"
+  ],
+  "axle-shaft-fwd-right": [
+   "axle-asm-fwd-right",
+   "axle-shaft-each",
+   "axle-shaft-each-side"
+  ],
+  "axle-shaft-fwd-both": [
+   "axle-asm-fwd-both",
+   "axle-asm-fwd-left",
+   "axle-asm-fwd-right",
+   "axle-shaft-fwd-left",
+   "axle-shaft-fwd-right",
+   "axle-shaft-each",
+   "axle-shaft-each-side"
+  ],
+  "diag-ac": [
+   "syn-ac-perf",
+   "syn-ac-leak",
+   "ac-leak"
+  ],
+  "syn-wpump": [
+   "sm:engine coolant:REPLACE"
+  ],
+  "syn-thermo": [
+   "sm:engine coolant:REPLACE"
+  ],
+  "syn-radiator": [
+   "sm:engine coolant:REPLACE"
+  ],
+  "syn-hose-up": [
+   "sm:engine coolant:REPLACE"
+  ],
+  "syn-hose-low": [
+   "sm:engine coolant:REPLACE"
+  ],
+  "syn-heatercore": [
+   "sm:engine coolant:REPLACE"
+  ],
+  "strut": [
+   "syn-strut-f-one"
+  ],
+  "syn-strut-f-both": [
+   "syn-strut-f-one"
+  ],
+  "sway": [
+   "syn-link-f-one",
+   "syn-strut-link-each"
+  ],
+  "syn-link-f-both": [
+   "syn-link-f-one",
+   "syn-strut-link-each"
+  ],
+  "syn-shock-r-both": [
+   "syn-shock-r-one"
+  ],
+  "syn-lca-f-both": [
+   "syn-lca-f-one"
+  ],
+  "syn-tre-both": [
+   "syn-tre-one"
+  ],
+  "syn-vc-both": [
+   "syn-vc-front",
+   "syn-vc-rear"
+  ],
+  "syn-align": [
+   "syn-align-check"
+  ],
+  "align": [
+   "syn-align-check"
+  ],
+  "syn-mount-balance": [
+   "syn-balance",
+   "balance",
+   "syn-tire-balance-combo"
+  ],
+  "syn-tb": [
+   "syn-tb-clean",
+   "throttle"
+  ]
  },
  "bothSides": {
-  "axle-asm-fwd-both": ["axle-asm-fwd-left", "axle-asm-fwd-right"],
-  "axle-shaft-fwd-both": ["axle-shaft-fwd-left", "axle-shaft-fwd-right"],
-  "syn-vc-both": ["syn-vc-front", "syn-vc-rear"],
-  "syn-pads-fr": ["syn-pads-f", "syn-pads-r"]
+  "axle-asm-fwd-both": [
+   "axle-asm-fwd-left",
+   "axle-asm-fwd-right"
+  ],
+  "axle-shaft-fwd-both": [
+   "axle-shaft-fwd-left",
+   "axle-shaft-fwd-right"
+  ],
+  "syn-vc-both": [
+   "syn-vc-front",
+   "syn-vc-rear"
+  ],
+  "syn-pads-fr": [
+   "syn-pads-f",
+   "syn-pads-r"
+  ]
  },
  "followOn": [
-  { "noteContains": "DOES NOT include wheel alignment", "suggest": "syn-align", "why": "Replacing steering or suspension parts changes the alignment, so the tires wear unevenly until it is set." }
+  {
+   "noteContains": "DOES NOT include wheel alignment",
+   "suggest": "syn-align",
+   "why": "Replacing steering or suspension parts can change the wheel alignment, which can lead to uneven tire wear."
+  }
  ],
  "componentSay": {
-  "AXLE SHAFT ASSEMBLY": "axle", "BRAKE SYSTEM (COMPLETE)": "brakes", "CALIPER": "brake caliper", "DISC BRAKE PADS": "brake pads",
-  "DISC BRAKE ROTOR": "brake rotors", "MASTER CYLINDER": "brake master cylinder", "WHEEL SPEED SENSOR": "wheel speed sensor",
-  "PARKING BRAKE CABLE": "parking brake cable", "A/C COMPRESSOR": "A/C compressor", "A/C CONDENSER": "A/C condenser",
-  "EVAPORATOR CORE": "A/C evaporator", "EXPANSION VALVE": "A/C expansion valve", "A/C PRESSURE SENSOR": "A/C pressure sensor",
-  "BLOWER MOTOR": "blower motor", "WATER PUMP": "water pump", "THERMOSTAT": "thermostat", "RADIATOR": "radiator",
-  "BATTERY": "battery", "ALTERNATOR": "alternator", "STARTER": "starter", "DRIVE BELT TENSIONER": "belt tensioner",
-  "SPARK PLUG": "spark plugs", "IGNITION COIL": "ignition coil", "VALVE COVER GASKET": "valve cover gasket",
-  "STRUT ASSEMBLY": "struts", "LOWER CONTROL ARM": "control arm", "TIE ROD END": "tie rod", "TIRES": "tires"
+  "AXLE SHAFT ASSEMBLY": "axle",
+  "BRAKE SYSTEM (COMPLETE)": "brakes",
+  "CALIPER": "brake caliper",
+  "DISC BRAKE PADS": "brake pads",
+  "DISC BRAKE ROTOR": "brake rotors",
+  "MASTER CYLINDER": "brake master cylinder",
+  "WHEEL SPEED SENSOR": "wheel speed sensor",
+  "PARKING BRAKE CABLE": "parking brake cable",
+  "A/C COMPRESSOR": "A/C compressor",
+  "A/C CONDENSER": "A/C condenser",
+  "EVAPORATOR CORE": "A/C evaporator",
+  "EXPANSION VALVE": "A/C expansion valve",
+  "A/C PRESSURE SENSOR": "A/C pressure sensor",
+  "BLOWER MOTOR": "blower motor",
+  "WATER PUMP": "water pump",
+  "THERMOSTAT": "thermostat",
+  "RADIATOR": "radiator",
+  "BATTERY": "battery",
+  "ALTERNATOR": "alternator",
+  "STARTER": "starter",
+  "DRIVE BELT TENSIONER": "belt tensioner",
+  "SPARK PLUG": "spark plugs",
+  "IGNITION COIL": "ignition coil",
+  "VALVE COVER GASKET": "valve cover gasket",
+  "STRUT ASSEMBLY": "struts",
+  "LOWER CONTROL ARM": "control arm",
+  "TIE ROD END": "tie rod",
+  "TIRES": "tires"
  }
 }

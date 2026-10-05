@@ -1,0 +1,21 @@
+{
+ "_about": "Sources and standard lines the customer talk tracks use, so every claim says where it comes from in words a vehicle owner understands. repairTime.say is how hours are described to the customer (never 'labor guide'); repairTime.source is the reference added at the end of a talk track that quotes hours from a real labor-guide export (resources/labor_guide/*.xml); repairTime.sourceSynthetic is used for the made-up demo rows in synthetic/, which must not be attributed to a provider. laborGuide.cite is the advisor-facing name. maintenance names the schedule ({make} is filled in). confirm, approval and estimate are appended where a talk track quotes work or a price.",
+ "repairTime": {
+  "say": "the standard repair time",
+  "source": "(Source: Mitchell 1 repair times.)",
+  "sourceSynthetic": "(Repair times are standard estimates.)"
+ },
+ "laborGuide": {
+  "provider": "Mitchell 1",
+  "cite": "the Mitchell 1 labor guide",
+  "citeSynthetic": "the labor guide"
+ },
+ "maintenance": {
+  "oem": "{make}'s factory (OEM) maintenance schedule",
+  "oemNoMake": "the factory (OEM) maintenance schedule",
+  "generic": "a general maintenance schedule (not specific to this make)"
+ },
+ "confirm": "Our technician will inspect the vehicle and confirm before any work is done, and we will contact you with the findings and an estimate for your approval.",
+ "approval": "Nothing is added without your approval.",
+ "estimate": "plus parts and applicable fees"
+}

@@ -11,10 +11,15 @@
  */
 
 import { Router } from 'express';
-import { lookupNapaParts, NapaLookupError } from '../services/napaPartsService.js';
+import { lookupNapaParts, NapaLookupError, napaConfig } from '../services/napaPartsService.js';
 import { withSampleAvailability } from '../services/partsAvailabilityService.js';
 
 const router = Router();
+
+/** GET /api/core/parts/config -> how WrenchIQ connects to the NAPA catalog (no secrets). */
+router.get('/config', (_req, res) => {
+  res.json(napaConfig());
+});
 
 router.post('/search', async (req, res) => {
   try {

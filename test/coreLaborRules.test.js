@@ -101,14 +101,14 @@ describe('talk track for add-on labor', () => {
     const t = talkFor('syn-wpump-thermo', 'syn-wpump', 150);
     expect(t).toMatchObject({ kind: 'recommended', label: 'Recommended', hours: 0.4, price: 60, saves: 0.6 });
     expect(t.text).toMatch(/water pump/);
-    expect(t.text).toMatch(/0\.4 hours, about \$60/);
-    expect(t.text).toMatch(/on its own later it would be 1\.0 hours \(about \$150\)/);
+    expect(t.text).toMatch(/0\.4 hours of labor \(an estimated \$60\)/);
+    expect(t.text).toMatch(/the standard repair time for it is 0\.4 hours of labor \(an estimated \$60\), compared with 1\.0 hours if it is done separately later.*\(Repair times are standard estimates\.\)$/);
   });
   it('frames only-if-needed work as conditional, and required work as part of the job', () => {
-    expect(talkFor('axle-boot-each', 'axle-asm-fwd-left', null).text).toMatch(/only replace the CV axle boot if it is worn.*show you what we find/);
+    expect(talkFor('axle-boot-each', 'axle-asm-fwd-left', null).text).toMatch(/technician will inspect it\. If it is worn or damaged, we would recommend we replace the CV axle boot\..*get your approval first\. \(Source: Mitchell 1 repair times\.\)$/);
     const req = talkFor('syn-ac-comp-evac', 'syn-ac-comp', 140).text;
-    expect(req).toMatch(/^To do the A\/C compressor job right/);
-    expect(req).toMatch(/part of the job, not an extra/);
+    expect(req).toMatch(/^To complete the A\/C compressor job, this step is part of the work: we need to evacuate and recharge the A\/C\./);
+    expect(req).not.toMatch(/Mitchell 1/) // synthetic row: never attributed to the provider;
     expect(talkFor('axle-boot-each', 'axle-asm-fwd-left', null).saves).toBeNull();
   });
 });
@@ -161,8 +161,8 @@ describe('Why? popover: a customer talk track for every line', () => {
   });
   it('a repair ties back to the customer\'s own words and the guide hours', () => {
     const w = customerWhy(ITEM('brk-front'), { hours: 1.8, rate: 100, concern: 'Grinding noise when I brake.' });
-    expect(w.text).toMatch(/^You told us: "Grinding noise when I brake"\. Based on that, the most likely fix is to replace the front brake pads and rotors\./);
-    expect(w.text).toMatch(/1\.8 hours of labor, about \$180/);
+    expect(w.text).toMatch(/^You told us: "Grinding noise when I brake"\. Based on that description, the repair most often associated with it is to replace the front brake pads and rotors\. Our technician will inspect the vehicle and confirm before any work is done/);
+    expect(w.text).toMatch(/The standard repair time for this job is 1\.8 hours of labor \(an estimated \$180\), plus parts and applicable fees/);
     expect(w.basis).toMatch(/LG-BRK-F-0142/);
   });
   it('an add-on uses its labor-guide talk track; a manual line just says what it is', () => {
@@ -234,7 +234,7 @@ describe('shop profile: free flowing, starts with the shop', () => {
     S.mode = 'ro';
   });
   it('keeps a recognized preference as a named fact and anything else as a note', async () => {
-    S.profile = {}; fresh(); S.pro.started = true;
+    S.profile = {}; fresh(); S.pro.started = true; S.useAgent = false;
     await Cp.send('our labor rate is 165 an hour'); await Cp.run(async () => {});
     expect(S.profile['shop.labor_rate']).toMatchObject({ value: 165, label: 'Labor rate' });
     await Cp.send('we close early on fridays and always road test brake jobs'); await Cp.run(async () => {});
@@ -289,11 +289,11 @@ describe('scheduled maintenance, interpreted for the advisor', () => {
   });
   it('writes a script that leads with what matters and offers comfort items as optional', () => {
     const { script } = interpretMaint(at60(), { rate: 150, make: 'Toyota' });
-    expect(script).toMatch(/^At this mileage Toyota's factory maintenance schedule calls for the 60,000 mile service/);
-    expect(script.indexOf('For safety')).toBeLessThan(script.indexOf('To protect the engine'));
-    expect(script).toMatch(/change the oil and filter and replace the spark plugs/);
-    expect(script).toMatch(/If you would like, we can also replace the (cabin|engine) air filter and replace the (cabin|engine) air filter\..*can wait/);
-    expect(script).toMatch(/multi-point inspection, covering the brakes, steering and suspension, cooling system and fluids and more/);
+    expect(script).toMatch(/^According to Toyota's factory \(OEM\) maintenance schedule, the 60,000 mile service is due at this mileage/);
+    expect(script.indexOf('safety-related items')).toBeLessThan(script.indexOf('To help protect the engine'));
+    expect(script).toMatch(/the schedule calls for us to change the oil and filter and replace the spark plugs/);
+    expect(script).toMatch(/items you can choose to do now or later: replace the (cabin|engine) air filter and replace the (cabin|engine) air filter\..*optional today/);
+    expect(script).toMatch(/multi-point inspection, covering the brakes, steering and suspension, cooling system and fluids and more\. If it finds anything else, we will contact you/);
     expect((script.match(/change the oil and filter/g) || []).length).toBe(1); // oil + filter rows said once
   });
   it('a repair already doing a scheduled job is not sold twice', () => {
@@ -322,9 +322,9 @@ describe('maintenance script after the recommended work is on the order', () => 
     const first = interpretMaint(ms, { make: 'Toyota' });
     first.recommendedIds.forEach(id => S.ro.accepted.add(id));
     const a = interpretMaint(ms, { accepted: [...S.ro.accepted], make: 'Toyota' });
-    expect(a.scriptLines[0]).toBe('The recommended work for the 60,000 mile service is on today\'s order.');
-    expect(a.script).not.toMatch(/For safety|To protect the engine/);
-    expect(a.script).toMatch(/If you would like, we can also/);
+    expect(a.scriptLines[0]).toBe('The items Toyota\'s factory (OEM) maintenance schedule lists as most important for the 60,000 mile service are on today\'s order.');
+    expect(a.script).not.toMatch(/safety-related items|To help protect the engine/);
+    expect(a.script).toMatch(/items you can choose to do now or later/);
     expect(ms.note).toBe('right at the 60,000 mi service');
   });
 });
@@ -380,7 +380,7 @@ describe('before recommendations: one combined question, at most two rounds', ()
     expect(r.labor.anchor).toMatch(/^axle-asm/);
     expect(r.labor.items.length).toBeGreaterThan(0);
     expect(r.labor.items.every(i => i.say)).toBe(true);
-    expect(r.labor.say).toMatch(/costs much less to do at the same time/);
+    expect(r.labor.say).toMatch(/^Some related work can be done together with the axle shaft assembly.*\(Source: Mitchell 1 repair times\.\)$/);
   });
   it('an advisor who adds work skips the questions', async () => {
     await Cr.send('2018 Toyota Corolla 61k, grinding when I brake'); await settle();
@@ -418,8 +418,8 @@ describe('shop setting: how labor-guide recommendations are presented', () => {
     expect(l.lead.map(i => i.id)).toContain('transaxle-seal-each');
     expect(l.more.length).toBeGreaterThan(0);
     expect(l.more.every(i => ['if-needed', 'optional'].includes(i.kindId))).toBe(true);
-    expect(l.say).toMatch(/With this job we would also put in a new transmission output seal\./);
-    expect(l.say).toMatch(/only done if the technician finds they are needed/);
+    expect(l.say).toMatch(/With this job we would recommend we also put in a new transmission output seal\./);
+    expect(l.say).toMatch(/Others depend on what the technician finds or on your preference.*Nothing is added without your approval/);
     expect(orderAddOns(['axle-boot-each', 'transaxle-seal-each'])).toEqual(['transaxle-seal-each', 'axle-boot-each']);
   });
   it('all: every add-on in the guide order, one list, nothing marked conditional', () => {
@@ -428,12 +428,92 @@ describe('shop setting: how labor-guide recommendations are presented', () => {
     const l = buildRecs().labor;
     expect(l.more).toEqual([]);
     expect(l.lead.map(i => i.id)).toEqual(l.items.map(i => i.id));
-    expect(l.say).toMatch(/The labor guide lists \d+ items with this job/);
+    expect(l.say).toMatch(/There are \d+ items that can go with this job/);
     expect(orderAddOns(['axle-boot-each', 'transaxle-seal-each'])).toEqual(['axle-boot-each', 'transaxle-seal-each']);
   });
   it('the agent is told the shop setting in the repair order snapshot', () => {
     axle();
     const p = buildRoPrompt(roContext());
     expect(p).toMatch(/How the shop wants add-on labor presented: Lead with add-on labor that is part of the job/);
+  });
+});
+
+import { laborCite } from '../src/core/talkSources.js';
+describe('talk-track sources: claims name where they come from', () => {
+  it('only rows from a real labor-guide export are attributed to the provider', () => {
+    expect(laborCite(REPMAP['axle-asm-fwd-left'])).toBe('the Mitchell 1 labor guide');
+    expect(laborCite(REPMAP['syn-wpump'])).toBe('the labor guide');
+    expect(laborCite(REPMAP['brk-front'])).toBe('the labor guide');
+    REP.filter(r => r.synthetic && r.laborType === 'COMBINATION').forEach(r => {
+      const parent = REP.find(p => p.laborType === 'OPERATION' && p.component === r.component);
+      if (parent) expect(talkFor(r.id, parent.id, 150).text, r.id).not.toMatch(/Mitchell/);
+    });
+  });
+  it('customer wording asks for approval and never promises an outcome', () => {
+    const texts = REP.filter(r => r.laborType === 'COMBINATION').map(r => {
+      const parent = REP.find(p => p.laborType === 'OPERATION' && p.component === r.component);
+      return parent ? talkFor(r.id, parent.id, 150).text : '';
+    }).filter(Boolean);
+    texts.forEach(t => expect(t, t).not.toMatch(/\bwill (fail|break|not stop|leave you)|saves you|guarantee/i));
+    expect(texts.filter(t => /approval|your choice/.test(t)).length).toBeGreaterThan(texts.length / 2);
+  });
+});
+
+describe('customer wording speaks the language of the vehicle owner', () => {
+  it('never says "labor guide" to the customer; hours are the standard repair time, with the source at the end', () => {
+    Object.assign(S.ro, { year: '2018', make: 'Toyota', model: 'Sienna', mileage: '90000', symptom: 'Clicking when turning and grease on the inside of the front left tire.' });
+    const r = buildRecs();
+    const texts = [r.repairs.say, r.labor.say, ...r.labor.items.map(i => i.say), customerWhy(ITEM('brk-front'), { concern: 'grinding' }).text];
+    texts.forEach(t => { expect(t, t).not.toMatch(/labor guide/i); expect(t, t).toMatch(/\((Source: Mitchell 1 repair times|Repair times are standard estimates)\.\)$/); });
+  });
+});
+
+import { offlineAnswer, profileContext, settingsAnswer } from '../src/core/howItWorks.js';
+import { buildProfilePrompt } from '../server/services/coreAgentService.js';
+describe('Shop profile answers questions about how the assistant works', () => {
+  beforeEach(() => { S.useAgent = false; S.pro = { awaiting: null, started: true }; S.chats.profile = { items: [], chips: [], nextId: 1 }; });
+  const lastSaid = () => S.chats.profile.items.filter(i => i.kind === 'agent').at(-1).text;
+  it('explains the current settings, including what was chosen', async () => {
+    S.profile['shop.labor_rate'] = { value: 165, display: '$165/hr', label: 'Labor rate' };
+    setSetting('labor.presentation', 'all');
+    await Cp.send('What settings am I using?'); await Cp.run(async () => {});
+    const a = lastSaid();
+    expect(a).toMatch(/Parts supplier: NAPA/);
+    expect(a).toMatch(/Scheduled maintenance: WrenchIQ presents what matters most \(default\)/);
+    expect(a).toMatch(/Labor guide recommendations: Present every add-on the labor guide lists/);
+    expect(a).toMatch(/Labor rate: \$165\/hr/);
+    expect(Object.keys(S.profile).some(k => k.startsWith('note.'))).toBe(false); // a question is not saved as a note
+  });
+  it('explains the labor guide and scheduled maintenance with the live settings filled in', () => {
+    S.profile['shop.labor_rate'] = { value: 150, display: '$150/hr' };
+    expect(offlineAnswer('how do you use the labor guide')).toMatch(/standard hours.*Mitchell 1.*\$150 an hour.*WrenchIQ presents what matters most/s);
+    expect(offlineAnswer('explain scheduled maintenance')).toMatch(/manufacturer's \(OEM\) maintenance schedule.*by your setting: "WrenchIQ presents what matters most"/s);
+    expect(offlineAnswer('how do you pick parts')).toMatch(/Your parts supplier is NAPA\. When I pick parts, availability comes first/);
+  });
+  it('the agent gets the same knowledge and settings, with no tools', () => {
+    const p = buildProfilePrompt(profileContext());
+    expect(p).toMatch(/SHOP: Cornerstone Automotive, 2341 El Camino Real/);
+    expect(p).toMatch(/- Scheduled maintenance: WrenchIQ presents what matters most \(default\) — Lead with the items/);
+    expect(p).toMatch(/## How I use the labor guide/);
+    expect(p).not.toMatch(/\{\{/);
+  });
+});
+
+import { signIn } from '../src/core/harness.js';
+describe('mock login starts the shop profile fresh', () => {
+  it('clears what was saved, resets settings and greets again', async () => {
+    S.booted = true; S.useAgent = false;
+    S.profile = { 'shop.labor_rate': { value: 165, display: '$165/hr' }, 'labor.presentation': { value: 'all' }, 'note.1': { value: 'x', display: 'x' } };
+    S.chats.profile = { items: [{ kind: 'agent', text: 'old' }], chips: [], nextId: 2 };
+    signIn('someone@gmail.com'); await Cp.run(async () => {});
+    expect(S.auth.email).toBe('someone@gmail.com');
+    expect(S.mode).toBe('profile');
+    expect(S.profile['shop.labor_rate']).toBeUndefined();
+    expect(Object.keys(S.profile).some(k => k.startsWith('note.'))).toBe(false);
+    expect(laborMode()).toBe('prioritized');
+    const said = S.chats.profile.items.filter(i => i.kind === 'agent').map(i => i.text);
+    expect(said).not.toContain('old');
+    expect(said[0]).toMatch(/^Your shop: Cornerstone Automotive/);
+    S.mode = 'ro';
   });
 });

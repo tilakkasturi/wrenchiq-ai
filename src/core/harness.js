@@ -12,15 +12,19 @@ import {
   partOn, qtyFromName, combinationsFor, partQty, rankingDetail,
 } from './logic';
 import { checkAdd, orphanedCombos, followOnsFor } from './laborRules';
-import { searchNapa } from './partsApi';
+import { searchNapa, getNapaConfig } from './partsApi';
 import { shopPick } from './partPolicy';
 import { engineSpec } from './engineCylinders';
 import { runRoAgent } from './roAgent';
 import { useLineOps } from './roTools';
 import { DEMOS } from './demoScenarios';
+import { profileContext, offlineAnswer, exampleQuestions } from './howItWorks';
+import { agentStep } from './agentApi';
 import { interpretMaint } from './maintAdvice';
-import { flow, resetFlow, nextStep, applyAnswers, recordPicked, MAX_ROUNDS } from './recommend';
+import { flow, resetFlow, nextStep, applyAnswers, recordPicked, MAX_ROUNDS, buildRecs } from './recommend';
 import { maintMode, settingOption, orderAddOns } from './shopSettings';
+import { buildPackage, packageLevels, packageLevel, prefetchPackageParts } from './packages';
+import { partsFor, pricedPartNames } from './maintParts';
 import { onResourceChange } from './liveResource';
 import { beginTurn, endTurn, trace } from './trace';
 import { prompt } from '../services/promptLoader';
@@ -57,7 +61,7 @@ const harness = {
 /* ================= shop profile mode ================= */
 // Free flowing: the assistant states the shop (resources/shop) and keeps whatever the advisor says
 // about how the shop works. Preferences it recognizes (PQ) become named facts; anything else is a note.
-const isQuestion = t => /\?\s*$/.test(t) || /^(what|what's|whats|how|which|who|do|does|is|are|can|show|list)\b/i.test(t);
+const isQuestion = t => /\?\s*$/.test(t) || /^(what|what's|whats|how|which|who|why|where|when|do|does|is|are|can|show|list|explain|tell me|describe|walk me)\b/i.test(t);
 const userFacts = () => Object.keys(S.profile).filter(k => !FIXEDMAP[k] && (PQMAP[k] || k.startsWith('note.')));
 
 function saveFixed() {
@@ -70,10 +74,14 @@ function profileSummary() {
   return 'Here is your shop profile.\n' + lines.map(l => '- ' + l).join('\n');
 }
 
+// "show me the NAPA config", "how are we connected to NAPA", "napa settings": the real configuration
+const NAPA_CONFIG_RX = /\bnapa\b/i, CONFIG_WORDS_RX = /\b(config\w*|settings?|set ?up|connect\w*|catalog|credentials?|account|how)\b/i;
+
 handlers.profile = async function (text) {
   const t = text.trim();
   if (t === '__goro__') { setMode('ro'); return; }
   if (!t) return;
+  if (NAPA_CONFIG_RX.test(t) && CONFIG_WORDS_RX.test(t)) return showNapaConfig(Cp);
   const saved = [];
   // the answer to "do you mean A or B?" counts for that preference
   const q = S.pro.awaiting ? PQMAP[S.pro.awaiting] : null;
@@ -86,7 +94,7 @@ handlers.profile = async function (text) {
     if (r) { saveFact(o, r); saved.push(o); }
   }
   if (!saved.length) {
-    if (isQuestion(t)) return Cp.agent(profileSummary());
+    if (isQuestion(t)) return answerAboutShop(t);
     if (t.split(/\s+/).length < 3) return Cp.agent('Tell me a bit more about how your shop works, like "labor rate is 165" or "we never do body work", and I will keep it in shop memory.');
     // not a preference I know by name: keep it as the advisor said it
     const key = 'note.' + Date.now();
@@ -100,6 +108,35 @@ handlers.profile = async function (text) {
   return Cp.agent('Saved to your shop profile: ' + saved.map(o => o.label.toLowerCase() + ' ' + S.profile[o.key].display).join(', ') + '.');
 };
 
+/**
+ * A question about the assistant or the shop's setup. Agent mode: the model answers from the
+ * explanations in resources/shop/how_it_works.json and the current settings; offline or scripted:
+ * those explanations answer by topic.
+ */
+async function answerAboutShop(t) {
+  const turn = beginTurn(S.useAgent ? 'agent' : 'scripted', t);
+  try {
+    if (S.useAgent) {
+      const hist = S.pro.history || (S.pro.history = []);
+      hist.push({ role: 'user', content: t });
+      const stop = Cp.typing();
+      const out = await agentStep({ messages: hist.slice(-8), context: profileContext(), tools: [] });
+      stop();
+      const text = out.ok && out.message && String(out.message.content || '').trim();
+      if (text) {
+        hist.push({ role: 'assistant', content: text });
+        trace('model', 'Shop profile answer', out.model || 'model', { question: t, answer: text, source: 'resources/shop/how_it_works.json + current settings' });
+        return Cp.agent(text);
+      }
+      hist.pop();
+      Cp.event('Assistant offline, answering from the built-in explanations');
+    }
+    const ans = offlineAnswer(t);
+    trace('rule', 'Shop profile answer (offline)', 'Matched by topic in how_it_works.json', { question: t, answer: ans });
+    return Cp.agent(ans);
+  } finally { endTurn(turn); }
+}
+
 async function startProfile() {
   if (S.pro.started) return;
   S.pro.started = true;
@@ -109,8 +146,8 @@ async function startProfile() {
   const n = userFacts().length;
   await Cp.agent(n
     ? 'Welcome back. ' + n + ' thing' + (n > 1 ? 's are' : ' is') + ' saved in your shop profile. Tell me anything else about how you run the shop and I will keep it.'
-    : 'Tell me anything about how you run the shop, in your own words: your labor rate, parts markup, how you talk to customers, work you never take. I will keep it in shop memory and use it on repair orders.');
-  Cp.chips(SHOP.examples.map(x => ({ t: x, text: x })).concat([{ t: 'Go to Repair order', text: '__goro__', silent: true }]));
+    : 'Tell me anything about how you run the shop, in your own words: your labor rate, parts markup, how you talk to customers, work you never take. I will keep it in shop memory and use it on repair orders. You can also ask me how I work, like how I use the labor guide or scheduled maintenance.');
+  Cp.chips(exampleQuestions().slice(0, 3).map(x => ({ t: x, text: x })).concat(SHOP.examples.slice(0, 2).map(x => ({ t: x, text: x })), [{ t: 'Go to Repair order', text: '__goro__', silent: true }]));
 }
 
 /* ================= repair order mode ================= */
@@ -339,8 +376,13 @@ async function advanceFlow(C) {
     f.shown = true;
     trace('rule', 'Recommendations', 'Shown after ' + f.rounds + ' answer round' + (f.rounds === 1 ? '' : 's'),
       { rule: 'Three sections: likely repairs, scheduled maintenance, labor-guide recommendations, each with a customer talk track.', rounds: f.rounds, answers: { ...S.ro.answers } });
-    await C.agent('Here is what I recommend, in three parts: likely repairs, scheduled maintenance, and labor-guide recommendations. Each has what to say to the customer; open any line for the detail.');
-    C.card({ type: 'recs' });
+    // the prepackaged estimate first (the shop's severity level), then each recommendation on its own
+    const pk = hasPackage();
+    await C.agent(pk
+      ? 'Here is the prepackaged estimate at your shop\'s severity level, then each recommendation on its own: likely repairs, scheduled maintenance, and labor-guide recommendations, with what to say to the customer.'
+      : 'Here is what I recommend, in three parts: likely repairs, scheduled maintenance, and labor-guide recommendations. Each has what to say to the customer; open any line for the detail.');
+    if (pk) postPackage(C);
+    C.card({ type: 'recs', individual: pk });
     C.chips(RECS_CHIPS());
     return true;
   }
@@ -365,7 +407,8 @@ export function answerQuestions(picked, parts) {
 /* ----- adding a repair also prices the parts it needs ----- */
 async function autoPriceParts(it, quiet = false) {
   const R = S.ro, C = Cr;
-  const names = (it.parts || []).slice(0, 3);
+  // labor-guide rows list their parts; maintenance lines get them from maintenance_parts.json
+  const names = pricedPartNames(it);
   if (!names.length || R.autoPriced.has(it.id)) return { added: [], notPriced: [] };
   if (!vehicleOk()) {
     await C.agent('Once I have the year, make and model I can price the parts for ' + it.name.toLowerCase() + ' from NAPA.');
@@ -415,6 +458,8 @@ async function autoPriceParts(it, quiet = false) {
   found.forEach(r => { const q = partQty(r.n, it); C.card({ type: 'parts', res: r.res, part: r.n, qty: q.qty, perCyl: q.perCyl, fit }); });
   const none = missing.concat(unpriced);
   if (none.length && !quiet) await C.agent('Not on the RO, no NAPA price to use: ' + none.join(', ') + '. Add it by hand if the job needs it.');
+  const manual = partsFor(it).filter(p => p.price === false);
+  if (manual.length && !quiet) await C.agent('Add by hand: ' + manual.map(p => p.confirm || p.name).join('; ') + '.');
   if (diesel.length && !quiet) await C.agent('No ' + diesel.map(n => n.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase()).join(' or ') + ' on the RO: the ' + (S.ro.engine || 'engine') + ' is a diesel.');
   if (waiting.length && !quiet) await askEngine(C, waiting, ask);
   return { added, notPriced: none, waitingForEngine: waiting.length ? { parts: waiting, options: (ask.options || []).map(e => e.engine + ' (' + e.cylinders + ' cyl)') } : null, diesel };
@@ -588,6 +633,20 @@ export function resetProfile() {
   S.pro.started = false; S.pro.awaiting = null;
   Cp.clear(); Cp.run(startProfile);
 }
+/**
+ * Mock sign-in (SignIn.jsx): each login starts the shop profile fresh: nothing saved, settings at
+ * their defaults, a new greeting on the Shop profile tab.
+ */
+export function signIn(email) {
+  S.auth = { email, at: Date.now() };
+  S.profile = {}; S.skipped = new Set(); persistProfile();
+  S.pro = { awaiting: null, started: false, history: [] };
+  Cp.clear();
+  S.mode = 'profile';
+  notify();
+  // first login boots the assistant (CoreAssistantApp), which greets; later logins greet here
+  if (S.booted) Cp.run(startProfile);
+}
 export function setUseAgent(on) {
   S.useAgent = on;
   Cr.event('Assistant · ' + (on ? 'agent (Gemma with tools)' : 'scripted rules'));
@@ -644,7 +703,7 @@ async function afterPlace(res, C, { quiet = false } = {}) {
     await C.agent(res.reason + (res.saves > 0 ? ' That keeps ' + hoursMoney(res.saves) + ' off the bill.' : ''));
   }
   const it = ITEM(res.added);
-  const parts = it.src === 'lg' ? await autoPriceParts(it, quiet) : null;
+  const parts = partsFor(it).length ? await autoPriceParts(it, quiet) : null;
   await offerAddOns(res.added, C, quiet);
   return { parts };
 }
@@ -706,6 +765,54 @@ export function acceptItem(id) {
 export function removeItem(id) { takeOff(id, Cr); notify(); }
 export function dismissItem(id) { S.ro.dismissed.add(id); Cr.event('Set aside · ' + ITEM(id).name); notify(); }
 export function restoreItem(id) { S.ro.dismissed.delete(id); notify(); }
+/** Whether the shop's severity level has anything to package for this order. */
+const hasPackage = () => buildPackage(packageLevel()).items.length > 0;
+
+/** Shop profile: the NAPA configuration as the server uses it (secrets never sent to the browser). */
+async function showNapaConfig(C) {
+  await C.trace(['Read NAPA connection settings', 'Read shop parts rules']);
+  const r = await getNapaConfig();
+  if (!r.ok) { await C.agent(r.message); return; }
+  trace('rule', 'NAPA configuration', r.config.connection.catalogApiUrl.value + ' · DC ' + r.config.connection.dcId.value, { config: { ...r.config, terms: r.config.terms.length + ' rules' } });
+  await C.agent('Here is how WrenchIQ connects to NAPA for this shop: the catalog endpoint and account IDs it sends, how a part is looked up, how prices and availability are read, and your shop\'s parts rules. Store credentials are never shown.');
+  C.card({ type: 'napaConfig', config: r.config });
+}
+
+/** The prepackaged estimate at the shop's severity level (packages.js), as a card with the totals. */
+function postPackage(C) {
+  const recs = buildRecs(), lv = packageLevel(), pk = buildPackage(lv, recs), all = packageLevels(recs);
+  if (!pk.items.length) return;
+  prefetchPackageParts(recs);
+  trace('rule', 'Prepackaged estimate', settingOption('package.severity').label + ': ' + pk.items.length + ' lines' + (pk.total !== null ? ', ' + money(pk.total) + (pk.partsPending ? ' + parts pending' : '') : ''),
+    { rule: 'Severity per line: high = the customer\'s concern, safety maintenance, add-ons that are part of the job; medium = engine-protecting maintenance, the inspection, recommended add-ons, jobs the repair does not include; low = comfort maintenance, if-needed and optional add-ons. A level packages its severity and above, through the same labor rules as Add to RO. Total = labor at the shop rate + parts at the shop pick.',
+      level: lv, items: pk.items.map(i => ({ name: i.name, severity: i.severity, why: i.why })), skipped: pk.skipped.map(i => ({ name: i.name, reason: i.reason })), confirm: pk.confirm,
+      totals: Object.fromEntries(Object.entries(all).map(([k, v]) => [k, { lines: v.items.length, hours: Math.round(v.hours * 10) / 10, total: v.total }])) });
+  C.card({ type: 'package' });
+}
+
+/** Put every line of a package on the RO through the labor rules; parts follow as for Add to RO. */
+export function addPackage(level = packageLevel()) {
+  const pk = buildPackage(level);
+  const turn = beginTurn('ui', 'Add package to RO · severity ' + level);
+  const results = pk.items.filter(i => !i.onOrder).map(i => ({ i, res: placeLine(i.id) }));
+  notify();
+  Cr.run(async () => {
+    try {
+      const added = results.filter(r => r.res.added).map(r => ITEM(r.res.added).name);
+      const notAdded = results.filter(r => !r.res.added).map(r => ITEM(r.i.id).name + ' (' + r.res.reason + ')');
+      await Cr.agent((added.length || notAdded.length
+        ? 'Added the ' + level + '-severity package: ' + added.length + ' line' + (added.length === 1 ? '' : 's') + '.'
+        : 'The ' + level + '-severity package lines are already on the RO; adding their parts at the shop pick.') + (notAdded.length ? ' Not added: ' + notAdded.join('; ') + '.' : '')
+        + (pk.confirm.length ? ' Before the final estimate, confirm: ' + [...new Set(pk.confirm.map(c => c.line.replace(/,.*$/, '') + ': ' + c.what.charAt(0).toLowerCase() + c.what.slice(1)))].join('; ') + '.' : ''));
+      // parts at the shop's pick for each labor-guide line; add-ons are already in the package
+      // parts for every line in the package, including lines that were already on the RO without them
+      const lineIds = results.filter(r => r.res.added).map(r => r.res.added).concat(pk.items.filter(i => i.onOrder).map(i => i.id));
+      for (const id of lineIds) { const it = ITEM(id); if (it && partsFor(it).length && S.ro.accepted.has(id)) await autoPriceParts(it, true); }
+      if (S.ro.needCyl.length) await askEngine(Cr, S.ro.needCyl.map(x => x.part), { options: engineSpec().options });
+    } finally { endTurn(turn); }
+  });
+}
+
 /** which: 'recommended' (safety + engine items and the inspection, see maintAdvice.js) or 'all'. */
 export function addAllMaint(which = 'all') {
   const ms = maintState();
@@ -713,9 +820,15 @@ export function addAllMaint(which = 'all') {
   const turn = beginTurn('ui', which === 'recommended' ? 'Add recommended maintenance' : 'Add all due maintenance');
   const adv = which === 'recommended' && interpretMaint(ms, { rate: rate(), accepted: [...S.ro.accepted], make: S.ro.make });
   const r = placeMaint(ms, adv ? adv.recommendedIds : ms.ids);
-  endTurn(turn);
   notify();
-  Cr.run(() => Cr.agent(maintSaid(r, ms)));
+  Cr.run(async () => {
+    try {
+      await Cr.agent(maintSaid(r, ms));
+      // the lines' parts at the shop pick, as for a single Add (maintenance_parts.json)
+      for (const x of r.added) { const it = ITEM(x.r.added); if (it && partsFor(it).length) await autoPriceParts(it, true); }
+      if (S.ro.needCyl.length) await askEngine(Cr, S.ro.needCyl.map(x => x.part), { options: engineSpec().options });
+    } finally { endTurn(turn); }
+  });
 }
 export function saveVehicle(v) {
   const R = S.ro;

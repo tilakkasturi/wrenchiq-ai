@@ -1223,7 +1223,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the CV axle boot",
-    "why": "A torn boot lets dirt in and grease out, and that wears out the joint."
+    "why": "A torn boot can let dirt in and grease out, which can wear the joint over time."
    }
   },
   {
@@ -1249,7 +1249,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the inner or outer CV axle boot",
-    "why": "A torn boot lets dirt in and grease out, and that wears out the joint."
+    "why": "A torn boot can let dirt in and grease out, which can wear the joint over time."
    }
   },
   {
@@ -1271,7 +1271,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the axle's center support bearing",
-    "why": "It holds the long axle steady; a worn one causes a vibration at highway speed."
+    "why": "It supports the longer axle; when worn it can cause a vibration at highway speed."
    }
   },
   {
@@ -1297,7 +1297,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the CV joint",
-    "why": "A worn joint clicks when turning and can eventually let go."
+    "why": "A worn joint can click when turning and may get worse over time."
    }
   },
   {
@@ -1321,7 +1321,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "put in a new transmission output seal",
-    "why": "The seal gets disturbed when the axle comes out, and a new one prevents a fluid leak later."
+    "why": "The seal is disturbed when the axle is removed, and a new one helps prevent a fluid leak."
    }
   },
   {
@@ -1345,7 +1345,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the axle shaft itself",
-    "why": "If the shaft is bent or its splines are worn, it is replaced while the assembly is already out."
+    "why": "If the inspection finds the shaft bent or its splines worn, it can be replaced while the assembly is already out."
    }
   },
   {
@@ -1369,7 +1369,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the axle shaft itself",
-    "why": "If the shaft is bent or its splines are worn, it is replaced while the assembly is already out."
+    "why": "If the inspection finds the shaft bent or its splines worn, it can be replaced while the assembly is already out."
    }
   },
   {
@@ -1570,7 +1570,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "adjust the parking brake",
-    "why": "New brake parts change how the parking brake sits, so we set it to hold properly."
+    "why": "New brake parts can change the parking brake adjustment, so it is set to the manufacturer's specification."
    }
   },
   {
@@ -1595,7 +1595,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "bleed the brakes with the ABS scan tool",
-    "why": "If air gets into the ABS unit, this is the only way to get a firm pedal back."
+    "why": "If air reaches the ABS unit, this procedure is used to restore normal pedal feel."
    }
   },
   {
@@ -1620,7 +1620,7 @@
    "talk": {
     "kind": "required",
     "plain": "bleed the brake lines",
-    "why": "Opening the brake system lets air in, and bleeding it keeps the pedal firm and safe."
+    "why": "Opening the brake system can let air in, and bleeding it restores normal pedal feel."
    }
   },
   {
@@ -1640,7 +1640,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "bed in the new brakes on a road test",
-    "why": "It seats the new pads to the rotors so they stop smoothly and quietly from day one."
+    "why": "It beds the new pads to the rotors, which helps them brake smoothly and quietly."
    }
   },
   {
@@ -1660,7 +1660,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "bed in the new brakes on a road test",
-    "why": "It seats the new pads to the rotors so they stop smoothly and quietly from day one."
+    "why": "It beds the new pads to the rotors, which helps them brake smoothly and quietly."
    }
   },
   {
@@ -1681,7 +1681,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "clean the rust off the hub where the rotor sits",
-    "why": "Rust there makes the rotor wobble, which you feel as a pulsing pedal."
+    "why": "Rust there can make the rotor run out of true, which can be felt as a pulsing pedal."
    }
   },
   {
@@ -1702,7 +1702,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "clean the rust off the hub where the rotor sits",
-    "why": "Rust there makes the rotor wobble, which you feel as a pulsing pedal."
+    "why": "Rust there can make the rotor run out of true, which can be felt as a pulsing pedal."
    }
   },
   {
@@ -1725,7 +1725,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "correct rotor wobble by re-indexing it on the hub",
-    "why": "If the technician measures wobble, this fixes it without buying new parts."
+    "why": "If the technician measures runout, this can correct it without new parts."
    }
   },
   {
@@ -1748,7 +1748,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "correct rotor wobble by re-indexing it on the hub",
-    "why": "If the technician measures wobble, this fixes it without buying new parts."
+    "why": "If the technician measures runout, this can correct it without new parts."
    }
   },
   {
@@ -1770,7 +1770,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace a cracked brake hose",
-    "why": "Hoses crack with age, and the system is already open, so this is the cheapest time to do it.",
+    "why": "Brake hoses can crack with age, and the system is already open for today's work.",
     "standalone": "syn-hose-f-one"
    }
   },
@@ -1792,7 +1792,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the parking brake shoes",
-    "why": "Worn shoes mean the parking brake may not hold on a hill."
+    "why": "Worn shoes can reduce how well the parking brake holds."
    }
   },
   {
@@ -1817,7 +1817,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the rear wheel bearing",
-    "why": "A worn bearing hums or growls and gets louder over time.",
+    "why": "A worn bearing can hum or growl, and the noise usually increases over time.",
     "standalone": "syn-bearing-r-one"
    }
   },
@@ -1843,7 +1843,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the front wheel bearing",
-    "why": "A worn bearing hums or growls and gets louder over time.",
+    "why": "A worn bearing can hum or growl, and the noise usually increases over time.",
     "standalone": "syn-bearing-f-one"
    }
   },
@@ -1866,7 +1866,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "run an ABS system test",
-    "why": "If the ABS light is on or a sensor was disturbed, this confirms the system works."
+    "why": "If the ABS light is on or a sensor was disturbed, this test checks that the system is working."
    }
   },
   {
@@ -1931,7 +1931,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the rotor",
-    "why": "If the rotor is worn below its minimum thickness, new pads on it will not stop well or last.",
+    "why": "If the rotor measures below the manufacturer's minimum thickness, it should be replaced with the pads.",
     "standalone": "syn-rotor-f-one"
    }
   },
@@ -1947,7 +1947,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "resurface the rotor",
-    "why": "A smooth, flat rotor lets the new pads stop evenly without noise or pulsing."
+    "why": "A smooth, true rotor surface helps the new pads brake evenly and quietly."
    }
   },
   {
@@ -1964,7 +1964,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "put in new pad clips and hardware",
-    "why": "Old clips rust and let the pads rattle or squeal, even when the pads are new."
+    "why": "Old clips can corrode and let pads rattle or squeal, even with new pads."
    }
   },
   {
@@ -1979,7 +1979,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "bed in the new brakes on a road test",
-    "why": "It seats the new pads to the rotors so they stop smoothly and quietly from day one."
+    "why": "It beds the new pads to the rotors, which helps them brake smoothly and quietly."
    }
   },
   {
@@ -2053,7 +2053,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "correct rotor wobble by re-indexing it on the hub",
-    "why": "If the technician measures wobble, this fixes it without buying new parts."
+    "why": "If the technician measures runout, this can correct it without new parts."
    }
   },
   {
@@ -2068,7 +2068,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "clean the rust off the hub where the rotor sits",
-    "why": "Rust there makes a new rotor wobble, which you feel as a pulsing pedal."
+    "why": "Rust there can make a new rotor run out of true, which can be felt as a pulsing pedal."
    }
   },
   {
@@ -2101,7 +2101,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "bleed the brakes with the ABS scan tool",
-    "why": "If air gets into the ABS unit, this is the only way to get a firm pedal back."
+    "why": "If air reaches the ABS unit, this procedure is used to restore normal pedal feel."
    }
   },
   {
@@ -2194,7 +2194,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "run an ABS system test",
-    "why": "It confirms the new sensor reads correctly and the ABS light stays off."
+    "why": "It checks that the new sensor reads correctly and the ABS system is working."
    }
   },
   {
@@ -2224,7 +2224,7 @@
    "talk": {
     "kind": "required",
     "plain": "adjust the parking brake",
-    "why": "A new cable has to be set to the right tension or the parking brake will not hold."
+    "why": "A new cable is adjusted to the manufacturer's tension so the parking brake holds as designed."
    }
   },
   {
@@ -2305,7 +2305,7 @@
    "talk": {
     "kind": "required",
     "plain": "evacuate and recharge the A/C",
-    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "why": "Whenever the A/C system is opened, the manufacturer calls for it to be evacuated and recharged to the specified amount.",
     "standalone": "syn-ac-evac"
    }
   },
@@ -2323,7 +2323,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "replace the A/C drier",
-    "why": "It traps moisture, and most compressor warranties require a new one with a new compressor."
+    "why": "It removes moisture from the system, and many compressor warranties require a new one with a new compressor."
    }
   },
   {
@@ -2338,7 +2338,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "flush the A/C lines",
-    "why": "If the old compressor shed metal, flushing keeps that debris from killing the new one."
+    "why": "If the old compressor left debris in the system, flushing helps protect the new one."
    }
   },
   {
@@ -2387,7 +2387,7 @@
    "talk": {
     "kind": "required",
     "plain": "evacuate and recharge the A/C",
-    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "why": "Whenever the A/C system is opened, the manufacturer calls for it to be evacuated and recharged to the specified amount.",
     "standalone": "syn-ac-evac"
    }
   },
@@ -2405,7 +2405,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "replace the A/C drier",
-    "why": "It traps moisture, and once the system is open the old one is used up."
+    "why": "It removes moisture from the system and is commonly replaced whenever the system is opened."
    }
   },
   {
@@ -2453,7 +2453,7 @@
    "talk": {
     "kind": "required",
     "plain": "evacuate and recharge the A/C",
-    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "why": "Whenever the A/C system is opened, the manufacturer calls for it to be evacuated and recharged to the specified amount.",
     "standalone": "syn-ac-evac"
    }
   },
@@ -2471,7 +2471,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "replace the expansion valve",
-    "why": "It bolts to the evaporator, so it is right there, and an old valve is a common cause of poor cooling.",
+    "why": "It mounts at the evaporator, which is already accessible, and a worn valve can reduce cooling.",
     "standalone": "syn-txv-f"
    }
   },
@@ -2489,7 +2489,7 @@
    "talk": {
     "kind": "optional",
     "plain": "replace the heater core",
-    "why": "It sits next to the evaporator behind the dash; doing it now avoids taking the dash apart a second time.",
+    "why": "It sits next to the evaporator behind the dash, so doing it now avoids removing the dash a second time.",
     "standalone": "syn-heatercore"
    }
   },
@@ -2523,7 +2523,7 @@
    "talk": {
     "kind": "required",
     "plain": "evacuate and recharge the A/C",
-    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "why": "Whenever the A/C system is opened, the manufacturer calls for it to be evacuated and recharged to the specified amount.",
     "standalone": "syn-ac-evac"
    }
   },
@@ -2556,7 +2556,7 @@
    "talk": {
     "kind": "required",
     "plain": "evacuate and recharge the A/C",
-    "why": "Any time the A/C system is opened it has to be vacuumed out and refilled to the exact amount, or it will not cool.",
+    "why": "Whenever the A/C system is opened, the manufacturer calls for it to be evacuated and recharged to the specified amount.",
     "standalone": "syn-ac-evac"
    }
   },
@@ -2605,7 +2605,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the blower resistor",
-    "why": "A failing motor often burns out the resistor, and it is right next to it.",
+    "why": "A failing motor can damage the resistor, which is located right next to it.",
     "standalone": "syn-blower-res"
    }
   },
@@ -2687,7 +2687,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "put on a new drive belt",
-    "why": "The belt comes off for this job anyway, and an old one is the next thing to squeal or break.",
+    "why": "The belt is removed for this job, and a worn belt can squeal or crack with age.",
     "standalone": "syn-belt"
    }
   },
@@ -2705,7 +2705,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "replace the thermostat",
-    "why": "The coolant is already drained, and an old thermostat is a common cause of overheating later.",
+    "why": "The coolant is already drained, and an aging thermostat can affect engine temperature.",
     "standalone": "syn-thermo"
    }
   },
@@ -2723,7 +2723,7 @@
    "talk": {
     "kind": "optional",
     "plain": "flush the cooling system",
-    "why": "It clears old deposits so the new pump is not circulating dirty coolant."
+    "why": "It flushes out old coolant and deposits so the new pump starts with clean coolant."
    }
   },
   {
@@ -2756,7 +2756,7 @@
    "talk": {
     "kind": "optional",
     "plain": "flush the cooling system",
-    "why": "It clears old deposits so the new thermostat is not sitting in dirty coolant."
+    "why": "It flushes out old coolant and deposits so the new thermostat starts with clean coolant."
    }
   },
   {
@@ -2790,7 +2790,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the upper radiator hose",
-    "why": "It comes off with the radiator, and a soft or cracked hose is the next leak.",
+    "why": "It is removed with the radiator, and a soft or cracked hose can begin to leak.",
     "standalone": "syn-hose-up"
    }
   },
@@ -2808,7 +2808,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the lower radiator hose",
-    "why": "It comes off with the radiator, and a soft or cracked hose is the next leak.",
+    "why": "It is removed with the radiator, and a soft or cracked hose can begin to leak.",
     "standalone": "syn-hose-low"
    }
   },
@@ -2826,7 +2826,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "replace the thermostat",
-    "why": "The coolant is already drained, and an old thermostat is a common cause of overheating later.",
+    "why": "The coolant is already drained, and an aging thermostat can affect engine temperature.",
     "standalone": "syn-thermo"
    }
   },
@@ -2844,7 +2844,7 @@
    "talk": {
     "kind": "optional",
     "plain": "flush the cooling system",
-    "why": "It clears old deposits so they do not clog the new radiator."
+    "why": "It flushes out old coolant and deposits so they do not collect in the new radiator."
    }
   },
   {
@@ -2950,7 +2950,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "clean the battery terminals and cables",
-    "why": "Corrosion on the cables can make a brand-new battery act like a weak one.",
+    "why": "Corrosion on the cables can reduce how well even a new battery performs.",
     "standalone": "battcable"
    }
   },
@@ -2984,7 +2984,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "put on a new drive belt",
-    "why": "The belt comes off for this job anyway, and a worn belt can slip and undercharge the new alternator.",
+    "why": "The belt is removed for this job, and a worn belt can slip and reduce charging.",
     "standalone": "syn-belt"
    }
   },
@@ -3002,7 +3002,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the belt tensioner",
-    "why": "A weak tensioner lets the belt slip, and it is right there with the belt off.",
+    "why": "A weak tensioner can let the belt slip, and it is accessible while the belt is off.",
     "standalone": "syn-tensioner"
    }
   },
@@ -3036,7 +3036,7 @@
    "talk": {
     "kind": "required",
     "plain": "put in a new intake plenum gasket",
-    "why": "The intake comes off to reach the starter, and the old gasket cannot be reused without risking a vacuum leak."
+    "why": "The intake is removed to reach the starter, and the manufacturer calls for a new gasket on reassembly."
    }
   },
   {
@@ -3084,7 +3084,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the idler pulley",
-    "why": "A worn pulley bearing makes the same squeal or chirp as a bad tensioner."
+    "why": "A worn pulley bearing can make the same squeal or chirp as a weak tensioner."
    }
   },
   {
@@ -3116,7 +3116,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace an ignition coil",
-    "why": "If a coil tests weak, swapping it now avoids taking the intake apart again for a misfire.",
+    "why": "If a coil tests weak, replacing it now avoids removing the intake again later.",
     "standalone": [
      "syn-coil-rear",
      "syn-coil-front"
@@ -3165,7 +3165,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace another coil on the same side",
-    "why": "Coils of the same age tend to fail one after another."
+    "why": "Coils of the same age and mileage often wear at a similar rate."
    }
   },
   {
@@ -3182,7 +3182,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "replace the spark plug under that coil",
-    "why": "A worn plug is often what overworked the coil, and it is right under it."
+    "why": "A worn plug can put extra load on the coil, and it is directly under it."
    }
   },
   {
@@ -3242,7 +3242,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "replace the spark plugs",
-    "why": "The plugs sit under the valve covers, so the access labor is already done.",
+    "why": "The plugs sit under the valve covers, so the access labor is already part of today's job.",
     "standalone": "syn-plugs"
    }
   },
@@ -3388,7 +3388,7 @@
    "talk": {
     "kind": "recommended",
     "plain": "replace the strut mount and bearing",
-    "why": "An old mount can clunk or make the steering feel notchy, even with a new strut."
+    "why": "A worn mount can clunk or make the steering feel notchy, even with a new strut."
    }
   },
   {
@@ -3405,7 +3405,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the coil spring",
-    "why": "A cracked or sagging spring changes ride height and wears the new strut faster."
+    "why": "A cracked or sagging spring can change ride height and add wear to the new strut."
    }
   },
   {
@@ -3422,7 +3422,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the sway bar link",
-    "why": "It bolts to the strut, and a worn link is a common source of clunks over bumps.",
+    "why": "It attaches to the strut, and a worn link can clunk over bumps.",
     "standalone": "syn-link-f-one"
    }
   },
@@ -3529,7 +3529,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the lower ball joint",
-    "why": "A loose ball joint is a safety item, and the arm is already off."
+    "why": "The ball joint affects steering and suspension, and the arm is already removed."
    }
   },
   {
@@ -3546,7 +3546,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the control arm bushing",
-    "why": "Cracked bushings cause clunks and uneven tire wear."
+    "why": "Cracked bushings can cause clunks and uneven tire wear."
    }
   },
   {
@@ -3593,7 +3593,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the inner tie rod",
-    "why": "If the inner joint is loose too, the steering stays sloppy with only the outer replaced."
+    "why": "If the inner joint is also loose, replacing only the outer may not restore steering feel."
    }
   },
   {
@@ -3610,7 +3610,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace the steering rack boot",
-    "why": "A torn boot lets water into the steering rack, which is a much bigger repair."
+    "why": "A torn boot can let water and dirt into the steering rack."
    }
   },
   {
@@ -3736,7 +3736,7 @@
    "talk": {
     "kind": "optional",
     "plain": "balance the tires",
-    "why": "The wheels are already off for the rotation, and balancing smooths out highway vibration.",
+    "why": "The wheels are already off for the rotation, and balancing can reduce highway vibration.",
     "standalone": "syn-balance"
    }
   },
@@ -3754,7 +3754,7 @@
    "talk": {
     "kind": "if-needed",
     "plain": "replace a tire pressure sensor",
-    "why": "Sensor batteries die with age; with the tire already off it is a fraction of the labor.",
+    "why": "Sensor batteries wear out with age, and the tire is already off for today's work.",
     "standalone": "syn-tpms-each"
    }
   },

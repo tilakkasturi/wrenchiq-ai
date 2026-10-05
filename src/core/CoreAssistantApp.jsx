@@ -6,7 +6,10 @@ import ChatPanel from './components/ChatPanel';
 import MemoryPanel from './components/MemoryPanel';
 import RepairOrderPanel from './components/RepairOrderPanel';
 import TracePanel from './components/TracePanel';
+import SignIn from './components/SignIn';
 import './core.css';
+// the Predii logo from resources/ (a wide JPG on white; core.css crops it to the mark)
+import PREDII_LOGO from '../../resources/Flat Predii Logo.JPG?url';
 
 // Everything the side panel shows, as one string, to notice when it changed.
 const panelSig = () => JSON.stringify(S.mode === 'ro'
@@ -20,7 +23,8 @@ export default function CoreAssistantApp() {
   const [tracing, setTracing] = useState(false); // the Agent trace tab; the harness mode underneath is kept
   const prev = useRef({ sig: panelSig(), mode: S.mode });
 
-  useEffect(() => { if (!S.booted) { loadProfile(); boot(); } }, []);
+  // the assistant starts once the shop user has signed in (mock sign-in, SignIn.jsx)
+  useEffect(() => { if (S.auth && !S.booted) { loadProfile(); boot(); } }, [S.auth]);
 
   // Phone width: the panel is a tab, so mark it when it changes while the chat is showing.
   const sig = panelSig();
@@ -34,6 +38,8 @@ export default function CoreAssistantApp() {
   const sideLabel = mode === 'ro' ? 'Repair order' : 'Shop memory';
   const pick = m => { setTracing(false); setView('chat'); setDot(false); setMode(m); };
   const showSide = () => { setView('side'); setDot(false); };
+
+  if (!S.auth) return <div className="wiq-core"><SignIn logo={PREDII_LOGO} /></div>;
 
   return (
     <div className="wiq-core">
@@ -49,6 +55,7 @@ export default function CoreAssistantApp() {
             <button role="tab" aria-selected={tracing} onClick={() => setTracing(true)}>Agent trace{S.trace && S.trace.turns.length ? <span className="tr-count mono">{S.trace.turns.length}</span> : null}</button>
           </nav>
           <div className="proto"><i>Prototype</i><span>Sample data. Nothing is sent to a shop system.</span></div>
+          <span className="predii-mark" role="img" aria-label="Predii"><img src={PREDII_LOGO} alt="" /></span>
         </header>
 
         {!tracing && <div className="mobtabs">

@@ -1,9 +1,14 @@
 {
- "_about": "The demo shop the Core assistant runs as. Shown at the top of Shop profile and kept in shop memory as fixed facts (the advisor cannot change them in the chat). maintenancePresentation is the default for how scheduled maintenance is presented (\"prioritized\": by severity, the important items first; \"all\": the full schedule as is); the shop can change it in Shop profile. laborGuidePresentation is the same choice for labor-guide recommendations, the add-on labor that goes with a repair (\"prioritized\": part-of-the-job and recommended add-ons first, only-if-needed and optional ones offered as conditional; \"all\": every add-on the labor guide lists, in guide order).",
+ "_about": "The demo shop the Core assistant runs as. Shown at the top of Shop profile and kept in shop memory as fixed facts (the advisor cannot change them in the chat). maintenancePresentation is the default for how scheduled maintenance is presented (\"prioritized\": by severity, the important items first; \"all\": the full schedule as is); the shop can change it in Shop profile. laborGuidePresentation is the same choice for labor-guide recommendations, the add-on labor that goes with a repair (\"prioritized\": part-of-the-job and recommended add-ons first, only-if-needed and optional ones offered as conditional; \"all\": every add-on the labor guide lists, in guide order). packageSeverity is the default level for the prepackaged estimate (\"high\": only what cannot wait, \"medium\": plus what protects the vehicle, \"low\": everything recommended). demoUser is the shop user prefilled on the mock sign-in screen (Core opens on it; Log in just enters the demo).",
  "shopId": "cornerstone",
  "name": "Cornerstone Automotive",
  "address": "2341 El Camino Real, Sunnyvale, California",
  "partsSupplier": "NAPA",
+ "demoUser": {
+  "name": "Service desk",
+  "email": "cornerstone.serviceadvisor@gmail.com",
+  "note": "Prefilled on the mock sign-in screen; nothing is sent anywhere."
+ },
  "partsPolicy": {
   "rule": "availability_then_price",
   "label": "Availability first, then lowest price",
@@ -12,6 +17,7 @@
  },
  "maintenancePresentation": "prioritized",
  "laborGuidePresentation": "prioritized",
+ "packageSeverity": "medium",
  "examples": [
   "Labor rate is $165 an hour",
   "We mark up parts 45%",

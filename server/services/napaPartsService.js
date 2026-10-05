@@ -11,7 +11,7 @@
  * or an empty list, never a made-up number.
  */
 
-import { listMakes, listModels, findKeywords, lookupPartsByKeyword } from '../../napa/searchParts.js';
+import { listMakes, listModels, findKeywords, lookupPartsByKeyword, catalogSettings } from '../../napa/searchParts.js';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_ROWS = 8;
@@ -276,4 +276,39 @@ export async function lookupNapaParts({ year, make, model, part, refresh = false
   };
   cache.set(key, { at: Date.now(), value });
   return value;
+}
+
+const LABELS = { dcId: { 59: 'Sacramento Distribution Center' }, countryId: { 1: 'United States' }, customerTypeId: { 1: 'Standard' }, vehicleTypeId: { 1: 'Automobile / light truck' } };
+
+/**
+ * Everything WrenchIQ uses to talk to the NAPA catalog, for the Shop profile "NAPA configuration"
+ * view. Secrets are never returned: NAPA store credentials are reported only as configured or not.
+ */
+export function napaConfig() {
+  const c = catalogSettings();
+  const withLabel = (k, v) => ({ ...v, label: (LABELS[k] || {})[v.value] || null });
+  return {
+    supplier: 'NAPA',
+    protocol: 'NAPA XML Parts Catalog Server (NXPCS) v6.1.1: HTTP POST, application/xml',
+    auth: 'No API key or login: NAPA identifies the account by the IDs below, sent in every request body.',
+    connection: {
+      catalogApiUrl: c.catalogApiUrl,
+      dcId: withLabel('dcId', c.dcId),
+      countryId: withLabel('countryId', c.countryId),
+      customerTypeId: withLabel('customerTypeId', c.customerTypeId),
+      vehicleTypeId: withLabel('vehicleTypeId', c.vehicleTypeId),
+    },
+    storeCredentials: {
+      configured: !!(process.env.NAPA_STORE_ID && process.env.NAPA_STORE_PASSWORD),
+      usedBy: "NAPA's Price/Availability (TAMS) API only, which WrenchIQ does not call yet. The catalog lookup does not use them.",
+    },
+    lookup: {
+      steps: ['Year → NAPA make list', 'Make → NAPA model list (normalized prefix match, light-duty first)', 'Part name → NAPA search term (table below)', 'Term → NAPA keywords for that vehicle, closest keyword first', 'Keyword → parts that fit, accessories and the wrong axle side dropped'],
+      maxRows: MAX_ROWS,
+      cacheTtlMinutes: CACHE_TTL_MS / 60000,
+      readOnly: 'Look up only: no cart, no ordering.',
+    },
+    pricing: 'NAPA catalog list price, not your account cost. A part with no catalog price shows as "No catalog price" and is never estimated.',
+    terms: TERMS.map(([rx, term]) => ({ match: rx.source, term })),
+  };
 }

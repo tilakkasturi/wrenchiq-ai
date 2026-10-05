@@ -26,6 +26,18 @@ const COUNTRY_ID = process.env.NAPA_COUNTRY_ID || "1"; // US
 const CUSTOMER_TYPE_ID = process.env.NAPA_CUSTOMER_TYPE_ID || "1"; // Standard
 const VEHICLE_TYPE_ID = "1"; // Automobile/Light Truck
 
+/** The connection settings in use, and whether each came from the environment or the default. */
+export function catalogSettings() {
+  const src = name => (process.env[name] ? "env " + name : "default");
+  return {
+    catalogApiUrl: { value: CATALOG_API_URL, source: src("NAPA_CATALOG_API_URL") },
+    dcId: { value: DC_ID, source: src("NAPA_DC_ID") },
+    countryId: { value: COUNTRY_ID, source: src("NAPA_COUNTRY_ID") },
+    customerTypeId: { value: CUSTOMER_TYPE_ID, source: src("NAPA_CUSTOMER_TYPE_ID") },
+    vehicleTypeId: { value: VEHICLE_TYPE_ID, source: "fixed in code" },
+  };
+}
+
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@" });
 const builder = new XMLBuilder({ ignoreAttributes: false, attributeNamePrefix: "@" });
 

@@ -99,7 +99,7 @@ function Section({ n, title, count, hint, open, children }) {
  * recommendations. Each has a talk track; each item opens for the detail. Rebuilt from the repair
  * order every render, so adding a line updates every section.
  */
-export function RecsCard() {
+export function RecsCard({ card } = {}) {
   const r = buildRecs(), rt = rate();
   const { repairs, maint, labor } = r;
   const addOnDrill = it => (
@@ -113,7 +113,7 @@ export function RecsCard() {
   const first = repairs.items.length ? 1 : maint.adv ? 2 : labor.anchor ? 3 : 1;
   return (
     <>
-      <div className="label" style={{ marginBottom: 6 }}>Recommendations</div>
+      <div className="label" style={{ marginBottom: 6 }}>{card && card.individual ? 'Individual recommendations' : 'Recommendations'}</div>
       <div className="card recs">
         {r.concern && <p className="why-line" style={{ marginTop: 0 }}>{r.concern}</p>}
 

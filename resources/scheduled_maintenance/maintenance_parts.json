@@ -1,0 +1,17 @@
+{
+ "_about": "Parts a scheduled-maintenance line needs, by the schedule's PreferredTerm, for the operations listed in operations (inspections and rotations need none). Part names follow the labor guide's convention: '(n)' is the quantity, and the NAPA lookup ignores the parentheses. Spark plugs are one per cylinder (engine_cylinders.json). confirm is what the advisor still checks before the final estimate. price: false means the catalog has no sensible unit to price (bulk fluids), so the part is listed to add by hand instead of priced.",
+ "operations": ["REPLACE"],
+ "parts": {
+  "engine oil": [{ "name": "Motor oil, quart (5)", "confirm": "Oil grade and capacity for this engine: priced as 5 quarts" }],
+  "engine oil filter": [{ "name": "Oil filter" }],
+  "spark plug": [{ "name": "Spark plugs (set)" }],
+  "engine air filter": [{ "name": "Engine air filter" }],
+  "cabin air filter": [{ "name": "Cabin air filter" }],
+  "engine coolant": [{ "name": "Antifreeze, gallon (2)", "confirm": "Coolant type and capacity: priced as 2 gallons" }],
+  "window wiper blade": [{ "name": "Wiper blades (2)", "confirm": "Front wiper blade sizes: priced as 2 blades" }],
+  "brake fluid": [{ "name": "Brake fluid" }],
+  "transmission fluid": [{ "name": "Transmission fluid", "price": false, "confirm": "Transmission fluid type and quantity: add by hand" }],
+  "transfer case fluid": [{ "name": "Transfer case fluid", "price": false, "confirm": "Transfer case fluid type and quantity: add by hand" }],
+  "differential fluid": [{ "name": "Differential fluid", "price": false, "confirm": "Differential fluid type and quantity: add by hand" }]
+ }
+}
