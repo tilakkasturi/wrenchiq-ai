@@ -5,6 +5,7 @@ import { RepairsCard, MaintCard, PartsCard, CombosCard } from './Cards';
 import { QuestionsCard, RecsCard } from './FlowCards';
 import { PackageCard } from './PackageCard';
 import { NapaConfigCard } from './NapaConfigCard';
+import { PartstechCard, PartstechConfigCard } from './PartstechCards';
 
 const CHATS = { profile: Cp, ro: Cr };
 
@@ -37,6 +38,8 @@ function Item({ item }) {
           : item.card.type === 'recs' ? <RecsCard card={item.card} />
           : item.card.type === 'package' ? <PackageCard />
           : item.card.type === 'napaConfig' ? <NapaConfigCard card={item.card} />
+          : item.card.type === 'partstech' ? <PartstechCard card={item.card} />
+          : item.card.type === 'partstechConfig' ? <PartstechConfigCard card={item.card} />
           : <MaintCard card={item.card} />}
       </div>
     );

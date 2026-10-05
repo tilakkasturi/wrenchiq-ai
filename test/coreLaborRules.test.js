@@ -1,6 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-vi.mock('../src/core/partsApi.js', () => ({ searchNapa: async () => ({ ok: true, priceBasis: 'NAPA catalog list price', retrievedAt: new Date().toISOString(), parts: [] }) }));
+const { ptCalls, napaCalls } = vi.hoisted(() => ({ ptCalls: [], napaCalls: [] }));
+vi.mock('../src/core/partsApi.js', () => ({
+  searchNapa: async q => { napaCalls.push(q); return { ok: true, priceBasis: 'NAPA catalog list price', retrievedAt: new Date().toISOString(), parts: [] }; },
+  getNapaConfig: async () => ({ ok: false, message: 'NAPA config (mock)' }),
+  getPartstechConfig: async () => ({ ok: true, config: { connection: { apiUrl: { value: 'https://api.partstech.com' }, partnerId: { value: 'p' }, userId: { value: 'u' }, keysConfigured: true }, callbacks: { enabled: false }, lookup: { steps: [] } } }),
+  startPartstech: async q => { ptCalls.push(q); return { ok: true, ref: 'ref' + ptCalls.length, sessionId: 's' + ptCalls.length, redirectUrl: 'https://app.partstech.com/api-search/x/y/s' + ptCalls.length + '/', query: { searchParams: { vin: q.vin } } }; },
+  getPartstechSession: async ref => ({ ok: true, ref, status: 'parts_selected', cartUpdatedAt: new Date().toISOString(), parts: [
+    { supplier: 'AutoZone', store: 'AZ Store 3230', partNumber: 'D2076', brand: 'Duralast', description: 'Duralast Brake Pads', position: 'Front', quantity: 1, cost: 28.28, listPrice: 50.05, core: 0, inStock: true, orderItemId: 'oi1' },
+  ] }),
+}));
 
 import { S, newRO } from '../src/core/state.js';
 import { REP, REPMAP, parseLaborXml, buildLaborGuide } from '../src/core/laborGuide.js';
@@ -191,7 +200,10 @@ describe('agent add_repair_line goes through the guardrails', () => {
 describe('click-through demos', () => {
   it('every scenario loads from resources/demo: short owner fragments, then advisor shorthand', () => {
     expect(demoList().map(d => d.id)).toEqual(['cv-axle', 'ac', 'water-pump', 'valve-cover']);
-    DEMOS.starters.forEach(st => { expect(st.text, st.text).toMatch(/^\d\d [a-z0-9]+ \d+k /); expect(st.text.length, st.text).toBeLessThan(70); });
+    DEMOS.starters.forEach(st => {
+      expect(st.text, st.text).toMatch(/^\d\d [a-z0-9]+ \d+k .* vin [A-HJ-NPR-Z0-9]{17}$/); // each carries a demo VIN for the parts supplier
+      expect(st.text.replace(/ vin \w{17}$/, '').length, st.text).toBeLessThan(70); // the owner's fragment stays short
+    });
     DEMOS.scenarios.forEach(d => d.steps.forEach((st, i) => {
       expect(st.text.length, st.text).toBeLessThan(100);
       expect(/^\s*(please\s+)?(add|include)\b/i.test(st.text), st.text).toBe(false); // so the model, not the keyword rule, reads it
@@ -223,16 +235,40 @@ import { setMode, Cp } from '../src/core/harness.js';
 describe('shop profile: free flowing, starts with the shop', () => {
   const fresh = () => { S.pro = { awaiting: null, started: false }; S.chats.profile = { items: [], chips: [], nextId: 1 }; };
   const saidP = () => S.chats.profile.items.filter(i => i.kind === 'agent').map(i => i.text);
-  it('states the shop and supplier from resources/shop, asks no questions', async () => {
+  it('states the shop from resources/shop, then asks once which parts supplier to use', async () => {
     S.profile = {}; fresh();
     setMode('profile'); await Cp.run(async () => {});
     expect(saidP()[0]).toBe('Your shop: Cornerstone Automotive, 2341 El Camino Real, Sunnyvale, California.');
-    expect(saidP()[1]).toBe('Your parts supplier is set to NAPA.');
-    expect(saidP().join(' ')).not.toMatch(/\?/);
+    expect(saidP().at(-1)).toBe('Which parts supplier should I use on repair orders: NAPA or PartsTech?');
+    expect(saidP().filter(t => /\?/.test(t))).toHaveLength(1);
+    expect(S.chats.profile.chips.map(c => c.t)).toEqual(['Use NAPA', 'Use PartsTech', 'Go to Repair order']);
     expect(S.profile['shop.identity'].value).toMatch(/^Cornerstone Automotive/);
-    expect(S.pro.awaiting).toBeNull();
+    expect(S.pro.awaiting).toBe('parts.supplier');
     S.mode = 'ro';
   });
+  it('remembers the parts supplier: answered once, stated (not asked) next time, switchable', async () => {
+    S.profile = {}; fresh(); S.useAgent = false;
+    setMode('profile'); await Cp.run(async () => {});
+    await Cp.send('PartsTech'); await Cp.run(async () => {});
+    expect(S.profile['parts.supplier'].value).toBe('partstech');
+    expect(saidP().at(-1)).toMatch(/^Saved: your parts supplier is now PartsTech\./);
+    fresh(); setMode('profile'); await Cp.run(async () => {});
+    expect(saidP()).toContain('Your parts supplier is PartsTech.');
+    expect(saidP().join(' ')).not.toMatch(/Which parts supplier/);
+    await Cp.send('switch to NAPA'); await Cp.run(async () => {});
+    expect(S.profile['parts.supplier'].value).toBe('napa');
+    S.mode = 'ro';
+ }, 20000);
+  it('shows the configuration of the shop supplier, or of the supplier named', async () => {
+    S.profile = {}; fresh(); S.pro.started = true; S.useAgent = false;
+    setSetting('parts.supplier', 'partstech');
+    await Cp.send('show me the parts supplier config'); await Cp.run(async () => {});
+    expect(S.chats.profile.items.filter(i => i.kind === 'cards').map(i => i.card.type)).toEqual(['partstechConfig']);
+    await Cp.send('show me the NAPA config'); await Cp.run(async () => {});
+    expect(saidP().at(-1)).toBe('NAPA config (mock)'); // the NAPA card path, not PartsTech
+    expect(S.profile['parts.supplier'].value).toBe('partstech'); // asking about NAPA does not switch
+    S.mode = 'ro';
+ }, 20000);
   it('keeps a recognized preference as a named fact and anything else as a note', async () => {
     S.profile = {}; fresh(); S.pro.started = true; S.useAgent = false;
     await Cp.send('our labor rate is 165 an hour'); await Cp.run(async () => {});
@@ -488,7 +524,10 @@ describe('Shop profile answers questions about how the assistant works', () => {
     S.profile['shop.labor_rate'] = { value: 150, display: '$150/hr' };
     expect(offlineAnswer('how do you use the labor guide')).toMatch(/standard hours.*Mitchell 1.*\$150 an hour.*WrenchIQ presents what matters most/s);
     expect(offlineAnswer('explain scheduled maintenance')).toMatch(/manufacturer's \(OEM\) maintenance schedule.*by your setting: "WrenchIQ presents what matters most"/s);
-    expect(offlineAnswer('how do you pick parts')).toMatch(/Your parts supplier is NAPA\. When I pick parts, availability comes first/);
+    expect(offlineAnswer('how do you pick parts')).toMatch(/Your parts supplier is NAPA; you can switch between NAPA and PartsTech in Shop profile\. When I pick parts, availability comes first/);
+    setSetting('parts.supplier', 'partstech');
+    expect(offlineAnswer('how do you pick parts')).toMatch(/Your parts supplier is PartsTech;.*PartsTech is a parts aggregator.*nothing goes on the order until the advisor picks it/s);
+    delete S.profile['parts.supplier'];
   });
   it('the agent gets the same knowledge and settings, with no tools', () => {
     const p = buildProfilePrompt(profileContext());
@@ -538,5 +577,74 @@ describe('the concern reads descriptively, not as question: answer', () => {
     const c = concern();
     expect(c).toBe('Customer states: Check engine light is on and the vehicle has a rough idle when stopped. Customer reports: The check engine light is flashing. The engine idles rough or hesitates. Since the light came on, it runs rough or has low power.');
     expect(c).not.toMatch(/: Yes|: No\b|Warning light:|Reported:/);
+  });
+});
+
+import { partstechParts, loadPartstechCard, addPartstechPart, searchPart, showPartstech, bringPartstechBack, newJob } from '../src/core/harness.js';
+import { extractVehicle } from '../src/core/logic.js';
+import DEMO_STARTERS from '../resources/demo/core_demo_scenarios.json';
+import { orderTotals as totalsOf } from '../src/core/logic.js';
+describe('repair order parts follow the shop parts supplier', () => {
+  beforeEach(() => { ptCalls.length = 0; napaCalls.length = 0; Object.assign(S.ro, { vin: '4T1B11HK7JU512345', year: '2018', make: 'Toyota', model: 'Camry' }); });
+  it('NAPA (default): a part search goes to the NAPA catalog', async () => {
+    searchPart('front brake pads'); await settle();
+    expect(napaCalls).toHaveLength(1);
+    expect(ptCalls).toHaveLength(0);
+  });
+  it('PartsTech: opens a PartsTech session by VIN and posts a PartsTech card, no NAPA lookup, nothing on the RO', async () => {
+    setSetting('parts.supplier', 'partstech');
+    searchPart('front brake pads'); await settle();
+    expect(napaCalls).toHaveLength(0);
+    expect(ptCalls[0]).toMatchObject({ vin: '4T1B11HK7JU512345', part: 'front brake pads' });
+    const [card] = cardsOf('partstech');
+    expect(card).toMatchObject({ ref: 'ref1', part: 'front brake pads', status: 'open', rows: [] });
+    expect(S.ro.parts.added).toHaveLength(0);
+  });
+  it('PartsTech: adding a repair opens PartsTech for its parts instead of auto-adding NAPA picks', async () => {
+    setSetting('parts.supplier', 'partstech');
+    acceptItem('brk-front'); await settle();
+    expect(napaCalls).toHaveLength(0);
+    expect(cardsOf('partstech').length).toBeGreaterThan(0);
+    expect(cardsOf('parts')).toHaveLength(0);
+    expect(S.ro.parts.added).toHaveLength(0);
+  });
+  it('PartsTech: what the advisor picked comes back and goes on the RO at the shop cost, marked PartsTech', async () => {
+    setSetting('parts.supplier', 'partstech');
+    await Cr.run(() => partstechParts(Cr, ['Front brake pads (set)'], null));
+    const [card] = cardsOf('partstech');
+    await loadPartstechCard(card);
+    expect(card.rows[0]).toMatchObject({ supplier: 'PartsTech', source: 'AutoZone', partNumber: 'D2076', listPrice: 28.28, list: 50.05 });
+    addPartstechPart(card, card.rows[0]);
+    expect(S.ro.parts.added[0]).toMatchObject({ supplier: 'PartsTech', source: 'AutoZone', partNumber: 'D2076', each: 28.28, qty: 1 });
+    expect(S.chats.ro.items.some(i => i.kind === 'event' && /Added to RO · .*PartsTech \(AutoZone\) Duralast D2076 · \$28\.28/.test(i.text))).toBe(true);
+    expect(totalsOf().parts).toBeCloseTo(28.28);
+  });
+  it('demo starters carry a VIN: PartsTech searches by it, NAPA gets year, make and model from the text', async () => {
+    for (const st of DEMO_STARTERS.starters) {
+      Object.assign(S.ro, { vin: '', year: '', make: '', model: '' });
+      extractVehicle(st.text);
+      expect(S.ro.vin, st.label).toMatch(/^[A-HJ-NPR-Z0-9]{17}$/);
+      expect(S.ro.year && S.ro.make && S.ro.model, st.label).toBeTruthy();
+    }
+    Object.assign(S.ro, { vin: '', year: '', make: '', model: '' });
+    extractVehicle(DEMO_STARTERS.starters[0].text); // 18 Corolla
+    searchPart('front brake pads'); await settle();
+    expect(napaCalls[0]).toMatchObject({ year: S.ro.year, make: S.ro.make, model: S.ro.model });
+    setSetting('parts.supplier', 'partstech');
+    searchPart('front brake pads'); await settle();
+    expect(ptCalls[0].vin).toBe('2T1BURHE3JC012345');
+  });
+  it('PartsTech shows in its own tab, never in place of WrenchIQ; Done reads the cart and returns to the RO', async () => {
+    setSetting('parts.supplier', 'partstech');
+    searchPart('front brake pads'); await settle();
+    const [card] = cardsOf('partstech');
+    showPartstech(card);
+    expect(S.pt).toMatchObject({ open: true, card });
+    await bringPartstechBack();
+    expect(S.pt.open).toBe(false);
+    expect(S.mode).toBe('ro');
+    expect(card.rows).toHaveLength(1);
+    newJob(); await settle();
+    expect(S.pt).toEqual({ card: null, open: false });
   });
 });

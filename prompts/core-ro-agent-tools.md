@@ -54,7 +54,7 @@ Line id, e.g. "axle-asm-fwd-left"
 The job name with spelling corrected, e.g. "right axle shaft assembly" for "rite axel", when no id is known
 
 ## search_napa_parts
-Look up NAPA catalog parts with list prices for the vehicle on the repair order. Needs year, make and model recorded. Call once per part.
+Look up a part with the shop's parts supplier for the vehicle on the repair order. With NAPA it returns catalog parts with list prices; with PartsTech it opens PartsTech for the advisor to pick parts and returns no prices (supplier "PartsTech"). Needs year, make and model recorded. Call once per part.
 
 ## search_napa_parts.part
 Part name as a mechanic says it, e.g. "front brake pads"

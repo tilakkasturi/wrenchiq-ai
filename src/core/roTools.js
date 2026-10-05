@@ -17,7 +17,7 @@ import { searchNapa } from './partsApi';
 import { standalonesOf, parentsOnOrder, sameJob } from './laborRules';
 import { interpretMaint } from './maintAdvice';
 import { pendingQuestions, resetFlow } from './recommend';
-import { maintMode, fullSchedule, settingOption } from './shopSettings';
+import { maintMode, fullSchedule, settingOption, supplierKey } from './shopSettings';
 import { promptSection } from '../services/promptLoader';
 
 // The harness owns how a line is placed and announced; it hands those in here so this module does
@@ -206,6 +206,7 @@ export const TOOLS = {
       parts_not_priced: after?.parts?.notPriced.length ? after.parts.notPriced : undefined,
       parts_waiting_for_engine: after?.parts?.waitingForEngine || undefined,
       parts_not_needed_diesel: after?.parts?.diesel?.length ? after.parts.diesel : undefined,
+      parts_to_pick_in_partstech: after?.parts?.partstech?.length ? after.parts.partstech : undefined,
     };
   },
 
@@ -214,6 +215,11 @@ export const TOOLS = {
     if (!part) return { error: 'part is empty' };
     if (!vehicleOk()) return { error: 'Year, make and model are not all recorded yet. Ask the advisor, then call update_vehicle.' };
     const R = S.ro;
+    // the shop's parts supplier is PartsTech: the advisor picks in PartsTech (punch-out), so no prices here
+    if (supplierKey() === 'partstech') {
+      await LINES.partstech(C, [part], null);
+      return { part, fits: vehicleLine(), supplier: 'PartsTech', picked_by: 'advisor in PartsTech', prices: 'none until the advisor picks parts in PartsTech' };
+    }
     const res = await searchNapa({ year: R.year, make: R.make, model: R.model, part });
     if (!res.ok) return { error: res.code, message: res.message };
     R.parts.lastQ = part;

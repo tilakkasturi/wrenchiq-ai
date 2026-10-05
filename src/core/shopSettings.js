@@ -39,7 +39,14 @@ export const SETTINGS = [
     ],
   },
 ];
-export const SETTINGMAP = Object.fromEntries(SETTINGS.map(s => [s.key, s]));
+
+/**
+ * Which parts supplier the repair order uses: NAPA (catalog lookup, the shop pick goes on the RO) or
+ * PartsTech (punch-out: the advisor picks parts in PartsTech). Kept apart from SETTINGS, which are
+ * about how work is presented; asked in the Shop profile chat and shown in its own section.
+ */
+export const SUPPLIER_SETTING = defineSetting('parts.supplier', () => (String(SHOP.partsSupplier || 'NAPA').toLowerCase() === 'partstech' ? 'partstech' : 'napa'), ['napa', 'partstech']);
+export const SETTINGMAP = Object.fromEntries(SETTINGS.concat(SUPPLIER_SETTING).map(s => [s.key, s]));
 
 /** The shop's choice for a setting, or the default. */
 export function setting(key) {
@@ -56,6 +63,13 @@ export function setSetting(key, value) {
   persistProfile();
   notify();
 }
+
+/** 'napa' (default from resources/shop) or 'partstech'. */
+export const supplierKey = () => setting('parts.supplier');
+/** Display name of the shop's parts supplier: "NAPA" or "PartsTech". */
+export const supplierName = () => settingOption('parts.supplier').label;
+/** Whether the shop has chosen a supplier (vs. still on the default). */
+export const supplierChosen = () => !!(S.profile['parts.supplier'] && SUPPLIER_SETTING.options.some(o => o.value === S.profile['parts.supplier'].value));
 
 /** 'prioritized' (default) or 'all'. */
 export const maintMode = () => setting('maint.presentation');

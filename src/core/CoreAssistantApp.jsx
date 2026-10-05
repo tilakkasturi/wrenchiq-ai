@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCore, S, loadProfile } from './state';
 import { FIXEDMAP } from './data';
-import { boot, setMode, newJob, setUseAgent, runDemo, demoList } from './harness';
+import { boot, setMode, newJob, setUseAgent, runDemo, demoList, hidePartstech, showPartstech } from './harness';
+import { supplierKey } from './shopSettings';
 import ChatPanel from './components/ChatPanel';
 import MemoryPanel from './components/MemoryPanel';
 import RepairOrderPanel from './components/RepairOrderPanel';
 import TracePanel from './components/TracePanel';
+import PartstechPanel from './components/PartstechPanel';
 import SignIn from './components/SignIn';
 import './core.css';
 // the Predii logo from resources/ (a wide JPG on white; core.css crops it to the mark)
@@ -36,7 +38,9 @@ export default function CoreAssistantApp() {
 
   const mode = S.mode;
   const sideLabel = mode === 'ro' ? 'Repair order' : 'Shop memory';
-  const pick = m => { setTracing(false); setView('chat'); setDot(false); setMode(m); };
+  const pick = m => { setTracing(false); hidePartstech(); setView('chat'); setDot(false); setMode(m); };
+  const pt = S.pt.open, showPtTab = supplierKey() === 'partstech' || !!S.pt.card;
+  const openPt = () => { setTracing(false); showPartstech(S.pt.card); };
   const showSide = () => { setView('side'); setDot(false); };
 
   if (!S.auth) return <div className="wiq-core"><SignIn logo={PREDII_LOGO} /></div>;
@@ -50,20 +54,22 @@ export default function CoreAssistantApp() {
             <div><b>WrenchIQ Core</b><small>Agentic shop assistant</small></div>
           </div>
           <nav className="modes" role="tablist" aria-label="Mode">
-            <button role="tab" aria-selected={!tracing && mode === 'profile'} onClick={() => pick('profile')}>Shop profile</button>
-            <button role="tab" aria-selected={!tracing && mode === 'ro'} onClick={() => pick('ro')}>Repair order</button>
-            <button role="tab" aria-selected={tracing} onClick={() => setTracing(true)}>Agent trace{S.trace && S.trace.turns.length ? <span className="tr-count mono">{S.trace.turns.length}</span> : null}</button>
+            <button role="tab" aria-selected={!tracing && !pt && mode === 'profile'} onClick={() => pick('profile')}>Shop profile</button>
+            <button role="tab" aria-selected={!tracing && !pt && mode === 'ro'} onClick={() => pick('ro')}>Repair order</button>
+            <button role="tab" aria-selected={tracing && !pt} onClick={() => { hidePartstech(); setTracing(true); }}>Agent trace{S.trace && S.trace.turns.length ? <span className="tr-count mono">{S.trace.turns.length}</span> : null}</button>
+            {showPtTab && <button role="tab" aria-selected={pt} onClick={openPt}>PartsTech</button>}
           </nav>
           <div className="proto"><i>Prototype</i><span>Sample data. Nothing is sent to a shop system.</span></div>
           <span className="predii-mark" role="img" aria-label="Predii"><img src={PREDII_LOGO} alt="" /></span>
         </header>
 
-        {!tracing && <div className="mobtabs">
+        {!tracing && !pt && <div className="mobtabs">
           <button aria-pressed={view === 'chat'} onClick={() => setView('chat')}>Chat</button>
           <button aria-pressed={view === 'side'} className={dot ? 'dot' : ''} onClick={showSide}>{sideLabel}</button>
         </div>}
 
-        <div className={'stage' + (tracing ? ' single' : '')} data-view={view}>
+        <PartstechPanel />
+        <div className={'stage' + (tracing ? ' single' : '')} data-view={view} style={pt ? { display: 'none' } : undefined}>
           {tracing ? <TracePanel /> : mode === 'profile' ? (
             <>
               <ChatPanel key="profile" mode="profile" title="Shop profile" placeholder="Tell me how your shop works, in your own words"

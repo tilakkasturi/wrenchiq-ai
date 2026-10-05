@@ -1,5 +1,5 @@
 {
- "_about": "Click-through demos for the Core repair order agent (Repair order mode). starters: one-click openers on a new repair order, short owner fragments (year, model, mileage, symptom, no full sentences): rewriting them into a proper customer concern is one of the agent's jobs. scenarios: the Demo menu; the first step is the owner's fragment, the steps after it are the advisor's own shorthand, so the model has to decode it. Steps that do not start with a correctly spelled 'add' go to the model; 'total?' is answered by the deterministic rules. laborRate is used for the session only when the shop has not set one.",
+ "_about": "Click-through demos for the Core repair order agent (Repair order mode). starters: one-click openers on a new repair order, short owner fragments (year, model, mileage, symptom, no full sentences): rewriting them into a proper customer concern is one of the agent's jobs. scenarios: the Demo menu; the first step is the owner's fragment, the steps after it are the advisor's own shorthand, so the model has to decode it. Steps that do not start with a correctly spelled 'add' go to the model; 'total?' is answered by the deterministic rules. laborRate is used for the session only when the shop has not set one. Each starter carries a demo VIN (valid check digit, decoded by PartsTech to that year, make and model) so the VIN reaches the parts supplier: PartsTech searches by VIN; NAPA's catalog has no VIN input, so it gets the year, make and model from the text.",
  "laborRate": 150,
  "scenarios": [
   {
@@ -106,35 +106,35 @@
  "starters": [
   {
    "label": "18 Corolla, brakes grind",
-   "text": "18 corolla 61k brakes grind, wheel shakes on hwy"
+   "text": "18 corolla 61k brakes grind, wheel shakes on hwy vin 2T1BURHE3JC012345"
   },
   {
    "label": "16 Camry, overheating",
-   "text": "16 camry 140k overheats in traffic, sweet smell"
+   "text": "16 camry 140k overheats in traffic, sweet smell vin 4T1BF1FK0GU512345"
   },
   {
    "label": "19 RAV4, engine light",
-   "text": "19 rav4 52k engine light on, shaky at stops"
+   "text": "19 rav4 52k engine light on, shaky at stops vin 2T3P1RFV2KW012345"
   },
   {
    "label": "18 Sienna, 60k service",
-   "text": "18 sienna 60k service, what else due?"
+   "text": "18 sienna 60k service, what else due? vin 5TDYZ3DC2JS901691"
   },
   {
    "label": "17 Tacoma, clunk on bumps",
-   "text": "17 tacoma 98k clunk on bumps, front tires wearing inside"
+   "text": "17 tacoma 98k clunk on bumps, front tires wearing inside vin 3TMCZ5AN0HM012345"
   },
   {
    "label": "15 Highlander, no start",
-   "text": "15 highlander 112k no start, just clicks, old battery"
+   "text": "15 highlander 112k no start, just clicks, old battery vin 5TDJKRFH3FS112345"
   },
   {
    "label": "14 Prius, brakes squeal",
-   "text": "14 prius 160k brakes squeal, pedal soft"
+   "text": "14 prius 160k brakes squeal, pedal soft vin JTDKN3DU6E1712345"
   },
   {
    "label": "18 Tundra, A/C warm",
-   "text": "18 tundra 85k ac warm, weak air"
+   "text": "18 tundra 85k ac warm, weak air vin 5TFDY5F19JX712345"
   }
  ]
 }

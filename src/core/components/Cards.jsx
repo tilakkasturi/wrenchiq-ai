@@ -8,7 +8,7 @@ import { talkFor } from '../talkTrack';
 import { talkText, talkState } from '../talkGen';
 import { TalkTag } from './TalkTag';
 import { interpretMaint } from '../maintAdvice';
-import { maintMode, fullSchedule, settingOption } from '../shopSettings';
+import { maintMode, fullSchedule, settingOption, supplierKey } from '../shopSettings';
 import { partPrice, prefetchPartPrices } from '../partPrices';
 import { policy, rankParts, shopPick } from '../partPolicy';
 import { engineSpec, perCylinder } from '../engineCylinders';
@@ -18,6 +18,7 @@ function chipPrice(n, it) {
   const p = partPrice(n);
   if (!p || p.status === 'error') return 'price';
   if (p.status === 'loading') return 'checking…';
+  if (p.status === 'partstech') return 'pick in PartsTech';
   if (p.status !== 'ok') return 'no NAPA price';
   const a = p.pick.availability;
   if (perCylinder(n, it)) {
@@ -68,7 +69,7 @@ export function RepairsCard({ card }) {
                 <span>Parts:</span>
                 {it.parts.map(n => (
                   <button key={n} type="button" className="pchip" disabled={!vehicleOk()}
-                    title={vehicleOk() ? 'Shop pick: ' + policy().label.toLowerCase() + '. NAPA list price; availability is sample data. Click for all options.' : 'Enter year, make and model first'}
+                    title={!vehicleOk() ? 'Enter year, make and model first' : supplierKey() === 'partstech' ? 'Open PartsTech for this part and pick it there.' : 'Shop pick: ' + policy().label.toLowerCase() + '. NAPA list price; availability is sample data. Click for all options.'}
                     onClick={() => searchPart(n)}>{n} · {vehicleOk() ? chipPrice(n, it) : 'price'}</button>
                 ))}
               </div>

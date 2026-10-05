@@ -12,7 +12,7 @@ import {
   partOn, qtyFromName, combinationsFor, partQty, rankingDetail,
 } from './logic';
 import { checkAdd, orphanedCombos, followOnsFor } from './laborRules';
-import { searchNapa, getNapaConfig } from './partsApi';
+import { searchNapa, getNapaConfig, startPartstech, getPartstechSession, getPartstechConfig } from './partsApi';
 import { shopPick } from './partPolicy';
 import { engineSpec } from './engineCylinders';
 import { runRoAgent } from './roAgent';
@@ -22,7 +22,7 @@ import { profileContext, offlineAnswer, exampleQuestions } from './howItWorks';
 import { agentStep } from './agentApi';
 import { interpretMaint } from './maintAdvice';
 import { flow, resetFlow, nextStep, applyAnswers, recordPicked, MAX_ROUNDS, buildRecs } from './recommend';
-import { maintMode, settingOption, orderAddOns } from './shopSettings';
+import { maintMode, settingOption, orderAddOns, setSetting, supplierKey, supplierName, supplierChosen, SETTINGMAP } from './shopSettings';
 import { buildPackage, packageLevels, packageLevel, prefetchPackageParts } from './packages';
 import { partsFor, pricedPartNames } from './maintParts';
 import { onResourceChange } from './liveResource';
@@ -74,14 +74,27 @@ function profileSummary() {
   return 'Here is your shop profile.\n' + lines.map(l => '- ' + l).join('\n');
 }
 
-// "show me the NAPA config", "how are we connected to NAPA", "napa settings": the real configuration
-const NAPA_CONFIG_RX = /\bnapa\b/i, CONFIG_WORDS_RX = /\b(config\w*|settings?|set ?up|connect\w*|catalog|credentials?|account|how)\b/i;
+// "show me the NAPA config", "how are we connected to PartsTech", "parts supplier settings": the real
+// configuration of the named supplier, or of the shop's supplier when none is named
+const CONFIG_WORDS_RX = /\b(config\w*|settings?|set ?up|connect\w*|catalog|credentials?|account|how)\b/i;
+const SUPPLIER_CONFIG_RX = /\b(config\w*|settings?|set ?up|connect\w*|credentials?)\b/i, SUPPLIER_WORD_RX = /\b(supplier|aggregator|parts)\b/i;
+const CHOOSE_RX = /\b(use|using|switch|change|go with|set|pick|choose|prefer|want|move to)\b/i;
+/** 'napa' | 'partstech' when the text names exactly one supplier, else null. */
+function supplierIn(t) {
+  const pt = /\bparts\s?tech\b/i.test(t), napa = /\bnapa\b/i.test(t);
+  return pt && !napa ? 'partstech' : napa && !pt ? 'napa' : null;
+}
 
 handlers.profile = async function (text) {
   const t = text.trim();
   if (t === '__goro__') { setMode('ro'); return; }
   if (!t) return;
-  if (NAPA_CONFIG_RX.test(t) && CONFIG_WORDS_RX.test(t)) return showNapaConfig(Cp);
+  const named = supplierIn(t), awaitingSupplier = S.pro.awaiting === 'parts.supplier';
+  if (named && CONFIG_WORDS_RX.test(t) && !CHOOSE_RX.test(t)) return showSupplierConfig(Cp, named);
+  if (!named && SUPPLIER_CONFIG_RX.test(t) && SUPPLIER_WORD_RX.test(t)) return showSupplierConfig(Cp, supplierKey());
+  // "PartsTech", "use NAPA", "switch to PartsTech": the parts supplier for repair orders
+  if (named && (awaitingSupplier || CHOOSE_RX.test(t) || t.split(/\s+/).length <= 2)) { S.pro.awaiting = null; return chooseSupplier(named); }
+  if (awaitingSupplier && /\b(both|either|not sure|which)\b/i.test(t)) return askSupplier();
   const saved = [];
   // the answer to "do you mean A or B?" counts for that preference
   const q = S.pro.awaiting ? PQMAP[S.pro.awaiting] : null;
@@ -147,7 +160,32 @@ async function startProfile() {
   await Cp.agent(n
     ? 'Welcome back. ' + n + ' thing' + (n > 1 ? 's are' : ' is') + ' saved in your shop profile. Tell me anything else about how you run the shop and I will keep it.'
     : 'Tell me anything about how you run the shop, in your own words: your labor rate, parts markup, how you talk to customers, work you never take. I will keep it in shop memory and use it on repair orders. You can also ask me how I work, like how I use the labor guide or scheduled maintenance.');
+  if (!supplierChosen()) return askSupplier();
+  await Cp.agent('Your parts supplier is ' + supplierName() + '.', settingOption('parts.supplier').say);
   Cp.chips(exampleQuestions().slice(0, 3).map(x => ({ t: x, text: x })).concat(SHOP.examples.slice(0, 2).map(x => ({ t: x, text: x })), [{ t: 'Go to Repair order', text: '__goro__', silent: true }]));
+}
+
+/** Which parts supplier the repair order uses. Asked once; the answer is kept in shop memory. */
+async function askSupplier() {
+  S.pro.awaiting = 'parts.supplier';
+  const o = SETTINGMAP['parts.supplier'].options;
+  await Cp.agent('Which parts supplier should I use on repair orders: NAPA or PartsTech?',
+    o.map(x => x.label + ': ' + x.say).join(' '));
+  Cp.chips(o.map(x => ({ t: 'Use ' + x.label, text: 'use ' + x.label })).concat([{ t: 'Go to Repair order', text: '__goro__', silent: true }]));
+}
+
+async function chooseSupplier(key) {
+  const before = supplierChosen() ? supplierKey() : null;
+  setSetting('parts.supplier', key);
+  Cp.event('Saved to shop memory · parts.supplier = ' + supplierName());
+  trace('rule', 'Parts supplier', supplierName(), { setting: 'parts.supplier', value: key, previous: before, say: settingOption('parts.supplier').say });
+  const other = SETTINGMAP['parts.supplier'].options.find(o => o.value !== key);
+  await Cp.agent((before === key ? 'Your parts supplier is already ' : 'Saved: your parts supplier is now ') + supplierName() + '. Repair orders use it from now on. ' + settingOption('parts.supplier').say);
+  Cp.chips([
+    { t: 'Show ' + supplierName() + ' config', text: 'show ' + supplierName() + ' config' },
+    { t: 'Switch to ' + other.label, text: 'use ' + other.label },
+    { t: 'Go to Repair order', text: '__goro__', silent: true },
+  ]);
 }
 
 /* ================= repair order mode ================= */
@@ -411,8 +449,15 @@ async function autoPriceParts(it, quiet = false) {
   const names = pricedPartNames(it);
   if (!names.length || R.autoPriced.has(it.id)) return { added: [], notPriced: [] };
   if (!vehicleOk()) {
-    await C.agent('Once I have the year, make and model I can price the parts for ' + it.name.toLowerCase() + ' from NAPA.');
+    await C.agent('Once I have the year, make and model I can price the parts for ' + it.name.toLowerCase() + ' from ' + supplierName() + '.');
     return;
+  }
+  if (supplierKey() === 'partstech') {
+    // punch-out: the advisor picks in PartsTech, so nothing is opened for lines added in the background
+    if (quiet) return { added: [], notPriced: [], partstech: names };
+    R.autoPriced.add(it.id);
+    await partstechParts(C, names, it);
+    return { added: [], notPriced: [], partstech: names };
   }
   R.autoPriced.add(it.id);
   const fit = vehicleLine();
@@ -539,6 +584,7 @@ async function runParts(part) {
     return;
   }
   R.parts.lastQ = part;
+  if (supplierKey() === 'partstech') return partstechParts(C, [part], null);
   await C.trace(['Read vehicle fitment', 'Look up at NAPA', 'Match by part name', 'Read prices']);
   const res = await searchNapa({ year: R.year, make: R.make, model: R.model, part });
   if (!res.ok) {
@@ -559,8 +605,73 @@ async function runParts(part) {
 }
 export function searchPart(part) { Cr.send('find ' + part); }
 
+/* ----- parts from PartsTech (punch-out): the advisor picks in PartsTech, the picks come back here ----- */
+const bare = n => n.replace(/\s*\(.*?\)\s*/g, ' ').trim();
+
+/** Open one PartsTech session per part name and post a card for each. it: the repair line, or null. */
+export async function partstechParts(C, names, it) {
+  const R = S.ro, fit = vehicleLine();
+  const vin = R.vin && R.vin.length === 17 ? R.vin : undefined;
+  await C.trace(['Read vehicle fitment', 'Open PartsTech for ' + names.length + ' part' + (names.length > 1 ? 's' : ''), 'Wait for the advisor to pick']);
+  const opened = await Promise.all(names.map(n => startPartstech({ vin, year: R.year, make: R.make, model: R.model, part: bare(n) }).then(res => ({ n, res }))));
+  const ok = opened.filter(o => o.res.ok), bad = opened.filter(o => !o.res.ok);
+  trace('rule', 'PartsTech · ' + names.map(bare).join(', '), ok.length + ' session' + (ok.length === 1 ? '' : 's') + ' opened' + (bad.length ? ', ' + bad.length + ' failed' : ''),
+    { rule: 'Shop parts supplier is PartsTech (Shop profile): punch-out, the advisor picks parts in PartsTech and WrenchIQ reads the cart back. Nothing goes on the RO until the advisor adds it.',
+      vehicle: vin ? 'VIN ' + vin : fit, for_line: it ? it.name : null,
+      sessions: opened.map(o => (o.res.ok ? { part: o.n, ref: o.res.ref, search: o.res.query && o.res.query.searchParams } : { part: o.n, error: o.res.message })) });
+  if (!ok.length) { await C.agent('Could not open PartsTech: ' + bad[0].res.message + ' Nothing was added for ' + (it ? it.name.toLowerCase() : bare(names[0]).toLowerCase()) + '.'); return; }
+  await C.agent((it ? 'Parts for ' + it.name.toLowerCase() + ' come from PartsTech, your parts supplier. ' : '')
+    + 'Open PartsTech for the ' + fit + (vin ? ' (by VIN)' : '') + ', compare suppliers and add the parts you want to the PartsTech cart. When you come back, they show here with your cost and you add them to the RO.');
+  ok.forEach(o => { const q = partQty(o.n, it); C.card({ type: 'partstech', ref: o.res.ref, redirectUrl: o.res.redirectUrl, part: o.n, qty: q.qty, perCyl: q.perCyl, fit, forLine: it ? it.id : null, rows: [], status: 'open' }); });
+  if (bad.length) await C.agent('Could not open PartsTech for ' + bad.map(b => bare(b.n).toLowerCase()).join(', ') + ': ' + bad[0].res.message);
+}
+
+/** Show a PartsTech session in the PartsTech tab (never in place of WrenchIQ). */
+export function showPartstech(card) { S.pt = { card, open: true }; notify(); }
+/** Leave the PartsTech tab; the frame stays loaded so going back keeps the advisor's place. */
+export function hidePartstech() { if (S.pt.open) { S.pt.open = false; notify(); } }
+/** Done in PartsTech: read the cart for the session and go back to the repair order. */
+export async function bringPartstechBack() {
+  const card = S.pt.card;
+  S.pt.open = false; S.mode = 'ro'; notify();
+  if (card) await loadPartstechCard(card, true);
+}
+
+/** A PartsTech cart row as an RO part row (addPart): price is the shop's cost from the picked supplier. */
+function partstechRow(p) {
+  return {
+    supplier: 'PartsTech', source: p.supplier, lineCode: p.brand, partNumber: p.partNumber, brand: p.brand,
+    description: p.description + (p.position ? ' (' + p.position + ')' : ''), listPrice: p.cost, list: p.listPrice, core: p.core,
+    cartQty: p.quantity, orderItemId: p.orderItemId,
+    availability: { label: (p.inStock ? 'In stock' : 'Out of stock') + ' · ' + p.supplier + (p.store ? ', ' + p.store : ''), short: p.inStock ? p.supplier + ' in stock' : p.supplier + ' out of stock' },
+  };
+}
+
+/** Read what the advisor picked in PartsTech for this card (refresh: ask PartsTech, not the saved copy). */
+export async function loadPartstechCard(card, refresh = true) {
+  card.status = 'loading'; notify();
+  const r = await getPartstechSession(card.ref, refresh);
+  if (!r.ok) { card.status = 'error'; card.error = r.message; notify(); return; }
+  card.rows = r.parts.map(partstechRow);
+  card.status = r.status; card.error = null; card.at = r.cartUpdatedAt;
+  if (card.rows.length) {
+    Cr.event('PartsTech · ' + card.rows.length + ' part' + (card.rows.length > 1 ? 's' : '') + ' picked for ' + bare(card.part).toLowerCase());
+    trace('rule', 'PartsTech cart · ' + bare(card.part), card.rows.map(x => x.lineCode + ' ' + x.partNumber + ' · ' + money(x.listPrice)).join('; '),
+      { ref: card.ref, status: r.status, parts: r.parts.map(p => ({ part_number: p.brand + ' ' + p.partNumber, supplier: p.supplier, store: p.store, qty: p.quantity, cost: p.cost, list: p.listPrice, in_stock: p.inStock })) });
+  }
+  notify();
+}
+
+/** Put a part the advisor picked in PartsTech on the RO. Quantity: the RO's need if known, else the PartsTech cart quantity. */
+export function addPartstechPart(card, row) {
+  const sp = card.perCyl ? engineSpec() : null;
+  const qty = (card.perCyl ? sp.cylinders : card.qty) || row.cartQty || 1;
+  addPart(row, card.part, qty, card.fit, card.forLine, !!card.perCyl);
+}
+
 function resetRO() {
   S.ro = { ...newRO(), started: true };
+  S.pt = { card: null, open: false }; // a new job has no PartsTech session
   Cr.clear();
 }
 async function startRO() {
@@ -733,7 +844,7 @@ function takeOff(id, C) {
   if (!R.accepted.delete(id)) return;
   C.event('Removed from RO · ' + ITEM(id).name);
   // the parts picked for this line go with it; a re-add picks them again
-  R.parts.added.filter(x => x.forLine === id).forEach(x => C.event('Removed from RO · ' + x.label + ' · NAPA ' + x.partNumber + ' · part for ' + ITEM(id).name));
+  R.parts.added.filter(x => x.forLine === id).forEach(x => C.event('Removed from RO · ' + x.label + ' · ' + (x.supplier || 'NAPA') + ' ' + x.partNumber + ' · part for ' + ITEM(id).name));
   R.parts.added = R.parts.added.filter(x => x.forLine !== id);
   R.needCyl = R.needCyl.filter(x => x.forLine !== id);
   R.autoPriced.delete(id);
@@ -752,7 +863,7 @@ function placeMaint(ms, ids = ms.ids) {
 const maintSaid = (r, ms) => 'Added ' + r.added.length + ' item' + (r.added.length === 1 ? '' : 's') + ' due at the ' + ms.at.toLocaleString() + ' mi service.'
   + (r.skipped.length ? ' Skipped ' + r.skipped.map(x => ITEM(x.id).name.toLowerCase() + ' (' + x.r.reason.replace(/\.$/, '') + ')').join('; ') + '.' : '');
 
-useLineOps({ place: placeLine, after: afterPlace, cylinders: resolveCylinderParts });
+useLineOps({ place: placeLine, after: afterPlace, cylinders: resolveCylinderParts, partstech: partstechParts });
 // a file under resources/ changed and was reloaded: a debugging detail, so it goes to the Agent trace, not the chat
 onResourceChange('harness.log', name => trace('note', 'Reloaded ' + name, 'from resources/ (dev server hot update)'));
 
@@ -768,13 +879,29 @@ export function restoreItem(id) { S.ro.dismissed.delete(id); notify(); }
 /** Whether the shop's severity level has anything to package for this order. */
 const hasPackage = () => buildPackage(packageLevel()).items.length > 0;
 
+/** The configuration of a parts supplier: 'napa' or 'partstech'. */
+const showSupplierConfig = (C, key) => (key === 'partstech' ? showPartstechConfig(C) : showNapaConfig(C));
+
+/** Shop profile: the PartsTech configuration as the server uses it (keys never sent to the browser). */
+async function showPartstechConfig(C) {
+  await C.trace(['Read PartsTech connection settings', 'Read shop parts rules']);
+  const r = await getPartstechConfig();
+  if (!r.ok) { await C.agent(r.message); return; }
+  const c = r.config;
+  trace('rule', 'PartsTech configuration', c.connection.apiUrl.value + ' · partner ' + (c.connection.partnerId.value || 'not set') + ' · callbacks ' + (c.callbacks.enabled ? 'on' : 'off'), { config: c });
+  await C.agent('Here is how WrenchIQ connects to PartsTech for this shop: the API and account it signs in with, how a part search opens in PartsTech, how the parts the advisor picks come back, and your shop\'s parts rules. Keys are never shown.'
+    + (supplierKey() === 'partstech' ? '' : ' PartsTech is not your parts supplier right now; repair orders use ' + supplierName() + '.'));
+  C.card({ type: 'partstechConfig', config: c });
+}
+
 /** Shop profile: the NAPA configuration as the server uses it (secrets never sent to the browser). */
 async function showNapaConfig(C) {
   await C.trace(['Read NAPA connection settings', 'Read shop parts rules']);
   const r = await getNapaConfig();
   if (!r.ok) { await C.agent(r.message); return; }
   trace('rule', 'NAPA configuration', r.config.connection.catalogApiUrl.value + ' · DC ' + r.config.connection.dcId.value, { config: { ...r.config, terms: r.config.terms.length + ' rules' } });
-  await C.agent('Here is how WrenchIQ connects to NAPA for this shop: the catalog endpoint and account IDs it sends, how a part is looked up, how prices and availability are read, and your shop\'s parts rules. Store credentials are never shown.');
+  await C.agent('Here is how WrenchIQ connects to NAPA for this shop: the catalog endpoint and account IDs it sends, how a part is looked up, how prices and availability are read, and your shop\'s parts rules. Store credentials are never shown.'
+    + (supplierKey() === 'napa' ? '' : ' NAPA is not your parts supplier right now; repair orders use ' + supplierName() + '.'));
   C.card({ type: 'napaConfig', config: r.config });
 }
 
@@ -860,21 +987,22 @@ export function addManual(name, hours) {
 export function addPart(row, label, qty, fit, forLine, perCyl = false) {
   const key = row.lineCode + '|' + row.partNumber;
   if (partOn(key)) return;
-  S.ro.parts.added.push({ key, label, description: row.description, lineCode: row.lineCode, partNumber: row.partNumber, brand: row.brand, quality: row.quality, each: row.listPrice, qty, fit, forLine, perCyl, availability: row.availability });
-  Cr.event('Added to RO · ' + label + ' · NAPA ' + row.lineCode + ' ' + row.partNumber + ' · ' + money(row.listPrice * qty) + (row.availability ? ' · ' + row.availability.short : ''));
+  const supplier = row.supplier || 'NAPA';
+  S.ro.parts.added.push({ key, label, description: row.description, lineCode: row.lineCode, partNumber: row.partNumber, brand: row.brand, quality: row.quality, each: row.listPrice, qty, fit, forLine, perCyl, availability: row.availability, supplier, source: row.source || null, list: row.list ?? null });
+  Cr.event('Added to RO · ' + label + ' · ' + supplier + (row.source ? ' (' + row.source + ')' : '') + ' ' + row.lineCode + ' ' + row.partNumber + ' · ' + money(row.listPrice * qty) + (row.availability ? ' · ' + row.availability.short : ''));
   notify();
 }
-/** Put another NAPA option on the RO in place of the part already there for the same need. */
+/** Put another option on the RO in place of the part already there for the same need. */
 export function swapPart(oldKey, row, label, qty, fit) {
   const R = S.ro, old = R.parts.added.find(x => x.key === oldKey);
   R.parts.added = R.parts.added.filter(x => x.key !== oldKey);
-  if (old) Cr.event('Removed from RO · ' + old.label + ' · NAPA ' + old.partNumber + ' · swapped');
+  if (old) Cr.event('Removed from RO · ' + old.label + ' · ' + (old.supplier || 'NAPA') + ' ' + old.partNumber + ' · swapped');
   addPart(row, label, qty, fit, old && old.forLine, !!(old && old.perCyl));
 }
 export function removePart(key) {
   const x = S.ro.parts.added.find(y => y.key === key);
   S.ro.parts.added = S.ro.parts.added.filter(y => y.key !== key);
-  if (x) Cr.event('Removed from RO · ' + x.label + ' · NAPA ' + x.partNumber);
+  if (x) Cr.event('Removed from RO · ' + x.label + ' · ' + (x.supplier || 'NAPA') + ' ' + x.partNumber);
   notify();
 }
 export function setPartQty(key, n) {

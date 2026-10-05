@@ -73,7 +73,7 @@ export function PackageCard() {
                   {i.parts.length > 0 && (
                     <div className="small pkg-parts">Parts: {i.parts.map(p => (
                       <span key={p.name}>{p.name}{' '}
-                        <span className="mono">{p.need === 'diesel' ? 'not on a diesel' : p.each === null ? (p.status === 'loading' ? 'pricing…' : p.status === 'none' ? 'no NAPA price' : p.status === 'manual' ? 'add by hand' : 'no price yet') : (p.qty ? p.qty + ' × ' : '? × ') + money(p.each)}</span>
+                        <span className="mono">{p.need === 'diesel' ? 'not on a diesel' : p.each === null ? (p.status === 'loading' ? 'pricing…' : p.status === 'none' ? 'no NAPA price' : p.status === 'partstech' ? 'pick in PartsTech' : p.status === 'manual' ? 'add by hand' : 'no price yet') : (p.qty ? p.qty + ' × ' : '? × ') + money(p.each)}</span>
                         {p.availability ? ' · ' + p.availability : ''}</span>
                     )).reduce((a, b) => [a, '; ', b])}</div>
                   )}

@@ -27,6 +27,9 @@ export const S = {
   pro: { awaiting: null, started: false },
   ro: newRO(),
   chats: { profile: newChat(), ro: newChat() },
+  // PartsTech tab: the session shown there (a 'partstech' chat card) and whether the tab is showing.
+  // PartsTech lives in its own tab, in a frame that stays loaded while other tabs are in front.
+  pt: { card: null, open: false },
 };
 
 const listeners = new Set();

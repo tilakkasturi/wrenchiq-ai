@@ -47,3 +47,21 @@ Severity low: everything recommended
 
 ## package.severity.low.say
 Package every recommendation: the high and medium items plus comfort maintenance and "only if needed" or optional add-on labor. The largest total.
+
+## parts.supplier.label
+Parts supplier
+
+## parts.supplier.why
+Where I look up parts for the repair order. Asked once in Shop profile and kept in shop memory.
+
+## parts.supplier.napa.label
+NAPA
+
+## parts.supplier.napa.say
+Look up parts in the NAPA catalog for the vehicle on the repair order and put the shop pick on the RO at NAPA list price, availability first, then lowest price.
+
+## parts.supplier.partstech.label
+PartsTech
+
+## parts.supplier.partstech.say
+Open PartsTech for the vehicle on the repair order so the advisor can compare suppliers there and pick parts; the parts they pick come back to the RO at the shop's cost from that supplier. Nothing is added to the RO until the advisor picks it.

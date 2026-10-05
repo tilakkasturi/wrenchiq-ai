@@ -2,7 +2,7 @@ import { useCore, S } from '../state';
 import { FIXED, PQ, SHOP } from '../data';
 import { forgetFact, resetProfile } from '../harness';
 import { useFlash } from './useFlash';
-import { SETTINGS, setting, setSetting, isDefault } from '../shopSettings';
+import { SETTINGS, SUPPLIER_SETTING, setting, setSetting, isDefault } from '../shopSettings';
 
 /** A shop instruction with its options; the chosen one is what the assistant follows. */
 function Setting({ s }) {
@@ -58,6 +58,8 @@ export default function MemoryPanel() {
         {FIXED.map(f => <Row key={f.key} k={f.key} label={f.label} f={S.profile[f.key] || { display: f.value }} fixed />)}
         {mine.map(m => <Row key={m.k} k={m.k} label={m.label} f={S.profile[m.k]} />)}
       </ul>
+      <div className="label" style={{ margin: '14px 0 6px' }}>Parts supplier</div>
+      <ul className="mem settings"><Setting s={SUPPLIER_SETTING} /></ul>
       <div className="label" style={{ margin: '14px 0 6px' }}>How I present work</div>
       <ul className="mem settings">{SETTINGS.map(s => <Setting key={s.key} s={s} />)}</ul>
       {!mine.length && <p className="small muted" style={{ marginTop: 8 }}>Nothing else yet. Tell me about your shop in the chat, like your labor rate or work you never take.</p>}

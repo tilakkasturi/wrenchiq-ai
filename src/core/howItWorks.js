@@ -6,7 +6,7 @@ import HOW from '../../resources/shop/how_it_works.json';
 import { liveStore, refillObject, resourceLoaded } from './liveResource';
 import { S } from './state';
 import { SHOP, FIXED, PQ } from './data';
-import { SETTINGS, setting, settingOption, isDefault } from './shopSettings';
+import { SETTINGS, setting, settingOption, isDefault, supplierKey, supplierName, supplierChosen } from './shopSettings';
 import { rate } from './logic';
 
 export const HOW_IT_WORKS = refillObject(liveStore('howItWorks', () => ({})), HOW);
@@ -17,23 +17,27 @@ const lowerFirst = s => s.charAt(0).toLowerCase() + s.slice(1);
 export function currentSettings() {
   const fixed = FIXED.map(f => ({ label: f.label, value: (S.profile[f.key] && S.profile[f.key].display) || f.value }));
   const parts = SHOP.partsPolicy ? [{ label: 'Parts choice', value: SHOP.partsPolicy.label, say: SHOP.partsPolicy.say }] : [];
+  const supplier = [{ label: 'Parts supplier', value: supplierName() + (supplierChosen() ? '' : ' (default)'), say: settingOption('parts.supplier').say }];
   const pres = SETTINGS.map(s => ({ label: s.label, value: settingOption(s.key).label + (isDefault(s.key) ? ' (default)' : ''), say: settingOption(s.key).say }));
   const facts = PQ.filter(q => S.profile[q.key]).map(q => ({ label: q.label, value: S.profile[q.key].display }))
     .concat(Object.keys(S.profile).filter(k => k.startsWith('note.')).sort().map(k => ({ label: 'Note', value: S.profile[k].display })));
-  return { settings: fixed.concat(parts, pres), facts };
+  return { settings: fixed.concat(supplier, parts, pres), facts };
 }
 
 function vars() {
   const lr = rate();
-  return {
+  const v = {
     shop: SHOP.name + ', ' + SHOP.address,
-    supplier: SHOP.partsSupplier,
+    supplier: supplierName(),
     partsRule: SHOP.partsPolicy ? SHOP.partsPolicy.say : '',
     partsWhy: SHOP.partsPolicy ? SHOP.partsPolicy.why : '',
     maintSetting: '"' + settingOption('maint.presentation').label + '": ' + lowerFirst(settingOption('maint.presentation').say),
     laborSetting: '"' + settingOption('labor.presentation').label + '": ' + lowerFirst(settingOption('labor.presentation').say),
     laborRate: lr ? '$' + lr + ' an hour' : 'not set yet; tell me, for example "labor rate is 150"',
   };
+  // how parts work depends on the supplier, and its text uses the placeholders above
+  v.partsHow = fill((HOW_IT_WORKS.partsHow || {})[supplierKey()] || '', v);
+  return v;
 }
 const fill = (text, v) => String(text).replace(/\{\{(\w+)\}\}/g, (m, k) => (v[k] !== undefined ? v[k] : m));
 
@@ -54,7 +58,7 @@ export function knowledge() {
 /** What the Shop profile agent gets with each question. */
 export function profileContext() {
   const { settings, facts } = currentSettings();
-  return { mode: 'profile', shop: SHOP.name + ', ' + SHOP.address, supplier: SHOP.partsSupplier, settings, facts, knowledge: knowledge() };
+  return { mode: 'profile', shop: SHOP.name + ', ' + SHOP.address, supplier: supplierName(), settings, facts, knowledge: knowledge() };
 }
 
 /** The answer when the model is not used: the topics the question matches (at most two), else the overview. */

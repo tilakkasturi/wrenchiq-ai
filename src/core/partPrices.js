@@ -5,6 +5,7 @@
 import { S, notify } from './state';
 import { searchNapa } from './partsApi';
 import { shopPick } from './partPolicy';
+import { supplierKey } from './shopSettings';
 
 const cache = new Map(); // key -> { status: 'loading' | 'ok' | 'none' | 'error', pick?: row }
 
@@ -12,6 +13,7 @@ const keyFor = (R, part) => [R.year, R.make, R.model, part].join('|').toLowerCas
 
 /** What is known about a part's price on the current vehicle, or undefined if never looked up. */
 export function partPrice(part) {
+  if (supplierKey() === 'partstech') return { status: 'partstech' };
   return cache.get(keyFor(S.ro, part));
 }
 
@@ -21,6 +23,8 @@ export function prefetchPartPrices(parts) {
   parts.forEach(part => {
     const k = keyFor(R, part);
     if (cache.has(k)) return;
+    // PartsTech is punch-out: there is no price until the advisor picks the part in PartsTech
+    if (supplierKey() === 'partstech') return;
     cache.set(k, { status: 'loading' });
     searchNapa({ year, make, model, part }).then(res => {
       const pick = res.ok ? shopPick(res.parts) : null;

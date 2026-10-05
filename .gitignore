@@ -75,5 +75,6 @@ ro-ner-demo/ner_output/*
 # Python virtualenv for ro-ner-demo (local install, not source)
 ro-ner-demo/.venv/
 
-# PartsTech API docs + dev credentials (plaintext keys) - keep local
-partstech/
+# PartsTech API docs + dev credentials (plaintext keys) - keep local; only the client script is tracked
+partstech/*
+!partstech/searchParts.js

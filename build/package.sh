@@ -111,6 +111,7 @@ tar -czf "${BUILD_HOME}/${MODULE}.tar.gz" \
   dist \
   server \
   napa/searchParts.js \
+  partstech/searchParts.js \
   src/data \
   ro-ner-demo \
   package.json \

@@ -1,7 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCore, S } from '../state';
 import { PQMAP, FIXEDMAP } from '../data';
-import { settingOption } from '../shopSettings';
+import { settingOption, supplierKey, supplierName } from '../shopSettings';
+
+/** What the parts total is made of: NAPA list price, PartsTech cost (the picked supplier), or both. */
+function partsBasis() {
+  const sup = new Set(S.ro.parts.added.map(x => x.supplier || 'NAPA'));
+  return [sup.has('NAPA') && 'NAPA list price', sup.has('PartsTech') && 'PartsTech cost'].filter(Boolean).join(' + ');
+}
 import { ITEM, hrs, rate, miles, vehicleLine, vehicleOk, concern, money, roSummary, partsTotals, orderTotals } from '../logic';
 import { saveVehicle, saveConcern, removeItem, lineWhy, addManual, changeHours, searchPart, removePart, setPartQty } from '../harness';
 import { useFlash } from './useFlash';
@@ -209,7 +215,7 @@ function PartsSection() {
   const sig = R.parts.added.map(x => x.key + ':' + x.qty).join('|');
   return (
     <Section sig={sig}>
-      <div className="head"><span className="label">Parts</span><span className="tag adv">NAPA LIST PRICE</span></div>
+      <div className="head"><span className="label">Parts</span><span className="tag adv">{supplierKey() === 'partstech' ? 'PARTSTECH · YOUR COST' : 'NAPA LIST PRICE'}</span></div>
       <p className="small">Fitment: {vehicleOk() ? fl : <span className="muted">enter year, make and model first</span>}</p>
       <div className="manual">
         <input value={q} onChange={e => setQ(e.target.value)} placeholder="Part name, like front brake pads" aria-label="Part name"
@@ -233,7 +239,7 @@ function PartsSection() {
                   <tr key={x.key}>
                     <td>
                       {x.description}<br />
-                      <span className="srcbadge">NAPA</span> <span className="mono small muted">{x.lineCode} {x.partNumber}</span>
+                      <span className="srcbadge">{x.supplier || 'NAPA'}</span> <span className="mono small muted">{x.lineCode} {x.partNumber}{x.source ? ' · ' + x.source : ''}</span>
                       {x.fit !== fl && <> <span className="tag med">checked for {x.fit}</span></>}
                       <br /><button className="btn ghost sm" onClick={() => removePart(x.key)}>Remove</button>
                     </td>
@@ -267,7 +273,7 @@ function TotalCard() {
         <span className="mono">{o.labor !== null ? money(o.labor) : o.laborMissing ? <span className="small muted">needs rate</span> : money(0)}</span>
       </div>
       <div className="trow">
-        <span>Parts <span className="muted small">{o.partsCount ? o.partsCount + ' · NAPA list price' : ''}</span></span>
+        <span>Parts <span className="muted small">{o.partsCount ? o.partsCount + ' · ' + partsBasis() : ''}</span></span>
         <span className="mono">{money(o.parts)}</span>
       </div>
       <div className="trow grand">
@@ -302,7 +308,8 @@ export default function RepairOrderPanel() {
   useCore();
   const mem = [];
   if (rate()) mem.push('Labor rate ' + S.profile['shop.labor_rate'].display);
-  ['parts.supplier', 'parts.policy', 'comms.tone'].forEach(k => { if (S.profile[k]) mem.push((FIXEDMAP[k] || PQMAP[k]).label + ': ' + S.profile[k].display); });
+  mem.push('Parts supplier: ' + supplierName());
+  ['parts.policy', 'comms.tone'].forEach(k => { if (S.profile[k]) mem.push((FIXEDMAP[k] || PQMAP[k]).label + ': ' + S.profile[k].display); });
   mem.push('Scheduled maintenance: ' + settingOption('maint.presentation').label);
   return (
     <aside className="panel side" aria-label="Repair order">

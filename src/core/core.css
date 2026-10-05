@@ -342,3 +342,7 @@
 .wiq-core .pkg-detail>summary::-webkit-details-marker{display:none}
 .wiq-core .pkg-detail>summary::before{content:"▸";color:var(--muted)}
 .wiq-core .pkg-detail[open]>summary::before{content:"▾"}
+/* PartsTech tab: PartsTech's screens in a frame filling the stage */
+.wiq-core .pt-panel{display:flex;flex-direction:column;height:calc(100vh - 120px);min-height:520px;overflow:hidden}
+.wiq-core .pt-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--line)}
+.wiq-core .pt-frame{flex:1;width:100%;border:0;background:#fff}
