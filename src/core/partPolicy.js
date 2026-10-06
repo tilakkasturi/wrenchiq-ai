@@ -10,6 +10,22 @@ export const policy = () => SHOP.partsPolicy || DEFAULT;
 const eta = r => (r.availability && Number.isFinite(r.availability.etaHours) ? r.availability.etaHours : Infinity);
 const price = r => (typeof r.listPrice === 'number' ? r.listPrice : Infinity);
 
+/**
+ * Where PartsTech should open for a session: its search page on the shop's first supplier
+ * (selected_distributor: the session's preferredSupplier, from the shop's supplier order) with the
+ * shop's rule as PartsTech's own filter (availability first -> "Fastest Delivery"). null when neither
+ * applies or the session has no search page. Loaded after the session link signs in.
+ */
+export function partstechFilteredUrl(card, rule = policy().rule) {
+  if (!card || !card.searchUrl) return null;
+  const fastest = rule === 'availability_then_price', sup = card.preferredSupplier;
+  if (!fastest && !sup) return null;
+  const u = new URL(card.searchUrl);
+  if (fastest) u.searchParams.append('availability[]', 'Fastest Delivery');
+  if (sup) u.searchParams.set('selected_distributor', String(sup.credentialId));
+  return u.href;
+}
+
 /** Rows in the order the shop would choose them. Does not change the input. */
 export function rankParts(rows, rule = policy().rule) {
   const byPrice = (a, b) => price(a) - price(b), byEta = (a, b) => eta(a) - eta(b);

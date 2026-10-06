@@ -1,7 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCore, S } from '../state';
 import { PQMAP, FIXEDMAP } from '../data';
-import { settingOption, supplierKey, supplierName } from '../shopSettings';
+import { settingOption, supplierKey, supplierName, supplierOrder } from '../shopSettings';
+
+/** PartsTech: send every part on the order in one PartsTech search, opened in the PartsTech tab. */
+function SendToPartstech() {
+  const [busy, setBusy] = useState(false), [err, setErr] = useState('');
+  const n = roPartList().length;
+  const send = async () => {
+    setBusy(true); setErr('');
+    try { const r = await sendPartsToPartstech(); if (!r.ok) setErr(r.message); } finally { setBusy(false); }
+  };
+  return (
+    <div className="pchips">
+      <button type="button" className="btn sm primary" disabled={busy || !vehicleOk() || !n}
+        title="Opens PartsTech in its own tab with every part on this order; what you send back from PartsTech goes on the RO"
+        onClick={send}>{busy ? 'Opening PartsTech…' : 'Send ' + (n || '') + ' part' + (n === 1 ? '' : 's') + ' to PartsTech'}</button>
+      {err && <span className="small" role="alert" style={{ color: 'var(--danger, #b42318)' }}>{err}</span>}
+    </div>
+  );
+}
 
 /** What the parts total is made of: NAPA list price, PartsTech cost (the picked supplier), or both. */
 function partsBasis() {
@@ -9,7 +27,7 @@ function partsBasis() {
   return [sup.has('NAPA') && 'NAPA list price', sup.has('PartsTech') && 'PartsTech cost'].filter(Boolean).join(' + ');
 }
 import { ITEM, hrs, rate, miles, vehicleLine, vehicleOk, concern, money, roSummary, partsTotals, orderTotals } from '../logic';
-import { saveVehicle, saveConcern, removeItem, lineWhy, addManual, changeHours, searchPart, removePart, setPartQty } from '../harness';
+import { saveVehicle, saveConcern, removeItem, lineWhy, addManual, changeHours, searchPart, removePart, setPartQty, sendPartsToPartstech, roPartList } from '../harness';
 import { useFlash } from './useFlash';
 import { customerWhy } from '../talkTrack';
 import { parentsOnOrder } from '../laborRules';
@@ -222,6 +240,7 @@ function PartsSection() {
           onKeyDown={e => { if (e.key === 'Enter') go(); }} />
         <button className="btn sm" disabled={!vehicleOk()} onClick={go}>Price</button>
       </div>
+      {supplierKey() === 'partstech' && <SendToPartstech />}
       {names.length > 0 && (
         <div className="pchips">
           <span className="small muted">From your lines:</span>
@@ -308,7 +327,7 @@ export default function RepairOrderPanel() {
   useCore();
   const mem = [];
   if (rate()) mem.push('Labor rate ' + S.profile['shop.labor_rate'].display);
-  mem.push('Parts supplier: ' + supplierName());
+  mem.push('Parts: ' + supplierName() + (supplierKey() === 'partstech' ? ' (' + supplierOrder().join(', then ') + ')' : ''));
   ['parts.policy', 'comms.tone'].forEach(k => { if (S.profile[k]) mem.push((FIXEDMAP[k] || PQMAP[k]).label + ': ' + S.profile[k].display); });
   mem.push('Scheduled maintenance: ' + settingOption('maint.presentation').label);
   return (

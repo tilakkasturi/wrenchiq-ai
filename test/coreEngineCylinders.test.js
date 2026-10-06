@@ -15,7 +15,7 @@ const said = () => S.chats.ro.items.filter(i => i.kind === 'agent').map(i => i.t
 const plugs = () => S.ro.parts.added.find(p => /spark plug/i.test(p.label));
 
 beforeEach(() => {
-  S.profile = {};
+  S.profile = { 'parts.supplier': { value: 'napa' } }; // these tests price parts from NAPA's catalog; the shop default is PartsTech
   S.useAgent = false; // scripted flow: no model in tests
   S.ro = { ...newRO(), started: true };
   S.chats.ro = { items: [], chips: [], nextId: 1 };

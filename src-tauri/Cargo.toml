@@ -15,7 +15,9 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+# "unstable": multi-webview, so PartsTech can be a native view inside the PartsTech tab (a frame
+# loses its sign-in cookie in WKWebView). See src/core/partstechView.js.
+tauri = { version = "2", features = ["unstable"] }
 tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }

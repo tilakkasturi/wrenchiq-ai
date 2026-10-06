@@ -49,19 +49,19 @@ Severity low: everything recommended
 Package every recommendation: the high and medium items plus comfort maintenance and "only if needed" or optional add-on labor. The largest total.
 
 ## parts.supplier.label
-Parts supplier
+Parts aggregator
 
 ## parts.supplier.why
-Where I look up parts for the repair order. Asked once in Shop profile and kept in shop memory.
-
-## parts.supplier.napa.label
-NAPA
-
-## parts.supplier.napa.say
-Look up parts in the NAPA catalog for the vehicle on the repair order and put the shop pick on the RO at NAPA list price, availability first, then lowest price.
+Where I get parts for the repair order: through a parts aggregator (PartsTech, which brings suppliers like NAPA, O'Reilly and AutoZone into one search), or straight from NAPA's catalog. Asked in Shop profile and kept in shop memory.
 
 ## parts.supplier.partstech.label
 PartsTech
 
 ## parts.supplier.partstech.say
-Open PartsTech for the vehicle on the repair order so the advisor can compare suppliers there and pick parts; the parts they pick come back to the RO at the shop's cost from that supplier. Nothing is added to the RO until the advisor picks it.
+Open PartsTech for the vehicle on the repair order, on your preferred supplier with the fastest delivery first, so the advisor can compare suppliers there and pick parts; the parts they send back go on the RO at the shop's cost from that supplier. Nothing is added to the RO until the advisor picks it.
+
+## parts.supplier.napa.label
+NAPA catalog (no aggregator)
+
+## parts.supplier.napa.say
+Look up parts straight in NAPA's catalog for the vehicle on the repair order and put the shop pick on the RO at NAPA list price, availability first, then lowest price.

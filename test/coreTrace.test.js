@@ -11,7 +11,7 @@ const settle = () => Cr.run(async () => {});
 const titles = turn => turn.steps.map(s => s.kind + ':' + s.title);
 
 beforeEach(() => {
-  S.profile = {};
+  S.profile = { 'parts.supplier': { value: 'napa' } }; // these tests price parts from NAPA's catalog; the shop default is PartsTech
   S.useAgent = false;
   S.ro = { ...newRO(), started: true };
   S.chats.ro = { items: [], chips: [], nextId: 1 };

@@ -2,7 +2,7 @@ import { useCore, S } from '../state';
 import { FIXED, PQ, SHOP } from '../data';
 import { forgetFact, resetProfile } from '../harness';
 import { useFlash } from './useFlash';
-import { SETTINGS, SUPPLIER_SETTING, setting, setSetting, isDefault } from '../shopSettings';
+import { SETTINGS, SUPPLIER_SETTING, setting, setSetting, isDefault, supplierKey, supplierOrder, moveSupplier } from '../shopSettings';
 
 /** A shop instruction with its options; the chosen one is what the assistant follows. */
 function Setting({ s }) {
@@ -20,6 +20,26 @@ function Setting({ s }) {
         ))}
       </div>
     </li>
+  );
+}
+
+/** The order of suppliers inside PartsTech (the aggregator): PartsTech opens on the first one on the account. */
+function SupplierOrder() {
+  const order = supplierOrder();
+  return (
+    <div className="setting" style={{ marginTop: 8 }}>
+      <div className="k">Supplier order in PartsTech{!S.profile['parts.partstech_order'] && <span className="small muted"> · default</span>}</div>
+      <p className="small muted" style={{ margin: '2px 0 6px' }}>PartsTech opens on the first supplier here that is set up on your PartsTech account, with the fastest delivery first. If it has nothing fast, check the next one.</p>
+      <ol className="small" style={{ margin: 0, paddingLeft: 18 }}>
+        {order.map((n, i) => (
+          <li key={n} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
+            <span style={{ flex: 1 }}>{n}</span>
+            <button type="button" className="btn ghost sm" disabled={i === 0} aria-label={'Move ' + n + ' up'} onClick={() => moveSupplier(n, -1)}>↑</button>
+            <button type="button" className="btn ghost sm" disabled={i === order.length - 1} aria-label={'Move ' + n + ' down'} onClick={() => moveSupplier(n, 1)}>↓</button>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -58,8 +78,9 @@ export default function MemoryPanel() {
         {FIXED.map(f => <Row key={f.key} k={f.key} label={f.label} f={S.profile[f.key] || { display: f.value }} fixed />)}
         {mine.map(m => <Row key={m.k} k={m.k} label={m.label} f={S.profile[m.k]} />)}
       </ul>
-      <div className="label" style={{ margin: '14px 0 6px' }}>Parts supplier</div>
+      <div className="label" style={{ margin: '14px 0 6px' }}>Where I get parts</div>
       <ul className="mem settings"><Setting s={SUPPLIER_SETTING} /></ul>
+      {supplierKey() === 'partstech' && <SupplierOrder />}
       <div className="label" style={{ margin: '14px 0 6px' }}>How I present work</div>
       <ul className="mem settings">{SETTINGS.map(s => <Setting key={s.key} s={s} />)}</ul>
       {!mine.length && <p className="small muted" style={{ marginTop: 8 }}>Nothing else yet. Tell me about your shop in the chat, like your labor rate or work you never take.</p>}

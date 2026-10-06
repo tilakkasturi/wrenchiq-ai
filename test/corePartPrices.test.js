@@ -19,7 +19,7 @@ import { partPrice, prefetchPartPrices } from '../src/core/partPrices.js';
 const flush = () => new Promise(r => setTimeout(r, 0));
 
 describe('part chip prices', () => {
-  beforeEach(() => { S.ro = { ...newRO(), year: '2018', make: 'Toyota', model: 'Corolla' }; searchNapa.mockClear(); });
+  beforeEach(() => { S.profile = { 'parts.supplier': { value: 'napa' } }; S.ro = { ...newRO(), year: '2018', make: 'Toyota', model: 'Corolla' }; searchNapa.mockClear(); }); // these tests price parts from NAPA's catalog; the shop default is PartsTech
 
   it('keeps the shop pick: soonest available priced part, not the cheapest', async () => {
     prefetchPartPrices(['Front brake pads (set)']);

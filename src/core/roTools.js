@@ -217,8 +217,9 @@ export const TOOLS = {
     const R = S.ro;
     // the shop's parts supplier is PartsTech: the advisor picks in PartsTech (punch-out), so no prices here
     if (supplierKey() === 'partstech') {
-      await LINES.partstech(C, [part], null);
-      return { part, fits: vehicleLine(), supplier: 'PartsTech', picked_by: 'advisor in PartsTech', prices: 'none until the advisor picks parts in PartsTech' };
+      const r = await LINES.partstech([part]); // one PartsTech session with every part on the RO plus this one
+      if (!r.ok) return { error: 'partstech', message: r.message };
+      return { part, fits: vehicleLine(), supplier: 'PartsTech', picked_by: 'advisor in PartsTech (its own tab)', sent_to_partstech: r.session.names, prices: 'none until the advisor picks parts in PartsTech; picked parts go straight onto the repair order' };
     }
     const res = await searchNapa({ year: R.year, make: R.make, model: R.model, part });
     if (!res.ok) return { error: res.code, message: res.message };

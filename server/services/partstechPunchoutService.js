@@ -22,11 +22,34 @@
  */
 
 import { randomBytes } from 'crypto';
-import { createQuote, getCart, getQuote, partstechSettings } from '../../partstech/searchParts.js';
+import { createQuote, getCart, getQuote, partstechSettings, searchUrlFor, resolvePartType, listShopSuppliers } from '../../partstech/searchParts.js';
 
 const COLLECTION = 'partstech_sessions';
 const MAX_CALLBACK_BODY = 20000; // chars of a raw callback body kept per call
 const MAX_CALLBACKS = 50;        // callback log entries kept per session
+
+const SUPPLIERS_TTL_MS = 10 * 60 * 1000;
+let suppliersCache = null; // { at, list }
+
+/** The suppliers on the shop's PartsTech account (cached 10 minutes). */
+export async function shopSuppliers() {
+  if (!suppliersCache || Date.now() - suppliersCache.at > SUPPLIERS_TTL_MS) suppliersCache = { at: Date.now(), list: await listShopSuppliers() };
+  return suppliersCache.list;
+}
+
+const supplierKeyOf = name => String(name).toLowerCase().replace(/[^a-z]/g, '').replace(/autoparts$/, '');
+/**
+ * The shop's supplier order (names, e.g. ["NAPA", "O'Reilly"]) -> the first supplier in it that is set
+ * up and approved on the PartsTech account: the supplier PartsTech opens on. null if none match.
+ */
+export function preferredSupplier(order, suppliers) {
+  for (const name of order || []) {
+    const k = supplierKeyOf(name);
+    const hit = suppliers.find(s => s.status !== 'Rejected' && (supplierKeyOf(s.supplier).startsWith(k) || k.startsWith(supplierKeyOf(s.supplier))));
+    if (hit) return { credentialId: hit.credentialId, supplier: hit.supplier, store: hit.store, asked: name };
+  }
+  return null;
+}
 
 export class PunchoutError extends Error {
   constructor(code, message, status = 400) { super(message); this.code = code; this.status = status; }
@@ -61,11 +84,16 @@ function publicView(s) {
     sessionId: s.sessionId,
     roId: s.roId,
     redirectUrl: s.redirectUrl,
+    searchUrl: s.searchUrl || null,
     query: s.query,
+    requested: s.requested || [],
+    supplierOrder: s.supplierOrder || [],
+    preferredSupplier: s.preferredSupplier || null,
     status: s.status,
     createdAt: s.createdAt,
     cartUpdatedAt: s.cartUpdatedAt || null,
     orderedAt: s.orderedAt || null,
+    returnedAt: s.returnedAt || null,
     orders: s.cart?.orders || [],
     parts: s.cart?.parts || [],
     callbackCount: s.callbacks?.length || 0,
@@ -76,22 +104,38 @@ function publicView(s) {
 /**
  * Open a punch-out session for a vehicle + part.
  * @param {object} db
- * @param {{vin?:string, year?:number, make?:string, model?:string, part?:string, partTypeIds?:number[], roId?:string}} q
+ * Several parts at once (q.parts: the repair order's part names) open ONE session searching all of
+ * their PartsTech part types together; `requested` says which part type each name became, so the
+ * parts the advisor picks can be matched back to the RO's lines.
+ * q.supplierOrder: the shop's order of suppliers inside PartsTech (e.g. NAPA, then O'Reilly); the
+ * session opens on the first one set up on the account (preferredSupplier).
+ * @param {{vin?:string, year?:number, make?:string, model?:string, part?:string, parts?:string[], partTypeIds?:number[], supplierOrder?:string[], roId?:string}} q
  * @param {{publicBaseUrl?:string, browserBaseUrl:string}} bases  public origin PartsTech can call; origin the advisor's browser uses
  */
 export async function startSession(db, q, bases) {
   if (!q.vin && !(q.year && q.make && q.model)) throw new PunchoutError('no_vehicle', 'A VIN or year, make and model are needed.');
-  if (!q.part && !q.partTypeIds?.length) throw new PunchoutError('no_part', 'A part name or partTypeIds are needed.');
+  const names = [...new Set((q.parts || []).map(n => String(n).trim()).filter(Boolean))];
+  if (!q.part && !names.length && !q.partTypeIds?.length) throw new PunchoutError('no_part', 'A part name or partTypeIds are needed.');
 
   const ref = randomBytes(16).toString('hex');
   const urls = callbackUrls(bases, ref);
-  const query = {
+  const vehicle = {
     vin: q.vin || undefined,
     year: q.vin ? undefined : Number(q.year),
     make: q.vin ? undefined : q.make,
     model: q.vin ? undefined : q.model,
-    keyword: q.part || undefined,
-    partTypeIds: q.partTypeIds?.length ? q.partTypeIds.map(Number) : undefined,
+  };
+  // several parts: each name -> a PartsTech part type; the session searches them all
+  let requested = [];
+  if (names.length) {
+    requested = await Promise.all(names.map(async name => ({ name, ...((await resolvePartType(name, vehicle)) || { partTypeId: null, how: 'no PartsTech part type matched' }) })));
+  }
+  const ids = [...new Set(requested.map(r => r.partTypeId).filter(Boolean))];
+  const query = {
+    ...vehicle,
+    // nothing resolved: let PartsTech search the first name as typed
+    keyword: q.part || (names.length && !ids.length ? names[0] : undefined),
+    partTypeIds: q.partTypeIds?.length ? q.partTypeIds.map(Number) : ids.length ? ids : undefined,
   };
   // Stored before PartsTech is asked: quote/create verifies callbackUrl/callbackOrderUrl and may
   // call them while we wait, so the ref has to resolve already (handleCallback logs it as 'pending').
@@ -101,6 +145,9 @@ export async function startSession(db, q, bases) {
     redirectUrl: null,
     roId: q.roId || null,
     query,
+    requested,
+    supplierOrder: Array.isArray(q.supplierOrder) ? q.supplierOrder.map(String) : [],
+    preferredSupplier: Array.isArray(q.supplierOrder) && q.supplierOrder.length ? preferredSupplier(q.supplierOrder, await shopSuppliers().catch(() => [])) : null,
     urls,
     status: 'pending',
     createdAt: new Date(),
@@ -115,7 +162,9 @@ export async function startSession(db, q, bases) {
     await coll(db).updateOne({ ref }, { $set: { status: 'failed', error: err.message } });
     throw err;
   }
-  const set = { sessionId: quote.sessionId, redirectUrl: quote.redirectUrl, query: { ...query, searchParams: quote.searchParams }, status: 'open' };
+  // PartsTech's search page for the session, for opening it with a filter (the shop's parts rule) after sign-in
+  const searchUrl = await searchUrlFor(quote.redirectUrl);
+  const set = { sessionId: quote.sessionId, redirectUrl: quote.redirectUrl, searchUrl, query: { ...query, searchParams: quote.searchParams }, status: 'open' };
   await coll(db).updateOne({ ref }, { $set: set });
   return publicView({ ...doc, ...set });
 }
@@ -139,6 +188,19 @@ export async function refreshCart(db, sessionOrRef) {
   };
   await coll(db).updateOne({ _id: s._id }, { $set: set });
   return publicView({ ...s, ...set });
+}
+
+/**
+ * PartsTech sent the advisor back (returnUrl: "send to repair order" in PartsTech). Re-read the cart and
+ * stamp returnedAt, which WrenchIQ watches to close PartsTech and bring the parts to the RO.
+ */
+export async function markReturned(db, ref) {
+  const s = await coll(db).findOne({ ref });
+  if (!s) throw new PunchoutError('not_found', 'No PartsTech session with that reference.', 404);
+  const view = await refreshCart(db, s);
+  const returnedAt = new Date();
+  await coll(db).updateOne({ _id: s._id }, { $set: { returnedAt } });
+  return { ...view, returnedAt };
 }
 
 /** Log a callback from PartsTech, then refresh the cart. kind: 'cart' | 'order'. */

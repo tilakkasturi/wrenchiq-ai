@@ -45,9 +45,9 @@ async function call(path, init, fallback) {
   }
 }
 
-/** Open a PartsTech session for the vehicle + part: { ref, sessionId, redirectUrl, parts: [] }. */
-export const startPartstech = ({ vin, year, make, model, part, roId }) =>
-  call('/api/partstech/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vin: vin || undefined, year, make, model, part, roId }) }, 'Could not open PartsTech.');
+/** Open a PartsTech session for the vehicle + a part or a list of parts: { ref, redirectUrl, searchUrl, requested, parts: [] }. */
+export const startPartstech = ({ vin, year, make, model, part, parts, supplierOrder, roId }) =>
+  call('/api/partstech/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vin: vin || undefined, year, make, model, part, parts, supplierOrder, roId }) }, 'Could not open PartsTech.');
 
 /** The parts picked so far in a PartsTech session; refresh re-reads the cart from PartsTech. */
 export const getPartstechSession = (ref, refresh = false) =>

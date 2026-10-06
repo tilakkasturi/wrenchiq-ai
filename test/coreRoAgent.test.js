@@ -13,7 +13,7 @@ import { buildRoPrompt, runCoreStep, cleanText, RO_TOOL_NAMES } from '../server/
 
 const fakeChat = () => { const c = { events: [], cards: [] }; c.event = t => c.events.push(t); c.card = x => c.cards.push(x); return c; };
 let C;
-beforeEach(() => { S.profile = {}; S.ro = newRO(); C = fakeChat(); });
+beforeEach(() => { S.profile = { 'parts.supplier': { value: 'napa' } }; S.ro = newRO(); C = fakeChat(); }); // these tests price parts from NAPA's catalog; the shop default is PartsTech
 
 describe('repair order agent tools', () => {
   it('every tool schema is in the server allowlist and has an implementation', () => {

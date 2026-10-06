@@ -15,7 +15,7 @@ const cards = () => items().filter(i => i.kind === 'cards' && i.card.type === 'p
 const said = () => items().filter(i => i.kind === 'agent').map(i => i.text);
 
 beforeEach(() => {
-  S.profile = {};
+  S.profile = { 'parts.supplier': { value: 'napa' } }; // these tests price parts from NAPA's catalog; the shop default is PartsTech
   S.ro = { ...newRO(), started: true };
   S.chats.ro = { items: [], chips: [], nextId: 1 };
   searchNapa.mockReset();

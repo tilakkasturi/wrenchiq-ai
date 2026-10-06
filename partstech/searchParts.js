@@ -127,7 +127,7 @@ export async function findVehicle({ year, make, model }) {
 /** Part types whose name contains `name` (e.g. "brake pad" → Disc Brake Pad Set 1684, Disc Brake Pad 63062, ...). */
 export async function findPartTypes(name) {
   const types = await callApi("GET", `/taxonomy/part-types?name=${encodeURIComponent(name)}&perPage=50`);
-  return (types || []).map(t => ({ id: t.partTypeId, name: t.partTypeName, description: t.description }));
+  return (types || []).map(t => ({ id: t.partTypeId, name: t.partTypeName, description: t.description, application: t.application }));
 }
 
 /**
@@ -166,6 +166,83 @@ export async function createQuote(query, urls = { callbackUrl: "", callbackOrder
   const searchParams = await buildSearchParams(query);
   const res = await callApi("POST", "/punchout/quote/create", { searchParams, urls });
   return { searchParams, sessionId: res.sessionId, redirectUrl: res.redirectUrl };
+}
+
+/**
+ * PartsTech's own search page for a punch-out session: where redirectUrl sends the browser after
+ * signing it in (e.g. /searchresult?vin=...&part_types=1684&vehicle=754594). redirectUrl drops any
+ * query added to it, so a filter (availability[]=Fastest Delivery) has to go on this URL instead,
+ * loaded once the session link has signed the browser in. null if PartsTech does not redirect.
+ */
+export async function searchUrlFor(redirectUrl) {
+  try {
+    const res = await fetch(redirectUrl, { redirect: "manual" });
+    const loc = res.headers.get("location");
+    return loc && /\/searchresult\b/.test(loc) ? new URL(loc, redirectUrl).href : null;
+  } catch {
+    return null;
+  }
+}
+
+const typeCache = new Map(); // part name (lower case) -> { partTypeId, partTypeName, how } | null
+
+const POSITION_WORDS = /\b(front|rear|left|right|upper|lower|inner|outer|driver|passenger|lh|rh|set|pair|assembly|kit)\b/g;
+const words = s => String(s).toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(w => w.length > 2).map(w => w.replace(/s$/, ""));
+
+/**
+ * A repair-order part name ("Front brake pads (set)", "front brake rotors") -> PartsTech part type.
+ * First PartsTech's own matcher: a punch-out session for the name as a keyword redirects to a search
+ * that names the part type (part_text_id / part_types). Else the closest part type by name in the
+ * taxonomy (position words dropped, every remaining word matched). null when neither finds one.
+ */
+export async function resolvePartType(name, vehicle) {
+  const key = String(name).toLowerCase().trim();
+  if (typeCache.has(key)) return typeCache.get(key);
+  const keyword = String(name).replace(/\s*\([^)]*\)\s*/g, " ").trim();
+  let hit = null;
+  try {
+    const q = await createQuote({ ...vehicle, keyword, partTypeIds: undefined });
+    const url = await searchUrlFor(q.redirectUrl);
+    const u = url && new URL(url);
+    const id = u && (u.searchParams.get("part_text_id") || (/^\d+$/.test(u.searchParams.get("part_types") || "") && u.searchParams.get("part_types")));
+    if (id) hit = { partTypeId: Number(id), partTypeName: null, how: "PartsTech keyword match" };
+  } catch { /* fall through to the taxonomy */ }
+  if (!hit) {
+    const want = words(keyword.toLowerCase().replace(POSITION_WORDS, " "));
+    const noun = words(keyword).at(-1); // "kit" in "brake hardware kit", "rotor" in "front brake rotors"
+    if (want.length) {
+      const types = await findPartTypes(want.slice(-2).join(" ")).catch(() => []);
+      // a part that fits the vehicle beats a universal item (a "Brake Rotor Micrometer" is a tool),
+      // then a name ending in the same noun, then the shortest name
+      const scored = types
+        .map(t => ({ t, tw: words(t.name) }))
+        .filter(x => want.every(w => x.tw.some(v => v === w || v.startsWith(w) || w.startsWith(v))))
+        .sort((a, b) => (a.t.application === "FITTED" ? 0 : 1) - (b.t.application === "FITTED" ? 0 : 1)
+          || (a.tw.at(-1) === noun ? 0 : 1) - (b.tw.at(-1) === noun ? 0 : 1)
+          || a.tw.length - b.tw.length);
+      if (scored.length) hit = { partTypeId: scored[0].t.id, partTypeName: scored[0].t.name, how: "PartsTech part type by name" };
+    }
+  }
+  typeCache.set(key, hit);
+  return hit;
+}
+
+/**
+ * The suppliers on the shop's PartsTech account (PartsTech is the aggregator; these are the suppliers
+ * inside it), in the account's own priority order. credentialId is what PartsTech's search URL calls
+ * selected_distributor. The account's supplier credentials are never returned.
+ */
+export async function listShopSuppliers() {
+  const rows = await callApi("GET", "/profile/shop/suppliers");
+  return (rows || []).map(r => ({
+    credentialId: r.id,
+    priority: r.priority,
+    supplier: r.supplier?.name || "",
+    supplierId: r.supplier?.id ?? null,
+    store: r.store?.name || null,
+    type: r.type || null,
+    status: r.status || null,
+  })).sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99));
 }
 
 /** Quote session status: OPEN / submitted, and the urls it was created with. */
@@ -211,6 +288,7 @@ export function toRow(part, order) {
     description: String(part.partName ?? ""),
     brand: part.brand?.displayName || part.brand?.brandName || "",
     partType: part.taxonomy?.partTypeName || "",
+    partTypeId: part.taxonomy?.partTypeId ?? null,
     position: attr("Position"),
     quantity: part.quantity ?? null,
     // price.price is the shop's cost from this supplier; list is the supplier's list price.

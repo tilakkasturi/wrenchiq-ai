@@ -6,7 +6,7 @@ import HOW from '../../resources/shop/how_it_works.json';
 import { liveStore, refillObject, resourceLoaded } from './liveResource';
 import { S } from './state';
 import { SHOP, FIXED, PQ } from './data';
-import { SETTINGS, setting, settingOption, isDefault, supplierKey, supplierName, supplierChosen } from './shopSettings';
+import { SETTINGS, setting, settingOption, isDefault, supplierKey, supplierName, supplierChosen, sourcePhrase, supplierOrder } from './shopSettings';
 import { rate } from './logic';
 
 export const HOW_IT_WORKS = refillObject(liveStore('howItWorks', () => ({})), HOW);
@@ -17,7 +17,8 @@ const lowerFirst = s => s.charAt(0).toLowerCase() + s.slice(1);
 export function currentSettings() {
   const fixed = FIXED.map(f => ({ label: f.label, value: (S.profile[f.key] && S.profile[f.key].display) || f.value }));
   const parts = SHOP.partsPolicy ? [{ label: 'Parts choice', value: SHOP.partsPolicy.label, say: SHOP.partsPolicy.say }] : [];
-  const supplier = [{ label: 'Parts supplier', value: supplierName() + (supplierChosen() ? '' : ' (default)'), say: settingOption('parts.supplier').say }];
+  const supplier = [{ label: 'Parts aggregator', value: supplierName() + (supplierChosen() ? '' : ' (default)'), say: settingOption('parts.supplier').say }]
+    .concat(supplierKey() === 'partstech' ? [{ label: 'Preferred supplier in PartsTech', value: supplierOrder().join(', then ') + (S.profile['parts.partstech_order'] ? '' : ' (default)') }] : []);
   const pres = SETTINGS.map(s => ({ label: s.label, value: settingOption(s.key).label + (isDefault(s.key) ? ' (default)' : ''), say: settingOption(s.key).say }));
   const facts = PQ.filter(q => S.profile[q.key]).map(q => ({ label: q.label, value: S.profile[q.key].display }))
     .concat(Object.keys(S.profile).filter(k => k.startsWith('note.')).sort().map(k => ({ label: 'Note', value: S.profile[k].display })));
@@ -29,6 +30,8 @@ function vars() {
   const v = {
     shop: SHOP.name + ', ' + SHOP.address,
     supplier: supplierName(),
+    source: sourcePhrase(),
+    preferred: supplierOrder()[0] || 'none set',
     partsRule: SHOP.partsPolicy ? SHOP.partsPolicy.say : '',
     partsWhy: SHOP.partsPolicy ? SHOP.partsPolicy.why : '',
     maintSetting: '"' + settingOption('maint.presentation').label + '": ' + lowerFirst(settingOption('maint.presentation').say),

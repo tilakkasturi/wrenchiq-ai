@@ -22,10 +22,11 @@ import { profileContext, offlineAnswer, exampleQuestions } from './howItWorks';
 import { agentStep } from './agentApi';
 import { interpretMaint } from './maintAdvice';
 import { flow, resetFlow, nextStep, applyAnswers, recordPicked, MAX_ROUNDS, buildRecs } from './recommend';
-import { maintMode, settingOption, orderAddOns, setSetting, supplierKey, supplierName, supplierChosen, SETTINGMAP } from './shopSettings';
+import { maintMode, settingOption, orderAddOns, setSetting, supplierKey, supplierName, supplierChosen, SETTINGMAP, supplierOrder, setSupplierOrder, sourcePhrase, preferredChosen, preferredSupplierName } from './shopSettings';
 import { buildPackage, packageLevels, packageLevel, prefetchPackageParts } from './packages';
 import { partsFor, pricedPartNames } from './maintParts';
 import { onResourceChange } from './liveResource';
+import { closePartstechViews, closePartstechView } from './partstechView';
 import { beginTurn, endTurn, trace } from './trace';
 import { prompt } from '../services/promptLoader';
 import { policy, rankParts, pickReason } from './partPolicy';
@@ -79,7 +80,19 @@ function profileSummary() {
 const CONFIG_WORDS_RX = /\b(config\w*|settings?|set ?up|connect\w*|catalog|credentials?|account|how)\b/i;
 const SUPPLIER_CONFIG_RX = /\b(config\w*|settings?|set ?up|connect\w*|credentials?)\b/i, SUPPLIER_WORD_RX = /\b(supplier|aggregator|parts)\b/i;
 const CHOOSE_RX = /\b(use|using|switch|change|go with|set|pick|choose|prefer|want|move to)\b/i;
-/** 'napa' | 'partstech' when the text names exactly one supplier, else null. */
+// Suppliers inside PartsTech, as the shop names them (PartsTech is the aggregator).
+const PT_SUPPLIERS = [['NAPA', /\bnapa\b/i], ["O'Reilly", /\bo\s*'?\s*reil+y\b/i], ['AutoZone', /\bauto\s?zone\b/i], ['Advance', /\badvance\b/i], ['Carquest', /\bcarquest\b/i], ['WorldPac', /\bworld\s?pac\b/i]];
+const ORDER_RX = /\b(first|then|second|secondary|primary|before|after|next|fallback|otherwise|order|priority|prefer\w*)\b/i;
+/** A supplier order said in words ("NAPA first, then O'Reilly"): the names in the order said, the rest after. */
+function supplierOrderIn(t, answering = false) {
+  if (!answering && !ORDER_RX.test(t)) return null;
+  const hits = PT_SUPPLIERS.map(([name, rx]) => ({ name, at: t.search(rx) })).filter(h => h.at >= 0).sort((a, b) => a.at - b.at);
+  if (!hits.length || (hits.length === 1 && !answering && !/\b(first|primary|prefer\w*)\b/i.test(t))) return null;
+  const said = hits.map(h => h.name);
+  return said.concat(supplierOrder().filter(n => !said.includes(n)));
+}
+
+/** 'napa' | 'partstech' when the text names exactly one parts source, else null. */
 function supplierIn(t) {
   const pt = /\bparts\s?tech\b/i.test(t), napa = /\bnapa\b/i.test(t);
   return pt && !napa ? 'partstech' : napa && !pt ? 'napa' : null;
@@ -89,6 +102,9 @@ handlers.profile = async function (text) {
   const t = text.trim();
   if (t === '__goro__') { setMode('ro'); return; }
   if (!t) return;
+  // "NAPA first, then O'Reilly": the order of suppliers inside PartsTech, not a switch to NAPA's catalog
+  const order = supplierOrderIn(t, S.pro.awaiting === 'parts.preferred');
+  if (order) { S.pro.awaiting = null; return chooseSupplierOrder(order); }
   const named = supplierIn(t), awaitingSupplier = S.pro.awaiting === 'parts.supplier';
   if (named && CONFIG_WORDS_RX.test(t) && !CHOOSE_RX.test(t)) return showSupplierConfig(Cp, named);
   if (!named && SUPPLIER_CONFIG_RX.test(t) && SUPPLIER_WORD_RX.test(t)) return showSupplierConfig(Cp, supplierKey());
@@ -154,6 +170,7 @@ async function startProfile() {
   if (S.pro.started) return;
   S.pro.started = true;
   saveFixed();
+  ensureLaborRate();
   notify();
   for (const f of FIXED) await Cp.agent(f.say, f.why);
   const n = userFacts().length;
@@ -161,26 +178,66 @@ async function startProfile() {
     ? 'Welcome back. ' + n + ' thing' + (n > 1 ? 's are' : ' is') + ' saved in your shop profile. Tell me anything else about how you run the shop and I will keep it.'
     : 'Tell me anything about how you run the shop, in your own words: your labor rate, parts markup, how you talk to customers, work you never take. I will keep it in shop memory and use it on repair orders. You can also ask me how I work, like how I use the labor guide or scheduled maintenance.');
   if (!supplierChosen()) return askSupplier();
-  await Cp.agent('Your parts supplier is ' + supplierName() + '.', settingOption('parts.supplier').say);
+  await Cp.agent('You get parts ' + sourcePhrase() + '.', settingOption('parts.supplier').say);
+  if (supplierKey() === 'partstech') {
+    if (!preferredChosen()) return askPreferredSupplier();
+    await Cp.agent(orderLine());
+  }
+  await Cp.agent('Your labor rate is ' + S.profile['shop.labor_rate'].display + '.', PQMAP['shop.labor_rate'].why + ' To change it, say "labor rate is 120".');
   Cp.chips(exampleQuestions().slice(0, 3).map(x => ({ t: x, text: x })).concat(SHOP.examples.slice(0, 2).map(x => ({ t: x, text: x })), [{ t: 'Go to Repair order', text: '__goro__', silent: true }]));
 }
 
-/** Which parts supplier the repair order uses. Asked once; the answer is kept in shop memory. */
+/**
+ * The shop's labor rate: set automatically from resources/shop (laborRate, $90/hr) when none is saved,
+ * so labor-guide hours are priced from the start; the shop changes it in Shop profile.
+ */
+function ensureLaborRate() {
+  if (rate() || !SHOP.laborRate) return;
+  const q = PQMAP['shop.labor_rate'];
+  saveFact(q, { value: SHOP.laborRate, display: q.fmt(SHOP.laborRate) });
+  Cp.event('Saved to shop memory · shop.labor_rate = ' + q.fmt(SHOP.laborRate) + ' (default)');
+}
+
+/** Where the repair order gets parts: NAPA's catalog or PartsTech (an aggregator). Asked once; kept in shop memory. */
 async function askSupplier() {
   S.pro.awaiting = 'parts.supplier';
   const o = SETTINGMAP['parts.supplier'].options;
-  await Cp.agent('Which parts supplier should I use on repair orders: NAPA or PartsTech?',
-    o.map(x => x.label + ': ' + x.say).join(' '));
-  Cp.chips(o.map(x => ({ t: 'Use ' + x.label, text: 'use ' + x.label })).concat([{ t: 'Go to Repair order', text: '__goro__', silent: true }]));
+  const def = SETTINGMAP['parts.supplier'].defaultValue();
+  await Cp.agent('Which parts aggregator do you like? ' + o.find(x => x.value === def).label + ' is the default.',
+    'PartsTech brings suppliers like NAPA, O\'Reilly and AutoZone into one search. ' + o.map(x => x.label + ': ' + x.say).join(' '));
+  Cp.chips(o.map(x => ({ t: x.label + (x.value === def ? ' (default)' : ''), text: 'use ' + (x.value === 'napa' ? 'NAPA' : x.label) })).concat([{ t: 'Go to Repair order', text: '__goro__', silent: true }]));
+}
+
+/** The preferred supplier inside PartsTech (NAPA by default): PartsTech opens on it. Kept in shop memory. */
+async function askPreferredSupplier() {
+  S.pro.awaiting = 'parts.preferred';
+  const order = supplierOrder();
+  await Cp.agent('Which supplier is your preferred supplier: ' + order.map((n, i) => n + (i === 0 ? ' (default)' : '')).join(', ') + '?',
+    'PartsTech opens on your preferred supplier with the fastest delivery first; if it has nothing fast, the next supplier is one tab over.');
+  Cp.chips(order.map((n, i) => ({ t: n + (i === 0 ? ' (default)' : ''), text: n + ' first' })).concat([{ t: 'Go to Repair order', text: '__goro__', silent: true }]));
+}
+
+const orderLine = () => 'In PartsTech I open ' + supplierOrder()[0] + ' first' + (supplierOrder().length > 1 ? ', then ' + supplierOrder().slice(1).join(', then ') : '') + ', with the fastest delivery shown first.';
+
+async function chooseSupplierOrder(order) {
+  setSupplierOrder(order);
+  Cp.event('Saved to shop memory · supplier order in PartsTech = ' + order.join(', then '));
+  trace('rule', 'Supplier order in PartsTech', order.join(' → '), { setting: 'parts.partstech_order', value: order, note: 'PartsTech is the aggregator; it opens on the first of these that is set up on the shop\'s PartsTech account.' });
+  await Cp.agent('Saved: your preferred supplier is ' + order[0] + '. ' + orderLine() + (supplierKey() === 'partstech' ? '' : ' You get parts ' + sourcePhrase() + ' right now, so this applies once you switch to PartsTech.'),
+    'PartsTech shows how many parts each supplier has for the search; if ' + order[0] + ' has nothing with fast delivery, ' + (order[1] || 'the next supplier') + ' is the next tab to check.');
 }
 
 async function chooseSupplier(key) {
   const before = supplierChosen() ? supplierKey() : null;
   setSetting('parts.supplier', key);
-  Cp.event('Saved to shop memory · parts.supplier = ' + supplierName());
+  Cp.event('Saved to shop memory · parts source = ' + supplierName());
   trace('rule', 'Parts supplier', supplierName(), { setting: 'parts.supplier', value: key, previous: before, say: settingOption('parts.supplier').say });
   const other = SETTINGMAP['parts.supplier'].options.find(o => o.value !== key);
-  await Cp.agent((before === key ? 'Your parts supplier is already ' : 'Saved: your parts supplier is now ') + supplierName() + '. Repair orders use it from now on. ' + settingOption('parts.supplier').say);
+  await Cp.agent((before === key ? 'You already get parts ' : 'Saved: you get parts ') + sourcePhrase() + (before === key ? '. ' : ' now. ') + settingOption('parts.supplier').say);
+  if (key === 'partstech') {
+    if (!preferredChosen()) return askPreferredSupplier();
+    await Cp.agent(orderLine(), 'Say "O\'Reilly first, then NAPA" to change it, or use the arrows in Shop profile.');
+  }
   Cp.chips([
     { t: 'Show ' + supplierName() + ' config', text: 'show ' + supplierName() + ' config' },
     { t: 'Switch to ' + other.label, text: 'use ' + other.label },
@@ -452,13 +509,9 @@ async function autoPriceParts(it, quiet = false) {
     await C.agent('Once I have the year, make and model I can price the parts for ' + it.name.toLowerCase() + ' from ' + supplierName() + '.');
     return;
   }
-  if (supplierKey() === 'partstech') {
-    // punch-out: the advisor picks in PartsTech, so nothing is opened for lines added in the background
-    if (quiet) return { added: [], notPriced: [], partstech: names };
-    R.autoPriced.add(it.id);
-    await partstechParts(C, names, it);
-    return { added: [], notPriced: [], partstech: names };
-  }
+  // PartsTech: the advisor sends the order's parts from the RO panel (Parts), picks them in PartsTech,
+  // and they come back onto the RO; adding a line opens nothing
+  if (supplierKey() === 'partstech') return { added: [], notPriced: [], partstech: names };
   R.autoPriced.add(it.id);
   const fit = vehicleLine();
   await C.trace(['Read vehicle fitment', 'Look up ' + names.length + ' part' + (names.length > 1 ? 's' : '') + ' at NAPA', 'Read prices']);
@@ -584,7 +637,7 @@ async function runParts(part) {
     return;
   }
   R.parts.lastQ = part;
-  if (supplierKey() === 'partstech') return partstechParts(C, [part], null);
+  if (supplierKey() === 'partstech') { const r = await sendPartsToPartstech([part]); if (!r.ok) Cr.event('PartsTech · ' + r.message); return; }
   await C.trace(['Read vehicle fitment', 'Look up at NAPA', 'Match by part name', 'Read prices']);
   const res = await searchNapa({ year: R.year, make: R.make, model: R.model, part });
   if (!res.ok) {
@@ -605,73 +658,138 @@ async function runParts(part) {
 }
 export function searchPart(part) { Cr.send('find ' + part); }
 
-/* ----- parts from PartsTech (punch-out): the advisor picks in PartsTech, the picks come back here ----- */
+/* ----- parts from PartsTech (punch-out): the advisor picks in PartsTech, the picks land on the RO ----- */
+// Nothing about PartsTech goes in the chat: the RO panel (Parts) sends the order's parts, PartsTech
+// opens in its own tab, and what the advisor sends back from PartsTech goes straight onto the RO.
 const bare = n => n.replace(/\s*\(.*?\)\s*/g, ' ').trim();
 
-/** Open one PartsTech session per part name and post a card for each. it: the repair line, or null. */
-export async function partstechParts(C, names, it) {
+/** Every part the repair order's lines need, each with the line it is for (first line wins on a repeat). */
+export function roPartList() {
+  const out = [], seen = new Set();
+  [...S.ro.accepted].map(ITEM).filter(Boolean).forEach(it => pricedPartNames(it).forEach(name => {
+    const k = bare(name).toLowerCase();
+    if (!seen.has(k)) { seen.add(k); out.push({ name, forLine: it.id }); }
+  }));
+  return out;
+}
+
+/**
+ * Send parts to PartsTech: ONE session searching all of them (each name resolved to a PartsTech part
+ * type on the server), opened in the PartsTech tab. extra: part names asked for beyond the RO's lines.
+ * Returns { ok, message?, session? } for the caller (the agent tool) to report.
+ */
+export async function sendPartsToPartstech(extra = []) {
   const R = S.ro, fit = vehicleLine();
+  if (!vehicleOk()) return { ok: false, message: 'Year, make and model (or a VIN) are needed before PartsTech can search parts.' };
+  const list = roPartList();
+  extra.forEach(name => { if (!list.some(x => bare(x.name).toLowerCase() === bare(name).toLowerCase())) list.push({ name, forLine: null }); });
+  if (!list.length) return { ok: false, message: 'There are no parts on the repair order yet.' };
+  const names = list.map(x => x.name);
+  // the same parts are already open in PartsTech: go back to that session
+  const order = supplierOrder();
+  const cur = S.pt.card;
+  if (cur && cur.fit === fit && cur.names.join('|') === names.join('|') && (cur.supplierOrder || []).join('|') === order.join('|')) { showPartstech(cur); return { ok: true, session: cur }; }
   const vin = R.vin && R.vin.length === 17 ? R.vin : undefined;
-  await C.trace(['Read vehicle fitment', 'Open PartsTech for ' + names.length + ' part' + (names.length > 1 ? 's' : ''), 'Wait for the advisor to pick']);
-  const opened = await Promise.all(names.map(n => startPartstech({ vin, year: R.year, make: R.make, model: R.model, part: bare(n) }).then(res => ({ n, res }))));
-  const ok = opened.filter(o => o.res.ok), bad = opened.filter(o => !o.res.ok);
-  trace('rule', 'PartsTech · ' + names.map(bare).join(', '), ok.length + ' session' + (ok.length === 1 ? '' : 's') + ' opened' + (bad.length ? ', ' + bad.length + ' failed' : ''),
-    { rule: 'Shop parts supplier is PartsTech (Shop profile): punch-out, the advisor picks parts in PartsTech and WrenchIQ reads the cart back. Nothing goes on the RO until the advisor adds it.',
-      vehicle: vin ? 'VIN ' + vin : fit, for_line: it ? it.name : null,
-      sessions: opened.map(o => (o.res.ok ? { part: o.n, ref: o.res.ref, search: o.res.query && o.res.query.searchParams } : { part: o.n, error: o.res.message })) });
-  if (!ok.length) { await C.agent('Could not open PartsTech: ' + bad[0].res.message + ' Nothing was added for ' + (it ? it.name.toLowerCase() : bare(names[0]).toLowerCase()) + '.'); return; }
-  await C.agent((it ? 'Parts for ' + it.name.toLowerCase() + ' come from PartsTech, your parts supplier. ' : '')
-    + 'Open PartsTech for the ' + fit + (vin ? ' (by VIN)' : '') + ', compare suppliers and add the parts you want to the PartsTech cart. When you come back, they show here with your cost and you add them to the RO.');
-  ok.forEach(o => { const q = partQty(o.n, it); C.card({ type: 'partstech', ref: o.res.ref, redirectUrl: o.res.redirectUrl, part: o.n, qty: q.qty, perCyl: q.perCyl, fit, forLine: it ? it.id : null, rows: [], status: 'open' }); });
-  if (bad.length) await C.agent('Could not open PartsTech for ' + bad.map(b => bare(b.n).toLowerCase()).join(', ') + ': ' + bad[0].res.message);
+  const turn = beginTurn('ui', 'Send ' + names.length + ' part' + (names.length > 1 ? 's' : '') + ' to PartsTech');
+  try {
+    const res = await startPartstech({ vin, year: R.year, make: R.make, model: R.model, parts: names.map(bare), supplierOrder: order });
+    if (!res.ok) { trace('rule', 'PartsTech · not opened', res.message, { parts: names }); return { ok: false, message: res.message }; }
+    const forLine = Object.fromEntries(list.map(x => [bare(x.name).toLowerCase(), x.forLine]));
+    const requested = (res.requested || []).map(r => ({ ...r, forLine: forLine[String(r.name).toLowerCase()] ?? null }));
+    const session = { ref: res.ref, redirectUrl: res.redirectUrl, searchUrl: res.searchUrl || null, fit, names, requested, supplierOrder: order, preferredSupplier: res.preferredSupplier || null, rows: [], status: 'open' };
+    trace('rule', 'PartsTech · ' + names.length + ' part' + (names.length > 1 ? 's' : '') + ' sent', requested.map(r => bare(r.name) + (r.partTypeId ? ' → ' + (r.partTypeName || 'part type ' + r.partTypeId) : ' → not matched')).join('; '),
+      { rule: 'Parts come through PartsTech, an aggregator of suppliers (Shop profile): one PartsTech session searches every part on the RO, opened on the first supplier in the shop\'s order that is on the PartsTech account; what the advisor sends back goes on the RO, matched to its line by part type.',
+        vehicle: vin ? 'VIN ' + vin : fit, ref: res.ref, requested, supplier_order: order,
+        opens_on: res.preferredSupplier ? res.preferredSupplier.supplier + ' (selected_distributor ' + res.preferredSupplier.credentialId + ')' : 'PartsTech\'s own first supplier (none of the shop\'s order is on the account)',
+        search: res.query && res.query.searchParams });
+    showPartstech(session);
+    return { ok: true, session };
+  } finally { endTurn(turn); }
 }
 
 /** Show a PartsTech session in the PartsTech tab (never in place of WrenchIQ). */
-export function showPartstech(card) { S.pt = { card, open: true }; notify(); }
-/** Leave the PartsTech tab; the frame stays loaded so going back keeps the advisor's place. */
+export function showPartstech(session) {
+  if (!session) { S.pt = { card: S.pt.card, open: true }; notify(); return; }
+  if (S.pt.card !== session) session.openedAt = new Date().toISOString(); // only a return after this closes it
+  S.pt = { card: session, open: true }; notify();
+}
+
+/**
+ * PartsTech is done (its "send to repair order", or Done in the tab): read the cart, close PartsTech,
+ * go back to the repair order and put what was picked on it.
+ */
+async function finishPartstech(session, refresh) {
+  closePartstechView(session.ref);
+  S.pt = { card: null, open: false };
+  S.mode = 'ro';
+  notify();
+  await loadPartstechCard(session, refresh);
+  if (session.status !== 'error') applyPartstechCart(session);
+}
+
+/** While the tab shows a session: has PartsTech sent the advisor back (returnUrl hit on the server)? */
+export async function checkPartstechReturn(session) {
+  if (!session || S.pt.card !== session) return;
+  const r = await getPartstechSession(session.ref, false);
+  if (r.ok && r.returnedAt && r.returnedAt > (session.openedAt || '') && S.pt.card === session) await finishPartstech(session, false);
+}
+/** Leave the PartsTech tab; PartsTech stays loaded so going back keeps the advisor's place. */
 export function hidePartstech() { if (S.pt.open) { S.pt.open = false; notify(); } }
-/** Done in PartsTech: read the cart for the session and go back to the repair order. */
+/** Done in the PartsTech tab: read the cart, close PartsTech and go back to the repair order. */
 export async function bringPartstechBack() {
-  const card = S.pt.card;
+  const session = S.pt.card;
+  if (session) return finishPartstech(session, true);
   S.pt.open = false; S.mode = 'ro'; notify();
-  if (card) await loadPartstechCard(card, true);
 }
 
 /** A PartsTech cart row as an RO part row (addPart): price is the shop's cost from the picked supplier. */
-function partstechRow(p) {
+function partstechRow(p, ref) {
   return {
     supplier: 'PartsTech', source: p.supplier, lineCode: p.brand, partNumber: p.partNumber, brand: p.brand,
     description: p.description + (p.position ? ' (' + p.position + ')' : ''), listPrice: p.cost, list: p.listPrice, core: p.core,
-    cartQty: p.quantity, orderItemId: p.orderItemId,
+    cartQty: p.quantity, orderItemId: p.orderItemId, partTypeId: p.partTypeId, partType: p.partType, ptRef: ref,
     availability: { label: (p.inStock ? 'In stock' : 'Out of stock') + ' · ' + p.supplier + (p.store ? ', ' + p.store : ''), short: p.inStock ? p.supplier + ' in stock' : p.supplier + ' out of stock' },
   };
 }
 
-/** Read what the advisor picked in PartsTech for this card (refresh: ask PartsTech, not the saved copy). */
-export async function loadPartstechCard(card, refresh = true) {
-  card.status = 'loading'; notify();
-  const r = await getPartstechSession(card.ref, refresh);
-  if (!r.ok) { card.status = 'error'; card.error = r.message; notify(); return; }
-  card.rows = r.parts.map(partstechRow);
-  card.status = r.status; card.error = null; card.at = r.cartUpdatedAt;
-  if (card.rows.length) {
-    Cr.event('PartsTech · ' + card.rows.length + ' part' + (card.rows.length > 1 ? 's' : '') + ' picked for ' + bare(card.part).toLowerCase());
-    trace('rule', 'PartsTech cart · ' + bare(card.part), card.rows.map(x => x.lineCode + ' ' + x.partNumber + ' · ' + money(x.listPrice)).join('; '),
-      { ref: card.ref, status: r.status, parts: r.parts.map(p => ({ part_number: p.brand + ' ' + p.partNumber, supplier: p.supplier, store: p.store, qty: p.quantity, cost: p.cost, list: p.listPrice, in_stock: p.inStock })) });
-  }
+/** Read the session's PartsTech cart (refresh: ask PartsTech, not the saved copy). */
+export async function loadPartstechCard(session, refresh = true) {
+  session.status = 'loading'; notify();
+  const r = await getPartstechSession(session.ref, refresh);
+  if (!r.ok) { session.status = 'error'; session.error = r.message; Cr.event('PartsTech · could not read the cart: ' + r.message); notify(); return; }
+  session.rows = r.parts.map(p => partstechRow(p, session.ref));
+  session.status = r.status; session.error = null; session.at = r.cartUpdatedAt;
+  trace('rule', 'PartsTech cart', session.rows.length ? session.rows.map(x => x.lineCode + ' ' + x.partNumber + ' x' + (x.cartQty || 1) + ' · ' + money(x.listPrice)).join('; ') : 'empty',
+    { ref: session.ref, status: r.status, parts: r.parts.map(p => ({ part_number: p.brand + ' ' + p.partNumber, part_type: p.partType, supplier: p.supplier, store: p.store, qty: p.quantity, cost: p.cost, list: p.listPrice, in_stock: p.inStock })) });
   notify();
 }
 
-/** Put a part the advisor picked in PartsTech on the RO. Quantity: the RO's need if known, else the PartsTech cart quantity. */
-export function addPartstechPart(card, row) {
-  const sp = card.perCyl ? engineSpec() : null;
-  const qty = (card.perCyl ? sp.cylinders : card.qty) || row.cartQty || 1;
-  addPart(row, card.part, qty, card.fit, card.forLine, !!card.perCyl);
+/**
+ * The PartsTech cart becomes the RO's PartsTech parts for this session: every picked part goes on (the
+ * quantity the advisor set in PartsTech), matched to the line that needed its part type; parts this
+ * session put on earlier but no longer in the cart come off.
+ */
+export function applyPartstechCart(session) {
+  const R = S.ro, byType = new Map(session.requested.filter(r => r.partTypeId).map(r => [r.partTypeId, r]));
+  const keep = new Set();
+  session.rows.forEach(row => {
+    const req = byType.get(row.partTypeId);
+    const key = row.lineCode + '|' + row.partNumber;
+    keep.add(key);
+    const on = R.parts.added.find(x => x.key === key);
+    if (on) { if (on.qty !== (row.cartQty || 1)) setPartQty(key, row.cartQty || 1); return; }
+    addPart(row, req ? req.name : (row.partType || row.description), row.cartQty || 1, session.fit, req ? req.forLine : null);
+  });
+  R.parts.added.filter(x => x.ptRef === session.ref && !keep.has(x.key)).forEach(x => removePart(x.key));
+  const missed = session.requested.filter(r => !session.rows.some(row => row.partTypeId && row.partTypeId === r.partTypeId)).map(r => bare(r.name).toLowerCase());
+  Cr.event('PartsTech · ' + (session.rows.length ? session.rows.length + ' part' + (session.rows.length > 1 ? 's' : '') + ' on the RO' : 'nothing picked') + (missed.length && session.rows.length ? ' · not picked: ' + missed.join(', ') : ''));
+  notify();
 }
 
 function resetRO() {
   S.ro = { ...newRO(), started: true };
   S.pt = { card: null, open: false }; // a new job has no PartsTech session
+  closePartstechViews();
   Cr.clear();
 }
 async function startRO() {
@@ -863,7 +981,7 @@ function placeMaint(ms, ids = ms.ids) {
 const maintSaid = (r, ms) => 'Added ' + r.added.length + ' item' + (r.added.length === 1 ? '' : 's') + ' due at the ' + ms.at.toLocaleString() + ' mi service.'
   + (r.skipped.length ? ' Skipped ' + r.skipped.map(x => ITEM(x.id).name.toLowerCase() + ' (' + x.r.reason.replace(/\.$/, '') + ')').join('; ') + '.' : '');
 
-useLineOps({ place: placeLine, after: afterPlace, cylinders: resolveCylinderParts, partstech: partstechParts });
+useLineOps({ place: placeLine, after: afterPlace, cylinders: resolveCylinderParts, partstech: sendPartsToPartstech });
 // a file under resources/ changed and was reloaded: a debugging detail, so it goes to the Agent trace, not the chat
 onResourceChange('harness.log', name => trace('note', 'Reloaded ' + name, 'from resources/ (dev server hot update)'));
 
@@ -988,7 +1106,7 @@ export function addPart(row, label, qty, fit, forLine, perCyl = false) {
   const key = row.lineCode + '|' + row.partNumber;
   if (partOn(key)) return;
   const supplier = row.supplier || 'NAPA';
-  S.ro.parts.added.push({ key, label, description: row.description, lineCode: row.lineCode, partNumber: row.partNumber, brand: row.brand, quality: row.quality, each: row.listPrice, qty, fit, forLine, perCyl, availability: row.availability, supplier, source: row.source || null, list: row.list ?? null });
+  S.ro.parts.added.push({ key, label, description: row.description, lineCode: row.lineCode, partNumber: row.partNumber, brand: row.brand, quality: row.quality, each: row.listPrice, qty, fit, forLine, perCyl, availability: row.availability, supplier, source: row.source || null, list: row.list ?? null, ptRef: row.ptRef || null });
   Cr.event('Added to RO · ' + label + ' · ' + supplier + (row.source ? ' (' + row.source + ')' : '') + ' ' + row.lineCode + ' ' + row.partNumber + ' · ' + money(row.listPrice * qty) + (row.availability ? ' · ' + row.availability.short : ''));
   notify();
 }

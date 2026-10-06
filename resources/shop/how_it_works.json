@@ -1,8 +1,8 @@
 {
- "_about": "What the Core assistant tells the shop about how it works, in the Shop profile chat. Each topic is matched to a question by the regex in match (offline answers) and is also handed to the model as its knowledge (agent answers), so this file is the single source of truth. {{placeholders}} are filled with the shop's current settings: shop, supplier, partsHow (partsHow[napa|partstech] below, by the shop's parts supplier), partsRule, partsWhy, maintSetting, laborSetting, laborRate. Keep answers factual: they describe what the app does, nothing it does not.",
+ "_about": "What the Core assistant tells the shop about how it works, in the Shop profile chat. Each topic is matched to a question by the regex in match (offline answers) and is also handed to the model as its knowledge (agent answers), so this file is the single source of truth. {{placeholders}} are filled with the shop's current settings: shop, supplier, source (\"through PartsTech\" or \"from NAPA's catalog\"), preferred (the preferred supplier in PartsTech), partsHow (partsHow[napa|partstech] below, by the shop's parts supplier), partsRule, partsWhy, maintSetting, laborSetting, laborRate. Keep answers factual: they describe what the app does, nothing it does not.",
  "partsHow": {
   "napa": "{{partsRule}} {{partsWhy}} When a repair goes on the order I add the shop pick for each part it needs, and the advisor can swap to another option on the parts card. Prices are NAPA catalog list prices, not your account cost, and availability in this demo is sample data.",
-  "partstech": "PartsTech is a parts aggregator: when a repair needs parts I open PartsTech for the vehicle on the order, already searched for that part, and the advisor compares suppliers there (AutoZone, NAPA, O'Reilly and others on your PartsTech account) and adds the parts they want to the PartsTech cart. The parts they pick come back to the repair order with brand, supplier, store, your cost and list price, and stock. I do not pick parts on my own with PartsTech and nothing goes on the order until the advisor picks it. Ordering stays in PartsTech."
+  "partstech": "PartsTech is a parts aggregator: suppliers like NAPA, O'Reilly and AutoZone in one search. When the repair order needs parts I send them all to PartsTech for the vehicle on the order, opened on your preferred supplier ({{preferred}}) with the fastest delivery first, and the advisor compares suppliers there and adds the parts they want to the PartsTech cart. When they send it to the repair order, the parts go on it with brand, supplier, store, your cost and list price, and stock. I do not pick parts on my own with PartsTech and nothing goes on the order until the advisor picks it. Ordering stays in PartsTech."
  },
  "questions": [
   "What settings am I using?",
@@ -34,7 +34,7 @@
    "id": "parts",
    "title": "How I pick parts",
    "match": "part|napa|partstech|parts ?tech|supplier|aggregator|price|availab|stock|catalog",
-   "answer": "Your parts supplier is {{supplier}}; you can switch between NAPA and PartsTech in Shop profile. {{partsHow}}"
+   "answer": "You get parts {{source}}; you can change the parts aggregator and your preferred supplier in Shop profile. {{partsHow}}"
   },
   {
    "id": "flow",

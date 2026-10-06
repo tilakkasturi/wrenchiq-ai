@@ -45,7 +45,7 @@ export const SETTINGS = [
  * PartsTech (punch-out: the advisor picks parts in PartsTech). Kept apart from SETTINGS, which are
  * about how work is presented; asked in the Shop profile chat and shown in its own section.
  */
-export const SUPPLIER_SETTING = defineSetting('parts.supplier', () => (String(SHOP.partsSupplier || 'NAPA').toLowerCase() === 'partstech' ? 'partstech' : 'napa'), ['napa', 'partstech']);
+export const SUPPLIER_SETTING = defineSetting('parts.supplier', () => (String(SHOP.partsSupplier || 'PartsTech').toLowerCase() === 'napa' ? 'napa' : 'partstech'), ['partstech', 'napa']);
 export const SETTINGMAP = Object.fromEntries(SETTINGS.concat(SUPPLIER_SETTING).map(s => [s.key, s]));
 
 /** The shop's choice for a setting, or the default. */
@@ -64,12 +64,42 @@ export function setSetting(key, value) {
   notify();
 }
 
-/** 'napa' (default from resources/shop) or 'partstech'. */
+/** 'partstech' (default from resources/shop) or 'napa' (NAPA's catalog, no aggregator). */
 export const supplierKey = () => setting('parts.supplier');
-/** Display name of the shop's parts supplier: "NAPA" or "PartsTech". */
+/** Display name of the parts source: "PartsTech" or "NAPA catalog (no aggregator)". */
 export const supplierName = () => settingOption('parts.supplier').label;
-/** Whether the shop has chosen a supplier (vs. still on the default). */
+/** Whether the shop has chosen the aggregator (vs. still on the default). */
 export const supplierChosen = () => !!(S.profile['parts.supplier'] && SUPPLIER_SETTING.options.some(o => o.value === S.profile['parts.supplier'].value));
+
+/**
+ * The order of suppliers inside PartsTech (PartsTech is the aggregator; NAPA, O'Reilly, AutoZone are
+ * suppliers in it), e.g. ["NAPA", "O'Reilly", "AutoZone"]: PartsTech opens on the first one set up on
+ * the shop's account. Default from resources/shop (partstechSupplierOrder); the shop's order in shop memory.
+ */
+export const supplierOrder = () => {
+  const v = S.profile['parts.partstech_order'] && S.profile['parts.partstech_order'].value;
+  return Array.isArray(v) && v.length ? v : (SHOP.partstechSupplierOrder || []);
+};
+export function setSupplierOrder(order) {
+  const clean = [...new Set(order.map(String).filter(Boolean))];
+  S.profile['parts.partstech_order'] = { value: clean, display: clean.join(', then '), label: 'Supplier order in PartsTech', at: Date.now() };
+  persistProfile();
+  notify();
+}
+/** The shop's preferred supplier in PartsTech: the first of the supplier order (NAPA by default). */
+export const preferredSupplierName = () => supplierOrder()[0];
+/** Whether the shop has chosen its preferred supplier (vs. still on the default). */
+export const preferredChosen = () => !!S.profile['parts.partstech_order'];
+
+/** Move one supplier up (-1) or down (+1) in the PartsTech supplier order. */
+export function moveSupplier(name, dir) {
+  const o = supplierOrder().slice(), i = o.indexOf(name), j = i + dir;
+  if (i < 0 || j < 0 || j >= o.length) return;
+  [o[i], o[j]] = [o[j], o[i]];
+  setSupplierOrder(o);
+}
+/** Where the shop gets parts, as a phrase: "from NAPA's catalog" or "through PartsTech". */
+export const sourcePhrase = () => (supplierKey() === 'partstech' ? 'through PartsTech' : 'from NAPA\'s catalog');
 
 /** 'prioritized' (default) or 'all'. */
 export const maintMode = () => setting('maint.presentation');

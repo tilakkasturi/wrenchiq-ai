@@ -1,13 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const { ptCalls, napaCalls } = vi.hoisted(() => ({ ptCalls: [], napaCalls: [] }));
+let returnedAt = null; // what the mocked server says about PartsTech's return page
+let cartHasRotor = true;
 vi.mock('../src/core/partsApi.js', () => ({
   searchNapa: async q => { napaCalls.push(q); return { ok: true, priceBasis: 'NAPA catalog list price', retrievedAt: new Date().toISOString(), parts: [] }; },
   getNapaConfig: async () => ({ ok: false, message: 'NAPA config (mock)' }),
   getPartstechConfig: async () => ({ ok: true, config: { connection: { apiUrl: { value: 'https://api.partstech.com' }, partnerId: { value: 'p' }, userId: { value: 'u' }, keysConfigured: true }, callbacks: { enabled: false }, lookup: { steps: [] } } }),
-  startPartstech: async q => { ptCalls.push(q); return { ok: true, ref: 'ref' + ptCalls.length, sessionId: 's' + ptCalls.length, redirectUrl: 'https://app.partstech.com/api-search/x/y/s' + ptCalls.length + '/', query: { searchParams: { vin: q.vin } } }; },
-  getPartstechSession: async ref => ({ ok: true, ref, status: 'parts_selected', cartUpdatedAt: new Date().toISOString(), parts: [
-    { supplier: 'AutoZone', store: 'AZ Store 3230', partNumber: 'D2076', brand: 'Duralast', description: 'Duralast Brake Pads', position: 'Front', quantity: 1, cost: 28.28, listPrice: 50.05, core: 0, inStock: true, orderItemId: 'oi1' },
+  startPartstech: async q => {
+    ptCalls.push(q);
+    const TYPES = { 'front brake pads': 1684, 'front brake rotors': 1896 };
+    const requested = (q.parts || []).map(name => ({ name, partTypeId: TYPES[name.toLowerCase()] || null }));
+    return { ok: true, ref: 'ref' + ptCalls.length, sessionId: 's' + ptCalls.length, redirectUrl: 'https://app.partstech.com/api-search/x/y/s' + ptCalls.length + '/', requested, query: { searchParams: { vin: q.vin } } };
+  },
+  getPartstechSession: async ref => ({ ok: true, ref, status: 'parts_selected', cartUpdatedAt: new Date().toISOString(), returnedAt, parts: [
+    { supplier: 'AutoZone', store: 'AZ Store 3230', partNumber: 'D2076', brand: 'Duralast', description: 'Duralast Brake Pads', position: 'Front', quantity: 2, cost: 28.28, listPrice: 50.05, core: 0, inStock: true, orderItemId: 'oi1', partTypeId: 1684, partType: 'Disc Brake Pad Set' },
+    ...(cartHasRotor ? [{ supplier: 'NAPA', store: 'BOS537', partNumber: '85-0123', brand: 'NAPA Premium', description: 'Disc Brake Rotor', position: 'Front', quantity: 1, cost: 61.5, listPrice: 99, core: 0, inStock: true, orderItemId: 'oi2', partTypeId: 1896, partType: 'Disc Brake Rotor' }] : []),
   ] }),
 }));
 
@@ -25,7 +33,7 @@ const cardsOf = type => S.chats.ro.items.filter(i => i.kind === 'cards' && i.car
 const on = () => [...S.ro.accepted].sort();
 
 beforeEach(() => {
-  S.profile = {};
+  S.profile = { 'parts.supplier': { value: 'napa' } }; // these tests price parts from NAPA's catalog; the shop default is PartsTech
   S.ro = { ...newRO(), started: true };
   S.chats.ro = { items: [], chips: [], nextId: 1 };
 });
@@ -235,30 +243,44 @@ import { setMode, Cp } from '../src/core/harness.js';
 describe('shop profile: free flowing, starts with the shop', () => {
   const fresh = () => { S.pro = { awaiting: null, started: false }; S.chats.profile = { items: [], chips: [], nextId: 1 }; };
   const saidP = () => S.chats.profile.items.filter(i => i.kind === 'agent').map(i => i.text);
-  it('states the shop from resources/shop, then asks once which parts supplier to use', async () => {
-    S.profile = {}; fresh();
-    setMode('profile'); await Cp.run(async () => {});
-    expect(saidP()[0]).toBe('Your shop: Cornerstone Automotive, 2341 El Camino Real, Sunnyvale, California.');
-    expect(saidP().at(-1)).toBe('Which parts supplier should I use on repair orders: NAPA or PartsTech?');
-    expect(saidP().filter(t => /\?/.test(t))).toHaveLength(1);
-    expect(S.chats.profile.chips.map(c => c.t)).toEqual(['Use NAPA', 'Use PartsTech', 'Go to Repair order']);
-    expect(S.profile['shop.identity'].value).toMatch(/^Cornerstone Automotive/);
-    expect(S.pro.awaiting).toBe('parts.supplier');
-    S.mode = 'ro';
-  });
-  it('remembers the parts supplier: answered once, stated (not asked) next time, switchable', async () => {
+  it('states the shop, then asks which parts aggregator (PartsTech by default) and which preferred supplier (NAPA by default)', async () => {
     S.profile = {}; fresh(); S.useAgent = false;
     setMode('profile'); await Cp.run(async () => {});
-    await Cp.send('PartsTech'); await Cp.run(async () => {});
+    expect(saidP()[0]).toBe('Your shop: Cornerstone Automotive, 2341 El Camino Real, Sunnyvale, California.');
+    expect(saidP().at(-1)).toBe('Which parts aggregator do you like? PartsTech is the default.');
+    expect(S.chats.profile.chips.map(c => c.t)).toEqual(['PartsTech (default)', 'NAPA catalog (no aggregator)', 'Go to Repair order']);
+    expect(S.pro.awaiting).toBe('parts.supplier');
+    await Cp.send('use PartsTech'); await Cp.run(async () => {});
     expect(S.profile['parts.supplier'].value).toBe('partstech');
-    expect(saidP().at(-1)).toMatch(/^Saved: your parts supplier is now PartsTech\./);
-    fresh(); setMode('profile'); await Cp.run(async () => {});
-    expect(saidP()).toContain('Your parts supplier is PartsTech.');
-    expect(saidP().join(' ')).not.toMatch(/Which parts supplier/);
-    await Cp.send('switch to NAPA'); await Cp.run(async () => {});
-    expect(S.profile['parts.supplier'].value).toBe('napa');
+    expect(saidP().at(-1)).toBe("Which supplier is your preferred supplier: NAPA (default), O'Reilly, AutoZone?");
+    expect(S.chats.profile.chips.map(c => c.t)).toEqual(['NAPA (default)', "O'Reilly", 'AutoZone', 'Go to Repair order']);
+    expect(S.pro.awaiting).toBe('parts.preferred');
+    // a supplier name answers it: preferred first, the rest after
+    await Cp.send("O'Reilly"); await Cp.run(async () => {});
+    expect(S.profile['parts.partstech_order'].value).toEqual(["O'Reilly", 'NAPA', 'AutoZone']);
+    expect(S.profile['parts.supplier'].value).toBe('partstech'); // naming a supplier does not switch away from PartsTech
     S.mode = 'ro';
- }, 20000);
+  }, 20000);
+  it('remembers both answers: stated, not asked, next time; switchable in words', async () => {
+    S.profile = {}; fresh(); S.useAgent = false;
+    setMode('profile'); await Cp.run(async () => {});
+    await Cp.send('use PartsTech'); await Cp.run(async () => {});
+    await Cp.send('NAPA first'); await Cp.run(async () => {});
+    expect(S.profile['parts.partstech_order'].value[0]).toBe('NAPA');
+    // the labor rate is set automatically from resources/shop ($90/hr), not asked
+    expect(S.profile['shop.labor_rate'].value).toBe(90);
+    fresh(); setMode('profile'); await Cp.run(async () => {});
+    expect(saidP()).toContain('You get parts through PartsTech.');
+    expect(saidP().some(t => /^In PartsTech I open NAPA first, then O'Reilly, then AutoZone/.test(t))).toBe(true);
+    expect(saidP().join(' ')).not.toMatch(/Which parts aggregator|Which supplier is your preferred/);
+    await Cp.send("O'Reilly first, then NAPA"); await Cp.run(async () => {});
+    expect(S.profile['parts.partstech_order'].value).toEqual(["O'Reilly", 'NAPA', 'AutoZone']);
+    await Cp.send('switch to NAPA catalog'); await Cp.run(async () => {});
+    expect(S.profile['parts.supplier'].value).toBe('napa');
+    await Cp.send('labor rate is 165'); await Cp.run(async () => {});
+    expect(S.profile['shop.labor_rate'].value).toBe(165);
+    S.mode = 'ro';
+  }, 30000);
   it('shows the configuration of the shop supplier, or of the supplier named', async () => {
     S.profile = {}; fresh(); S.pro.started = true; S.useAgent = false;
     setSetting('parts.supplier', 'partstech');
@@ -514,7 +536,7 @@ describe('Shop profile answers questions about how the assistant works', () => {
     setSetting('labor.presentation', 'all');
     await Cp.send('What settings am I using?'); await Cp.run(async () => {});
     const a = lastSaid();
-    expect(a).toMatch(/Parts supplier: NAPA/);
+    expect(a).toMatch(/Parts aggregator: NAPA catalog \(no aggregator\)/);
     expect(a).toMatch(/Scheduled maintenance: WrenchIQ presents what matters most \(default\)/);
     expect(a).toMatch(/Labor guide recommendations: Present every add-on the labor guide lists/);
     expect(a).toMatch(/Labor rate: \$165\/hr/);
@@ -524,9 +546,9 @@ describe('Shop profile answers questions about how the assistant works', () => {
     S.profile['shop.labor_rate'] = { value: 150, display: '$150/hr' };
     expect(offlineAnswer('how do you use the labor guide')).toMatch(/standard hours.*Mitchell 1.*\$150 an hour.*WrenchIQ presents what matters most/s);
     expect(offlineAnswer('explain scheduled maintenance')).toMatch(/manufacturer's \(OEM\) maintenance schedule.*by your setting: "WrenchIQ presents what matters most"/s);
-    expect(offlineAnswer('how do you pick parts')).toMatch(/Your parts supplier is NAPA; you can switch between NAPA and PartsTech in Shop profile\. When I pick parts, availability comes first/);
+    expect(offlineAnswer('how do you pick parts')).toMatch(/You get parts from NAPA's catalog; you can change the parts aggregator and your preferred supplier in Shop profile\. When I pick parts, availability comes first/);
     setSetting('parts.supplier', 'partstech');
-    expect(offlineAnswer('how do you pick parts')).toMatch(/Your parts supplier is PartsTech;.*PartsTech is a parts aggregator.*nothing goes on the order until the advisor picks it/s);
+    expect(offlineAnswer('how do you pick parts')).toMatch(/You get parts through PartsTech;.*PartsTech is a parts aggregator.*preferred supplier \(NAPA\).*nothing goes on the order until the advisor picks it/s);
     delete S.profile['parts.supplier'];
   });
   it('the agent gets the same knowledge and settings, with no tools', () => {
@@ -547,7 +569,7 @@ describe('mock login starts the shop profile fresh', () => {
     signIn('someone@gmail.com'); await Cp.run(async () => {});
     expect(S.auth.email).toBe('someone@gmail.com');
     expect(S.mode).toBe('profile');
-    expect(S.profile['shop.labor_rate']).toBeUndefined();
+    expect(S.profile['shop.labor_rate'].value).toBe(90); // the saved $165 is gone; the shop default is set again
     expect(Object.keys(S.profile).some(k => k.startsWith('note.'))).toBe(false);
     expect(laborMode()).toBe('prioritized');
     const said = S.chats.profile.items.filter(i => i.kind === 'agent').map(i => i.text);
@@ -580,44 +602,69 @@ describe('the concern reads descriptively, not as question: answer', () => {
   });
 });
 
-import { partstechParts, loadPartstechCard, addPartstechPart, searchPart, showPartstech, bringPartstechBack, newJob } from '../src/core/harness.js';
+import { searchPart, showPartstech, bringPartstechBack, newJob, checkPartstechReturn, sendPartsToPartstech, roPartList } from '../src/core/harness.js';
+import { vehicleLine } from '../src/core/logic.js';
 import { extractVehicle } from '../src/core/logic.js';
 import DEMO_STARTERS from '../resources/demo/core_demo_scenarios.json';
 import { orderTotals as totalsOf } from '../src/core/logic.js';
 describe('repair order parts follow the shop parts supplier', () => {
-  beforeEach(() => { ptCalls.length = 0; napaCalls.length = 0; Object.assign(S.ro, { vin: '4T1B11HK7JU512345', year: '2018', make: 'Toyota', model: 'Camry' }); });
+  beforeEach(() => { ptCalls.length = 0; napaCalls.length = 0; returnedAt = null; cartHasRotor = true; S.pt = { card: null, open: false }; Object.assign(S.ro, { vin: '2T1BURHE3JC012345', year: '2018', make: 'Toyota', model: 'Corolla' }); });
+  const ptChat = () => S.chats.ro.items.filter(i => i.kind === 'cards' && /partstech/i.test(i.card.type));
   it('NAPA (default): a part search goes to the NAPA catalog', async () => {
     searchPart('front brake pads'); await settle();
     expect(napaCalls).toHaveLength(1);
     expect(ptCalls).toHaveLength(0);
   });
-  it('PartsTech: opens a PartsTech session by VIN and posts a PartsTech card, no NAPA lookup, nothing on the RO', async () => {
-    setSetting('parts.supplier', 'partstech');
-    searchPart('front brake pads'); await settle();
-    expect(napaCalls).toHaveLength(0);
-    expect(ptCalls[0]).toMatchObject({ vin: '4T1B11HK7JU512345', part: 'front brake pads' });
-    const [card] = cardsOf('partstech');
-    expect(card).toMatchObject({ ref: 'ref1', part: 'front brake pads', status: 'open', rows: [] });
-    expect(S.ro.parts.added).toHaveLength(0);
-  });
-  it('PartsTech: adding a repair opens PartsTech for its parts instead of auto-adding NAPA picks', async () => {
+  it('PartsTech: adding a repair opens nothing and adds nothing; no NAPA lookup', async () => {
     setSetting('parts.supplier', 'partstech');
     acceptItem('brk-front'); await settle();
     expect(napaCalls).toHaveLength(0);
-    expect(cardsOf('partstech').length).toBeGreaterThan(0);
-    expect(cardsOf('parts')).toHaveLength(0);
+    expect(ptCalls).toHaveLength(0);
+    expect(S.pt.open).toBe(false);
     expect(S.ro.parts.added).toHaveLength(0);
   });
-  it('PartsTech: what the advisor picked comes back and goes on the RO at the shop cost, marked PartsTech', async () => {
+  it('PartsTech: one session with EVERY part on the RO (plus the one asked for), opened in the PartsTech tab, nothing in the chat', async () => {
     setSetting('parts.supplier', 'partstech');
-    await Cr.run(() => partstechParts(Cr, ['Front brake pads (set)'], null));
-    const [card] = cardsOf('partstech');
-    await loadPartstechCard(card);
-    expect(card.rows[0]).toMatchObject({ supplier: 'PartsTech', source: 'AutoZone', partNumber: 'D2076', listPrice: 28.28, list: 50.05 });
-    addPartstechPart(card, card.rows[0]);
-    expect(S.ro.parts.added[0]).toMatchObject({ supplier: 'PartsTech', source: 'AutoZone', partNumber: 'D2076', each: 28.28, qty: 1 });
-    expect(S.chats.ro.items.some(i => i.kind === 'event' && /Added to RO · .*PartsTech \(AutoZone\) Duralast D2076 · \$28\.28/.test(i.text))).toBe(true);
-    expect(totalsOf().parts).toBeCloseTo(28.28);
+    acceptItem('brk-front'); await settle();
+    const roParts = roPartList().map(x => x.name);
+    expect(roParts.length).toBeGreaterThan(0);
+    searchPart('front brake rotors'); await settle();
+    expect(ptCalls).toHaveLength(1);
+    expect(ptCalls[0].vin).toBe('2T1BURHE3JC012345');
+    // the asked-for part is already on the RO (any case), so it is not sent twice
+    expect(ptCalls[0].parts).toEqual(roParts.map(n => n.replace(/\s*\(.*?\)\s*/g, ' ').trim()));
+    expect(ptCalls[0].parts.map(n => n.toLowerCase())).toContain('front brake rotors');
+    expect(S.pt).toMatchObject({ open: true });
+    expect(S.pt.card.names.map(n => n.replace(/\s*\(.*?\)\s*/g, ' ').trim().toLowerCase())).toContain('front brake rotors');
+    expect(ptChat()).toHaveLength(0);
+    // the same parts again: back to that session, no new one
+    searchPart('front brake rotors'); await settle();
+    expect(ptCalls).toHaveLength(1);
+  });
+  it("PartsTech: 'send to repair order' closes PartsTech, goes back to the RO and puts every picked part on it", async () => {
+    setSetting('parts.supplier', 'partstech');
+    const r = await sendPartsToPartstech(['front brake pads', 'front brake rotors']);
+    expect(r.ok).toBe(true);
+    const session = S.pt.card;
+    returnedAt = new Date(Date.now() + 1000).toISOString(); // the server saw PartsTech's return page
+    await checkPartstechReturn(session);
+    expect(S.pt).toEqual({ card: null, open: false });
+    expect(S.mode).toBe('ro');
+    const on = Object.fromEntries(S.ro.parts.added.map(x => [x.partNumber, x]));
+    expect(on['D2076']).toMatchObject({ supplier: 'PartsTech', source: 'AutoZone', each: 28.28, qty: 2, label: 'front brake pads', ptRef: session.ref });
+    expect(on['85-0123']).toMatchObject({ supplier: 'PartsTech', source: 'NAPA', each: 61.5, qty: 1, label: 'front brake rotors' });
+    expect(totalsOf().parts).toBeCloseTo(28.28 * 2 + 61.5);
+    expect(ptChat()).toHaveLength(0);
+  });
+  it('PartsTech: sending again syncs the RO to the cart (a part taken out of the cart comes off)', async () => {
+    setSetting('parts.supplier', 'partstech');
+    await sendPartsToPartstech(['front brake pads', 'front brake rotors']);
+    await bringPartstechBack(); // the Send to repair order button in the tab
+    expect(S.ro.parts.added.map(x => x.partNumber).sort()).toEqual(['85-0123', 'D2076']);
+    cartHasRotor = false;
+    showPartstech(Object.assign(S.ro.parts.added[0] && { ref: S.ro.parts.added[0].ptRef, names: ['front brake pads', 'front brake rotors'], fit: vehicleLine(), requested: [{ name: 'front brake pads', partTypeId: 1684 }, { name: 'front brake rotors', partTypeId: 1896 }], rows: [] }));
+    await bringPartstechBack();
+    expect(S.ro.parts.added.map(x => x.partNumber)).toEqual(['D2076']);
   });
   it('demo starters carry a VIN: PartsTech searches by it, NAPA gets year, make and model from the text', async () => {
     for (const st of DEMO_STARTERS.starters) {
@@ -634,17 +681,18 @@ describe('repair order parts follow the shop parts supplier', () => {
     searchPart('front brake pads'); await settle();
     expect(ptCalls[0].vin).toBe('2T1BURHE3JC012345');
   });
-  it('PartsTech shows in its own tab, never in place of WrenchIQ; Done reads the cart and returns to the RO', async () => {
+  it('a new job closes PartsTech', async () => {
     setSetting('parts.supplier', 'partstech');
-    searchPart('front brake pads'); await settle();
-    const [card] = cardsOf('partstech');
-    showPartstech(card);
-    expect(S.pt).toMatchObject({ open: true, card });
-    await bringPartstechBack();
-    expect(S.pt.open).toBe(false);
-    expect(S.mode).toBe('ro');
-    expect(card.rows).toHaveLength(1);
+    await sendPartsToPartstech(['front brake pads']);
+    expect(S.pt.open).toBe(true);
     newJob(); await settle();
     expect(S.pt).toEqual({ card: null, open: false });
+  });
+  it('PartsTech opens with the shop rule as its filter: availability first -> Fastest Delivery', async () => {
+    const { partstechFilteredUrl } = await import('../src/core/partPolicy.js');
+    const card = { searchUrl: 'https://app.partstech.com/searchresult?vin=2T1BURHE3JC012345&part_types=1684&vehicle=754594' };
+    expect(partstechFilteredUrl(card, 'availability_then_price')).toBe(card.searchUrl + '&availability%5B%5D=Fastest+Delivery');
+    expect(partstechFilteredUrl(card, 'price_then_availability')).toBeNull();
+    expect(partstechFilteredUrl({ searchUrl: null }, 'availability_then_price')).toBeNull();
   });
 });

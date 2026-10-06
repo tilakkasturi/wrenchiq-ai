@@ -9,7 +9,7 @@ import { buildPackage, packageCandidates, packageLevel, LEVELS } from '../src/co
 import { prefetchPartPrices } from '../src/core/partPrices.js';
 
 const brakes = () => {
-  S.profile = { 'shop.labor_rate': { value: 150, display: '$150/hr' } };
+  S.profile = { 'shop.labor_rate': { value: 150, display: '$150/hr' }, 'parts.supplier': { value: 'napa' } }; // these tests price parts from NAPA's catalog; the shop default is PartsTech
   S.ro = { ...newRO(), started: true, year: '2018', make: 'Toyota', model: 'Corolla', mileage: '61000', symptom: 'Grinding noise when braking' };
 };
 beforeEach(brakes);
