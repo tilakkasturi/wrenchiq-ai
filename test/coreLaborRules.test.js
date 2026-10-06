@@ -694,5 +694,9 @@ describe('repair order parts follow the shop parts supplier', () => {
     expect(partstechFilteredUrl(card, 'availability_then_price')).toBe(card.searchUrl + '&availability%5B%5D=Fastest+Delivery');
     expect(partstechFilteredUrl(card, 'price_then_availability')).toBeNull();
     expect(partstechFilteredUrl({ searchUrl: null }, 'availability_then_price')).toBeNull();
+    // the preferred supplier (NAPA by default) is the supplier PartsTech opens on
+    const napa = { ...card, preferredSupplier: { credentialId: 587612, supplier: 'NAPA Auto Parts' } };
+    expect(partstechFilteredUrl(napa, 'availability_then_price')).toBe(card.searchUrl + '&availability%5B%5D=Fastest+Delivery&selected_distributor=587612');
+    expect(partstechFilteredUrl(napa, 'price_then_availability')).toBe(card.searchUrl + '&selected_distributor=587612');
   });
 });

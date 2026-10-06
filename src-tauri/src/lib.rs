@@ -88,6 +88,13 @@ async fn open_partstech(
     height: f64,
 ) -> Result<(), String> {
     let window = app.get_window("main").ok_or_else(|| "main window not found".to_string())?;
+    // geometry for diagnosing where the view lands (the Sidecar log, tauri dev's terminal)
+    let scale = window.scale_factor().unwrap_or(1.0);
+    eprintln!(
+        "[partstech] open {label} at ({x:.0},{y:.0}) {width:.0}x{height:.0} logical; window inner {:?} outer {:?} scale {scale}",
+        window.inner_size().ok(),
+        window.outer_size().ok()
+    );
     let start = url.parse().map_err(|e| format!("bad PartsTech url: {e}"))?;
     let then = Mutex::new(then_url);
     let builder = WebviewBuilder::new(&label, WebviewUrl::External(start)).on_page_load(move |webview, payload| {
@@ -105,6 +112,12 @@ async fn open_partstech(
     Ok(())
 }
 
+// Diagnostics from the PartsTech view code (src/core/partstechView.js) into the Sidecar log.
+#[tauri::command]
+fn partstech_log(message: String) {
+    eprintln!("[partstech] {message}");
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let initial_mode = env::var("WRENCHIQ_WINDOW_MODE").unwrap_or_else(|_| "sidecar".to_string());
@@ -113,7 +126,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .manage(WindowModeState(Mutex::new(initial_mode.clone())))
-        .invoke_handler(tauri::generate_handler![window_mode, set_window_mode, open_partstech])
+        .invoke_handler(tauri::generate_handler![window_mode, set_window_mode, open_partstech, partstech_log])
         .setup(move |app| {
             // Starts hidden (tauri.conf.json `visible: false`) so this
             // resize+reposition never flashes the default centered placement
